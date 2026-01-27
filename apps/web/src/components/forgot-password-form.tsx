@@ -13,12 +13,14 @@ import { cn } from "@/lib/utils";
 
 export default function ForgotPasswordForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [userNotFound, setUserNotFound] = useState(false);
 
   const form = useForm({
     defaultValues: {
       email: "",
     },
     onSubmit: async ({ value }) => {
+      setUserNotFound(false);
       await authClient.requestPasswordReset(
         {
           email: value.email,
@@ -30,7 +32,18 @@ export default function ForgotPasswordForm() {
             toast.success("Reset link sent");
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            const errorMessage = error.error.message || error.error.statusText;
+
+            // Check if user doesn't exist
+            if (errorMessage.toLowerCase().includes("user") &&
+                (errorMessage.toLowerCase().includes("not found") ||
+                 errorMessage.toLowerCase().includes("does not exist") ||
+                 errorMessage.toLowerCase().includes("doesn't exist"))) {
+              setUserNotFound(true);
+              toast.error("No account found with this email address");
+            } else {
+              toast.error(errorMessage);
+            }
           },
         },
       );
@@ -62,6 +75,20 @@ export default function ForgotPasswordForm() {
       <p className="mb-6 text-center text-muted-foreground">
         Enter your email address and we will send you a link to reset your password.
       </p>
+
+      {userNotFound && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800 mb-2">
+            No account found with this email address.
+          </p>
+          <Link
+            to="/login"
+            className={cn(buttonVariants({ variant: "default", size: "sm" }), "w-full")}
+          >
+            Create an Account
+          </Link>
+        </div>
+      )}
 
       <form
         onSubmit={(e) => {

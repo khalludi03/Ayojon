@@ -3,6 +3,7 @@ import * as schema from "@my-better-t-app/db/schema/auth";
 import { env } from "@my-better-t-app/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { sendPasswordResetEmail } from "./lib/email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -15,12 +16,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     sendResetPassword: async ({ user, url, token }) => {
-      // Mock email sending
-      console.log("----------------------------------------");
-      console.log(`Reset password for ${user.email}`);
-      console.log(`Reset link: ${url}`);
-      console.log(`Token: ${token}`);
-      console.log("----------------------------------------");
+      try {
+        await sendPasswordResetEmail({
+          to: user.email,
+          userName: user.name,
+          resetUrl: url,
+        });
+        console.log(`Password reset email sent to ${user.email}`);
+      } catch (error) {
+        console.error("Failed to send password reset email:", error);
+        // Log but don't throw to prevent timing attacks
+      }
     },
   },
   socialProviders: {

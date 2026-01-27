@@ -1,0 +1,106 @@
+import { env } from "@my-better-t-app/env/server";
+import { Resend } from "resend";
+
+const resend = new Resend(env.RESEND_API_KEY);
+
+interface SendPasswordResetEmailParams {
+  to: string;
+  userName: string;
+  resetUrl: string;
+}
+
+export async function sendPasswordResetEmail({
+  to,
+  userName,
+  resetUrl,
+}: SendPasswordResetEmailParams) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "My Better T App <onboarding@resend.dev>",
+      to: [to],
+      subject: "Reset your password",
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Reset Your Password</title>
+          </head>
+          <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 0;">
+              <tr>
+                <td align="center">
+                  <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                      <td style="padding: 40px 40px 20px;">
+                        <h1 style="margin: 0 0 20px; font-size: 24px; font-weight: 600; color: #18181b;">
+                          Reset Your Password
+                        </h1>
+                        <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.5; color: #52525b;">
+                          Hi ${userName || "there"},
+                        </p>
+                        <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.5; color: #52525b;">
+                          We received a request to reset your password. Click the button below to create a new password:
+                        </p>
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                          <tr>
+                            <td align="center">
+                              <a href="${resetUrl}"
+                                 style="display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: 500;">
+                                Reset Password
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.5; color: #71717a;">
+                          Or copy and paste this link into your browser:
+                        </p>
+                        <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.5; color: #4f46e5; word-break: break-all;">
+                          ${resetUrl}
+                        </p>
+                        <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.5; color: #71717a;">
+                          This link will expire in 1 hour for security reasons.
+                        </p>
+                        <p style="margin: 20px 0 0; font-size: 14px; line-height: 1.5; color: #71717a;">
+                          If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 20px 40px 40px; border-top: 1px solid #e4e4e7;">
+                        <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">
+                          Best regards,<br>
+                          My Better T App Team
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                  <table width="600" cellpadding="0" cellspacing="0" style="margin-top: 20px;">
+                    <tr>
+                      <td style="padding: 0 40px;">
+                        <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa; text-align: center;">
+                          This is an automated email. Please do not reply to this message.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      console.error("Failed to send password reset email:", error);
+      throw error;
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("Error sending password reset email:", error);
+    throw error;
+  }
+}

@@ -13,6 +13,7 @@ export const env = createEnv({
     FACEBOOK_CLIENT_ID: z.string().min(1),
     FACEBOOK_CLIENT_SECRET: z.string().min(1),
     CORS_ORIGIN: z.url(),
+    RESEND_API_KEY: z.string().min(1),
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   },
   runtimeEnv: process.env,
