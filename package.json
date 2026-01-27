@@ -34,13 +34,14 @@
   "dependencies": {
     "@my-better-t-app/env": "workspace:*",
     "dotenv": "catalog:",
-    "resend": "^6.9.0",
+    "nodemailer": "^7.0.13",
     "supabase": "^2.72.8",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@my-better-t-app/config": "workspace:*",
     "@types/bun": "catalog:",
+    "@types/nodemailer": "^7.0.9",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "typescript": "catalog:"

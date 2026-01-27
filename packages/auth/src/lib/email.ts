@@ -1,7 +1,15 @@
 import { env } from "@my-better-t-app/env/server";
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: env.EMAIL_HOST,
+  port: env.EMAIL_PORT,
+  secure: env.EMAIL_PORT === 465, // true for 465, false for other ports
+  auth: {
+    user: env.EMAIL_USER,
+    pass: env.EMAIL_PASSWORD,
+  },
+});
 
 interface SendPasswordResetEmailParams {
   to: string;
@@ -15,9 +23,9 @@ export async function sendPasswordResetEmail({
   resetUrl,
 }: SendPasswordResetEmailParams) {
   try {
-    const { data, error } = await resend.emails.send({
-      from: "My Better T App <onboarding@resend.dev>",
-      to: [to],
+    const info = await transporter.sendMail({
+      from: `"My Better T App" <${env.EMAIL_USER}>`,
+      to,
       subject: "Reset your password",
       html: `
         <!DOCTYPE html>
@@ -93,12 +101,7 @@ export async function sendPasswordResetEmail({
       `,
     });
 
-    if (error) {
-      console.error("Failed to send password reset email:", error);
-      throw error;
-    }
-
-    return { success: true, data };
+    return { success: true, data: info };
   } catch (error) {
     console.error("Error sending password reset email:", error);
     throw error;
