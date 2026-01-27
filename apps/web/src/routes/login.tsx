@@ -8,8 +8,9 @@ export const Route = createFileRoute("/login")({
   component: RouteComponent,
 });
 
+
 function RouteComponent() {
-  const [showSignIn, setShowSignIn] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(true);
 
   return showSignIn ? (
     <SignInForm onSwitchToSignUp={() => setShowSignIn(false)} />
