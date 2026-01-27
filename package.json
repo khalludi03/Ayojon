@@ -34,6 +34,7 @@
   "dependencies": {
     "@my-better-t-app/env": "workspace:*",
     "dotenv": "catalog:",
+    "supabase": "^2.72.8",
     "zod": "catalog:"
   },
   "devDependencies": {
