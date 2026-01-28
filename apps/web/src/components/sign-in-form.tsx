@@ -5,7 +5,6 @@ import { useNavigate, Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 import { authClient } from "@/lib/auth-client";
-import Loader from "./loader";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -15,7 +14,6 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
   const navigate = useNavigate({
     from: "/",
   });
-  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -31,7 +29,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         {
           onSuccess: () => {
             navigate({
-              to: "/dashboard",
+              to: "/",
             });
             toast.success("Sign in successful");
           },
@@ -43,15 +41,11 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
     },
     validators: {
       onSubmit: z.object({
-        email: z.email("Invalid email address"),
+        email: z.string().email("Invalid email address"),
         password: z.string().min(8, "Password must be at least 8 characters"),
       }),
     },
   });
-
-  if (isPending) {
-    return <Loader />;
-  }
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -163,7 +157,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         onClick={async () => {
           await authClient.signIn.social({
             provider: "google",
-            callbackURL: window.location.origin + "/dashboard",
+            callbackURL: window.location.origin + "/",
           });
         }}
       >
@@ -192,7 +186,7 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         onClick={async () => {
           await authClient.signIn.social({
             provider: "facebook",
-            callbackURL: window.location.origin + "/dashboard",
+            callbackURL: window.location.origin + "/",
           });
         }}
       >

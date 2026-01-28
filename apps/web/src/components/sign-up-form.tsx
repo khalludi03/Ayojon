@@ -6,7 +6,6 @@ import z from "zod";
 import { authClient } from "@/lib/auth-client";
 
 
-import Loader from "./loader";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -57,7 +56,6 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   const navigate = useNavigate({
     from: "/",
   });
-  const { isPending } = authClient.useSession();
 
   const form = useForm({
     defaultValues: {
@@ -90,7 +88,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       onSubmit: z
         .object({
           name: z.string().min(2, "Name must be at least 2 characters"),
-          email: z.email("Invalid email address"),
+          email: z.string().email("Invalid email address"),
           password: z
             .string()
             .min(8, "Password must be at least 8 characters")
@@ -106,10 +104,6 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         }),
     },
   });
-
-  if (isPending) {
-    return <Loader />;
-  }
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -274,7 +268,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         onClick={async () => {
           await authClient.signIn.social({
             provider: "google",
-            callbackURL: window.location.origin + "/dashboard",
+            callbackURL: window.location.origin + "/",
           });
         }}
       >
@@ -303,7 +297,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         onClick={async () => {
           await authClient.signIn.social({
             provider: "facebook",
-            callbackURL: window.location.origin + "/dashboard",
+            callbackURL: window.location.origin + "/",
           });
         }}
       >

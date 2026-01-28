@@ -15,12 +15,25 @@ app.use(
   cors({
     origin: env.CORS_ORIGIN,
     allowMethods: ["GET", "POST", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
     credentials: true,
+    maxAge: 600,
   }),
 );
 
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+  const response = await auth.handler(c.req.raw);
+
+  // Clone the response to add CORS headers
+  const headers = new Headers(response.headers);
+  headers.set("Access-Control-Allow-Origin", env.CORS_ORIGIN);
+  headers.set("Access-Control-Allow-Credentials", "true");
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+});
 
 app.use(
   "/trpc/*",

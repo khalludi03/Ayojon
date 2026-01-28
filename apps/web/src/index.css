@@ -126,3 +126,6 @@
     @apply font-sans;
   }
 }
+
+/* Import e-commerce global styles */
+@import "./styles/globals.css";

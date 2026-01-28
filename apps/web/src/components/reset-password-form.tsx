@@ -111,7 +111,13 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
     validators: {
       onSubmit: z
         .object({
-          password: z.string().min(8, "Password must be at least 8 characters"),
+          password: z
+            .string()
+            .min(8, "Password must be at least 8 characters")
+            .regex(/[a-z]/, "Password must contain a lowercase letter")
+            .regex(/[A-Z]/, "Password must contain an uppercase letter")
+            .regex(/[0-9]/, "Password must contain a number")
+            .regex(/[^a-zA-Z0-9]/, "Password must contain a special character"),
           confirmPassword: z.string(),
         })
         .refine((data) => data.password === data.confirmPassword, {
