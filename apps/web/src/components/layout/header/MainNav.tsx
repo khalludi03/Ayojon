@@ -46,10 +46,10 @@ interface MainNavProps {
 export function MainNav({ onCategoryClick }: MainNavProps) {
   return (
     <nav className="flex items-center gap-1">
-      {/* All Categories Button */}
+      {/* All Categories Button - Desktop only */}
       <button
         onClick={onCategoryClick}
-        className="flex items-center gap-2 rounded-lg bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[hsl(var(--primary))]/90 hover:shadow-md"
+        className="hidden items-center gap-2 rounded-lg bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[hsl(var(--primary))]/90 hover:shadow-md lg:flex"
       >
         <Menu className="h-4 w-4" />
         <span>All Categories</span>
@@ -57,7 +57,7 @@ export function MainNav({ onCategoryClick }: MainNavProps) {
       </button>
 
       {/* Main Navigation Links */}
-      <div className="hidden items-center gap-1 lg:flex ml-2">
+      <div className="hidden items-center gap-1 ml-2 lg:flex">
         {/* Home - Simple link, no dropdown */}
         <Link
           to="/"

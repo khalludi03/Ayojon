@@ -29,51 +29,51 @@ function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-[hsl(var(--muted))]/50 to-transparent py-6">
-        <div className="mx-auto max-w-7xl px-4">
+      <section className="bg-gradient-to-b from-[hsl(var(--muted))]/50 to-transparent py-3 sm:py-4 md:py-6">
+        <div className="mx-auto max-w-7xl px-2 sm:px-4">
           {/* Hero Carousel */}
           <HeroCarousel />
         </div>
       </section>
 
       {/* Trust Badges / Features Bar */}
-      <section className="border-y border-[hsl(var(--border))] bg-[hsl(var(--card))] py-6">
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="flex items-center gap-3 p-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10">
-                <TrendingUp className="h-6 w-6 text-[hsl(var(--primary))]" />
+      <section className="border-y border-[hsl(var(--border))] bg-[hsl(var(--card))] py-4 sm:py-5 md:py-6">
+        <div className="mx-auto max-w-7xl px-2 sm:px-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 lg:gap-5 xl:gap-6">
+            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                <TrendingUp className="h-5 w-5 text-[hsl(var(--primary))] sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <p className="font-semibold text-[hsl(var(--foreground))]">Free Shipping</p>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">On orders over ৳999</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(var(--secondary))]/20">
-                <Award className="h-6 w-6 text-[hsl(var(--secondary))]" />
-              </div>
-              <div>
-                <p className="font-semibold text-[hsl(var(--foreground))]">Best Quality</p>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">Verified products</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Free Shipping</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">On orders over ৳999</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(var(--accent))]/10">
-                <Zap className="h-6 w-6 text-[hsl(var(--accent))]" />
+            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--secondary))]/20 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                <Award className="h-5 w-5 text-[hsl(var(--secondary))] sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <p className="font-semibold text-[hsl(var(--foreground))]">Fast Delivery</p>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">24/7 express service</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Best Quality</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">Verified products</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10">
-                <Sparkles className="h-6 w-6 text-emerald-500" />
+            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))]/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                <Zap className="h-5 w-5 text-[hsl(var(--accent))] sm:h-6 sm:w-6" />
               </div>
-              <div>
-                <p className="font-semibold text-[hsl(var(--foreground))]">Secure Payment</p>
-                <p className="text-sm text-[hsl(var(--muted-foreground))]">100% protected</p>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Fast Delivery</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">24/7 express service</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                <Sparkles className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Secure Payment</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">100% protected</p>
               </div>
             </div>
           </div>
@@ -166,27 +166,27 @@ function HomePage() {
       />
 
       {/* All Products Section with Filters */}
-      <section className="py-10">
-        <div className="mx-auto max-w-7xl px-4">
+      <section className="py-6 sm:py-8 md:py-10">
+        <div className="mx-auto max-w-7xl px-2 sm:px-4">
           {/* Section Header */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-xl font-bold text-[hsl(var(--foreground))] sm:text-2xl">
               All Products
             </h2>
-            <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+            <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
               Explore our wide selection of quality products
             </p>
           </div>
 
           {/* Filters + Products Layout */}
-          <div className="flex gap-8">
-            {/* Filter Sidebar - Hidden on mobile */}
-            <div className="hidden lg:block">
+          <div className="flex gap-6 lg:gap-8">
+            {/* Filter Sidebar - Hidden on mobile and tablet */}
+            <div className="hidden lg:block lg:w-64 xl:w-72">
               <FilterSidebar />
             </div>
 
             {/* Products Area */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {/* Sort & Active Filters */}
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <ActiveFilters />
