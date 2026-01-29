@@ -10,6 +10,7 @@ import { FilterSidebar } from '@/components/product/FilterSidebar'
 import { SortDropdown } from '@/components/product/SortDropdown'
 import { ActiveFilters } from '@/components/product/ActiveFilters'
 import { InfiniteProductGrid } from '@/components/product/InfiniteProductGrid'
+import { EventsSection } from '@/components/events/EventsSection'
 import { useFlashSale, useForYou, useHotDeals } from '@/hooks/use-products'
 
 export const Route = createFileRoute('/')({ component: HomePage })
@@ -88,6 +89,9 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Shop by Event Section */}
+      <EventsSection />
 
       {/* Today's Deals */}
       <DealsSection />

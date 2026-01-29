@@ -31,6 +31,7 @@ const DEFAULT_FILTERS: FilterState = {
   sort: 'relevance',
   page: 1,
   limit: 20,
+  eventType: undefined,
   activeFilterCount: 0,
 };
 
@@ -46,6 +47,7 @@ function calculateActiveFilterCount(filters: ProductFilters): number {
   if (filters.inStock) count++;
   if (filters.vendorIds && filters.vendorIds.length > 0) count++;
   if (filters.search) count++;
+  if (filters.eventType) count++;
   return count;
 }
 
