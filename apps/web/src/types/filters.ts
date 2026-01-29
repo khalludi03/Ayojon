@@ -28,6 +28,7 @@ export interface ProductFilters {
   sort?: SortOption;
   page?: number;
   limit?: number;
+  eventType?: string;
 }
 
 export interface FilterState extends ProductFilters {

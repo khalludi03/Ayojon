@@ -6,3 +6,4 @@ export * from './category';
 export * from './carousel';
 export * from './filters';
 export * from './cart';
+export * from './event';
