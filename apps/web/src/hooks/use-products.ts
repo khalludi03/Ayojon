@@ -204,3 +204,19 @@ export function useFeaturedProducts(
     ...options,
   });
 }
+
+/**
+ * Fetch products by category
+ */
+export function useProductsByCategory(
+  categoryId: string,
+  limit: number = 8,
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: [...productKeys.all, 'category', categoryId, limit],
+    queryFn: () => productService.getProducts({ categoryId, limit }).then(result => result.data),
+    enabled: !!categoryId,
+    ...options,
+  });
+}
