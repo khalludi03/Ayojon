@@ -1,13 +1,20 @@
 import { Baby,
   BookOpen,
+  Camera,
   Car,
   Download,
   Dumbbell,
+  Flower,
+  Gamepad2,
   Home,
+  LayoutPanelTop,
+  Mic,
+  PartyPopper,
   Shirt,
   ShoppingBasket,
   Smartphone,
   Sparkles,
+  UtensilsCrossed,
   X } from 'lucide-react';
 import type { CategoryIconName } from '@/types';
 import { useCategories } from '@/hooks/use-categories';
@@ -23,6 +30,13 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   Baby,
   Car,
   Download,
+  Mic,
+  UtensilsCrossed,
+  Camera,
+  PartyPopper,
+  LayoutPanelTop,
+  Flower,
+  Gamepad2,
 };
 
 interface MegaMenuProps {
