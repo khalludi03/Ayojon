@@ -92,6 +92,12 @@ export const productService = {
     await randomDelay(200, 400);
     return mockDb.getForYou(limit);
   },
+
+  async getFeaturedProducts(limit?: number): Promise<Array<Product>> {
+    await mockDb.init();
+    await randomDelay(200, 400);
+    return mockDb.getFeaturedProducts(limit);
+  },
 };
 
 export const categoryService = {

@@ -269,6 +269,19 @@ class MockDatabase {
 
     return result.slice(0, limit);
   }
+
+  getFeaturedProducts(limit: number = 20): Array<Product> {
+    // Featured Products: high-quality products with good ratings and diverse categories
+    return this.products
+      .filter((p) => p.rating.average >= 4.0 && p.rating.count >= 10)
+      .sort((a, b) => {
+        // Sort by a combination of rating and popularity
+        const scoreA = a.rating.average * 0.7 + (a.rating.count / 1000) * 0.3;
+        const scoreB = b.rating.average * 0.7 + (b.rating.count / 1000) * 0.3;
+        return scoreB - scoreA;
+      })
+      .slice(0, limit);
+  }
 }
 
 // Export singleton instance
