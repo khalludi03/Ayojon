@@ -17,8 +17,16 @@ export function Header() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
+  // Set header height variable for children
+  const headerRef = (node: HTMLDivElement) => {
+    if (node) {
+      const height = node.offsetHeight;
+      document.documentElement.style.setProperty('--header-height', `${height}px`);
+    }
+  };
+
   return (
-    <>
+    <div ref={headerRef}>
       {/* Top Announcement Bar */}
       <div className="hidden sm:block bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--primary))] text-white">
         <div className="mx-auto max-w-7xl px-4">
@@ -97,7 +105,11 @@ export function Header() {
         <div className="border-t border-[hsl(var(--border))] bg-[hsl(var(--muted))]/50">
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex h-14 items-center justify-between">
-              <MainNav onCategoryClick={() => setIsMegaMenuOpen(true)} />
+              <MainNav 
+                isMegaMenuOpen={isMegaMenuOpen}
+                onCategoryClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)} 
+                onMouseEnter={() => setIsMegaMenuOpen(true)}
+              />
               
               {/* Right side promo text */}
               <div className="hidden xl:flex items-center">

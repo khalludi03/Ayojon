@@ -41,19 +41,27 @@ const bundleDropdownItems: Array<DropdownItem> = [
 
 interface MainNavProps {
   onCategoryClick?: () => void;
+  onMouseEnter?: () => void;
+  isMegaMenuOpen?: boolean;
 }
 
-export function MainNav({ onCategoryClick }: MainNavProps) {
+export function MainNav({ onCategoryClick, onMouseEnter, isMegaMenuOpen }: MainNavProps) {
   return (
     <nav className="flex items-center gap-1">
       {/* All Categories Button */}
       <button
         onClick={onCategoryClick}
-        className="flex items-center gap-2 rounded-lg bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-[hsl(var(--primary))]/90 hover:shadow-md"
+        onMouseEnter={onMouseEnter}
+        className={cn(
+          "flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 hover:shadow-md",
+          isMegaMenuOpen 
+            ? "bg-[hsl(var(--primary))] text-white shadow-md ring-2 ring-[hsl(var(--primary))]/20" 
+            : "bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90"
+        )}
       >
         <Menu className="h-4 w-4" />
         <span>All Categories</span>
-        <ChevronDown className="h-3 w-3 ml-1" />
+        <ChevronDown className={cn("h-3 w-3 ml-1 transition-transform duration-200", isMegaMenuOpen && "rotate-180")} />
       </button>
 
       {/* Main Navigation Links */}
