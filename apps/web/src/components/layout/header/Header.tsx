@@ -46,38 +46,41 @@ export function Header() {
 
       <header className="sticky top-0 z-40 w-full border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]/95 backdrop-blur supports-[backdrop-filter]:bg-[hsl(var(--background))]/60 shadow-sm">
         {/* Main Header Bar */}
-        <div className="mx-auto max-w-7xl px-4">
-          <div className="flex h-18 items-center justify-between gap-4 py-3">
-            {/* Mobile: Hamburger Menu */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden"
-              onClick={() => setIsMobileNavOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu className="h-6 w-6" />
-            </Button>
+        <div className="mx-auto max-w-7xl px-2 sm:px-4">
+          <div className="flex h-14 items-center justify-between gap-1 py-2 sm:h-16 sm:gap-2 md:h-18 md:gap-4 md:py-3">
+            {/* Left side: Hamburger + Logo grouped together */}
+            <div className="flex items-center gap-1 shrink-0 sm:gap-2">
+              {/* Mobile: Hamburger Menu */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 lg:hidden"
+                onClick={() => setIsMobileNavOpen(true)}
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
+              </Button>
 
-            {/* Logo */}
-            <Logo />
+              {/* Logo */}
+              <Logo />
+            </div>
 
-            {/* Search Bar - Hidden on mobile */}
-            <div className="hidden flex-1 max-w-2xl px-6 md:block">
+            {/* Search Bar - Hidden on mobile, visible on tablet+ */}
+            <div className="hidden flex-1 max-w-xl px-3 md:block md:px-4 lg:max-w-2xl lg:px-6">
               <SearchBar />
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex shrink-0 items-center gap-0 sm:gap-1 md:gap-2">
               {/* Mobile Search Icon */}
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="h-8 w-8 sm:h-9 sm:w-9 md:hidden"
                 onClick={() => setIsSearchModalOpen(true)}
                 aria-label="Open search"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
 
               <div className="hidden md:block">
@@ -86,7 +89,7 @@ export function Header() {
               <ThemeToggle />
               <WishlistIcon />
               <CartIcon />
-              <div className="ml-1 sm:ml-2 border-l border-[hsl(var(--border))] pl-1 sm:pl-2">
+              <div className="ml-0 border-l border-[hsl(var(--border))] pl-0.5 sm:ml-1 sm:pl-1 md:ml-2 md:pl-2">
                 <UserMenu />
               </div>
             </div>

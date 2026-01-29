@@ -50,16 +50,16 @@ const linkGroups = [
 
 export function FooterLinks() {
   return (
-    <div className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-6 sm:gap-8 md:grid-cols-3 lg:grid-cols-5">
       {linkGroups.map((group) => (
         <div key={group.title}>
-          <h4 className="font-semibold text-[hsl(var(--foreground))]">{group.title}</h4>
-          <ul className="mt-3 space-y-2">
+          <h4 className="text-sm font-semibold text-[hsl(var(--foreground))] sm:text-base">{group.title}</h4>
+          <ul className="mt-2 space-y-1.5 sm:mt-3 sm:space-y-2">
             {group.links.map((link) => (
               <li key={link.href}>
                 <Link
                   to={link.href}
-                  className="text-sm text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))]"
+                  className="text-xs text-[hsl(var(--muted-foreground))] transition-colors hover:text-[hsl(var(--primary))] sm:text-sm"
                 >
                   {link.label}
                 </Link>

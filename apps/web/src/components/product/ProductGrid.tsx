@@ -20,7 +20,7 @@ export function ProductGrid({
     return (
       <div
         className={cn(
-          'grid auto-rows-fr grid-cols-2 gap-4 md:grid-cols-4',
+          'grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5',
           className
         )}
       >
@@ -34,10 +34,10 @@ export function ProductGrid({
   if (products.length === 0) {
     return (
       <div className="py-12 text-center">
-        <p className="text-lg font-medium text-[hsl(var(--foreground))]">
+        <p className="text-base font-medium text-[hsl(var(--foreground))] sm:text-lg">
           No products found
         </p>
-        <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
+        <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
           Try adjusting your filters or search terms
         </p>
       </div>
@@ -47,7 +47,7 @@ export function ProductGrid({
   return (
     <div
       className={cn(
-        'grid auto-rows-fr grid-cols-2 gap-4 md:grid-cols-4',
+        'grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5',
         className
       )}
     >

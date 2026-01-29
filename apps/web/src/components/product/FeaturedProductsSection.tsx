@@ -18,33 +18,33 @@ export function FeaturedProductsSection() {
   };
 
   return (
-    <section className="py-10 bg-gradient-to-b from-[hsl(var(--muted))] to-[hsl(var(--background))]">
-      <div className="mx-auto max-w-7xl px-4">
+    <section className="py-6 bg-gradient-to-b from-[hsl(var(--muted))] to-[hsl(var(--background))] sm:py-8 md:py-10">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4">
         {/* Section Header */}
-        <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))]">
-            <Sparkles className="h-6 w-6 text-white" />
+        <div className="mb-6 flex items-center gap-2 sm:mb-8 sm:gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] sm:h-12 sm:w-12">
+            <Sparkles className="h-5 w-5 text-white sm:h-6 sm:w-6" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent sm:text-2xl">
               Featured Products
             </h2>
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            <p className="text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
               Discover trending and recommended items
             </p>
           </div>
         </div>
 
-        {/* Product Grid - 4 columns desktop, 2 columns mobile */}
+        {/* Product Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop, 5 cols xl */}
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5">
             {Array.from({ length: 20 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5">
               {displayedProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
@@ -66,7 +66,7 @@ export function FeaturedProductsSection() {
             )}
 
             {/* Results Info */}
-            <p className="mt-6 text-center text-sm text-[hsl(var(--muted-foreground))]">
+            <p className="mt-4 text-center text-xs text-[hsl(var(--muted-foreground))] sm:mt-6 sm:text-sm">
               Showing {displayedProducts.length} of {allFeaturedProducts?.length || 0} featured products
             </p>
           </>
