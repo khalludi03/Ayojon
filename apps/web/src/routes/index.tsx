@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { Award, Flame, Heart, Sparkles, TrendingUp, Zap } from 'lucide-react'
+import { Award, Camera, Flame, Heart, Home, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
 
 import { HeroCarousel } from '@/components/carousel/HeroCarousel'
 import { DealsSection } from '@/components/deals/DealsSection'
@@ -10,7 +10,7 @@ import { ActiveFilters } from '@/components/product/ActiveFilters'
 import { InfiniteProductGrid } from '@/components/product/InfiniteProductGrid'
 import { EventsSection } from '@/components/events/EventsSection'
 import { FeaturedProductsSection } from '@/components/product/FeaturedProductsSection'
-import { useFlashSale, useForYou, useHotDeals } from '@/hooks/use-products'
+import { useFlashSale, useForYou, useHotDeals, useProductsByCategory } from '@/hooks/use-products'
 
 export const Route = createFileRoute('/')({ component: HomePage })
 
@@ -19,6 +19,12 @@ function HomePage() {
   const { data: flashSaleProducts, isLoading: flashSaleLoading } = useFlashSale(12)
   const { data: forYouProducts, isLoading: forYouLoading } = useForYou(12)
   const { data: hotDealsProducts, isLoading: hotDealsLoading } = useHotDeals(12)
+  
+  // Fetch category sections
+  const { data: decorationsProducts, isLoading: decorationsLoading } = useProductsByCategory('decorations', 8)
+  const { data: soundLightingProducts, isLoading: soundLightingLoading } = useProductsByCategory('sound-lighting', 8)
+  const { data: furnitureProducts, isLoading: furnitureLoading } = useProductsByCategory('furniture-tents', 8)
+  const { data: cateringProducts, isLoading: cateringLoading } = useProductsByCategory('catering-equipment', 8)
 
   return (
     <>
@@ -112,6 +118,50 @@ function HomePage() {
         products={hotDealsProducts || []}
         isLoading={hotDealsLoading}
         viewAllLink="/deals/hot"
+        className="bg-[hsl(var(--muted))]"
+      />
+
+      {/* Category Sections */}
+      
+      {/* Decorations & Balloons */}
+      <ProductSection
+        title="Decorations & Balloons"
+        subtitle="Create stunning atmospheres for your events"
+        icon={<Sparkles className="h-5 w-5" />}
+        products={decorationsProducts || []}
+        isLoading={decorationsLoading}
+        viewAllLink="/category/decorations-balloons"
+      />
+
+      {/* Sound & Lighting */}
+      <ProductSection
+        title="Sound & Lighting"
+        subtitle="Professional audio and visual equipment"
+        icon={<Zap className="h-5 w-5" />}
+        products={soundLightingProducts || []}
+        isLoading={soundLightingLoading}
+        viewAllLink="/category/sound-lighting"
+        className="bg-gradient-to-r from-[hsl(var(--muted))]/50 to-transparent"
+      />
+
+      {/* Furniture & Tents */}
+      <ProductSection
+        title="Furniture & Tents"
+        subtitle="Comfortable seating and elegant setups"
+        icon={<Home className="h-5 w-5" />}
+        products={furnitureProducts || []}
+        isLoading={furnitureLoading}
+        viewAllLink="/category/furniture-tents"
+      />
+
+      {/* Catering Equipment */}
+      <ProductSection
+        title="Catering Equipment"
+        subtitle="Everything you need to serve with style"
+        icon={<UtensilsCrossed className="h-5 w-5" />}
+        products={cateringProducts || []}
+        isLoading={cateringLoading}
+        viewAllLink="/category/catering-equipment"
         className="bg-[hsl(var(--muted))]"
       />
 
