@@ -18,15 +18,15 @@ export function FeaturedProductsSection() {
   };
 
   return (
-    <section className="py-10 bg-[hsl(var(--muted))]">
+    <section className="py-10 bg-gradient-to-b from-[hsl(var(--muted))] to-[hsl(var(--background))]">
       <div className="mx-auto max-w-7xl px-4">
         {/* Section Header */}
         <div className="mb-8 flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[hsl(var(--primary))]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))]">
             <Sparkles className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] bg-clip-text text-transparent">
               Featured Products
             </h2>
             <p className="text-sm text-[hsl(var(--muted-foreground))]">

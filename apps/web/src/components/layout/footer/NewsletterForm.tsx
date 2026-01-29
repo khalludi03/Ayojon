@@ -23,10 +23,10 @@ export function NewsletterForm() {
     <div className="flex flex-col items-center gap-4 text-center md:flex-row md:text-left">
       <div className="flex-1">
         <h3 className="text-xl font-bold text-white">
-          Subscribe to Zynex for exclusive offers!
+          Subscribe to Ayojon for exclusive offers!
         </h3>
         <p className="mt-1 text-sm text-white/80">
-          Get the latest deals and discounts delivered to your inbox.
+          Get event deals and vendor updates delivered to your inbox.
         </p>
       </div>
 

@@ -28,7 +28,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "Ayojon - Your Event Marketplace",
+      },
+      {
+        name: "description",
+        content: "Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.",
       },
     ],
     links: [

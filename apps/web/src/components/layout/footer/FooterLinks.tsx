@@ -4,7 +4,7 @@ const linkGroups = [
   {
     title: 'About Us',
     links: [
-      { href: '/about', label: 'About Zynex' },
+      { href: '/about', label: 'About Ayojon' },
       { href: '/careers', label: 'Careers' },
       { href: '/press', label: 'Press' },
       { href: '/blog', label: 'Blog' },
@@ -30,7 +30,7 @@ const linkGroups = [
     ],
   },
   {
-    title: 'Sell on Zynex',
+    title: 'Sell on Ayojon',
     links: [
       { href: '/seller/register', label: 'Become a Seller' },
       { href: '/seller/login', label: 'Seller Login' },

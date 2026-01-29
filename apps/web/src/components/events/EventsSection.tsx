@@ -48,10 +48,10 @@ export function EventsSection() {
         {/* Section Header */}
         <div className="mb-8 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-[hsl(var(--foreground))] md:text-4xl">
-            Shop by Event
+            Shop by Event Type
           </h2>
           <p className="mt-2 text-[hsl(var(--muted-foreground))]">
-            Find the perfect products for your special occasion
+            Find everything you need for your celebration - rent from trusted vendors
           </p>
         </div>
 
