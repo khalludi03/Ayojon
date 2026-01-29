@@ -2,8 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Award, Flame, Heart, Sparkles, TrendingUp, Zap } from 'lucide-react'
 
 import { HeroCarousel } from '@/components/carousel/HeroCarousel'
-import { HeroBanner } from '@/components/carousel/HeroBanner'
-import { CategorySidebar } from '@/components/categories/CategorySidebar'
 import { DealsSection } from '@/components/deals/DealsSection'
 import { ProductSection } from '@/components/product/ProductSection'
 import { FilterSidebar } from '@/components/product/FilterSidebar'
@@ -24,26 +22,11 @@ function HomePage() {
 
   return (
     <>
-      {/* Hero Section with Category Sidebar */}
+      {/* Hero Section */}
       <section className="bg-gradient-to-b from-[hsl(var(--muted))]/50 to-transparent py-6">
         <div className="mx-auto max-w-7xl px-4">
-          <div className="flex gap-6">
-            {/* Category Sidebar - Hidden on mobile/tablet */}
-            <div className="hidden lg:block sticky top-32 self-start">
-              <CategorySidebar />
-            </div>
-
-            {/* Main Hero Content */}
-            <div className="flex-1 min-w-0">
-              {/* Hero Carousel */}
-              <HeroCarousel />
-              
-              {/* Hero Banner with promo cards */}
-              <div className="mt-6">
-                <HeroBanner />
-              </div>
-            </div>
-          </div>
+          {/* Hero Carousel */}
+          <HeroCarousel />
         </div>
       </section>
 
