@@ -190,3 +190,17 @@ export function useForYou(
     ...options,
   });
 }
+
+/**
+ * Fetch featured products
+ */
+export function useFeaturedProducts(
+  limit: number = 20,
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: [...productKeys.all, 'featured'],
+    queryFn: () => productService.getFeaturedProducts(limit),
+    ...options,
+  });
+}

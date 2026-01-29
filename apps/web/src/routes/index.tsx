@@ -11,6 +11,7 @@ import { SortDropdown } from '@/components/product/SortDropdown'
 import { ActiveFilters } from '@/components/product/ActiveFilters'
 import { InfiniteProductGrid } from '@/components/product/InfiniteProductGrid'
 import { EventsSection } from '@/components/events/EventsSection'
+import { FeaturedProductsSection } from '@/components/product/FeaturedProductsSection'
 import { useFlashSale, useForYou, useHotDeals } from '@/hooks/use-products'
 
 export const Route = createFileRoute('/')({ component: HomePage })
@@ -92,6 +93,9 @@ function HomePage() {
 
       {/* Shop by Event Section */}
       <EventsSection />
+
+      {/* Featured Products Section */}
+      <FeaturedProductsSection />
 
       {/* Today's Deals */}
       <DealsSection />
