@@ -4,7 +4,8 @@ import { useCallback, useSyncExternalStore } from 'react';
 import type { CurrencyCode, Product, ProductVariant } from '@/types';
 import { generateId } from '@/lib/utils';
 
-const STORAGE_KEY = 'zynex-cart';
+const STORAGE_KEY = 'ayojon-cart';
+const LEGACY_STORAGE_KEY = 'zynex-cart';
 
 export interface CartItem {
   id: string;
@@ -44,11 +45,23 @@ function createCartStore(): CartStore {
   // Load from sessionStorage (session-scoped, not persistent across browser restarts)
   if (typeof window !== 'undefined') {
     try {
+      // Try to load from new key first
+      let stored = sessionStorage.getItem(STORAGE_KEY);
+
+      // If not found, migrate from legacy key
+      if (!stored) {
+        const legacy = sessionStorage.getItem(LEGACY_STORAGE_KEY);
+        if (legacy) {
+          sessionStorage.setItem(STORAGE_KEY, legacy);
+          sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+          stored = legacy;
+        }
+      }
+
       // Clear any legacy localStorage data from previous implementation
       localStorage.removeItem(STORAGE_KEY);
-      
-      // Load from sessionStorage for current session only
-      const stored = sessionStorage.getItem(STORAGE_KEY);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+
       if (stored) {
         state = JSON.parse(stored);
       }

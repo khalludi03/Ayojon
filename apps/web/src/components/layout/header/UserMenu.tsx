@@ -66,8 +66,8 @@ export function UserMenu() {
             <DropdownMenuContent align="end" className="w-64 p-0 overflow-hidden">
               {/* Header */}
               <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/80 px-4 py-4 text-white">
-                <p className="text-lg font-bold">Welcome to Zynex!</p>
-                <p className="text-sm text-white/80">Sign in for exclusive deals</p>
+                <p className="text-lg font-bold">Welcome to Ayojon!</p>
+                <p className="text-sm text-white/80">Sign in to discover events</p>
               </div>
               
               <div className="p-2">
@@ -96,7 +96,7 @@ export function UserMenu() {
                     </div>
                     <div>
                       <p className="font-medium">Create Account</p>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Join Zynex today</p>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Join Ayojon today</p>
                     </div>
                   </div>
                 </DropdownMenuItem>

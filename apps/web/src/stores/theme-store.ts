@@ -5,7 +5,8 @@ import { useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'zynex-theme';
+const STORAGE_KEY = 'ayojon-theme';
+const LEGACY_STORAGE_KEY = 'zynex-theme';
 
 interface ThemeStore {
   theme: Theme;
@@ -13,10 +14,23 @@ interface ThemeStore {
   initialize: () => void;
 }
 
-// Get stored theme preference
+// Get stored theme preference with migration from legacy key
 function getStoredTheme(): Theme | null {
   if (typeof window === 'undefined') return null;
-  const stored = localStorage.getItem(STORAGE_KEY);
+
+  // Try new key first
+  let stored = localStorage.getItem(STORAGE_KEY);
+
+  // If not found, migrate from legacy key
+  if (!stored) {
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (legacy && (legacy === 'light' || legacy === 'dark')) {
+      localStorage.setItem(STORAGE_KEY, legacy);
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+      return legacy;
+    }
+  }
+
   if (stored === 'light' || stored === 'dark') {
     return stored;
   }

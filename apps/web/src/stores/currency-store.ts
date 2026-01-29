@@ -5,7 +5,8 @@ import type { CurrencyCode } from '@/types';
 import type {CurrencyConfig} from '@/lib/currency';
 import { CURRENCIES,  formatCurrencyPrice } from '@/lib/currency';
 
-const STORAGE_KEY = 'zynex-currency';
+const STORAGE_KEY = 'ayojon-currency';
+const LEGACY_STORAGE_KEY = 'zynex-currency';
 
 interface CurrencyState {
   currency: CurrencyCode;
@@ -25,10 +26,22 @@ function createCurrencyStore(): CurrencyStore {
   };
   const listeners = new Set<() => void>();
 
-  // Load from localStorage
+  // Load from localStorage with migration from legacy key
   if (typeof window !== 'undefined') {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      // Try new key first
+      let stored = localStorage.getItem(STORAGE_KEY);
+
+      // If not found, migrate from legacy key
+      if (!stored) {
+        const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (legacy && legacy in CURRENCIES) {
+          localStorage.setItem(STORAGE_KEY, legacy);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+          stored = legacy;
+        }
+      }
+
       if (stored && stored in CURRENCIES) {
         state = { currency: stored as CurrencyCode };
       }

@@ -20,7 +20,7 @@ export function Header() {
   return (
     <>
       {/* Top Announcement Bar */}
-      <div className="hidden sm:block bg-[hsl(var(--primary))] text-white">
+      <div className="hidden sm:block bg-gradient-to-r from-[hsl(var(--primary))] via-[hsl(var(--accent))] to-[hsl(var(--primary))] text-white">
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex h-9 items-center justify-between text-xs">
             <div className="flex items-center gap-6">
@@ -101,9 +101,10 @@ export function Header() {
               
               {/* Right side promo text */}
               <div className="hidden xl:flex items-center">
-                <a 
-                  href="/deals" 
-                  className="flex items-center gap-2 bg-gradient-to-r from-red-500 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200"
+                <a
+                  href="/deals"
+                  className="flex items-center gap-2 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white px-4 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-all duration-200"
+                  style={{ boxShadow: 'var(--shadow-festive)' }}
                 >
                   <span className="animate-pulse">🔥</span>
                   <span>Hot Deals: Up to 70% Off!</span>

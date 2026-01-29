@@ -21,6 +21,98 @@ import { slugify } from '@/lib/utils';
 // Set seed for reproducible data
 faker.seed(12345);
 
+// Event-specific product names by category
+const EVENT_PRODUCTS: Record<string, string[]> = {
+  'decorations': [
+    'Gold Balloon Arch Kit',
+    'LED Neon Sign - Love',
+    'Rose Gold Photo Backdrop',
+    'Fairy String Lights',
+    'Metallic Curtain Backdrop',
+    'Giant Number Balloons',
+  ],
+  'sound-lighting': [
+    'Professional PA Speaker System',
+    'Wireless Microphone Set',
+    'DJ Controller & Mixer',
+    'Moving Head Stage Light',
+    'RGB Uplighting Package',
+    'HD Projector & Screen',
+  ],
+  'furniture-tents': [
+    'White Chiavari Chairs',
+    'Round Banquet Table (6ft)',
+    'Wedding Tent (20x30)',
+    'Velvet Lounge Sofa Set',
+    'Wooden Stage Platform',
+    'Satin Table Linens',
+  ],
+  'catering-equipment': [
+    'Chafing Dish Set (4-pack)',
+    'Crystal Champagne Flutes',
+    'Silver Serving Platters',
+    'Portable Bar Counter',
+    'Beverage Dispenser Station',
+    'Gold-Rimmed Dinnerware Set',
+  ],
+  'photography-video': [
+    '360 Photo Booth',
+    'Professional DSLR Camera',
+    'Softbox Lighting Kit',
+    '4K Video Camera',
+    'Aerial Drone with Camera',
+    'Photo Props Set (50 pieces)',
+  ],
+  'party-supplies': [
+    'Disposable Gold Tableware',
+    'Party Favor Boxes (100ct)',
+    'Custom Birthday Banner',
+    'Confetti Cannons (12-pack)',
+    'Crystal Cake Stand',
+    'Floral Centerpiece Kit',
+  ],
+  'event-clothing': [
+    'Bridal Gown - Lace Detail',
+    'Traditional Saree Collection',
+    'Black Tuxedo Rental',
+    'Superhero Costume Set',
+    'Bridal Veil & Accessories',
+    'Kids Formal Suit',
+  ],
+  'stage-backdrops': [
+    'Adjustable Stage Platform',
+    'Pipe & Drape Backdrop',
+    'Sequin Fabric Backdrop',
+    'Floral Wall Panel (8x8ft)',
+    'Black Velvet Stage Curtain',
+    'Backdrop Stand & Frame',
+  ],
+  'floral-arrangements': [
+    'Wedding Bouquet - Roses',
+    'Floral Table Centerpiece',
+    'Eucalyptus Garland (10ft)',
+    'Corsage & Boutonniere Set',
+    'Glass Cylinder Vases',
+    'Artificial Flower Arrangement',
+  ],
+  'entertainment': [
+    'Bounce House Castle',
+    'Ring Toss Carnival Game',
+    'Professional Karaoke System',
+    'Arcade Basketball Game',
+    'Giant Jenga Lawn Game',
+    'Magic Props Kit',
+  ],
+};
+
+function getEventProductName(categoryId: string): string {
+  const products = EVENT_PRODUCTS[categoryId];
+  if (products && products.length > 0) {
+    return faker.helpers.arrayElement(products);
+  }
+  return faker.commerce.productName();
+}
+
 const DISCOUNT_OPTIONS = [0, 10, 15, 20, 25, 30, 40, 50, 60, 70];
 const BADGE_OPTIONS: Array<ProductBadge> = ['choice', 'top_seller', 'new', 'verified'];
 const COLOR_OPTIONS = ['Red', 'Blue', 'Black', 'White', 'Green', 'Yellow', 'Pink', 'Gray', 'Navy', 'Brown'];
@@ -152,9 +244,9 @@ export function createProduct(
   overrides: Partial<Product> = {},
   vendorData?: { id: string; name: string; isVerified: boolean }
 ): Product {
-  const title = overrides.title || faker.commerce.productName();
   const category = faker.helpers.arrayElement(CATEGORIES);
   const categoryId = overrides.categoryId || category.id;
+  const title = overrides.title || getEventProductName(categoryId);
   const stock = faker.number.int({ min: 0, max: 500 });
 
   let stockStatus: StockStatus = 'in_stock';

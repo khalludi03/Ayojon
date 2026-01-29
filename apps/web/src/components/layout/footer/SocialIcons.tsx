@@ -77,35 +77,35 @@ function LinkedInIcon({ className }: SocialIconProps) {
 // Social links configuration with brand colors
 const socialLinks = [
   {
-    href: 'https://facebook.com/zynex',
+    href: 'https://facebook.com/ayojon',
     Icon: FacebookIcon,
     label: 'Facebook',
     bgColor: 'hover:bg-[#1877F2]',
     iconColor: 'text-[#1877F2] group-hover:text-white',
   },
   {
-    href: 'https://instagram.com/zynex',
+    href: 'https://instagram.com/ayojon',
     Icon: InstagramIcon,
     label: 'Instagram',
     bgColor: 'hover:bg-gradient-to-tr hover:from-[#FFDC80] hover:via-[#F56040] hover:to-[#C13584]',
     iconColor: 'group-hover:text-white',
   },
   {
-    href: 'https://twitter.com/zynex',
+    href: 'https://twitter.com/ayojon',
     Icon: XIcon,
     label: 'X (Twitter)',
     bgColor: 'hover:bg-black dark:hover:bg-white',
     iconColor: 'text-black dark:text-white group-hover:text-white dark:group-hover:text-black',
   },
   {
-    href: 'https://youtube.com/zynex',
+    href: 'https://youtube.com/ayojon',
     Icon: YouTubeIcon,
     label: 'YouTube',
     bgColor: 'hover:bg-[#FF0000]',
     iconColor: 'text-[#FF0000] group-hover:text-white',
   },
   {
-    href: 'https://linkedin.com/company/zynex',
+    href: 'https://linkedin.com/company/ayojon',
     Icon: LinkedInIcon,
     label: 'LinkedIn',
     bgColor: 'hover:bg-[#0A66C2]',

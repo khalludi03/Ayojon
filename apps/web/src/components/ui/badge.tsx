@@ -70,7 +70,7 @@ interface ProductBadgeProps extends Omit<BadgeProps, 'variant'> {
 }
 
 const badgeTypeMap: Record<ProductBadgeProps['type'], { variant: BadgeProps['variant']; label: string }> = {
-  choice: { variant: 'choice', label: 'Zynex Choice' },
+  choice: { variant: 'choice', label: 'Ayojon Choice' },
   top_seller: { variant: 'topSeller', label: 'Top Seller' },
   new: { variant: 'new', label: 'New' },
   verified: { variant: 'verified', label: 'Verified' },

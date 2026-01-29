@@ -2,8 +2,10 @@
 
 import { generateId } from '@/lib/utils';
 
-const SESSION_ID_KEY = 'zynex-session-id';
-const SESSION_KEYS_TO_CLEAR = ['zynex-cart', 'zynex-wishlist'];
+const SESSION_ID_KEY = 'ayojon-session-id';
+const LEGACY_SESSION_ID_KEY = 'zynex-session-id';
+const SESSION_KEYS_TO_CLEAR = ['ayojon-cart', 'ayojon-wishlist'];
+const LEGACY_KEYS_TO_CLEAR = ['zynex-cart', 'zynex-wishlist'];
 
 interface SessionManager {
   getSessionId: () => string;
@@ -25,7 +27,18 @@ function createSessionManager(): SessionManager {
 
       if (typeof window !== 'undefined') {
         // Check sessionStorage for existing session ID
-        const stored = sessionStorage.getItem(SESSION_ID_KEY);
+        let stored = sessionStorage.getItem(SESSION_ID_KEY);
+
+        // If not found, migrate from legacy key
+        if (!stored) {
+          const legacy = sessionStorage.getItem(LEGACY_SESSION_ID_KEY);
+          if (legacy) {
+            sessionStorage.setItem(SESSION_ID_KEY, legacy);
+            sessionStorage.removeItem(LEGACY_SESSION_ID_KEY);
+            stored = legacy;
+          }
+        }
+
         if (stored) {
           sessionId = stored;
         } else {
@@ -53,9 +66,14 @@ function createSessionManager(): SessionManager {
      */
     clearSessionData: () => {
       if (typeof window !== 'undefined') {
+        // Clear new keys
         SESSION_KEYS_TO_CLEAR.forEach((key) => {
           sessionStorage.removeItem(key);
-          // Also clear from localStorage if it exists (migration)
+          localStorage.removeItem(key);
+        });
+        // Clear legacy keys
+        LEGACY_KEYS_TO_CLEAR.forEach((key) => {
+          sessionStorage.removeItem(key);
           localStorage.removeItem(key);
         });
       }
@@ -70,6 +88,9 @@ function createSessionManager(): SessionManager {
         // Clear any old localStorage data from previous implementation
         // This ensures fresh start for users migrating from localStorage
         SESSION_KEYS_TO_CLEAR.forEach((key) => {
+          localStorage.removeItem(key);
+        });
+        LEGACY_KEYS_TO_CLEAR.forEach((key) => {
           localStorage.removeItem(key);
         });
       }

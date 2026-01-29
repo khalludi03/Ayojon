@@ -38,7 +38,7 @@ export function Footer() {
                 Customer Hotline: 16XXX (9 AM - 8 PM, Sat-Thu)
               </p>
               <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                Email: support@zynex.com
+                Email: support@ayojon.com
               </p>
             </div>
             <SocialIcons />
@@ -51,7 +51,7 @@ export function Footer() {
         <div className="mx-auto max-w-7xl px-4 py-4">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-[hsl(var(--muted-foreground))]">
-              © 2026 Zynex.com. All rights reserved.
+              © 2026 Ayojon. All rights reserved.
             </p>
             <PaymentIcons />
           </div>

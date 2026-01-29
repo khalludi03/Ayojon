@@ -90,7 +90,7 @@ export function HeroCarousel() {
                   />
 
                   {/* Content Overlay */}
-                  <div className="absolute inset-0 flex items-center bg-gradient-to-r from-black/60 via-black/30 to-transparent">
+                  <div className="absolute inset-0 flex items-center bg-gradient-to-r from-black/70 via-black/40 to-transparent">
                     <div className="px-4 sm:px-6 md:px-8 lg:px-10">
                       <div className="max-w-xs sm:max-w-sm md:max-w-md">
                         {/* Category Badge */}
@@ -105,7 +105,8 @@ export function HeroCarousel() {
                         </p>
                         <a
                           href={slide.ctaLink}
-                          className="mt-3 inline-block rounded-lg bg-[hsl(var(--primary))] px-4 py-2 text-xs font-semibold text-white transition-all hover:bg-[hsl(var(--primary))]/90 hover:scale-105 sm:mt-4 sm:px-6 sm:py-2.5 sm:text-sm"
+                          className="mt-3 inline-block rounded-lg bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-4 py-2 text-xs font-semibold text-white transition-all hover:scale-105 sm:mt-4 sm:px-6 sm:py-2.5 sm:text-sm shadow-[var(--shadow-festive)]"
+                          style={{ boxShadow: 'var(--shadow-festive)' }}
                         >
                           {slide.ctaText}
                         </a>

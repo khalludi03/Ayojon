@@ -15,7 +15,7 @@ export function DealsSection() {
         {/* Section Header */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[hsl(var(--accent))]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))]">
               <Zap className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -33,15 +33,15 @@ export function DealsSection() {
             <Clock className="h-5 w-5" />
             <span className="text-sm font-medium">Ends in:</span>
             <div className="flex items-center gap-1 font-mono text-lg font-bold">
-              <span className="rounded bg-[hsl(var(--accent))] px-2 py-1 text-white">
+              <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-2 py-1 text-white">
                 {countdown.hours}
               </span>
               <span>:</span>
-              <span className="rounded bg-[hsl(var(--accent))] px-2 py-1 text-white">
+              <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-2 py-1 text-white">
                 {countdown.minutes}
               </span>
               <span>:</span>
-              <span className="rounded bg-[hsl(var(--accent))] px-2 py-1 text-white">
+              <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-2 py-1 text-white">
                 {countdown.seconds}
               </span>
             </div>
