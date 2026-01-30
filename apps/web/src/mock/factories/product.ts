@@ -256,6 +256,12 @@ export function createProduct(
   const title = overrides.title || getEventProductName(categoryId);
   const stock = faker.number.int({ min: 0, max: 500 });
 
+  // Assign a random subcategory from the category's subcategories
+  const selectedCategory = CATEGORIES.find((cat) => cat.id === categoryId) || category;
+  const subcategoryId = selectedCategory.subcategories.length > 0
+    ? faker.helpers.arrayElement(selectedCategory.subcategories).id
+    : undefined;
+
   let stockStatus: StockStatus = 'in_stock';
   if (stock === 0) stockStatus = 'out_of_stock';
   else if (stock < 10) stockStatus = 'low_stock';
@@ -287,6 +293,7 @@ export function createProduct(
     stock,
     badges,
     categoryId,
+    subcategoryId,
     keyFeatures: createKeyFeatures(),
     variants: createVariants(categoryId),
     returnPolicy: '7-day return policy. Product must be unused and in original packaging.',

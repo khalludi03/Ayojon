@@ -112,6 +112,12 @@ export const categoryService = {
     await randomDelay(100, 200);
     return mockDb.getCategoryById(id);
   },
+
+  async getCategoryBySlug(slug: string): Promise<Category | undefined> {
+    await mockDb.init();
+    await randomDelay(100, 200);
+    return mockDb.getCategoryBySlug(slug);
+  },
 };
 
 export const vendorService = {

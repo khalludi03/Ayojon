@@ -206,7 +206,8 @@ export function useFeaturedProducts(
 }
 
 /**
- * Fetch products by category
+ * Fetch products by category with full pagination support
+ * @deprecated Use useProducts with category filter instead
  */
 export function useProductsByCategory(
   categoryId: string,
@@ -215,8 +216,25 @@ export function useProductsByCategory(
 ) {
   return useQuery({
     queryKey: [...productKeys.all, 'category', categoryId, limit],
-    queryFn: () => productService.getProducts({ categoryId, limit }).then(result => result.data),
+    queryFn: () => productService.getProducts({ category: categoryId, limit }).then(result => result.data),
     enabled: !!categoryId,
+    ...options,
+  });
+}
+
+/**
+ * Fetch paginated products by category with full filter support
+ */
+export function useCategoryProducts(
+  categorySlug: string,
+  filters: Omit<ProductFilters, 'category'> = {},
+  options?: Omit<UseQueryOptions<PaginatedResult<Product>>, 'queryKey' | 'queryFn'>
+) {
+  const fullFilters = { ...filters, category: categorySlug };
+  return useQuery({
+    queryKey: [...productKeys.all, 'category-page', categorySlug, filters],
+    queryFn: () => productService.getProducts(fullFilters),
+    enabled: !!categorySlug,
     ...options,
   });
 }

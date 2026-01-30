@@ -164,3 +164,44 @@ export function useSort() {
     setSort,
   };
 }
+
+// Helper hook for subcategory management
+export function useSubcategory() {
+  const { filters, setFilter, clearFilter } = useFilters();
+
+  const setSubcategory = useCallback(
+    (subcategory: string | undefined) => {
+      if (subcategory) {
+        setFilter('subcategory', subcategory);
+      } else {
+        clearFilter('subcategory');
+      }
+    },
+    [setFilter, clearFilter]
+  );
+
+  return {
+    subcategory: filters.subcategory,
+    setSubcategory,
+  };
+}
+
+// Helper hook for category page context
+export function useCategoryFilters(categoryId: string) {
+  const { filters, setFilter, setFilters, clearFilter } = useFilters();
+
+  // Set the category filter when the component mounts or category changes
+  const initializeCategoryFilter = useCallback(() => {
+    if (filters.category !== categoryId) {
+      setFilter('category', categoryId);
+    }
+  }, [categoryId, filters.category, setFilter]);
+
+  return {
+    filters,
+    setFilter,
+    setFilters,
+    clearFilter,
+    initializeCategoryFilter,
+  };
+}
