@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HelpCircle, Menu, Phone, Search, Truck } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchBar } from './SearchBar';
+import { MobileSearchModal } from './MobileSearchModal';
 import { CurrencySelector } from './CurrencySelector';
 import { UserMenu } from './UserMenu';
 import { CartIcon } from './CartIcon';
@@ -125,32 +126,7 @@ export function Header() {
       <MobileNav isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
 
       {/* Mobile Search Modal */}
-      {isSearchModalOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-50 bg-black/50 md:hidden"
-            onClick={() => setIsSearchModalOpen(false)}
-            aria-hidden="true"
-          />
-
-          {/* Search Modal */}
-          <div className="fixed top-0 left-0 right-0 z-50 bg-[hsl(var(--background))] p-4 shadow-lg animate-slide-down md:hidden">
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <SearchBar />
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsSearchModalOpen(false)}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
+      <MobileSearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
     </>
   );
 }
