@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck, ExternalLink } from 'lucide-react';
 import type { Product, ProductVariant } from '@/types';
 import { useCart } from '@/stores/cart-store';
 import { useWishlist } from '@/stores/wishlist-store';
+import { useQuickView } from '@/stores/quick-view-store';
 import {
   Dialog,
   DialogContent,
@@ -14,18 +15,33 @@ import { Badge, DiscountBadge, StockBadge } from '@/components/ui/badge';
 import { cn, formatPrice } from '@/lib/utils';
 
 interface ProductModalProps {
-  product: Product | null;
-  isOpen: boolean;
-  onClose: () => void;
+  product?: Product | null;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
+export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose: propOnClose }: ProductModalProps) {
+  const { product: storeProduct, isOpen: storeIsOpen, closeQuickView } = useQuickView();
+  
+  const product = propProduct ?? storeProduct;
+  const isOpen = propIsOpen ?? storeIsOpen;
+  const onClose = propOnClose ?? closeQuickView;
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, ProductVariant>>({});
 
   const { addItem } = useCart();
   const { toggleItem, isInWishlist } = useWishlist();
+
+  // Reset state when product changes
+  useEffect(() => {
+    if (isOpen && product) {
+      setSelectedImageIndex(0);
+      setQuantity(1);
+      setSelectedVariants({});
+    }
+  }, [isOpen, product]);
 
   if (!product) return null;
 
@@ -51,6 +67,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const handleBuyNow = () => {
     handleAddToCart();
     // Navigate to checkout
+    window.location.href = '/checkout';
   };
 
   const incrementQuantity = () => setQuantity((q) => Math.min(q + 1, product.stock));
@@ -66,7 +83,7 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
   const hasHalfStar = product.rating.average % 1 >= 0.5;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto p-0">
         <div className="grid gap-6 p-6 md:grid-cols-2">
           {/* Left: Image Gallery */}
@@ -133,7 +150,18 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
           {/* Right: Product Details */}
           <div>
             <DialogHeader>
-              <DialogTitle className="text-xl">{product.title}</DialogTitle>
+              <div className="flex items-start justify-between gap-4">
+                <DialogTitle className="text-xl">{product.title}</DialogTitle>
+                <a
+                    href={`/product/${product.slug}`}
+                    className="flex shrink-0 items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline"
+                    target="_blank"
+                    rel="noreferrer"
+                >
+                    View Full Details
+                    <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </DialogHeader>
 
             {/* Vendor */}
@@ -170,6 +198,13 @@ export function ProductModal({ product, isOpen, onClose }: ProductModalProps) {
                 {product.rating.average} ({product.rating.count} reviews)
               </span>
             </div>
+            
+            {/* Short Description */}
+            {product.descriptionShort && (
+                <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))] line-clamp-3">
+                    {product.descriptionShort}
+                </p>
+            )}
 
             {/* Price */}
             <div className="mt-4">

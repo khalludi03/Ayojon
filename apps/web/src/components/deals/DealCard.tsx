@@ -1,7 +1,8 @@
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Eye } from 'lucide-react';
 import type { DealProduct } from '@/types';
 import { useCountdown } from '@/hooks/use-countdown';
 import { useCart } from '@/stores/cart-store';
+import { useQuickView } from '@/stores/quick-view-store';
 import { Badge, DiscountBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, formatPrice } from '@/lib/utils';
@@ -13,6 +14,7 @@ interface DealCardProps {
 export function DealCard({ deal }: DealCardProps) {
   const countdown = useCountdown(deal.dealEndsAt);
   const { addItem, toggleItem, isInCart } = useCart();
+  const { openQuickView } = useQuickView();
 
   const handleToggleCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -28,6 +30,12 @@ export function DealCard({ deal }: DealCardProps) {
     window.location.href = '/checkout';
   };
 
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openQuickView(deal);
+  };
+
   const inCart = isInCart(deal.id);
 
   // Product detail page URL
@@ -40,13 +48,29 @@ export function DealCard({ deal }: DealCardProps) {
       aria-label={`View ${deal.title} - ${formatPrice(deal.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
-      <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]">
+      <div 
+        className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]"
+        onClick={handleQuickView}
+      >
         <img
           src={deal.images[0]?.url}
           alt={deal.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
           loading="lazy"
         />
+
+        {/* Quick View Overlay Button (Desktop) */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20">
+            <Button 
+                variant="secondary" 
+                size="sm" 
+                className="gap-2 shadow-lg hidden sm:flex pointer-events-none sm:pointer-events-auto transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                onClick={handleQuickView}
+            >
+                <Eye className="h-4 w-4" />
+                Quick View
+            </Button>
+        </div>
 
         {/* Discount Badge */}
         {deal.pricing.discountPercentage > 0 && (

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Heart, ShoppingCart, Star, Truck } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Truck, Eye } from 'lucide-react';
 import type { Product } from '@/types';
 import { useCart } from '@/stores/cart-store';
 import { useWishlist } from '@/stores/wishlist-store';
+import { useQuickView } from '@/stores/quick-view-store';
 import { DiscountBadge, ProductBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, formatPrice } from '@/lib/utils';
@@ -16,6 +17,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addItem, toggleItem, isInCart } = useCart();
   const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
+  const { openQuickView } = useQuickView();
 
   const inCart = isInCart(product.id);
   const inWishlist = isInWishlist(product.id);
@@ -47,6 +49,12 @@ export function ProductCard({ product }: ProductCardProps) {
     window.location.href = '/checkout';
   };
 
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openQuickView(product);
+  };
+
   // Calculate star display
   const fullStars = Math.floor(product.rating.average);
   const hasHalfStar = product.rating.average % 1 >= 0.5;
@@ -58,13 +66,29 @@ export function ProductCard({ product }: ProductCardProps) {
       aria-label={`View ${product.title} - ${formatPrice(product.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
-      <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]">
+      <div 
+        className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]"
+        onClick={handleQuickView}
+      >
         <img
           src={product.images[0]?.url}
           alt={product.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
           loading="lazy"
         />
+
+        {/* Quick View Overlay Button (Desktop) */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20">
+            <Button 
+                variant="secondary" 
+                size="sm" 
+                className="gap-2 shadow-lg hidden sm:flex pointer-events-none sm:pointer-events-auto transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                onClick={handleQuickView}
+            >
+                <Eye className="h-4 w-4" />
+                Quick View
+            </Button>
+        </div>
 
         {/* Discount Badge */}
         {product.pricing.discountPercentage > 0 && (
@@ -77,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleToggleWishlist}
           className={cn(
-            'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2',
+            'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2 z-10',
             inWishlist
               ? 'text-red-500'
               : 'text-[hsl(var(--muted-foreground))] hover:text-red-500'
