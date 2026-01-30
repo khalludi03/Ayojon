@@ -44,15 +44,12 @@ export function HeroCarousel() {
         {/*
           CSS Grid Layout:
           - Mobile (< 640px): Single column, all stacked
-          - Small tablet (640px - 767px): 2 columns below main banner
-          - Tablet+ (768px+): Main banner + 2x2 side banner grid
-          - Desktop (1280px+): Optimized spacing
+          - Small/Medium/Large (640px - 1279px): Main banner full width, 2x2 grid below (STACKED)
+          - XL+ (1280px+): Main banner + 2x2 side banner grid (SIDE-BY-SIDE)
         */}
         <div className="grid gap-2 sm:gap-3 md:gap-4
           grid-cols-1
           sm:grid-cols-2
-          md:grid-cols-[1fr_280px]
-          lg:grid-cols-[1fr_320px]
           xl:grid-cols-[1fr_340px]
           2xl:grid-cols-[1fr_400px]
         ">
@@ -61,12 +58,12 @@ export function HeroCarousel() {
             className="group/carousel relative overflow-hidden rounded-lg
               col-span-1
               sm:col-span-2
-              md:col-span-1
-              md:row-span-2
+              xl:col-span-1
+              xl:row-span-2
               min-h-[180px]
               sm:min-h-[240px]
-              md:min-h-[320px]
-              lg:min-h-[360px]
+              md:min-h-[280px]
+              lg:min-h-[320px]
               xl:min-h-[400px]
             "
             onMouseEnter={handleMouseEnter}
@@ -157,17 +154,16 @@ export function HeroCarousel() {
           </div>
 
           {/* Side Banners - 2x2 Grid */}
-          {/* On mobile: Full width, stacked */}
-          {/* On small tablet (sm): 2-column grid below main banner */}
-          {/* On tablet+ (md): 2x2 grid on the right side */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:row-span-2 md:gap-3 lg:gap-4">
+          {/* On mobile/tablet/desktop: 2-column grid BELOW main banner (STACKED) - spans full width */}
+          {/* On XL+ (1280px+): 2x2 grid on the RIGHT SIDE of main banner (SIDE-BY-SIDE) */}
+          <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:gap-3 md:gap-4 xl:col-span-1 xl:row-span-2">
             {sideBanners.slice(0, 4).map((banner, index) => (
               <a
                 key={banner.slideId}
                 href={banner.ctaLink}
                 className={cn(
                   'group relative overflow-hidden rounded-lg transition-all hover:shadow-lg',
-                  'min-h-[100px] sm:min-h-[115px] md:min-h-[155px] lg:min-h-[175px] xl:min-h-[195px]'
+                  'min-h-[85px] sm:min-h-[110px] md:min-h-[130px] lg:min-h-[145px] xl:min-h-[195px]'
                 )}
                 style={{ backgroundColor: banner.backgroundColor }}
               >
