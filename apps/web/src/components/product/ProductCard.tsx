@@ -124,13 +124,22 @@ export function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Price - Fixed height */}
-        <div className="mt-1.5 flex h-6 items-baseline sm:mt-2 sm:h-7">
-          <span className="text-sm font-bold text-[hsl(var(--brand-orange))] sm:text-base md:text-lg">
-            {formatPrice(product.pricing.currentPrice)}
-          </span>
+        {/* Price - Enhanced visibility */}
+        <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
+          {/* Deal Price with Discount % */}
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-bold text-[hsl(var(--brand-orange))] sm:text-lg md:text-xl">
+              {formatPrice(product.pricing.currentPrice)}
+            </span>
+            {product.pricing.discountPercentage > 0 && (
+              <span className="text-[10px] font-semibold text-[hsl(var(--success))] sm:text-xs">
+                -{product.pricing.discountPercentage}%
+              </span>
+            )}
+          </div>
+          {/* Original Price (struck) */}
           {product.pricing.originalPrice > product.pricing.currentPrice && (
-            <span className="ml-1 text-[9px] text-[hsl(var(--muted-foreground))] line-through sm:ml-1.5 sm:text-[10px] md:text-xs">
+            <span className="text-xs text-[hsl(var(--muted-foreground))] line-through sm:text-sm">
               {formatPrice(product.pricing.originalPrice)}
             </span>
           )}

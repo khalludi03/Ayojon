@@ -316,9 +316,12 @@ export function createDealProduct(
   const dealStartedAt = new Date(now.getTime() - faker.number.int({ min: 0, max: 2 }) * 60 * 60 * 1000);
   const dealEndsAt = new Date(dealStartedAt.getTime() + dealDurations[dealType]);
 
+  // Create pricing with proper discount
+  const pricing = createPricing({ discountPercentage });
+
   const baseProduct = createProduct({
-    pricing: { discountPercentage } as any,
     ...overrides,
+    pricing,
   });
 
   return {
