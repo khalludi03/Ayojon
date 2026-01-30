@@ -154,7 +154,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-8 px-2 text-[10px] sm:h-9 sm:px-3 sm:text-xs md:text-sm"
+            className="flex-1 min-w-0 h-7 px-1.5 text-[10px] sm:h-8 sm:px-2 sm:text-xs md:h-9 md:px-3 md:text-sm"
             onClick={handleBuyNow}
           >
             Buy Now
@@ -162,11 +162,11 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             variant={inCart ? 'secondary' : 'primary'}
             size="sm"
-            className="flex-1 h-8 gap-0.5 px-2 text-[10px] sm:h-9 sm:gap-1 sm:px-3 sm:text-xs md:text-sm"
+            className="flex-1 min-w-0 h-7 gap-0.5 px-1.5 text-[10px] sm:h-8 sm:gap-1 sm:px-2 sm:text-xs md:h-9 md:px-3 md:text-sm"
             onClick={handleToggleCart}
             isLoading={isAddingToCart}
           >
-            <ShoppingCart className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5" />
+            <ShoppingCart className="h-2.5 w-2.5 flex-shrink-0 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5" />
             {inCart ? 'Added' : 'Add'}
           </Button>
         </div>
