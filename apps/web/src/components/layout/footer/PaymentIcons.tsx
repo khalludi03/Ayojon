@@ -226,14 +226,12 @@ function CodIcon({ className }: PaymentIconProps) {
   );
 }
 
-// Payment methods configuration
+// Payment methods configuration - bKash, Nagad, Visa, Mastercard, Cash on Delivery
 const paymentMethods = [
-  { name: 'Visa', Icon: VisaIcon, width: 'w-14' },
-  { name: 'Mastercard', Icon: MastercardIcon, width: 'w-11' },
   { name: 'bKash', Icon: BkashIcon, width: 'w-16' },
   { name: 'Nagad', Icon: NagadIcon, width: 'w-16' },
-  { name: 'Rocket', Icon: RocketIcon, width: 'w-14' },
-  { name: 'American Express', Icon: AmexIcon, width: 'w-14' },
+  { name: 'Visa', Icon: VisaIcon, width: 'w-14' },
+  { name: 'Mastercard', Icon: MastercardIcon, width: 'w-11' },
   { name: 'Cash on Delivery', Icon: CodIcon, width: 'w-16' },
 ];
 
