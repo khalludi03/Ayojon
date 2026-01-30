@@ -51,7 +51,8 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
 
   return (
     <Link
-      to={`/category/${category.slug}`}
+      to="/category/$categorySlug"
+      params={{ categorySlug: category.slug }}
       className={cn(
         'group flex flex-col items-center gap-2 rounded-lg p-3 transition-colors hover:bg-[hsl(var(--muted))]',
         className

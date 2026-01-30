@@ -68,6 +68,7 @@ export interface Product {
   stock: number;
   badges: Array<ProductBadge>;
   categoryId: string;
+  subcategoryId?: string;
   keyFeatures: Array<string>;
   variants: Array<ProductVariant>;
   returnPolicy: string;

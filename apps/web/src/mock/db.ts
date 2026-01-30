@@ -64,6 +64,12 @@ class MockDatabase {
       result = result.filter((p) => p.categoryId === filters.category);
     }
 
+    if (filters.subcategory) {
+      const beforeCount = result.length;
+      result = result.filter((p) => p.subcategoryId === filters.subcategory);
+      console.log(`[MockDB] Subcategory filter: ${filters.subcategory}, Before: ${beforeCount}, After: ${result.length}`);
+    }
+
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       result = result.filter(
@@ -165,6 +171,10 @@ class MockDatabase {
 
   getCategoryById(id: string): Category | undefined {
     return this.categories.find((c) => c.id === id);
+  }
+
+  getCategoryBySlug(slug: string): Category | undefined {
+    return this.categories.find((c) => c.slug === slug);
   }
 
   getVendors(): Array<Vendor> {
