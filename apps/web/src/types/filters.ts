@@ -6,8 +6,7 @@ export type SortOption =
   | 'price_desc'
   | 'created_desc'
   | 'sales_desc'
-  | 'rating_desc'
-  | 'discount_desc';
+  | 'rating_desc';
 
 export interface PriceRange {
   min: number;
@@ -39,10 +38,9 @@ export const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
   { value: 'relevance', label: 'Relevance' },
   { value: 'price_asc', label: 'Price: Low to High' },
   { value: 'price_desc', label: 'Price: High to Low' },
+  { value: 'rating_desc', label: 'Rating: High to Low' },
   { value: 'created_desc', label: 'Newest First' },
-  { value: 'sales_desc', label: 'Best Selling' },
-  { value: 'rating_desc', label: 'Top Rated' },
-  { value: 'discount_desc', label: 'Discount: High to Low' },
+  { value: 'sales_desc', label: 'Most Popular' },
 ];
 
 export const PRICE_PRESETS: Array<{ label: string; min: number; max: number }> = [
