@@ -11,6 +11,7 @@ import { Header } from "@/components/layout/header/Header";
 import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
+import { ProductModal } from "@/components/product/ProductModal";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {
@@ -61,6 +62,7 @@ function RootDocument() {
             <Outlet />
           </main>
           <Footer />
+          <ProductModal />
         </ToastProvider>
         <Toaster richColors />
         <TanStackRouterDevtools position="bottom-left" />
