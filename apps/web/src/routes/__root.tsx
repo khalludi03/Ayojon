@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header/Header";
 import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
+import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {
@@ -56,6 +57,7 @@ function RootDocument() {
         <ToastProvider>
           <Header />
           <main className="flex-1">
+            <AppBreadcrumb />
             <Outlet />
           </main>
           <Footer />
