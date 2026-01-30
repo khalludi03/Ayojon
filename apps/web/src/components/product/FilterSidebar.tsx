@@ -1,10 +1,12 @@
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import { useCategories } from '@/hooks/use-categories';
 import { useFilters, usePriceRange } from '@/stores/filter-store';
 import { RangeSlider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PRICE_PRESETS } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PRICE_PRESETS, EVENT_TYPES, DIVISIONS, PRODUCT_CONDITIONS, DELIVERY_OPTIONS } from '@/types';
+import type { AvailabilityType, ProductCondition, DeliveryOption } from '@/types';
 import { cn, formatPrice } from '@/lib/utils';
 
 interface FilterSidebarProps {
@@ -15,6 +17,14 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
   const { data: categories } = useCategories();
   const { filters, setFilter, clearFilter, clearAllFilters, activeFilterCount } = useFilters();
   const { minPrice, maxPrice, setPriceRange } = usePriceRange();
+
+  const toggleEventType = (eventType: string) => {
+    const current = filters.eventTypes || [];
+    const updated = current.includes(eventType)
+      ? current.filter((t) => t !== eventType)
+      : [...current, eventType];
+    setFilter('eventTypes', updated.length > 0 ? updated : undefined);
+  };
 
   return (
     <aside className={cn('w-64 shrink-0 space-y-6', className)}>
@@ -102,6 +112,105 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
         </div>
       </div>
 
+      {/* Availability Filter */}
+      <div>
+        <h3 className="mb-3 font-medium">Availability</h3>
+        <div className="space-y-2">
+          {[
+            { value: 'rental' as AvailabilityType, label: 'Rental' },
+            { value: 'purchase' as AvailabilityType, label: 'Purchase' },
+            { value: 'both' as AvailabilityType, label: 'Both' },
+          ].map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <input
+                type="radio"
+                name="availability"
+                checked={filters.availability === option.value}
+                onChange={() => setFilter('availability', option.value)}
+                className="h-4 w-4 border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+              />
+              <span className="text-sm">{option.label}</span>
+            </label>
+          ))}
+          {filters.availability && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 text-xs"
+              onClick={() => clearFilter('availability')}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Event Type Filter */}
+      <div>
+        <h3 className="mb-3 font-medium">Event Type</h3>
+        <div className="space-y-2">
+          {EVENT_TYPES.map((event) => (
+            <label
+              key={event.value}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <input
+                type="checkbox"
+                checked={filters.eventTypes?.includes(event.value) || false}
+                onChange={() => toggleEventType(event.value)}
+                className="h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+              />
+              <span className="text-sm">{event.label}</span>
+            </label>
+          ))}
+          {filters.eventTypes && filters.eventTypes.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 text-xs"
+              onClick={() => clearFilter('eventTypes')}
+            >
+              Clear event types
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Product Condition Filter */}
+      <div>
+        <h3 className="mb-3 font-medium">Product Condition</h3>
+        <div className="space-y-2">
+          {PRODUCT_CONDITIONS.map((condition) => (
+            <label
+              key={condition.value}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <input
+                type="radio"
+                name="condition"
+                checked={filters.productCondition === condition.value}
+                onChange={() => setFilter('productCondition', condition.value as ProductCondition)}
+                className="h-4 w-4 border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+              />
+              <span className="text-sm">{condition.label}</span>
+            </label>
+          ))}
+          {filters.productCondition && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 text-xs"
+              onClick={() => clearFilter('productCondition')}
+            >
+              Any condition
+            </Button>
+          )}
+        </div>
+      </div>
+
       {/* Rating Filter */}
       <div>
         <h3 className="mb-3 font-medium">Rating</h3>
@@ -129,6 +238,58 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
               onClick={() => clearFilter('minRating')}
             >
               Any rating
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Vendor Location Filter */}
+      <div>
+        <h3 className="mb-3 font-medium">Vendor Location</h3>
+        <Select
+          value={filters.vendorLocation || 'all'}
+          onValueChange={(value) => setFilter('vendorLocation', value === 'all' ? undefined : value)}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All Divisions" />
+          </SelectTrigger>
+          <SelectContent>
+            {DIVISIONS.map((division) => (
+              <SelectItem key={division.value} value={division.value}>
+                {division.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Delivery Options Filter */}
+      <div>
+        <h3 className="mb-3 font-medium">Delivery Options</h3>
+        <div className="space-y-2">
+          {DELIVERY_OPTIONS.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer items-center gap-2"
+            >
+              <input
+                type="radio"
+                name="delivery"
+                checked={filters.deliveryOption === option.value}
+                onChange={() => setFilter('deliveryOption', option.value as DeliveryOption)}
+                className="h-4 w-4 border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
+              />
+              <span className="text-sm">{option.label}</span>
+            </label>
+          ))}
+          {filters.deliveryOption && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 text-xs"
+              onClick={() => clearFilter('deliveryOption')}
+            >
+              Any delivery
             </Button>
           )}
         </div>
