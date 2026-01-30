@@ -53,6 +53,24 @@ function RootDocument() {
     <html lang="en">
       <head>
         <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('ayojon-theme') || localStorage.getItem('zynex-theme') || 'light';
+                  var root = document.documentElement;
+
+                  // Apply theme immediately without transitions
+                  root.classList.remove('light', 'dark');
+                  root.classList.add(theme);
+                } catch (e) {
+                  console.error('Failed to apply theme:', e);
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col">
         <ToastProvider>
