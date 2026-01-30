@@ -1,4 +1,4 @@
-import { Eye, ShoppingCart } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import type { DealProduct } from '@/types';
 import { useCountdown } from '@/hooks/use-countdown';
 import { useCart } from '@/stores/cart-store';
@@ -8,114 +8,130 @@ import { cn, formatPrice } from '@/lib/utils';
 
 interface DealCardProps {
   deal: DealProduct;
-  onQuickView?: (deal: DealProduct) => void;
 }
 
-export function DealCard({ deal, onQuickView }: DealCardProps) {
+export function DealCard({ deal }: DealCardProps) {
   const countdown = useCountdown(deal.dealEndsAt);
-  const { addItem, isInCart } = useCart();
+  const { addItem, toggleItem, isInCart } = useCart();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleToggleCart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleItem(deal);
+  };
+
+  const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItem(deal);
-  };
-
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onQuickView?.(deal);
+    // Navigate to checkout
+    window.location.href = '/checkout';
   };
 
   const inCart = isInCart(deal.id);
 
+  // Product detail page URL
+  const productUrl = `/product/${deal.slug}`;
+
   return (
-    <div className="group flex h-[340px] w-44 shrink-0 flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-shadow hover:shadow-lg">
+    <a
+      href={productUrl}
+      className="group flex h-full w-full flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 transition-all hover:shadow-[var(--shadow-card-hover)] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-2 sm:p-2.5"
+      aria-label={`View ${deal.title} - ${formatPrice(deal.pricing.currentPrice)}`}
+    >
       {/* Image Container - Fixed aspect ratio */}
-      <div className="relative aspect-square w-full shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]">
+      <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]">
         <img
           src={deal.images[0]?.url}
           alt={deal.title}
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
         />
 
         {/* Discount Badge */}
         {deal.pricing.discountPercentage > 0 && (
-          <div className="absolute left-2 top-2">
+          <div className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2">
             <DiscountBadge percentage={deal.pricing.discountPercentage} />
           </div>
         )}
-
-        {/* Quick View Button (appears on hover) */}
-        <button
-          onClick={handleQuickView}
-          className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <span className="flex items-center gap-1 rounded-md bg-white px-3 py-1.5 text-xs font-medium">
-            <Eye className="h-3 w-3" />
-            Quick View
-          </span>
-        </button>
       </div>
 
       {/* Card Content - Flex column for alignment */}
       <div className="flex flex-1 flex-col">
         {/* Deal Type Badge - Fixed height */}
-        <div className="mt-2 h-5">
+        <div className="mt-1.5 h-4 sm:mt-2 sm:h-5">
           <Badge
             variant={deal.dealType === 'flash' ? 'deal' : 'secondary'}
-            className="text-[10px]"
+            className="text-[9px] sm:text-[10px]"
           >
             {deal.dealType === 'flash' ? 'Flash Deal' : 'Hot Deal'}
           </Badge>
         </div>
 
         {/* Title - Fixed height with line clamp */}
-        <h3 className="mt-2 h-10 text-sm font-medium leading-5 text-[hsl(var(--foreground))] line-clamp-2">
+        <h3 className="mt-1.5 h-9 text-[11px] font-medium leading-[18px] text-[hsl(var(--foreground))] line-clamp-2 group-hover:text-[hsl(var(--primary))] sm:mt-2 sm:h-10 sm:text-xs sm:leading-5">
           {deal.title}
         </h3>
 
-        {/* Price - Fixed height */}
-        <div className="mt-2 h-6">
-          <span className="text-lg font-bold leading-6 text-[hsl(var(--brand-orange))]">
-            {formatPrice(deal.pricing.currentPrice)}
-          </span>
-          {deal.pricing.originalPrice > deal.pricing.currentPrice && (
-            <span className="ml-2 text-xs text-[hsl(var(--muted-foreground))] line-through">
-              {formatPrice(deal.pricing.originalPrice)}
+        {/* Price Section - More prominent */}
+        <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
+          {/* Deal Price with Discount % */}
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-bold text-[hsl(var(--brand-orange))] sm:text-lg md:text-xl">
+              {formatPrice(deal.pricing.currentPrice)}
             </span>
+            {deal.pricing.discountPercentage > 0 && (
+              <span className="text-[10px] font-semibold text-[hsl(var(--success))] sm:text-xs">
+                -{deal.pricing.discountPercentage}%
+              </span>
+            )}
+          </div>
+          {/* Original Price (struck) */}
+          {deal.pricing.originalPrice > deal.pricing.currentPrice && (
+            <div className="text-xs text-[hsl(var(--muted-foreground))] line-through sm:text-sm">
+              {formatPrice(deal.pricing.originalPrice)}
+            </div>
           )}
         </div>
 
         {/* Timer - Fixed height (always reserve space) */}
-        <div className="mt-2 h-4 text-xs text-[hsl(var(--muted-foreground))]">
-          {deal.dealType === 'flash' && !countdown.isExpired ? (
+        <div className="mt-1.5 h-4 text-[9px] text-[hsl(var(--muted-foreground))] sm:mt-2 sm:text-[10px] md:text-xs">
+          {!countdown.isExpired ? (
             <>
-              <span className="font-mono text-[hsl(var(--accent))]">
+              Ends in{' '}
+              <span className="font-mono font-semibold text-[hsl(var(--accent))]">
                 {countdown.hours}:{countdown.minutes}:{countdown.seconds}
-              </span>{' '}
-              left
+              </span>
             </>
           ) : (
-            <span className="text-[hsl(var(--success))]">Limited offer</span>
+            <span className="text-[hsl(var(--destructive))]">Deal expired</span>
           )}
         </div>
 
-        {/* Spacer to push button to bottom */}
+        {/* Spacer to push buttons to bottom */}
         <div className="flex-1" />
 
-        {/* Add to Cart - Always at bottom */}
-        <Button
-          variant={inCart ? 'secondary' : 'primary'}
-          size="sm"
-          className="mt-2 w-full gap-1.5"
-          onClick={handleAddToCart}
-        >
-          <ShoppingCart className="h-3.5 w-3.5" />
-          {inCart ? 'Added' : 'Add to Cart'}
-        </Button>
+        {/* Action Buttons - Always at bottom */}
+        <div className="mt-2 flex gap-1 sm:gap-1.5 md:gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 min-w-0 h-7 px-1.5 text-[10px] sm:h-8 sm:px-2 sm:text-xs md:h-9 md:px-3 md:text-sm"
+            onClick={handleBuyNow}
+          >
+            Buy Now
+          </Button>
+          <Button
+            variant={inCart ? 'secondary' : 'primary'}
+            size="sm"
+            className="flex-1 min-w-0 h-7 gap-0.5 px-1.5 text-[10px] sm:h-8 sm:gap-1 sm:px-2 sm:text-xs md:h-9 md:px-3 md:text-sm"
+            onClick={handleToggleCart}
+          >
+            <ShoppingCart className="h-2.5 w-2.5 flex-shrink-0 sm:h-3 sm:w-3 md:h-3.5 md:w-3.5" />
+            {inCart ? 'Added' : 'Add'}
+          </Button>
+        </div>
       </div>
-    </div>
+    </a>
   );
 }

@@ -1,14 +1,22 @@
 import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
 import { useRef } from 'react';
-import { ProductCard } from '../product/ProductCard';
-import { useTodayDeals } from '@/hooks/use-deals';
-import { useDailyCountdown } from '@/hooks/use-countdown';
+import { DealCard } from './DealCard';
+import { useFlashDeals } from '@/hooks/use-deals';
+import { useCountdown } from '@/hooks/use-countdown';
 import { ProductCardSkeleton } from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
-export function DealsSection() {
-  const { data: deals, isLoading } = useTodayDeals(12);
-  const countdown = useDailyCountdown();
+interface FlashSaleSectionProps {
+  className?: string;
+}
+
+export function FlashSaleSection({ className }: FlashSaleSectionProps) {
+  const { data: deals, isLoading } = useFlashDeals(12);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Use the first deal's end time for the global countdown, or a default
+  const globalEndTime = deals?.[0]?.dealEndsAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const countdown = useCountdown(globalEndTime);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
@@ -21,7 +29,7 @@ export function DealsSection() {
   };
 
   return (
-    <section className="py-5 sm:py-6 md:py-8">
+    <section className={cn('py-5 sm:py-6 md:py-8', className)}>
       <div className="mx-auto max-w-7xl px-2 sm:px-4">
         {/* Section Header */}
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -31,10 +39,10 @@ export function DealsSection() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
-                Today's Deals
+                Flash Deals
               </h2>
               <p className="text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                Limited time offers - Don't miss out!
+                Limited time offers - Grab them fast!
               </p>
             </div>
           </div>
@@ -58,10 +66,10 @@ export function DealsSection() {
               </div>
             </div>
             <a
-              href="/deals"
+              href="/deals/flash"
               className="hidden text-sm font-medium text-[hsl(var(--primary))] hover:underline sm:inline"
             >
-              View All
+              View All Deals
             </a>
             <button
               onClick={() => scroll('left')}
@@ -83,7 +91,7 @@ export function DealsSection() {
         {/* Horizontal Scroll Container */}
         <div
           ref={scrollRef}
-          className="scrollbar-hide -mx-2 flex gap-2 overflow-x-auto px-2 pb-2 sm:-mx-4 sm:gap-3 sm:px-4 md:gap-4"
+          className="scrollbar-hide -mx-2 flex flex-row items-stretch gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2 sm:-mx-4 sm:gap-3 sm:px-4 md:gap-4"
         >
           {isLoading
             ? Array.from({ length: 6 }).map((_, i) => (
@@ -94,12 +102,12 @@ export function DealsSection() {
             : deals && deals.length > 0 ? (
                 deals.map((deal) => (
                   <div key={deal.id} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                    <ProductCard product={deal} />
+                    <DealCard deal={deal} />
                   </div>
                 ))
               ) : (
                 <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
-                  No deals available at the moment
+                  No flash deals available at the moment
                 </div>
               )}
         </div>
@@ -108,4 +116,4 @@ export function DealsSection() {
   );
 }
 
-export default DealsSection;
+export default FlashSaleSection;
