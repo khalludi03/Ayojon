@@ -34,57 +34,65 @@ export function AppBreadcrumb() {
   const shouldCondense = paths.length > 2;
 
   return (
-    <Breadcrumb className="mb-6 px-4 md:px-0">
-      <BreadcrumbList>
-        {/* Home is always the first item */}
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link to="/">Home</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-
-        {/* Mobile Ellipsis: Show only on small screens if path is deep */}
-        {shouldCondense && (
-          <>
-            <BreadcrumbItem className="md:hidden">
-              <BreadcrumbEllipsis />
+    <div className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 py-3 sm:py-4">
+      <div className="mx-auto max-w-7xl px-2 sm:px-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            {/* Home is always the first item */}
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/" className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                  Home
+                </Link>
+              </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator className="md:hidden" />
-          </>
-        )}
+            <BreadcrumbSeparator className="text-[hsl(var(--muted-foreground))]" />
 
-        {paths.map((path, index) => {
-          const isLast = index === paths.length - 1;
-          const href = `/${paths.slice(0, index + 1).join("/")}`;
-          
-          // Hide intermediate items on mobile if we are condensing
-          // Keep the last 2 items visible always
-          const isHiddenOnMobile = shouldCondense && index < paths.length - 2;
+            {/* Mobile Ellipsis: Show only on small screens if path is deep */}
+            {shouldCondense && (
+              <>
+                <BreadcrumbItem className="md:hidden">
+                  <BreadcrumbEllipsis />
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="md:hidden text-[hsl(var(--muted-foreground))]" />
+              </>
+            )}
 
-          return (
-            <React.Fragment key={path}>
-              <BreadcrumbItem className={isHiddenOnMobile ? "hidden md:inline-flex" : ""}>
-                {isLast ? (
-                  <BreadcrumbPage className="font-semibold">
-                    {formatSegment(path)}
-                  </BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link to={href}>{formatSegment(path)}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-              
-              {!isLast && (
-                <BreadcrumbSeparator 
-                  className={isHiddenOnMobile ? "hidden md:list-item" : ""} 
-                />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </BreadcrumbList>
-    </Breadcrumb>
+            {paths.map((path, index) => {
+              const isLast = index === paths.length - 1;
+              const href = `/${paths.slice(0, index + 1).join("/")}`;
+
+              // Hide intermediate items on mobile if we are condensing
+              // Keep the last 2 items visible always
+              const isHiddenOnMobile = shouldCondense && index < paths.length - 2;
+
+              return (
+                <React.Fragment key={path}>
+                  <BreadcrumbItem className={isHiddenOnMobile ? "hidden md:inline-flex" : ""}>
+                    {isLast ? (
+                      <BreadcrumbPage className="text-xs sm:text-sm font-semibold text-[hsl(var(--foreground))]">
+                        {formatSegment(path)}
+                      </BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink asChild>
+                        <Link to={href} className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                          {formatSegment(path)}
+                        </Link>
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+
+                  {!isLast && (
+                    <BreadcrumbSeparator
+                      className={isHiddenOnMobile ? "hidden md:list-item text-[hsl(var(--muted-foreground))]" : "text-[hsl(var(--muted-foreground))]"}
+                    />
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+    </div>
   );
 }

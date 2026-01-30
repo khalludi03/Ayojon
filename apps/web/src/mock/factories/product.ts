@@ -240,6 +240,13 @@ export function createKeyFeatures(): Array<string> {
   ].slice(0, faker.number.int({ min: 3, max: 5 }));
 }
 
+function generateRelevantDescription(title: string): string {
+  const adjectives = [faker.commerce.productAdjective(), faker.commerce.productAdjective()];
+  const material = faker.commerce.productMaterial();
+
+  return `${adjectives[0]} ${title.toLowerCase()} made with ${material.toLowerCase()}. ${faker.company.catchPhrase()}. ${adjectives[1]} quality for your event. ${faker.lorem.sentence({ min: 8, max: 12 })}`;
+}
+
 export function createProduct(
   overrides: Partial<Product> = {},
   vendorData?: { id: string; name: string; isVerified: boolean }
@@ -268,8 +275,8 @@ export function createProduct(
     id: faker.string.uuid(),
     title,
     slug: slugify(title) + '-' + faker.string.alphanumeric(6),
-    description: faker.commerce.productDescription(),
-    descriptionShort: faker.lorem.sentence({ min: 10, max: 20 }),
+    description: generateRelevantDescription(title),
+    descriptionShort: `${faker.commerce.productAdjective()} ${title.toLowerCase()} for your event. ${faker.company.catchPhrase()}.`,
     images: createProductImages(faker.number.int({ min: 3, max: 6 })),
     vendor,
     pricing: createPricing(overrides.pricing),
