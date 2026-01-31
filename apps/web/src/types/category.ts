@@ -34,4 +34,5 @@ export interface Category {
   subcategories: Array<Subcategory>;
   productCount?: number;
   imageUrl?: string;
+  description?: string;
 }

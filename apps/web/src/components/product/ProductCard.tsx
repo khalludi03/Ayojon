@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Heart, ShoppingCart, Star, Truck } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Truck, Eye } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import type { Product } from '@/types';
 import { useCart } from '@/stores/cart-store';
 import { useWishlist } from '@/stores/wishlist-store';
+import { useQuickView } from '@/stores/quick-view-store';
 import { DiscountBadge, ProductBadge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, formatPrice } from '@/lib/utils';
@@ -13,9 +15,11 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const navigate = useNavigate();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addItem, toggleItem, isInCart } = useCart();
   const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
+  const { openQuickView } = useQuickView();
 
   const inCart = isInCart(product.id);
   const inWishlist = isInWishlist(product.id);
@@ -43,8 +47,13 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     addItem(product);
-    // Navigate to checkout - for now just add to cart
-    window.location.href = '/checkout';
+    navigate({ to: '/checkout' });
+  };
+
+  const handleQuickView = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openQuickView(product);
   };
 
   // Calculate star display
@@ -58,13 +67,29 @@ export function ProductCard({ product }: ProductCardProps) {
       aria-label={`View ${product.title} - ${formatPrice(product.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
-      <div className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]">
+      <div 
+        className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]"
+        onClick={handleQuickView}
+      >
         <img
           src={product.images[0]?.url}
           alt={product.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
           loading="lazy"
         />
+
+        {/* Quick View Overlay Button (Desktop) */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20">
+            <Button 
+                variant="secondary" 
+                size="sm" 
+                className="gap-2 shadow-lg hidden sm:flex pointer-events-none sm:pointer-events-auto transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                onClick={handleQuickView}
+            >
+                <Eye className="h-4 w-4" />
+                Quick View
+            </Button>
+        </div>
 
         {/* Discount Badge */}
         {product.pricing.discountPercentage > 0 && (
@@ -77,7 +102,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <button
           onClick={handleToggleWishlist}
           className={cn(
-            'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2',
+            'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2 z-10',
             inWishlist
               ? 'text-red-500'
               : 'text-[hsl(var(--muted-foreground))] hover:text-red-500'
@@ -124,13 +149,22 @@ export function ProductCard({ product }: ProductCardProps) {
           </span>
         </div>
 
-        {/* Price - Fixed height */}
-        <div className="mt-1.5 flex h-6 items-baseline sm:mt-2 sm:h-7">
-          <span className="text-sm font-bold text-[hsl(var(--brand-orange))] sm:text-base md:text-lg">
-            {formatPrice(product.pricing.currentPrice)}
-          </span>
+        {/* Price - Enhanced visibility */}
+        <div className="mt-1.5 flex flex-col gap-0.5 sm:mt-2">
+          {/* Deal Price with Discount % */}
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-base font-bold text-[hsl(var(--brand-orange))] sm:text-lg md:text-xl">
+              {formatPrice(product.pricing.currentPrice)}
+            </span>
+            {product.pricing.discountPercentage > 0 && (
+              <span className="text-[10px] font-semibold text-[hsl(var(--success))] sm:text-xs">
+                -{product.pricing.discountPercentage}%
+              </span>
+            )}
+          </div>
+          {/* Original Price (struck) */}
           {product.pricing.originalPrice > product.pricing.currentPrice && (
-            <span className="ml-1 text-[9px] text-[hsl(var(--muted-foreground))] line-through sm:ml-1.5 sm:text-[10px] md:text-xs">
+            <span className="text-xs text-[hsl(var(--muted-foreground))] line-through sm:text-sm">
               {formatPrice(product.pricing.originalPrice)}
             </span>
           )}

@@ -13,6 +13,10 @@ export interface PriceRange {
   max: number;
 }
 
+export type AvailabilityType = 'rental' | 'purchase' | 'both';
+export type ProductCondition = 'new' | 'like-new' | 'good';
+export type DeliveryOption = 'same-day' | 'next-day' | 'standard';
+
 export interface ProductFilters {
   category?: string;
   subcategory?: string;
@@ -27,7 +31,11 @@ export interface ProductFilters {
   sort?: SortOption;
   page?: number;
   limit?: number;
-  eventType?: string;
+  eventTypes?: Array<string>;
+  availability?: AvailabilityType;
+  productCondition?: ProductCondition;
+  vendorLocation?: string;
+  deliveryOption?: DeliveryOption;
 }
 
 export interface FilterState extends ProductFilters {
@@ -49,4 +57,38 @@ export const PRICE_PRESETS: Array<{ label: string; min: number; max: number }> =
   { label: '2,000 - 5,000', min: 2000, max: 5000 },
   { label: '5,000 - 10,000', min: 5000, max: 10000 },
   { label: 'Over 10,000', min: 10000, max: 100000 },
+];
+
+export const EVENT_TYPES = [
+  { value: 'wedding', label: 'Wedding' },
+  { value: 'birthday', label: 'Birthday' },
+  { value: 'corporate', label: 'Corporate' },
+  { value: 'anniversary', label: 'Anniversary' },
+  { value: 'conference', label: 'Conference' },
+  { value: 'party', label: 'Party' },
+  { value: 'other', label: 'Other' },
+];
+
+export const DIVISIONS = [
+  { value: 'all', label: 'All Divisions' },
+  { value: 'dhaka', label: 'Dhaka' },
+  { value: 'chittagong', label: 'Chittagong' },
+  { value: 'rajshahi', label: 'Rajshahi' },
+  { value: 'khulna', label: 'Khulna' },
+  { value: 'barishal', label: 'Barishal' },
+  { value: 'sylhet', label: 'Sylhet' },
+  { value: 'rangpur', label: 'Rangpur' },
+  { value: 'mymensingh', label: 'Mymensingh' },
+];
+
+export const PRODUCT_CONDITIONS = [
+  { value: 'new', label: 'New' },
+  { value: 'like-new', label: 'Like New' },
+  { value: 'good', label: 'Good' },
+];
+
+export const DELIVERY_OPTIONS = [
+  { value: 'same-day', label: 'Same Day' },
+  { value: 'next-day', label: 'Next Day' },
+  { value: 'standard', label: 'Standard' },
 ];

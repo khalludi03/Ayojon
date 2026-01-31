@@ -17,6 +17,11 @@ export function formatPrice(
   currency: string = 'BDT',
   locale: string = 'en-BD'
 ): string {
+  // Handle invalid amounts
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    amount = 0;
+  }
+
   const symbols: Record<string, string> = {
     BDT: '৳',
     INR: '₹',

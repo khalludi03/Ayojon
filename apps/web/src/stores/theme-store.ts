@@ -38,12 +38,20 @@ function getStoredTheme(): Theme | null {
 }
 
 // Apply theme to document
-function applyTheme(theme: Theme): void {
+function applyTheme(theme: Theme, enableTransitions: boolean = true): void {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
   root.classList.remove('light', 'dark');
   root.classList.add(theme);
+
+  // Enable transitions after theme is applied (for user-triggered changes)
+  if (enableTransitions && !root.classList.contains('theme-transition-enabled')) {
+    // Use requestAnimationFrame to ensure the class is added after the theme class
+    requestAnimationFrame(() => {
+      root.classList.add('theme-transition-enabled');
+    });
+  }
 }
 
 interface ThemeState {
@@ -90,8 +98,15 @@ function createThemeStore(): InternalThemeStore {
       const theme = stored || 'light';
       state = { theme };
 
-      // Apply initial theme
-      applyTheme(theme);
+      // Apply initial theme without transitions to prevent flash
+      applyTheme(theme, false);
+
+      // Enable transitions after a short delay for subsequent theme changes
+      setTimeout(() => {
+        if (typeof document !== 'undefined') {
+          document.documentElement.classList.add('theme-transition-enabled');
+        }
+      }, 100);
     },
     subscribe(callback: () => void) {
       listeners.add(callback);
