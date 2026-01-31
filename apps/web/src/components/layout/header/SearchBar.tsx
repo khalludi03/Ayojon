@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, X, Clock, TrendingUp } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import { useSearchState } from '@/hooks/use-search';
 import { useCategories } from '@/hooks/use-categories';
 import { SearchResultsSkeleton } from '@/components/ui/skeleton';
@@ -14,6 +15,7 @@ const POPULAR_SEARCHES = [
 ];
 
 export function SearchBar() {
+  const navigate = useNavigate();
   const { query, setQuery, results, isLoading, isOpen, setIsOpen, clearSearch, hasResults } =
     useSearchState();
   const { data: categories } = useCategories();
@@ -89,15 +91,19 @@ export function SearchBar() {
         // Navigate to selected item
         if (selectedIndex < matchingCategories.length) {
           const category = matchingCategories[selectedIndex];
-          window.location.href = `/category/${category.slug}`;
+          if (category && category.slug) {
+            navigate({ to: '/category/$categorySlug', params: { categorySlug: category.slug } });
+          }
         } else {
           const product = results[selectedIndex - matchingCategories.length];
-          window.location.href = `/product/${product.slug}`;
+          if (product && product.slug) {
+            navigate({ to: '/product/$productSlug', params: { productSlug: product.slug } });
+          }
         }
       } else if (query.trim()) {
         // Perform full search
         saveRecentSearch(query);
-        window.location.href = `/products?search=${encodeURIComponent(query)}`;
+        navigate({ to: '/products', search: { search: query } });
       }
       setIsOpen(false);
     }
@@ -179,7 +185,7 @@ export function SearchBar() {
                       onClick={() => {
                         setQuery(search);
                         saveRecentSearch(search);
-                        window.location.href = `/products?search=${encodeURIComponent(search)}`;
+                        navigate({ to: '/products', search: { search } });
                       }}
                       className="flex-1 text-left text-sm text-[hsl(var(--foreground))]"
                     >
@@ -222,7 +228,7 @@ export function SearchBar() {
                             onClick={() => {
                               setQuery(search);
                               saveRecentSearch(search);
-                              window.location.href = `/products?search=${encodeURIComponent(search)}`;
+                              navigate({ to: '/products', search: { search } });
                             }}
                             className="w-full rounded px-2 py-1.5 text-left text-sm text-[hsl(var(--foreground))] transition-colors hover:bg-[hsl(var(--muted))]"
                           >
