@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Heart, ShoppingCart, Star, Truck, Eye } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import type { Product } from '@/types';
 import { useCart } from '@/stores/cart-store';
 import { useWishlist } from '@/stores/wishlist-store';
@@ -14,6 +15,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product }: ProductCardProps) {
+  const navigate = useNavigate();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const { addItem, toggleItem, isInCart } = useCart();
   const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
@@ -45,8 +47,7 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     e.stopPropagation();
     addItem(product);
-    // Navigate to checkout - for now just add to cart
-    window.location.href = '/checkout';
+    navigate({ to: '/checkout' });
   };
 
   const handleQuickView = (e: React.MouseEvent) => {

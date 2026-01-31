@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Search, X, Clock, TrendingUp, ArrowLeft } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import { useSearchState } from '@/hooks/use-search';
 import { useCategories } from '@/hooks/use-categories';
 import { SearchResultsSkeleton } from '@/components/ui/skeleton';
@@ -20,6 +21,7 @@ interface MobileSearchModalProps {
 }
 
 export function MobileSearchModal({ isOpen, onClose }: MobileSearchModalProps) {
+  const navigate = useNavigate();
   const { query, setQuery, results, isLoading, hasResults } = useSearchState();
   const { data: categories } = useCategories();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -91,14 +93,18 @@ export function MobileSearchModal({ isOpen, onClose }: MobileSearchModalProps) {
       if (selectedIndex >= 0) {
         if (selectedIndex < matchingCategories.length) {
           const category = matchingCategories[selectedIndex];
-          window.location.href = `/category/${category.slug}`;
+          if (category && category.slug) {
+            navigate({ to: '/category/$categorySlug', params: { categorySlug: category.slug } });
+          }
         } else {
           const product = results[selectedIndex - matchingCategories.length];
-          window.location.href = `/product/${product.slug}`;
+          if (product && product.slug) {
+            navigate({ to: '/product/$productSlug', params: { productSlug: product.slug } });
+          }
         }
       } else if (query.trim()) {
         saveRecentSearch(query);
-        window.location.href = `/products?search=${encodeURIComponent(query)}`;
+        navigate({ to: '/products', search: { search: query } });
       }
     }
   };
@@ -170,7 +176,7 @@ export function MobileSearchModal({ isOpen, onClose }: MobileSearchModalProps) {
                     onClick={() => {
                       setQuery(search);
                       saveRecentSearch(search);
-                      window.location.href = `/products?search=${encodeURIComponent(search)}`;
+                      navigate({ to: '/products', search: { search } });
                     }}
                     className="flex-1 text-left text-sm"
                   >
@@ -210,7 +216,7 @@ export function MobileSearchModal({ isOpen, onClose }: MobileSearchModalProps) {
                           onClick={() => {
                             setQuery(search);
                             saveRecentSearch(search);
-                            window.location.href = `/products?search=${encodeURIComponent(search)}`;
+                            navigate({ to: '/products', search: { search } });
                           }}
                           className="w-full rounded-lg bg-[hsl(var(--muted))] p-3 text-left text-sm"
                         >

@@ -1,4 +1,5 @@
 import { ShoppingCart, Eye } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import type { DealProduct } from '@/types';
 import { useCountdown } from '@/hooks/use-countdown';
 import { useCart } from '@/stores/cart-store';
@@ -12,6 +13,7 @@ interface DealCardProps {
 }
 
 export function DealCard({ deal }: DealCardProps) {
+  const navigate = useNavigate();
   const countdown = useCountdown(deal.dealEndsAt);
   const { addItem, toggleItem, isInCart } = useCart();
   const { openQuickView } = useQuickView();
@@ -26,8 +28,7 @@ export function DealCard({ deal }: DealCardProps) {
     e.preventDefault();
     e.stopPropagation();
     addItem(deal);
-    // Navigate to checkout
-    window.location.href = '/checkout';
+    navigate({ to: '/checkout' });
   };
 
   const handleQuickView = (e: React.MouseEvent) => {
