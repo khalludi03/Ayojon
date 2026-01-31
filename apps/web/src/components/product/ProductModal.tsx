@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck, ExternalLink } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
 import type { Product, ProductVariant } from '@/types';
 import { useCart } from '@/stores/cart-store';
 import { useWishlist } from '@/stores/wishlist-store';
@@ -21,8 +22,9 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose: propOnClose }: ProductModalProps) {
+  const navigate = useNavigate();
   const { product: storeProduct, isOpen: storeIsOpen, closeQuickView } = useQuickView();
-  
+
   const product = propProduct ?? storeProduct;
   const isOpen = propIsOpen ?? storeIsOpen;
   const onClose = propOnClose ?? closeQuickView;
@@ -66,8 +68,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
 
   const handleBuyNow = () => {
     handleAddToCart();
-    // Navigate to checkout
-    window.location.href = '/checkout';
+    navigate({ to: '/checkout' });
   };
 
   const incrementQuantity = () => setQuantity((q) => Math.min(q + 1, product.stock));
