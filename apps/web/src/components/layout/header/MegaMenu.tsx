@@ -1,14 +1,22 @@
 import { Baby,
   BookOpen,
+  Camera,
   Car,
   Download,
   Dumbbell,
+  Flower,
+  Gamepad2,
   Home,
+  LayoutPanelTop,
+  Mic,
+  PartyPopper,
   Shirt,
   ShoppingBasket,
   Smartphone,
   Sparkles,
+  UtensilsCrossed,
   X } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import type { CategoryIconName } from '@/types';
 import { useCategories } from '@/hooks/use-categories';
 
@@ -23,6 +31,13 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   Baby,
   Car,
   Download,
+  Mic,
+  UtensilsCrossed,
+  Camera,
+  PartyPopper,
+  LayoutPanelTop,
+  Flower,
+  Gamepad2,
 };
 
 interface MegaMenuProps {
@@ -73,8 +88,9 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                   const Icon = iconMap[category.icon];
                   return (
                     <div key={category.id} className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 hover:shadow-md transition-shadow">
-                      <a
-                        href={`/category/${category.slug}`}
+                      <Link
+                        to="/category/$categorySlug"
+                        params={{ categorySlug: category.slug }}
                         onClick={onClose}
                         className="flex items-center gap-3 font-semibold text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))] transition-colors"
                       >
@@ -82,27 +98,30 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                           <Icon className="h-5 w-5 text-[hsl(var(--primary))]" />
                         </div>
                         <span>{category.name}</span>
-                      </a>
+                      </Link>
 
                       <div className="mt-3 space-y-1">
                         {category.subcategories.slice(0, 5).map((sub) => (
-                          <a
+                          <Link
                             key={sub.id}
-                            href={`/category/${category.slug}/${sub.slug}`}
+                            to="/category/$categorySlug"
+                            params={{ categorySlug: category.slug }}
+                            search={{ subcategory: sub.id }}
                             onClick={onClose}
                             className="block text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:underline transition-colors"
                           >
                             {sub.name}
-                          </a>
+                          </Link>
                         ))}
                         {category.subcategories.length > 5 && (
-                          <a
-                            href={`/category/${category.slug}`}
+                          <Link
+                            to="/category/$categorySlug"
+                            params={{ categorySlug: category.slug }}
                             onClick={onClose}
                             className="block text-sm font-medium text-[hsl(var(--primary))] hover:underline"
                           >
                             +{category.subcategories.length - 5} more
-                          </a>
+                          </Link>
                         )}
                       </div>
                     </div>

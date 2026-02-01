@@ -8,6 +8,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Decorations & Balloons',
     slug: 'decorations-balloons',
     icon: 'Sparkles' as CategoryIconName,
+    description: 'Transform your venue with stunning decorations, balloon arrangements, LED lights, and themed decor. From elegant balloon arches to eye-catching neon signs, create the perfect ambiance for any celebration.',
+    imageUrl: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'balloon-arches', name: 'Balloon Arches & Bouquets', slug: 'balloon-arches', parentId: 'decorations' },
       { id: 'backdrops', name: 'Backdrops & Photo Walls', slug: 'backdrops', parentId: 'decorations' },
@@ -22,6 +24,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Sound & Lighting',
     slug: 'sound-lighting',
     icon: 'Mic' as CategoryIconName,
+    description: 'Professional audio and lighting equipment to set the mood and energize your event. From powerful PA systems to stunning stage effects, deliver an unforgettable sensory experience for your guests.',
+    imageUrl: 'https://images.unsplash.com/photo-1598387993441-a364f854c3e1?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'pa-systems', name: 'PA Systems & Speakers', slug: 'pa-systems', parentId: 'sound-lighting' },
       { id: 'microphones', name: 'Microphones & Wireless Systems', slug: 'microphones', parentId: 'sound-lighting' },
@@ -36,6 +40,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Furniture & Tents',
     slug: 'furniture-tents',
     icon: 'Home' as CategoryIconName,
+    description: 'Quality event furniture and tents for comfortable seating and weather protection. Choose from elegant chiavari chairs, spacious tents, stylish lounge furniture, and more to create the perfect event setup.',
+    imageUrl: 'https://images.unsplash.com/photo-1519167758481-83f29da8c6c9?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'chairs', name: 'Chairs (Chiavari, Folding, etc.)', slug: 'chairs', parentId: 'furniture-tents' },
       { id: 'tables', name: 'Tables (Round, Banquet, Cocktail)', slug: 'tables', parentId: 'furniture-tents' },
@@ -50,6 +56,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Catering Equipment',
     slug: 'catering-equipment',
     icon: 'UtensilsCrossed' as CategoryIconName,
+    description: 'Professional catering equipment and supplies for seamless food and beverage service. From elegant serving platters to modern bar equipment, ensure your guests enjoy a premium dining experience.',
+    imageUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'chafing-dishes', name: 'Chafing Dishes & Warmers', slug: 'chafing-dishes', parentId: 'catering-equipment' },
       { id: 'glassware', name: 'Glassware & Drinkware', slug: 'glassware', parentId: 'catering-equipment' },
@@ -64,6 +72,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Photography & Video',
     slug: 'photography-video',
     icon: 'Camera' as CategoryIconName,
+    description: 'Capture every precious moment with professional photography and videography equipment. From interactive photo booths to cutting-edge cameras and drones, preserve memories that last a lifetime.',
+    imageUrl: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'photo-booths', name: 'Photo Booths', slug: 'photo-booths', parentId: 'photography-video' },
       { id: 'cameras-lenses', name: 'Cameras & Lenses', slug: 'cameras-lenses', parentId: 'photography-video' },
@@ -78,6 +88,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Party Supplies',
     slug: 'party-supplies',
     icon: 'PartyPopper' as CategoryIconName,
+    description: 'Complete party essentials and supplies to add fun and flair to any celebration. From festive tableware to exciting party favors, make every moment special with our curated selection.',
+    imageUrl: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'tableware', name: 'Disposable Tableware', slug: 'tableware', parentId: 'party-supplies' },
       { id: 'party-favors', name: 'Party Favors & Giveaways', slug: 'party-favors', parentId: 'party-supplies' },
@@ -92,6 +104,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Event Clothing & Costumes',
     slug: 'event-clothing-costumes',
     icon: 'Shirt' as CategoryIconName,
+    description: 'Look your best with our collection of formal wear, traditional attire, and creative costumes. From elegant wedding outfits to fun character costumes, dress to impress for any occasion.',
+    imageUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'wedding-attire', name: 'Wedding Attire', slug: 'wedding-attire', parentId: 'event-clothing' },
       { id: 'traditional-wear', name: 'Traditional & Ethnic Wear', slug: 'traditional-wear', parentId: 'event-clothing' },
@@ -106,6 +120,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Stage & Backdrops',
     slug: 'stage-backdrops',
     icon: 'LayoutPanelTop' as CategoryIconName,
+    description: 'Create the perfect focal point with professional stage setups and beautiful backdrops. From elegant floral walls to versatile pipe and drape systems, frame your special moments in style.',
+    imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'stage-platforms', name: 'Stage Platforms', slug: 'stage-platforms', parentId: 'stage-backdrops' },
       { id: 'backdrop-stands', name: 'Backdrop Stands & Frames', slug: 'backdrop-stands', parentId: 'stage-backdrops' },
@@ -120,6 +136,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Floral Arrangements',
     slug: 'floral-arrangements',
     icon: 'Flower' as CategoryIconName,
+    description: 'Add natural beauty and elegance with fresh and artificial floral arrangements. From romantic bouquets to stunning centerpieces, bring color and fragrance to your special day.',
+    imageUrl: 'https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'bouquets', name: 'Bouquets & Hand Flowers', slug: 'bouquets', parentId: 'floral-arrangements' },
       { id: 'centerpieces-floral', name: 'Floral Centerpieces', slug: 'centerpieces-floral', parentId: 'floral-arrangements' },
@@ -134,6 +152,8 @@ export const CATEGORIES: Array<Category> = [
     name: 'Entertainment & Activities',
     slug: 'entertainment-activities',
     icon: 'Gamepad2' as CategoryIconName,
+    description: 'Keep your guests entertained with interactive games, inflatables, and performance equipment. From bounce houses for kids to arcade games for all ages, create fun-filled memories.',
+    imageUrl: 'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=1200&h=400&fit=crop',
     subcategories: [
       { id: 'inflatables', name: 'Inflatables & Bounce Houses', slug: 'inflatables', parentId: 'entertainment' },
       { id: 'carnival-games', name: 'Carnival Games', slug: 'carnival-games', parentId: 'entertainment' },
@@ -155,4 +175,14 @@ export function getCategoryBySlug(slug: string): Category | undefined {
 
 export function getAllSubcategories(): Array<{ id: string; name: string; parentId: string }> {
   return CATEGORIES.flatMap((cat) => cat.subcategories);
+}
+
+export function getRelatedCategories(categoryId: string, limit: number = 6): Array<Category> {
+  // Get all categories except the current one
+  const otherCategories = CATEGORIES.filter((cat) => cat.id !== categoryId);
+
+  // Shuffle and return the specified number of related categories
+  return otherCategories
+    .sort(() => Math.random() - 0.5)
+    .slice(0, limit);
 }

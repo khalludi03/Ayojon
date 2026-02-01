@@ -4,6 +4,7 @@ import { useCategories } from '@/hooks/use-categories';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatPrice } from '@/lib/utils';
+import { EVENT_TYPES, DIVISIONS, PRODUCT_CONDITIONS, DELIVERY_OPTIONS } from '@/types';
 
 export function ActiveFilters() {
   const { filters, clearFilter, clearAllFilters, activeFilterCount } = useFilters();
@@ -99,6 +100,66 @@ export function ActiveFilters() {
           Search: "{filters.search}"
           <button
             onClick={() => clearFilter('search')}
+            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {filters.availability && (
+        <Badge variant="outline" className="gap-1 pr-1">
+          Availability: {filters.availability}
+          <button
+            onClick={() => clearFilter('availability')}
+            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {filters.eventTypes && filters.eventTypes.length > 0 && (
+        <Badge variant="outline" className="gap-1 pr-1">
+          Events: {filters.eventTypes.map(et => EVENT_TYPES.find(e => e.value === et)?.label).join(', ')}
+          <button
+            onClick={() => clearFilter('eventTypes')}
+            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {filters.productCondition && (
+        <Badge variant="outline" className="gap-1 pr-1">
+          Condition: {PRODUCT_CONDITIONS.find(c => c.value === filters.productCondition)?.label}
+          <button
+            onClick={() => clearFilter('productCondition')}
+            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {filters.vendorLocation && filters.vendorLocation !== 'all' && (
+        <Badge variant="outline" className="gap-1 pr-1">
+          Location: {DIVISIONS.find(d => d.value === filters.vendorLocation)?.label}
+          <button
+            onClick={() => clearFilter('vendorLocation')}
+            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      )}
+
+      {filters.deliveryOption && (
+        <Badge variant="outline" className="gap-1 pr-1">
+          Delivery: {DELIVERY_OPTIONS.find(d => d.value === filters.deliveryOption)?.label}
+          <button
+            onClick={() => clearFilter('deliveryOption')}
             className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
           >
             <X className="h-3 w-3" />

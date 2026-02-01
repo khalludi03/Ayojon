@@ -40,14 +40,14 @@ export function HeroCarousel() {
 
   return (
     <section className="bg-[hsl(var(--background))]">
-      <div className="mx-auto max-w-[1920px] px-3 py-3 sm:px-4 sm:py-4 xl:px-6">
+      <div className="mx-auto max-w-[1920px] px-2 py-2 sm:px-3 sm:py-3 md:px-4 md:py-4 xl:px-6">
         {/*
           CSS Grid Layout:
           - Mobile (< 640px): Single column, all stacked
-          - Tablet (640px - 1279px): 2 columns for side banners
-          - Desktop (>= 1280px): Main banner + 2x2 side banner grid
+          - Small/Medium/Large (640px - 1279px): Main banner full width, 2x2 grid below (STACKED)
+          - XL+ (1280px+): Main banner + 2x2 side banner grid (SIDE-BY-SIDE)
         */}
-        <div className="grid gap-3 sm:gap-4
+        <div className="grid gap-2 sm:gap-3 md:gap-4
           grid-cols-1
           sm:grid-cols-2
           xl:grid-cols-[1fr_340px]
@@ -60,9 +60,10 @@ export function HeroCarousel() {
               sm:col-span-2
               xl:col-span-1
               xl:row-span-2
-              min-h-[200px]
-              sm:min-h-[280px]
-              md:min-h-[320px]
+              min-h-[180px]
+              sm:min-h-[240px]
+              md:min-h-[280px]
+              lg:min-h-[320px]
               xl:min-h-[400px]
             "
             onMouseEnter={handleMouseEnter}
@@ -91,21 +92,21 @@ export function HeroCarousel() {
 
                   {/* Content Overlay */}
                   <div className="absolute inset-0 flex items-center bg-gradient-to-r from-black/70 via-black/40 to-transparent">
-                    <div className="px-4 sm:px-6 md:px-8 lg:px-10">
-                      <div className="max-w-xs sm:max-w-sm md:max-w-md">
+                    <div className="px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+                      <div className="max-w-[280px] sm:max-w-xs md:max-w-sm lg:max-w-md">
                         {/* Category Badge */}
-                        <span className="inline-block rounded bg-[hsl(var(--muted))]/80 px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-[hsl(var(--foreground))] sm:text-xs">
+                        <span className="inline-block rounded bg-[hsl(var(--muted))]/80 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-[hsl(var(--foreground))] sm:px-2 sm:py-1 sm:text-[10px] md:text-xs">
                           {slide.subtitle.split(' ').slice(0, 2).join(' ')}
                         </span>
-                        <h2 className="mt-2 text-xl font-bold text-white sm:mt-3 sm:text-2xl md:text-3xl lg:text-4xl">
+                        <h2 className="mt-1.5 text-base font-bold text-white sm:mt-2 sm:text-xl md:mt-3 md:text-2xl lg:text-3xl xl:text-4xl">
                           {slide.title}
                         </h2>
-                        <p className="mt-1 text-sm text-white/90 sm:mt-2 sm:text-base md:text-lg">
+                        <p className="mt-1 text-xs text-white/90 sm:mt-1.5 sm:text-sm md:mt-2 md:text-base lg:text-lg">
                           {slide.subtitle}
                         </p>
                         <a
                           href={slide.ctaLink}
-                          className="mt-3 inline-block rounded-lg bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-4 py-2 text-xs font-semibold text-white transition-all hover:scale-105 sm:mt-4 sm:px-6 sm:py-2.5 sm:text-sm shadow-[var(--shadow-festive)]"
+                          className="mt-2 inline-block rounded-lg bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] px-3 py-1.5 text-[11px] font-semibold text-white transition-all hover:scale-105 sm:mt-3 sm:px-4 sm:py-2 sm:text-xs md:mt-4 md:px-6 md:py-2.5 md:text-sm shadow-[var(--shadow-festive)]"
                           style={{ boxShadow: 'var(--shadow-festive)' }}
                         >
                           {slide.ctaText}
@@ -153,17 +154,16 @@ export function HeroCarousel() {
           </div>
 
           {/* Side Banners - 2x2 Grid */}
-          {/* On mobile: Full width, stacked */}
-          {/* On tablet (sm): 2-column grid below main banner */}
-          {/* On desktop (xl+): 2x2 grid on the right side */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:row-span-2">
+          {/* On mobile/tablet/desktop: 2-column grid BELOW main banner (STACKED) - spans full width */}
+          {/* On XL+ (1280px+): 2x2 grid on the RIGHT SIDE of main banner (SIDE-BY-SIDE) */}
+          <div className="grid grid-cols-2 gap-2 sm:col-span-2 sm:gap-3 md:gap-4 xl:col-span-1 xl:row-span-2">
             {sideBanners.slice(0, 4).map((banner, index) => (
               <a
                 key={banner.slideId}
                 href={banner.ctaLink}
                 className={cn(
                   'group relative overflow-hidden rounded-lg transition-all hover:shadow-lg',
-                  'min-h-[120px] sm:min-h-[130px] xl:min-h-0'
+                  'min-h-[85px] sm:min-h-[110px] md:min-h-[130px] lg:min-h-[145px] xl:min-h-[195px]'
                 )}
                 style={{ backgroundColor: banner.backgroundColor }}
               >
@@ -176,15 +176,15 @@ export function HeroCarousel() {
                 />
 
                 {/* Discount Badge */}
-                <div className="absolute left-2 top-2 sm:left-3 sm:top-3">
-                  <div className="rounded bg-[hsl(var(--accent))] px-1.5 py-0.5 text-[10px] font-bold text-white sm:px-2 sm:py-1 sm:text-xs">
+                <div className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2 md:left-3 md:top-3">
+                  <div className="rounded bg-[hsl(var(--accent))] px-1 py-0.5 text-[9px] font-bold text-white sm:px-1.5 sm:text-[10px] md:px-2 md:py-1 md:text-xs">
                     {banner.subtitle}
                   </div>
                 </div>
 
                 {/* Title at Bottom */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 sm:p-3">
-                  <h3 className="text-xs font-semibold text-white sm:text-sm md:text-base">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 sm:p-2 md:p-3">
+                  <h3 className="text-[10px] font-semibold text-white sm:text-xs md:text-sm lg:text-base">
                     {banner.title}
                   </h3>
                 </div>

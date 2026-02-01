@@ -240,6 +240,13 @@ export function createKeyFeatures(): Array<string> {
   ].slice(0, faker.number.int({ min: 3, max: 5 }));
 }
 
+function generateRelevantDescription(title: string): string {
+  const adjectives = [faker.commerce.productAdjective(), faker.commerce.productAdjective()];
+  const material = faker.commerce.productMaterial();
+
+  return `${adjectives[0]} ${title.toLowerCase()} made with ${material.toLowerCase()}. ${faker.company.catchPhrase()}. ${adjectives[1]} quality for your event. ${faker.lorem.sentence({ min: 8, max: 12 })}`;
+}
+
 export function createProduct(
   overrides: Partial<Product> = {},
   vendorData?: { id: string; name: string; isVerified: boolean }
@@ -247,7 +254,14 @@ export function createProduct(
   const category = faker.helpers.arrayElement(CATEGORIES);
   const categoryId = overrides.categoryId || category.id;
   const title = overrides.title || getEventProductName(categoryId);
+  const brand = overrides.brand || faker.company.name();
   const stock = faker.number.int({ min: 0, max: 500 });
+
+  // Assign a random subcategory from the category's subcategories
+  const selectedCategory = CATEGORIES.find((cat) => cat.id === categoryId) || category;
+  const subcategoryId = selectedCategory.subcategories.length > 0
+    ? faker.helpers.arrayElement(selectedCategory.subcategories).id
+    : undefined;
 
   let stockStatus: StockStatus = 'in_stock';
   if (stock === 0) stockStatus = 'out_of_stock';
@@ -267,9 +281,10 @@ export function createProduct(
   return {
     id: faker.string.uuid(),
     title,
+    brand,
     slug: slugify(title) + '-' + faker.string.alphanumeric(6),
-    description: faker.commerce.productDescription(),
-    descriptionShort: faker.lorem.sentence({ min: 10, max: 20 }),
+    description: generateRelevantDescription(title),
+    descriptionShort: `${faker.commerce.productAdjective()} ${title.toLowerCase()} for your event. ${faker.company.catchPhrase()}.`,
     images: createProductImages(faker.number.int({ min: 3, max: 6 })),
     vendor,
     pricing: createPricing(overrides.pricing),
@@ -280,6 +295,7 @@ export function createProduct(
     stock,
     badges,
     categoryId,
+    subcategoryId,
     keyFeatures: createKeyFeatures(),
     variants: createVariants(categoryId),
     returnPolicy: '7-day return policy. Product must be unused and in original packaging.',
@@ -316,9 +332,12 @@ export function createDealProduct(
   const dealStartedAt = new Date(now.getTime() - faker.number.int({ min: 0, max: 2 }) * 60 * 60 * 1000);
   const dealEndsAt = new Date(dealStartedAt.getTime() + dealDurations[dealType]);
 
+  // Create pricing with proper discount
+  const pricing = createPricing({ discountPercentage });
+
   const baseProduct = createProduct({
-    pricing: { discountPercentage } as any,
     ...overrides,
+    pricing,
   });
 
   return {
