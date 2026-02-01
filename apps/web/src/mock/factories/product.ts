@@ -254,6 +254,7 @@ export function createProduct(
   const category = faker.helpers.arrayElement(CATEGORIES);
   const categoryId = overrides.categoryId || category.id;
   const title = overrides.title || getEventProductName(categoryId);
+  const brand = overrides.brand || faker.company.name();
   const stock = faker.number.int({ min: 0, max: 500 });
 
   // Assign a random subcategory from the category's subcategories
@@ -280,6 +281,7 @@ export function createProduct(
   return {
     id: faker.string.uuid(),
     title,
+    brand,
     slug: slugify(title) + '-' + faker.string.alphanumeric(6),
     description: generateRelevantDescription(title),
     descriptionShort: `${faker.commerce.productAdjective()} ${title.toLowerCase()} for your event. ${faker.company.catchPhrase()}.`,
