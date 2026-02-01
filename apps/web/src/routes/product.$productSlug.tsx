@@ -1,5 +1,6 @@
 import { createFileRoute, notFound, Link, useNavigate } from '@tanstack/react-router';
 import { ProductGallery } from '@/components/product/ProductGallery';
+import { ReviewsSection } from '@/components/product/ReviewsSection';
 import { ProductDescription } from '@/components/product/ProductDescription';
 import type { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
@@ -14,9 +15,22 @@ import {
     CheckCircle2, 
     Truck, 
     AlertTriangle,
-    CheckCircle
+    CheckCircle,
+    Minus,
+    Plus,
+    ShoppingCart,
+    Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 import { HorizontalScroller } from '@/components/deals/HorizontalScroller';
 import { ProductCard } from '@/components/product/ProductCard';
@@ -51,19 +65,86 @@ function ProductDetailPage() {
   const { product, relatedProducts } = Route.useLoaderData();
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const [quantity, setQuantity] = useState(1);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isBuyingNow, setIsBuyingNow] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
 
-  const handleAddToCart = () => {
-    if (product) {
-      addItem(product, 1);
-      toast.success('Added to cart');
+  const isLowStock = product.stock < 10 && product.stock > 0;
+  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.stock === 0;
+  const savings = product.pricing.originalPrice - product.pricing.currentPrice;
+
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setQuantity(1);
+      return;
+    }
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 1) {
+      setQuantity(Math.min(numValue, product.stock));
     }
   };
 
-  const handleBuyNow = () => {
-    if (product) {
-      addItem(product, 1);
-      navigate({ to: '/cart' });
+  const handleIncrement = () => {
+    if (quantity < product.stock) {
+      setQuantity(prev => prev + 1);
     }
+  };
+
+  const handleDecrement = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+
+    // Stock availability check
+    if (isOutOfStock) {
+      toast.error('This product is currently out of stock');
+      return;
+    }
+
+    if (quantity > product.stock) {
+      toast.error(`Only ${product.stock} items available in stock`);
+      return;
+    }
+
+    setIsAddingToCart(true);
+    
+    // Simulate async operation
+    setTimeout(() => {
+      addItem(product, quantity);
+      setIsAddingToCart(false);
+      setShowCartModal(true);
+      toast.success(`Added ${quantity} item(s) to cart`);
+    }, 300);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+
+    // Stock availability check
+    if (isOutOfStock) {
+      toast.error('This product is currently out of stock');
+      return;
+    }
+
+    if (quantity > product.stock) {
+      toast.error(`Only ${product.stock} items available in stock`);
+      return;
+    }
+
+    setIsBuyingNow(true);
+    
+    // Simulate async operation
+    setTimeout(() => {
+      addItem(product, quantity);
+      setIsBuyingNow(false);
+      navigate({ to: '/cart' });
+    }, 300);
   };
 
   const handleCopyLink = async () => {
@@ -164,20 +245,32 @@ function ProductDetailPage() {
 
             {/* Price & Delivery */}
             <div className="space-y-4 mb-8">
-                <div className="flex items-end gap-3">
-                    <span className="text-4xl font-bold text-foreground">
-                        {product.pricing.currencySymbol}{product.pricing.currentPrice.toLocaleString()}
-                    </span>
+                <div className="rounded-lg border bg-card p-5 shadow-sm">
+                    <div className="flex items-end gap-3 flex-wrap">
+                        <span className="text-4xl font-bold text-foreground">
+                            {product.pricing.currencySymbol}{product.pricing.currentPrice.toLocaleString()}
+                        </span>
+                        {product.pricing.discountPercentage > 0 && (
+                            <>
+                                <span className="text-xl text-muted-foreground line-through">
+                                    {product.pricing.currencySymbol}{product.pricing.originalPrice.toLocaleString()}
+                                </span>
+                                <Badge variant="destructive" className="mb-1">
+                                    -{product.pricing.discountPercentage}% OFF
+                                </Badge>
+                            </>
+                        )}
+                    </div>
+                    
                     {product.pricing.discountPercentage > 0 && (
-                        <>
-                            <span className="text-xl text-muted-foreground line-through">
-                                {product.pricing.currencySymbol}{product.pricing.originalPrice.toLocaleString()}
-                            </span>
-                            <Badge variant="destructive" className="mb-1">
-                                -{product.pricing.discountPercentage}% OFF
-                            </Badge>
-                        </>
+                        <div className="mt-2 text-sm font-medium text-green-600">
+                            You save {product.pricing.currencySymbol}{savings.toLocaleString()}
+                        </div>
                     )}
+                    
+                    <div className="mt-2 text-xs text-muted-foreground">
+                        (Incl. VAT)
+                    </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -186,6 +279,61 @@ function ProductDetailPage() {
                         <span className="font-semibold text-green-600">Free Delivery</span>
                     ) : (
                         <span>Delivery: {product.pricing.currencySymbol}{product.shipping.cost}</span>
+                    )}
+                </div>
+            </div>
+
+            {/* Quantity Selector */}
+            <div className="mb-8">
+                <div className="flex items-center gap-4 mb-2">
+                    <span className="text-sm font-medium">Quantity:</span>
+                    <div className="flex items-center rounded-md border">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 rounded-none" 
+                            onClick={handleDecrement}
+                            disabled={quantity <= 1 || isOutOfStock}
+                            type="button"
+                        >
+                            <Minus className="h-4 w-4" />
+                            <span className="sr-only">Decrease quantity</span>
+                        </Button>
+                        <input
+                            type="number"
+                            min="1"
+                            max={product.stock}
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                            disabled={isOutOfStock}
+                            className="h-9 w-16 border-x text-center text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 rounded-none" 
+                            onClick={handleIncrement}
+                            disabled={quantity >= product.stock || isOutOfStock}
+                            type="button"
+                        >
+                            <Plus className="h-4 w-4" />
+                            <span className="sr-only">Increase quantity</span>
+                        </Button>
+                    </div>
+                </div>
+                
+                {/* Stock Information */}
+                <div className="text-sm">
+                    {isOutOfStock ? (
+                        <p className="font-medium text-destructive">Out of Stock</p>
+                    ) : isLowStock ? (
+                        <p className="font-medium text-orange-600 animate-pulse">
+                            Only {product.stock} items left in stock! Order soon.
+                        </p>
+                    ) : (
+                        <p className="text-muted-foreground">
+                            {product.stock} available (Max {product.stock} per order)
+                        </p>
                     )}
                 </div>
             </div>
@@ -213,8 +361,40 @@ function ProductDetailPage() {
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                <Button size="lg" className="flex-1 h-14 text-lg" onClick={handleAddToCart}>Add to Cart</Button>
-                <Button size="lg" variant="secondary" className="flex-1 h-14 text-lg font-bold" onClick={handleBuyNow}>Buy Now</Button>
+                <Button 
+                    size="lg" 
+                    className="flex-1 h-14 text-lg gap-2" 
+                    onClick={handleAddToCart}
+                    disabled={isOutOfStock || isAddingToCart}
+                >
+                    {isAddingToCart ? (
+                        <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Adding...
+                        </>
+                    ) : (
+                        <>
+                            <ShoppingCart className="h-5 w-5" />
+                            Add to Cart
+                        </>
+                    )}
+                </Button>
+                <Button 
+                    size="lg" 
+                    variant="secondary" 
+                    className="flex-1 h-14 text-lg font-bold" 
+                    onClick={handleBuyNow}
+                    disabled={isOutOfStock || isBuyingNow}
+                >
+                    {isBuyingNow ? (
+                        <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                        'Buy Now'
+                    )}
+                </Button>
             </div>
 
             {/* Share Buttons */}
@@ -275,7 +455,43 @@ function ProductDetailPage() {
                 </HorizontalScroller>
             </div>
         )}
+        {/* Customer Reviews Section */}
+        <ReviewsSection productId={product.id} hasPurchased={false} />
       </div>
+
+      {/* Add to Cart Success Modal */}
+      <Dialog open={showCartModal} onOpenChange={setShowCartModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Added to Cart
+            </DialogTitle>
+            <DialogDescription>
+              {quantity} {quantity === 1 ? 'item' : 'items'} added to your cart successfully!
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCartModal(false)}
+              className="w-full sm:w-auto"
+            >
+              Continue Shopping
+            </Button>
+            <Button
+              onClick={() => {
+                setShowCartModal(false);
+                navigate({ to: '/cart' });
+              }}
+              className="w-full sm:w-auto"
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Go to Cart
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
