@@ -139,10 +139,22 @@ body {
     'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Ensure interactive elements show pointer cursor */
+a,
+button,
+[role="button"],
+[type="button"],
+[type="submit"],
+[type="reset"],
+select,
+.cursor-pointer {
+  cursor: pointer;
 }
 
 /* Only apply theme transitions after page load to prevent flash */
+html.theme-transition-enabled body,
 html.theme-transition-enabled * {
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
