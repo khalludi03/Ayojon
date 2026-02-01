@@ -71,6 +71,8 @@ export interface Product {
   categoryId: string;
   subcategoryId?: string;
   keyFeatures: Array<string>;
+  whatsIncluded: Array<string>;
+  setupInstructions?: string;
   variants: Array<ProductVariant>;
   returnPolicy: string;
   warranty: string;
