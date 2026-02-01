@@ -61,17 +61,13 @@ export function DealCard({ deal }: DealCardProps) {
         />
 
         {/* Quick View Overlay Button (Desktop) */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20">
-            <Button 
-                variant="secondary" 
-                size="sm" 
-                className="gap-2 shadow-lg hidden sm:flex pointer-events-none sm:pointer-events-auto transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
-                onClick={handleQuickView}
-            >
-                <Eye className="h-4 w-4" />
-                Quick View
-            </Button>
-        </div>
+        <button
+            onClick={handleQuickView}
+            className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20 cursor-pointer hidden sm:flex"
+            aria-label="Quick view"
+        >
+            <Eye className="h-8 w-8 text-white opacity-70 drop-shadow-lg transition-transform hover:scale-125" />
+        </button>
 
         {/* Discount Badge */}
         {deal.pricing.discountPercentage > 0 && (
