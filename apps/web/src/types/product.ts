@@ -51,6 +51,7 @@ export type CurrencyCode = 'BDT' | 'INR' | 'PKR' | 'USD';
 export interface Product {
   id: string;
   title: string;
+  brand?: string;
   slug: string;
   description: string;
   descriptionShort: string;

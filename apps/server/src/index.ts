@@ -1,4 +1,7 @@
-import { trpcServer } from "@hono/trpc-server";
+import { RPCHandler } from "@orpc/server/fetch";
+import { OpenAPIGenerator } from "@orpc/openapi";
+import { ZodToJsonSchemaConverter } from "@orpc/zod";
+import { Scalar } from "@scalar/hono-api-reference";
 import { createContext } from "@my-better-t-app/api/context";
 import { appRouter } from "@my-better-t-app/api/routers/index";
 import { auth } from "@my-better-t-app/auth";
@@ -6,7 +9,6 @@ import { env } from "@my-better-t-app/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-
 const app = new Hono();
 
 app.use(logger());
@@ -35,13 +37,55 @@ app.on(["POST", "GET"], "/api/auth/*", async (c) => {
   });
 });
 
-app.use(
-  "/trpc/*",
-  trpcServer({
-    router: appRouter,
-    createContext: (_opts, context) => {
-      return createContext({ context });
+// oRPC handler
+const rpcHandler = new RPCHandler(appRouter);
+
+// oRPC endpoints
+app.use("/api/*", async (c, next) => {
+  const context = await createContext({ context: c });
+
+  const { matched, response } = await rpcHandler.handle(c.req.raw, {
+    prefix: "/api",
+    context,
+  });
+
+  if (matched) {
+    return response;
+  }
+
+  await next();
+});
+
+// OpenAPI spec endpoint
+app.get("/doc", async (c) => {
+  const generator = new OpenAPIGenerator({
+    schemaConverters: [new ZodToJsonSchemaConverter()],
+  });
+
+  const spec = await generator.generate(appRouter, {
+    info: {
+      title: "My Better T-App API",
+      version: "1.0.0",
+      description: "API documentation for My Better T-App e-commerce platform",
     },
+    servers: [
+      {
+        url: env.CORS_ORIGIN || "http://localhost:3000",
+        description: "API Server",
+      },
+    ],
+  });
+
+  return c.json(spec);
+});
+
+// Scalar API documentation
+app.get(
+  "/scalar",
+  Scalar({
+    url: "/doc",
+    theme: "purple",
+    pageTitle: "My Better T-App API Documentation",
   }),
 );
 
