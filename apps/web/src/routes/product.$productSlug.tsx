@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { HorizontalScroller } from '@/components/deals/HorizontalScroller';
+import { ProductCard } from '@/components/product/ProductCard';
+
 export const Route = createFileRoute('/product/$productSlug')({
   component: ProductDetailPage,
   // Load data before rendering if possible, or handle in component
@@ -28,7 +31,8 @@ export const Route = createFileRoute('/product/$productSlug')({
     if (!product) {
        throw notFound();
     }
-    return product;
+    const relatedProducts = mockDb.getRelatedProducts(product.id, 8);
+    return { product, relatedProducts };
   },
   notFoundComponent: () => {
     return (
@@ -44,7 +48,7 @@ export const Route = createFileRoute('/product/$productSlug')({
 });
 
 function ProductDetailPage() {
-  const product = Route.useLoaderData();
+  const { product, relatedProducts } = Route.useLoaderData();
   const { addItem } = useCart();
   const navigate = useNavigate();
 
@@ -257,6 +261,20 @@ function ProductDetailPage() {
                 </div>
             </div>
         </div>
+
+        {/* You May Also Like Section */}
+        {relatedProducts.length > 0 && (
+            <div className="mt-16 border-t border-[hsl(var(--border))] pt-10 mb-16">
+                <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
+                <HorizontalScroller>
+                    {relatedProducts.map((relatedProduct) => (
+                        <div key={relatedProduct.id} className="w-[160px] flex-shrink-0 sm:w-[200px] md:w-[240px]">
+                            <ProductCard product={relatedProduct} />
+                        </div>
+                    ))}
+                </HorizontalScroller>
+            </div>
+        )}
       </div>
     </div>
   );
