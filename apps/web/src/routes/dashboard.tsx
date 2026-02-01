@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
 import { getUser } from "@/functions/get-user";
-import { useTRPC } from "@/utils/trpc";
+import { orpc } from "@/utils/trpc";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
@@ -22,8 +22,7 @@ export const Route = createFileRoute("/dashboard")({
 function RouteComponent() {
   const { session } = Route.useRouteContext();
 
-  const trpc = useTRPC();
-  const privateData = useQuery(trpc.privateData.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions());
 
   return (
     <div>
