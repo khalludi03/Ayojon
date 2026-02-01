@@ -87,3 +87,45 @@ export interface DealProduct extends Product {
   dealEndsAt: string;
   dealStartedAt: string;
 }
+
+// Review types
+export interface ReviewUser {
+  id: string;
+  name: string;
+  avatar?: string;
+  isAnonymous?: boolean;
+}
+
+export interface ReviewImage {
+  url: string;
+  alt: string;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  user: ReviewUser;
+  rating: number; // 1-5
+  title?: string;
+  comment: string;
+  isVerifiedPurchase: boolean;
+  images: Array<ReviewImage>;
+  helpfulVotes: number;
+  notHelpfulVotes: number;
+  createdAt: string;
+}
+
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingBreakdown: {
+    5: number;
+    4: number;
+    3: number;
+    2: number;
+    1: number;
+  };
+}
+
+export type ReviewFilter = 'all' | 'with_photos' | 'verified_purchase';
+export type ReviewSort = 'most_recent' | 'most_helpful' | 'highest_rating' | 'lowest_rating';

@@ -42,6 +42,18 @@ export function ProductInfo({ product }: ProductInfoProps) {
     }
   };
 
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setQuantity(1);
+      return;
+    }
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 1) {
+      setQuantity(Math.min(numValue, stock));
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -124,9 +136,15 @@ export function ProductInfo({ product }: ProductInfoProps) {
                     <Minus className="h-4 w-4" />
                     <span className="sr-only">Decrease quantity</span>
                 </Button>
-                <div className="flex h-9 w-12 items-center justify-center border-x text-sm font-medium">
-                    {quantity}
-                </div>
+                <input
+                    type="number"
+                    min="1"
+                    max={stock}
+                    value={quantity}
+                    onChange={handleQuantityChange}
+                    disabled={isOutOfStock}
+                    className="h-9 w-12 border-x text-center text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
                 <Button 
                     variant="ghost" 
                     size="icon" 
