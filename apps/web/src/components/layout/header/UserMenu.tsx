@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 export function UserMenu() {
   const [isHovered, setIsHovered] = useState(false);
   const navigate = useNavigate();
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   const isLoggedIn = !!session?.user;
   const user = session?.user ? {
@@ -36,6 +36,30 @@ export function UserMenu() {
       }
     });
   };
+
+  // Show nothing while loading to prevent flash of signin button
+  if (isPending) {
+    return (
+      <div className="flex items-center">
+        <div className="hidden sm:flex items-center gap-2">
+          <Button variant="ghost" size="sm" className="gap-2" disabled>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[hsl(var(--muted))]">
+              <User className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+            </div>
+            <div className="text-left">
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">Loading...</p>
+              <p className="text-sm font-medium invisible">Sign In / Register</p>
+            </div>
+          </Button>
+        </div>
+        <div className="sm:hidden">
+          <Button variant="ghost" size="icon-sm" className="rounded-full" disabled>
+            <User className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
