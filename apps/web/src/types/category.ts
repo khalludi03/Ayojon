@@ -10,7 +10,14 @@ export type CategoryIconName =
   | 'ShoppingBasket'
   | 'Baby'
   | 'Car'
-  | 'Download';
+  | 'Download'
+  | 'Mic'
+  | 'UtensilsCrossed'
+  | 'Camera'
+  | 'PartyPopper'
+  | 'LayoutPanelTop'
+  | 'Flower'
+  | 'Gamepad2';
 
 export interface Subcategory {
   id: string;
@@ -27,4 +34,5 @@ export interface Category {
   subcategories: Array<Subcategory>;
   productCount?: number;
   imageUrl?: string;
+  description?: string;
 }

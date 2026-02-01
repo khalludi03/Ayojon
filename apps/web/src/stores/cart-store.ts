@@ -31,6 +31,9 @@ interface CartStore {
   clearCart: () => void;
   getItemCount: () => number;
   getSubtotal: () => number;
+  getTax: () => number;
+  getShipping: () => number;
+  getTotal: () => number;
   isInCart: (productId: string) => boolean;
   subscribe: (callback: () => void) => () => void;
 }
@@ -205,6 +208,29 @@ function createCartStore(): CartStore {
       }, 0);
     },
 
+    getTax: () => {
+      const subtotal = cartStore.getSubtotal();
+      // 5% tax rate
+      return subtotal * 0.05;
+    },
+
+    getShipping: () => {
+      const subtotal = cartStore.getSubtotal();
+      // Free shipping for orders over 999 BDT
+      if (subtotal >= 999) {
+        return 0;
+      }
+      // Otherwise, flat rate of 60 BDT
+      return 60;
+    },
+
+    getTotal: () => {
+      const subtotal = cartStore.getSubtotal();
+      const tax = cartStore.getTax();
+      const shipping = cartStore.getShipping();
+      return subtotal + tax + shipping;
+    },
+
     isInCart: (productId: string) => {
       return state.items.some((item) => item.productId === productId);
     },
@@ -247,6 +273,10 @@ export function useCart() {
     toggleItem: cartStore.toggleItem,
     updateQuantity: cartStore.updateQuantity,
     clearCart: cartStore.clearCart,
+    getSubtotal: cartStore.getSubtotal,
+    getTax: cartStore.getTax,
+    getShipping: cartStore.getShipping,
+    getTotal: cartStore.getTotal,
     isInCart: (productId: string) => state.items.some((item) => item.productId === productId),
   };
 }

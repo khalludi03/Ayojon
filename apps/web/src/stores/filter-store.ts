@@ -31,7 +31,11 @@ const DEFAULT_FILTERS: FilterState = {
   sort: 'relevance',
   page: 1,
   limit: 20,
-  eventType: undefined,
+  eventTypes: undefined,
+  availability: undefined,
+  productCondition: undefined,
+  vendorLocation: undefined,
+  deliveryOption: undefined,
   activeFilterCount: 0,
 };
 
@@ -47,7 +51,11 @@ function calculateActiveFilterCount(filters: ProductFilters): number {
   if (filters.inStock) count++;
   if (filters.vendorIds && filters.vendorIds.length > 0) count++;
   if (filters.search) count++;
-  if (filters.eventType) count++;
+  if (filters.eventTypes && filters.eventTypes.length > 0) count++;
+  if (filters.availability) count++;
+  if (filters.productCondition) count++;
+  if (filters.vendorLocation && filters.vendorLocation !== 'all') count++;
+  if (filters.deliveryOption) count++;
   return count;
 }
 
@@ -154,5 +162,46 @@ export function useSort() {
   return {
     sort: filters.sort || 'relevance',
     setSort,
+  };
+}
+
+// Helper hook for subcategory management
+export function useSubcategory() {
+  const { filters, setFilter, clearFilter } = useFilters();
+
+  const setSubcategory = useCallback(
+    (subcategory: string | undefined) => {
+      if (subcategory) {
+        setFilter('subcategory', subcategory);
+      } else {
+        clearFilter('subcategory');
+      }
+    },
+    [setFilter, clearFilter]
+  );
+
+  return {
+    subcategory: filters.subcategory,
+    setSubcategory,
+  };
+}
+
+// Helper hook for category page context
+export function useCategoryFilters(categoryId: string) {
+  const { filters, setFilter, setFilters, clearFilter } = useFilters();
+
+  // Set the category filter when the component mounts or category changes
+  const initializeCategoryFilter = useCallback(() => {
+    if (filters.category !== categoryId) {
+      setFilter('category', categoryId);
+    }
+  }, [categoryId, filters.category, setFilter]);
+
+  return {
+    filters,
+    setFilter,
+    setFilters,
+    clearFilter,
+    initializeCategoryFilter,
   };
 }

@@ -130,18 +130,18 @@ const badges = [
 
 export function TrustBadges() {
   return (
-    <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 md:gap-6">
       {badges.map((badge) => (
         <div
           key={badge.title}
-          className="group flex flex-col items-center gap-3 text-center p-4 rounded-xl bg-[hsl(var(--card))] border border-[hsl(var(--border))] hover:shadow-md transition-all duration-300 md:flex-row md:text-left"
+          className="group flex flex-col items-center gap-2 text-center p-3 rounded-xl bg-[hsl(var(--card))] border border-[hsl(var(--border))] hover:shadow-md transition-all duration-300 sm:gap-3 sm:p-4 md:flex-row md:text-left"
         >
-          <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-xl ${badge.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-            <badge.Icon className={`h-8 w-8 ${badge.color}`} />
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${badge.bgColor} group-hover:scale-110 transition-transform duration-300 sm:h-14 sm:w-14`}>
+            <badge.Icon className={`h-7 w-7 ${badge.color} sm:h-8 sm:w-8`} />
           </div>
-          <div>
-            <p className="font-semibold text-[hsl(var(--foreground))]">{badge.title}</p>
-            <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{badge.description}</p>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-[hsl(var(--foreground))] sm:text-sm">{badge.title}</p>
+            <p className="text-[10px] text-[hsl(var(--muted-foreground))] mt-0.5 sm:text-xs">{badge.description}</p>
           </div>
         </div>
       ))}

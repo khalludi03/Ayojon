@@ -10,6 +10,7 @@ export const categoryKeys = {
   all: ['categories'] as const,
   lists: () => [...categoryKeys.all, 'list'] as const,
   detail: (id: string) => [...categoryKeys.all, 'detail', id] as const,
+  slug: (slug: string) => [...categoryKeys.all, 'slug', slug] as const,
 };
 
 /**
@@ -38,6 +39,22 @@ export function useCategory(
     queryKey: categoryKeys.detail(id),
     queryFn: () => categoryService.getCategoryById(id),
     enabled: !!id,
+    staleTime: 10 * 60 * 1000,
+    ...options,
+  });
+}
+
+/**
+ * Fetch single category by slug
+ */
+export function useCategoryBySlug(
+  slug: string,
+  options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>
+) {
+  return useQuery({
+    queryKey: categoryKeys.slug(slug),
+    queryFn: () => categoryService.getCategoryBySlug(slug),
+    enabled: !!slug,
     staleTime: 10 * 60 * 1000,
     ...options,
   });

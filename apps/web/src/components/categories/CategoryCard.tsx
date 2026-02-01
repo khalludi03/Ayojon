@@ -2,14 +2,21 @@ import { Link } from '@tanstack/react-router';
 import {
   Baby,
   BookOpen,
+  Camera,
   Car,
   Download,
   Dumbbell,
+  Flower,
+  Gamepad2,
   Home,
+  LayoutPanelTop,
+  Mic,
+  PartyPopper,
   Shirt,
   ShoppingBasket,
   Smartphone,
   Sparkles,
+  UtensilsCrossed,
 } from 'lucide-react';
 import type { Category, CategoryIconName } from '@/types';
 import { cn } from '@/lib/utils';
@@ -25,6 +32,13 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   Baby,
   Car,
   Download,
+  Mic,
+  UtensilsCrossed,
+  Camera,
+  PartyPopper,
+  LayoutPanelTop,
+  Flower,
+  Gamepad2,
 };
 
 interface CategoryCardProps {
@@ -37,7 +51,8 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
 
   return (
     <Link
-      to={`/category/${category.slug}`}
+      to="/category/$categorySlug"
+      params={{ categorySlug: category.slug }}
       className={cn(
         'group flex flex-col items-center gap-2 rounded-lg p-3 transition-colors hover:bg-[hsl(var(--muted))]',
         className

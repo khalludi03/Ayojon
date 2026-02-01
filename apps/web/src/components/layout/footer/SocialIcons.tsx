@@ -74,7 +74,7 @@ function LinkedInIcon({ className }: SocialIconProps) {
   );
 }
 
-// Social links configuration with brand colors
+// Social links configuration - Facebook, Instagram, Twitter only
 const socialLinks = [
   {
     href: 'https://facebook.com/ayojon',
@@ -93,23 +93,9 @@ const socialLinks = [
   {
     href: 'https://twitter.com/ayojon',
     Icon: XIcon,
-    label: 'X (Twitter)',
+    label: 'Twitter',
     bgColor: 'hover:bg-black dark:hover:bg-white',
     iconColor: 'text-black dark:text-white group-hover:text-white dark:group-hover:text-black',
-  },
-  {
-    href: 'https://youtube.com/ayojon',
-    Icon: YouTubeIcon,
-    label: 'YouTube',
-    bgColor: 'hover:bg-[#FF0000]',
-    iconColor: 'text-[#FF0000] group-hover:text-white',
-  },
-  {
-    href: 'https://linkedin.com/company/ayojon',
-    Icon: LinkedInIcon,
-    label: 'LinkedIn',
-    bgColor: 'hover:bg-[#0A66C2]',
-    iconColor: 'text-[#0A66C2] group-hover:text-white',
   },
 ];
 
