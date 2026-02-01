@@ -25,7 +25,7 @@ export const auth = betterAuth({
         console.log(`Password reset email sent to ${user.email}`);
       } catch (error) {
         console.error("Failed to send password reset email:", error);
-        // Log but don't throw to prevent timing attacks
+       
       }
     },
   },
