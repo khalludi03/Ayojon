@@ -1,6 +1,7 @@
 import { createFileRoute, notFound, Link, useNavigate } from '@tanstack/react-router';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ReviewsSection } from '@/components/product/ReviewsSection';
+import { ProductDescription } from '@/components/product/ProductDescription';
 import type { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -420,10 +421,7 @@ function ProductDetailPage() {
         <div className="mt-16 border-t border-[hsl(var(--border))] pt-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2">
-                    <h2 className="text-xl font-bold text-foreground mb-6">Product Details</h2>
-                    <div className="text-base leading-relaxed text-muted-foreground space-y-4">
-                        <p>{product.description}</p>
-                    </div>
+                    <ProductDescription product={product} />
                 </div>
                 
                 <div className="bg-muted/20 rounded-xl p-6 border h-fit">
