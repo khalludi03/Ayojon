@@ -4,7 +4,6 @@ import type { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { mockDb } from '@/mock/db';
-import { useEffect, useState } from 'react';
 import { useCart } from '@/stores/cart-store';
 import { 
     Facebook, 
@@ -26,28 +25,27 @@ export const Route = createFileRoute('/product/$productSlug')({
     await mockDb.init();
     const product = mockDb.getProductBySlug(params.productSlug);
     if (!product) {
-       return null;
+       throw notFound();
     }
     return product;
   },
+  notFoundComponent: () => {
+    return (
+        <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
+            <h1 className="text-2xl font-bold">Product Not Found</h1>
+            <p className="text-muted-foreground">The product you are looking for does not exist.</p>
+            <Link to="/products">
+                <Button variant="outline">Browse Products</Button>
+            </Link>
+        </div>
+    );
+  }
 });
 
 function ProductDetailPage() {
-  const { productSlug } = Route.useParams();
-  const initialData = Route.useLoaderData();
-  const [product, setProduct] = useState<Product | null | undefined>(initialData);
+  const product = Route.useLoaderData();
   const { addItem } = useCart();
   const navigate = useNavigate();
-
-  // Fallback if loader didn't run (client-side nav sometimes) or just to be safe
-  useEffect(() => {
-    if (!product) {
-        mockDb.init().then(() => {
-            const found = mockDb.getProductBySlug(productSlug);
-            setProduct(found);
-        });
-    }
-  }, [product, productSlug]);
 
   const handleAddToCart = () => {
     if (product) {
@@ -63,19 +61,38 @@ function ProductDetailPage() {
     }
   };
 
-  if (!product) {
-    return (
-        <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
-            <h1 className="text-2xl font-bold">Product Not Found</h1>
-            <p className="text-muted-foreground">The product you are looking for does not exist.</p>
-            <Button variant="outline" onClick={() => window.history.back()}>Go Back</Button>
-        </div>
-    );
-  }
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      toast.success('Link copied to clipboard!');
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+      toast.error('Failed to copy link to clipboard');
+    }
+  };
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Link copied to clipboard!');
+  const handleFacebookShare = () => {
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+  };
+
+  const handleTwitterShare = () => {
+    window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(product.title)}`, '_blank');
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.title,
+          text: product.description,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      handleCopyLink();
+    }
   };
 
   const stockStatusInfo = {
@@ -198,17 +215,19 @@ function ProductDetailPage() {
             {/* Share Buttons */}
             <div className="flex items-center gap-3">
                 <span className="text-sm font-medium text-muted-foreground mr-2">Share:</span>
-                <button className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-[#1877F2] hover:text-white transition-colors">
+                <button type="button" onClick={handleFacebookShare} aria-label="Share on Facebook" className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-[#1877F2] hover:text-white transition-colors">
                     <Facebook className="h-4 w-4" />
                 </button>
-                <button className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-[#1DA1F2] hover:text-white transition-colors">
+                <button type="button" onClick={handleTwitterShare} aria-label="Share on Twitter" className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-[#1DA1F2] hover:text-white transition-colors">
                     <Twitter className="h-4 w-4" />
                 </button>
-                <button className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-[#25D366] hover:text-white transition-colors">
+                <button type="button" onClick={handleNativeShare} aria-label="Share" className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-[#25D366] hover:text-white transition-colors">
                     <Share2 className="h-4 w-4" />
                 </button>
                 <button 
+                    type="button"
                     onClick={handleCopyLink}
+                    aria-label="Copy link"
                     className="h-9 w-9 rounded-full border border-muted flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors"
                 >
                     <Copy className="h-4 w-4" />
@@ -224,11 +243,6 @@ function ProductDetailPage() {
                     <h2 className="text-xl font-bold text-foreground mb-6">Product Details</h2>
                     <div className="text-base leading-relaxed text-muted-foreground space-y-4">
                         <p>{product.description}</p>
-                        <p>
-                            This premium item is carefully selected to meet the highest standards of quality and performance for your events. 
-                            Crafted with durability and style in mind, it provides the perfect balance of aesthetic appeal and functional reliability 
-                            to ensure your special occasion is both seamless and memorable.
-                        </p>
                     </div>
                 </div>
                 

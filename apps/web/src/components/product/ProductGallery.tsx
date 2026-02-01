@@ -58,6 +58,24 @@ export function ProductGallery({ images }: ProductGalleryProps) {
     }
   }, [selectedIndex, thumbnailsStartIndex]);
 
+  // Keyboard navigation for lightbox
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        prevImage();
+      } else if (e.key === 'ArrowRight') {
+        nextImage();
+      } else if (e.key === 'Escape') {
+        setIsLightboxOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isLightboxOpen, prevImage, nextImage]);
+
   if (!images.length) return null;
 
   return (
@@ -93,6 +111,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
 
         {/* Navigation Arrows (Main Image) */}
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); prevImage(); }}
           className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-sm transition-opacity opacity-0 group-hover:opacity-100 hover:bg-white"
           aria-label="Previous image"
@@ -100,6 +119,7 @@ export function ProductGallery({ images }: ProductGalleryProps) {
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); nextImage(); }}
           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-sm transition-opacity opacity-0 group-hover:opacity-100 hover:bg-white"
           aria-label="Next image"
@@ -117,8 +137,10 @@ export function ProductGallery({ images }: ProductGalleryProps) {
       <div className="relative mx-auto w-full max-w-md">
         {canScrollPrev && (
             <button 
+                type="button"
                 onClick={() => scrollThumbnails('prev')}
                 className="absolute -left-8 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Previous thumbnails"
             >
                 <ChevronLeft className="h-6 w-6" />
             </button>
@@ -132,12 +154,14 @@ export function ProductGallery({ images }: ProductGalleryProps) {
             {images.map((image, index) => (
                 <button
                     key={index}
+                    type="button"
                     onClick={() => setSelectedIndex(index)}
                     className={cn(
                         "relative flex-shrink-0 cursor-pointer overflow-hidden rounded-md border-2",
                         "h-20 w-20", // Fixed size for thumbnails
                         selectedIndex === index ? "border-primary" : "border-transparent hover:border-muted"
                     )}
+                    aria-label={`View image ${index + 1}`}
                 >
                     <img 
                         src={image.url} 
@@ -151,8 +175,10 @@ export function ProductGallery({ images }: ProductGalleryProps) {
 
         {canScrollNext && (
              <button 
+                type="button"
                 onClick={() => scrollThumbnails('next')}
                 className="absolute -right-8 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Next thumbnails"
             >
                 <ChevronRight className="h-6 w-6" />
             </button>
@@ -164,8 +190,10 @@ export function ProductGallery({ images }: ProductGalleryProps) {
         <DialogContent showCloseButton={false} className="max-w-[90vw] max-h-[90vh] p-0 border-none bg-black/90 text-white overflow-hidden flex flex-col items-center justify-center">
             <DialogTitle className="sr-only">Image Gallery</DialogTitle>
              <button 
+                type="button"
                 onClick={() => setIsLightboxOpen(false)}
                 className="absolute right-4 top-4 z-50 rounded-full bg-black/50 p-2 text-white hover:bg-black/70"
+                aria-label="Close lightbox"
             >
                 <X className="h-6 w-6" />
             </button>
@@ -178,14 +206,18 @@ export function ProductGallery({ images }: ProductGalleryProps) {
                 />
                 
                 <button
+                    type="button"
                     onClick={prevImage}
                     className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white hover:bg-black/70"
+                    aria-label="Previous image"
                 >
                     <ChevronLeft className="h-8 w-8" />
                 </button>
                 <button
+                    type="button"
                     onClick={nextImage}
                     className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white hover:bg-black/70"
+                    aria-label="Next image"
                 >
                     <ChevronRight className="h-8 w-8" />
                 </button>
