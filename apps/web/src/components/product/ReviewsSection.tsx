@@ -21,9 +21,9 @@ export function ReviewsSection({ productId, hasPurchased = false }: ReviewsSecti
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  const loadReviews = async (resetPage = false) => {
+  const loadReviews = async (resetPage = false, nextPage?: number) => {
     setIsLoading(true);
-    const currentPage = resetPage ? 1 : page;
+    const currentPage = resetPage ? 1 : (nextPage || page);
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -40,6 +40,9 @@ export function ReviewsSection({ productId, hasPurchased = false }: ReviewsSecti
       setPage(1);
     } else {
       setReviews(prev => [...prev, ...result.data]);
+      if (nextPage) {
+        setPage(nextPage);
+      }
     }
     
     setHasMore(result.hasMore);
@@ -57,8 +60,8 @@ export function ReviewsSection({ productId, hasPurchased = false }: ReviewsSecti
   }, [productId, filter, sort]);
 
   const handleLoadMore = () => {
-    setPage(prev => prev + 1);
-    loadReviews(false);
+    const nextPage = page + 1;
+    loadReviews(false, nextPage);
   };
 
   const filterOptions: { value: ReviewFilter; label: string }[] = [
