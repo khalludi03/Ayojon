@@ -1,4 +1,4 @@
-import { os } from "@orpc/server";
+import { ORPCError, os } from "@orpc/server";
 
 import type { Context } from "./context";
 
@@ -11,7 +11,9 @@ export const publicProcedure = baseProcedure;
 // Protected procedure (requires auth)
 export const protectedProcedure = baseProcedure.use(async ({ context, next }) => {
   if (!context.session) {
-    throw new Error("Authentication required");
+    throw new ORPCError("UNAUTHORIZED", {
+      message: "Authentication required",
+    });
   }
   return next({
     context: {
