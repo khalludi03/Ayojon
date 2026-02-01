@@ -50,7 +50,7 @@ app.use("/api/*", async (c, next) => {
   });
 
   if (matched) {
-    return c.newResponse(response.body, response);
+    return response;
   }
 
   await next();
