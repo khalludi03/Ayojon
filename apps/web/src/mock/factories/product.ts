@@ -240,6 +240,16 @@ export function createKeyFeatures(): Array<string> {
   ].slice(0, faker.number.int({ min: 3, max: 5 }));
 }
 
+export function createWhatsIncluded(): Array<string> {
+  return Array.from({ length: faker.number.int({ min: 2, max: 5 }) }, () => 
+    faker.commerce.productName()
+  );
+}
+
+export function createSetupInstructions(): string {
+  return faker.lorem.paragraphs(2);
+}
+
 function generateRelevantDescription(title: string): string {
   const adjectives = [faker.commerce.productAdjective(), faker.commerce.productAdjective()];
   const material = faker.commerce.productMaterial();
@@ -297,6 +307,8 @@ export function createProduct(
     categoryId,
     subcategoryId,
     keyFeatures: createKeyFeatures(),
+    whatsIncluded: createWhatsIncluded(),
+    setupInstructions: faker.datatype.boolean() ? createSetupInstructions() : undefined,
     variants: createVariants(categoryId),
     returnPolicy: '7-day return policy. Product must be unused and in original packaging.',
     warranty: faker.datatype.boolean() ? '1 year manufacturer warranty' : 'No warranty',

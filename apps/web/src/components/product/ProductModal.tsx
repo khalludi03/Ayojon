@@ -74,6 +74,18 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
   const incrementQuantity = () => setQuantity((q) => Math.min(q + 1, product.stock));
   const decrementQuantity = () => setQuantity((q) => Math.max(q - 1, 1));
 
+  const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value === '') {
+      setQuantity(1);
+      return;
+    }
+    const numValue = parseInt(value, 10);
+    if (!isNaN(numValue) && numValue >= 1) {
+      setQuantity(Math.min(numValue, product.stock));
+    }
+  };
+
   const goToPreviousImage = () =>
     setSelectedImageIndex((i) => (i === 0 ? product.images.length - 1 : i - 1));
   const goToNextImage = () =>
@@ -150,19 +162,17 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
 
           {/* Right: Product Details */}
           <div>
-            <DialogHeader>
-              <div className="flex items-start justify-between gap-4">
-                <DialogTitle className="text-xl">{product.title}</DialogTitle>
-                <a
-                    href={`/product/${product.slug}`}
-                    className="flex shrink-0 items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                >
-                    View Full Details
-                    <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
+            <DialogHeader className="pr-8">
+              <DialogTitle className="text-xl">{product.title}</DialogTitle>
+              <a
+                  href={`/product/${product.slug}`}
+                  className="flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline mt-1"
+                  target="_blank"
+                  rel="noreferrer"
+              >
+                  View Full Details
+                  <ExternalLink className="h-3 w-3" />
+              </a>
             </DialogHeader>
 
             {/* Vendor */}
@@ -265,7 +275,14 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-12 text-center font-medium">{quantity}</span>
+                <input
+                  type="number"
+                  min="1"
+                  max={product.stock}
+                  value={quantity}
+                  onChange={handleQuantityChange}
+                  className="w-12 rounded-md border border-[hsl(var(--border))] p-2 text-center font-medium focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
                 <button
                   onClick={incrementQuantity}
                   className="rounded-md border border-[hsl(var(--border))] p-2 hover:bg-[hsl(var(--muted))]"
