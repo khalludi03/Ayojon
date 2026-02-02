@@ -51,16 +51,16 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
             <div className="flex items-center gap-1.5 text-[hsl(var(--accent))] sm:gap-2">
               <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="hidden text-sm font-medium sm:inline">Ends in:</span>
-              <div className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg">
-                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1">
+              <div className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg" suppressHydrationWarning>
+                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
                   {countdown.hours}
                 </span>
                 <span className="text-xs sm:text-base">:</span>
-                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1">
+                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
                   {countdown.minutes}
                 </span>
                 <span className="text-xs sm:text-base">:</span>
-                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1">
+                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
                   {countdown.seconds}
                 </span>
               </div>
