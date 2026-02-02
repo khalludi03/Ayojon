@@ -19,6 +19,7 @@ export interface CartItem {
 interface CartState {
   items: Array<CartItem>;
   currency: CurrencyCode;
+  isDrawerOpen: boolean;
 }
 
 interface CartStore {
@@ -29,6 +30,9 @@ interface CartStore {
   toggleItem: (product: Product) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
+  openDrawer: () => void;
+  closeDrawer: () => void;
+  toggleDrawer: () => void;
   getItemCount: () => number;
   getSubtotal: () => number;
   getTax: () => number;
@@ -42,6 +46,7 @@ function createCartStore(): CartStore {
   let state: CartState = {
     items: [],
     currency: 'BDT',
+    isDrawerOpen: false,
   };
   const listeners = new Set<() => void>();
 
@@ -66,7 +71,8 @@ function createCartStore(): CartStore {
       localStorage.removeItem(LEGACY_STORAGE_KEY);
 
       if (stored) {
-        state = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        state = { ...state, items: parsed.items || [], currency: parsed.currency || 'BDT' };
       }
     } catch (e) {
       console.error('Failed to load cart from sessionStorage:', e);
@@ -80,7 +86,9 @@ function createCartStore(): CartStore {
   const persist = () => {
     if (typeof window !== 'undefined') {
       // Use sessionStorage - data clears when browser tab closes
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // Don't persist UI state like isDrawerOpen
+      const { isDrawerOpen, ...persistedState } = state;
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
     }
   };
 
@@ -103,6 +111,7 @@ function createCartStore(): CartStore {
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
+          isDrawerOpen: true, // Open drawer when adding item
         };
       } else {
         // Add new item
@@ -117,6 +126,7 @@ function createCartStore(): CartStore {
         state = {
           ...state,
           items: [...state.items, newItem],
+          isDrawerOpen: true, // Open drawer when adding item
         };
       }
 
@@ -164,6 +174,7 @@ function createCartStore(): CartStore {
         state = {
           ...state,
           items: [...state.items, newItem],
+          isDrawerOpen: true, // Open drawer when adding item
         };
       }
       
@@ -193,6 +204,21 @@ function createCartStore(): CartStore {
     clearCart: () => {
       state = { ...state, items: [] };
       persist();
+      notify();
+    },
+
+    openDrawer: () => {
+      state = { ...state, isDrawerOpen: true };
+      notify();
+    },
+
+    closeDrawer: () => {
+      state = { ...state, isDrawerOpen: false };
+      notify();
+    },
+
+    toggleDrawer: () => {
+      state = { ...state, isDrawerOpen: !state.isDrawerOpen };
       notify();
     },
 
@@ -248,7 +274,7 @@ export const cartStore = createCartStore();
 // Stable callbacks for useSyncExternalStore
 const subscribeCart = (callback: () => void) => cartStore.subscribe(callback);
 const getCartSnapshot = () => cartStore.getState();
-const getCartServerSnapshot = () => ({ items: [], currency: 'BDT' as CurrencyCode });
+const getCartServerSnapshot = () => ({ items: [], currency: 'BDT' as CurrencyCode, isDrawerOpen: false });
 
 // React hook
 export function useCart() {
@@ -265,6 +291,7 @@ export function useCart() {
   return {
     items: state.items,
     currency: state.currency,
+    isDrawerOpen: state.isDrawerOpen,
     itemCount,
     subtotal,
     addItem: cartStore.addItem,
@@ -273,6 +300,9 @@ export function useCart() {
     toggleItem: cartStore.toggleItem,
     updateQuantity: cartStore.updateQuantity,
     clearCart: cartStore.clearCart,
+    openDrawer: cartStore.openDrawer,
+    closeDrawer: cartStore.closeDrawer,
+    toggleDrawer: cartStore.toggleDrawer,
     getSubtotal: cartStore.getSubtotal,
     getTax: cartStore.getTax,
     getShipping: cartStore.getShipping,
