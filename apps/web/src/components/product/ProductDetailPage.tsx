@@ -1,40 +1,46 @@
-import { createFileRoute, notFound, Link } from '@tanstack/react-router';
-import { ProductDetailPage } from '@/components/product/ProductDetailPage';
+import { Link, useNavigate } from '@tanstack/react-router';
+import { ProductGallery } from '@/components/product/ProductGallery';
+import { ReviewsSection } from '@/components/product/ReviewsSection';
+import type { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
-import { mockDb } from '@/mock/db';
+import { Badge } from '@/components/ui/badge';
+import { useCart } from '@/stores/cart-store';
+import { 
+    Facebook, 
+    Twitter, 
+    Share2, 
+    Copy, 
+    CheckCircle2, 
+    Truck, 
+    AlertTriangle,
+    CheckCircle,
+    Minus,
+    Plus,
+    ShoppingCart,
+    Loader2
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-export const Route = createFileRoute('/product/$productSlug')({
-  component: RouteComponent,
-  // Load data before rendering if possible, or handle in component
-  loader: async ({ params }) => {
-    // Ensure DB is initialized
-    await mockDb.init();
-    const product = mockDb.getProductBySlug(params.productSlug);
-    if (!product) {
-       throw notFound();
-    }
-    return product;
-  },
-  notFoundComponent: () => {
-    return (
-        <div className="flex h-[50vh] flex-col items-center justify-center space-y-4">
-            <h1 className="text-2xl font-bold">Product Not Found</h1>
-            <p className="text-muted-foreground">The product you are looking for does not exist.</p>
-            <Link to="/products">
-                <Button variant="outline">Browse Products</Button>
-            </Link>
-        </div>
-    );
-  }
-});
+interface ProductDetailPageProps {
+  product: Product;
+}
 
-function ProductDetailPage() {
-  const { product, relatedProducts } = Route.useLoaderData();
+export function ProductDetailPage({ product }: ProductDetailPageProps) {
   const { addItem } = useCart();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
+  const [showCartModal, setShowCartModal] = useState(false);
 
   const isLowStock = product.stock < 10 && product.stock > 0;
   const isOutOfStock = product.stockStatus === 'out_of_stock' || product.stock === 0;
@@ -84,6 +90,7 @@ function ProductDetailPage() {
     setTimeout(() => {
       addItem(product, quantity);
       setIsAddingToCart(false);
+      setShowCartModal(true);
       toast.success(`Added ${quantity} item(s) to cart`);
     }, 300);
   };
@@ -390,7 +397,10 @@ function ProductDetailPage() {
         <div className="mt-16 border-t border-[hsl(var(--border))] pt-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2">
-                    <ProductDescription product={product} />
+                    <h2 className="text-xl font-bold text-foreground mb-6">Product Details</h2>
+                    <div className="text-base leading-relaxed text-muted-foreground space-y-4">
+                        <p>{product.description}</p>
+                    </div>
                 </div>
                 
                 <div className="bg-muted/20 rounded-xl p-6 border h-fit">
@@ -407,22 +417,43 @@ function ProductDetailPage() {
             </div>
         </div>
 
-        {/* You May Also Like Section */}
-        {relatedProducts.length > 0 && (
-            <div className="mt-16 border-t border-[hsl(var(--border))] pt-10 mb-16">
-                <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
-                <HorizontalScroller>
-                    {relatedProducts.map((relatedProduct) => (
-                        <div key={relatedProduct.id} className="w-[160px] flex-shrink-0 sm:w-[200px] md:w-[240px]">
-                            <ProductCard product={relatedProduct} />
-                        </div>
-                    ))}
-                </HorizontalScroller>
-            </div>
-        )}
         {/* Customer Reviews Section */}
         <ReviewsSection productId={product.id} hasPurchased={false} />
       </div>
+
+      {/* Add to Cart Success Modal */}
+      <Dialog open={showCartModal} onOpenChange={setShowCartModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Added to Cart
+            </DialogTitle>
+            <DialogDescription>
+              {quantity} {quantity === 1 ? 'item' : 'items'} added to your cart successfully!
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowCartModal(false)}
+              className="w-full sm:w-auto"
+            >
+              Continue Shopping
+            </Button>
+            <Button
+              onClick={() => {
+                setShowCartModal(false);
+                navigate({ to: '/cart' });
+              }}
+              className="w-full sm:w-auto"
+            >
+              <ShoppingCart className="mr-2 h-4 w-4" />
+              Go to Cart
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

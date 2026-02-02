@@ -116,11 +116,11 @@ export function DealCard({ deal }: DealCardProps) {
         </div>
 
         {/* Timer - Fixed height (always reserve space) */}
-        <div className="mt-1.5 h-4 text-[9px] text-[hsl(var(--muted-foreground))] sm:mt-2 sm:text-[10px] md:text-xs">
+        <div className="mt-1.5 h-4 text-[9px] text-[hsl(var(--muted-foreground))] sm:mt-2 sm:text-[10px] md:text-xs" suppressHydrationWarning>
           {!countdown.isExpired ? (
             <>
               Ends in{' '}
-              <span className="font-mono font-semibold text-[hsl(var(--accent))]">
+              <span className="font-mono font-semibold text-[hsl(var(--accent))]" suppressHydrationWarning>
                 {countdown.hours}:{countdown.minutes}:{countdown.seconds}
               </span>
             </>

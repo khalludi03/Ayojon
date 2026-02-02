@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CreditCard, Heart, LogIn, LogOut, MapPin, Package, Settings, User, UserPlus } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { authClient } from '@/lib/auth-client';
 import {
   DropdownMenu,
@@ -189,29 +189,39 @@ export function UserMenu() {
         </div>
         
         <div className="p-2">
-          <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <User className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-            <span>My Profile</span>
+          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+            <Link to="/account" search={{ section: "overview" }} className="flex items-center">
+              <User className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+              <span>My Profile</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Package className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-            <span>My Orders</span>
+          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+            <Link to="/account" search={{ section: "orders" }} className="flex items-center">
+              <Package className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+              <span>My Orders</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Heart className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-            <span>Wishlist</span>
+          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+            <Link to="/account" search={{ section: "wishlist" }} className="flex items-center">
+              <Heart className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+              <span>Wishlist</span>
+            </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <MapPin className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-            <span>Addresses</span>
+          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+            <Link to="/account" search={{ section: "addresses" }} className="flex items-center">
+              <MapPin className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+              <span>Addresses</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
             <CreditCard className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             <span>Payment Methods</span>
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Settings className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-            <span>Settings</span>
+          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+            <Link to="/account" search={{ section: "settings" }} className="flex items-center">
+              <Settings className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
+              <span>Settings</span>
+            </Link>
           </DropdownMenuItem>
         </div>
 
