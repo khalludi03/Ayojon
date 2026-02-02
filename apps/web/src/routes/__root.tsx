@@ -68,6 +68,10 @@ function RootDocument() {
                   console.error('Failed to apply theme:', e);
                 }
               })();
+
+              window.addEventListener('load', () => {
+                document.documentElement.classList.add('theme-transition-enabled');
+              });
             `,
           }}
         />

@@ -1,6 +1,7 @@
 import { createFileRoute, notFound, Link, useNavigate } from '@tanstack/react-router';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ReviewsSection } from '@/components/product/ReviewsSection';
+import { ProductDescription } from '@/components/product/ProductDescription';
 import type { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,6 +32,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+import { HorizontalScroller } from '@/components/deals/HorizontalScroller';
+import { ProductCard } from '@/components/product/ProductCard';
+
 export const Route = createFileRoute('/product/$productSlug')({
   component: ProductDetailPage,
   // Load data before rendering if possible, or handle in component
@@ -41,7 +45,8 @@ export const Route = createFileRoute('/product/$productSlug')({
     if (!product) {
        throw notFound();
     }
-    return product;
+    const relatedProducts = mockDb.getRelatedProducts(product.id, 8);
+    return { product, relatedProducts };
   },
   notFoundComponent: () => {
     return (
@@ -57,7 +62,7 @@ export const Route = createFileRoute('/product/$productSlug')({
 });
 
 function ProductDetailPage() {
-  const product = Route.useLoaderData();
+  const { product, relatedProducts } = Route.useLoaderData();
   const { addItem } = useCart();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
@@ -420,10 +425,7 @@ function ProductDetailPage() {
         <div className="mt-16 border-t border-[hsl(var(--border))] pt-10">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                 <div className="lg:col-span-2">
-                    <h2 className="text-xl font-bold text-foreground mb-6">Product Details</h2>
-                    <div className="text-base leading-relaxed text-muted-foreground space-y-4">
-                        <p>{product.description}</p>
-                    </div>
+                    <ProductDescription product={product} />
                 </div>
                 
                 <div className="bg-muted/20 rounded-xl p-6 border h-fit">
@@ -440,6 +442,19 @@ function ProductDetailPage() {
             </div>
         </div>
 
+        {/* You May Also Like Section */}
+        {relatedProducts.length > 0 && (
+            <div className="mt-16 border-t border-[hsl(var(--border))] pt-10 mb-16">
+                <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
+                <HorizontalScroller>
+                    {relatedProducts.map((relatedProduct) => (
+                        <div key={relatedProduct.id} className="w-[160px] flex-shrink-0 sm:w-[200px] md:w-[240px]">
+                            <ProductCard product={relatedProduct} />
+                        </div>
+                    ))}
+                </HorizontalScroller>
+            </div>
+        )}
         {/* Customer Reviews Section */}
         <ReviewsSection productId={product.id} hasPurchased={false} />
       </div>
