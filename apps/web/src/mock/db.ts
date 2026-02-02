@@ -3,8 +3,9 @@
 import { faker } from '@faker-js/faker';
 import { createDealProducts, createProducts } from './factories/product';
 import { createVendors } from './factories/vendor';
+import { createReviews, calculateReviewSummary } from './factories/review';
 import { CATEGORIES } from './seeds/categories';
-import type { Category, DealProduct, Product, ProductFilters, Vendor } from '@/types';
+import type { Category, DealProduct, Product, ProductFilters, Vendor, Review, ReviewSummary, ReviewFilter, ReviewSort } from '@/types';
 
 // Set seed for reproducible data
 faker.seed(12345);
@@ -23,6 +24,7 @@ class MockDatabase {
   private dealProducts: Array<DealProduct> = [];
   private vendors: Array<Vendor> = [];
   private categories: Array<Category> = CATEGORIES;
+  private reviews: Map<string, Array<Review>> = new Map();
   private initialized = false;
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -45,6 +47,12 @@ class MockDatabase {
 
     // Generate deal products (subset with high discounts)
     this.dealProducts = createDealProducts(24);
+
+    // Generate reviews for each product (varying counts)
+    this.products.forEach((product) => {
+      const reviewCount = faker.number.int({ min: 5, max: 50 });
+      this.reviews.set(product.id, createReviews(product.id, reviewCount));
+    });
 
     // Update category product counts
     this.categories = this.categories.map((cat) => ({
@@ -291,6 +299,65 @@ class MockDatabase {
         return scoreB - scoreA;
       })
       .slice(0, limit);
+  }
+
+  // Review methods
+  getProductReviews(
+    productId: string,
+    options: {
+      filter?: ReviewFilter;
+      sort?: ReviewSort;
+      page?: number;
+      limit?: number;
+    } = {}
+  ): PaginatedResult<Review> {
+    const { filter = 'all', sort = 'most_recent', page = 1, limit = 10 } = options;
+    
+    let reviews = this.reviews.get(productId) || [];
+
+    // Apply filters
+    if (filter === 'with_photos') {
+      reviews = reviews.filter((r) => r.images.length > 0);
+    } else if (filter === 'verified_purchase') {
+      reviews = reviews.filter((r) => r.isVerifiedPurchase);
+    }
+
+    // Apply sorting
+    reviews = [...reviews].sort((a, b) => {
+      switch (sort) {
+        case 'most_recent':
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case 'most_helpful':
+          return b.helpfulVotes - a.helpfulVotes;
+        case 'highest_rating':
+          return b.rating - a.rating;
+        case 'lowest_rating':
+          return a.rating - b.rating;
+        default:
+          return 0;
+      }
+    });
+
+    // Pagination
+    const total = reviews.length;
+    const totalPages = Math.ceil(total / limit);
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    const paginatedReviews = reviews.slice(start, end);
+
+    return {
+      data: paginatedReviews,
+      total,
+      page,
+      limit,
+      totalPages,
+      hasMore: page < totalPages,
+    };
+  }
+
+  getReviewSummary(productId: string): ReviewSummary {
+    const reviews = this.reviews.get(productId) || [];
+    return calculateReviewSummary(reviews);
   }
 }
 
