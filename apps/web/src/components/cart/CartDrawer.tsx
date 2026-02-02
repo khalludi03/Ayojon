@@ -197,16 +197,18 @@ export function CartDrawer() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <SheetClose asChild>
-                  <Link to="/cart">
-                    <Button variant="outline" className="w-full">
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/cart">
                       View Cart
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </SheetClose>
                 <SheetClose asChild>
-                  <Link to="/checkout">
-                    <Button className="w-full">Checkout</Button>
-                  </Link>
+                  <Button asChild className="w-full">
+                    <Link to="/checkout">
+                      Checkout
+                    </Link>
+                  </Button>
                 </SheetClose>
               </div>
             </div>
