@@ -13,7 +13,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useCart } from '@/stores/cart-store';
-import { formatPrice, cn } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 export function CartDrawer() {
