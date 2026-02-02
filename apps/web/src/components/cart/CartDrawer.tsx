@@ -123,7 +123,7 @@ export function CartDrawer() {
                         </Link>
                         {item.selectedVariant && (
                           <p className="text-sm text-muted-foreground">
-                            Variant: {item.selectedVariant.name}
+                            Variant: {item.selectedVariant.value}
                           </p>
                         )}
                         <p className="font-medium">
