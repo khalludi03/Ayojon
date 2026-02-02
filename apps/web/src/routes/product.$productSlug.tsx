@@ -68,7 +68,6 @@ function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isBuyingNow, setIsBuyingNow] = useState(false);
-  const [showCartModal, setShowCartModal] = useState(false);
 
   const isLowStock = product.stock < 10 && product.stock > 0;
   const isOutOfStock = product.stockStatus === 'out_of_stock' || product.stock === 0;
@@ -118,7 +117,6 @@ function ProductDetailPage() {
     setTimeout(() => {
       addItem(product, quantity);
       setIsAddingToCart(false);
-      setShowCartModal(true);
       toast.success(`Added ${quantity} item(s) to cart`);
     }, 300);
   };
@@ -458,40 +456,6 @@ function ProductDetailPage() {
         {/* Customer Reviews Section */}
         <ReviewsSection productId={product.id} hasPurchased={false} />
       </div>
-
-      {/* Add to Cart Success Modal */}
-      <Dialog open={showCartModal} onOpenChange={setShowCartModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              Added to Cart
-            </DialogTitle>
-            <DialogDescription>
-              {quantity} {quantity === 1 ? 'item' : 'items'} added to your cart successfully!
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowCartModal(false)}
-              className="w-full sm:w-auto"
-            >
-              Continue Shopping
-            </Button>
-            <Button
-              onClick={() => {
-                setShowCartModal(false);
-                navigate({ to: '/cart' });
-              }}
-              className="w-full sm:w-auto"
-            >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Go to Cart
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
