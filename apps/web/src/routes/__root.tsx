@@ -1,6 +1,4 @@
-import type { AppRouter } from "@my-better-t-app/api/routers/index";
 import type { QueryClient } from "@tanstack/react-query";
-import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
@@ -12,10 +10,11 @@ import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ProductModal } from "@/components/product/ProductModal";
+import { orpc } from "@/utils/trpc";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {
-  trpc: TRPCOptionsProxy<AppRouter>;
+  orpc: typeof orpc;
   queryClient: QueryClient;
 }
 

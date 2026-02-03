@@ -1,10 +1,9 @@
 import { createFileRoute, notFound, Link } from '@tanstack/react-router';
-import { ProductDetailPage } from '@/components/product/ProductDetailPage';
 import { Button } from '@/components/ui/button';
 import { mockDb } from '@/mock/db';
 
 export const Route = createFileRoute('/product/$productSlug')({
-  component: RouteComponent,
+  component: ProductDetailPage,
   // Load data before rendering if possible, or handle in component
   loader: async ({ params }) => {
     // Ensure DB is initialized
