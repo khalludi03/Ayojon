@@ -45,6 +45,14 @@ function CategoryPage() {
   const currentPage = searchParams.page || 1;
   const activeSubcategoryId = searchParams.subcategory || filters.subcategory;
 
+  const activeSubcategory = category?.subcategories?.find(s => s.id === activeSubcategoryId);
+
+  const displayCategory = category ? (activeSubcategory ? {
+    ...category,
+    name: activeSubcategory.name,
+    description: `Explore our extensive collection of ${activeSubcategory.name}. Part of our ${category.name} selection.`,
+  } : category) : null;
+
   // Update filter store with category ID when component mounts or category changes
   useEffect(() => {
     if (category && filters.category !== category.id) {
@@ -159,7 +167,7 @@ function CategoryPage() {
   }
 
   // Category not found
-  if (!category) {
+  if (!category || !displayCategory) {
     return null; // notFound will be thrown in useEffect
   }
 
@@ -168,15 +176,15 @@ function CategoryPage() {
       {/* Category Banner */}
       <section className="border-b border-border bg-card">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <CategoryBanner category={category} />
+          <CategoryBanner category={displayCategory} />
         </div>
       </section>
 
       {/* Category Description */}
-      {category.description && (
+      {displayCategory.description && (
         <section className="border-b border-border bg-card">
           <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
-            <CategoryDescription description={category.description} />
+            <CategoryDescription description={displayCategory.description} />
           </div>
         </section>
       )}
