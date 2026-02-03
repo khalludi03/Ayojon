@@ -25,9 +25,6 @@ export function ReviewsSection({ productId, hasPurchased = false }: ReviewsSecti
     setIsLoading(true);
     const currentPage = resetPage ? 1 : (nextPage || page);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
     const result = mockDb.getProductReviews(productId, {
       filter,
       sort,
