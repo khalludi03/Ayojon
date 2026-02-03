@@ -230,20 +230,20 @@ export function CartDrawer() {
 
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between text-base font-medium">
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal, currency)}</span>
+                 <span>Subtotal</span>
+                 <span>{formatPrice(subtotal, currency)}</span>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <SheetClose asChild>
-                  <Button variant="outline" className="w-full" asChild>
-                    <Link to="/cart">View Cart</Link>
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button className="w-full" asChild>
-                    <Link to="/checkout">Checkout</Link>
-                  </Button>
-                </SheetClose>
+              <div className="flex gap-4">
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/cart" onClick={closeDrawer}>
+                    View Cart
+                  </Link>
+                </Button>
+                <Button asChild className="w-full">
+                  <Link to="/checkout" onClick={closeDrawer}>
+                    Checkout
+                  </Link>
+                </Button>
               </div>
             </div>
           </>
