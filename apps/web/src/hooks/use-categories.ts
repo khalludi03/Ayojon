@@ -4,6 +4,7 @@ import {  useQuery } from '@tanstack/react-query';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { Category } from '@/types';
 import { categoryService } from '@/mock/services/product-service';
+import { CATEGORIES } from '@/mock/seeds/categories';
 
 // Query keys factory
 export const categoryKeys = {
@@ -22,6 +23,7 @@ export function useCategories(
   return useQuery({
     queryKey: categoryKeys.lists(),
     queryFn: () => categoryService.getCategories(),
+    initialData: CATEGORIES,
     // Categories rarely change, cache for longer
     staleTime: 10 * 60 * 1000, // 10 minutes
     ...options,
