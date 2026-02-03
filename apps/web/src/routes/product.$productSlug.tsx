@@ -1,13 +1,9 @@
 import { createFileRoute, notFound, Link } from '@tanstack/react-router';
-<<<<<<< HEAD
-import { ProductDetailPage } from '@/components/product/ProductDetailPage';
-=======
->>>>>>> main
 import { Button } from '@/components/ui/button';
 import { mockDb } from '@/mock/db';
 
 export const Route = createFileRoute('/product/$productSlug')({
-  component: RouteComponent,
+  component: ProductDetailPage,
   // Load data before rendering if possible, or handle in component
   loader: async ({ params }) => {
     // Ensure DB is initialized
@@ -31,12 +27,6 @@ export const Route = createFileRoute('/product/$productSlug')({
   }
 });
 
-<<<<<<< HEAD
-function RouteComponent() {
-  const product = Route.useLoaderData();
-  
-  return <ProductDetailPage product={product} />;
-=======
 function ProductDetailPage() {
   const { product, relatedProducts } = Route.useLoaderData();
   const { addItem } = useCart();
@@ -434,5 +424,4 @@ function ProductDetailPage() {
       </div>
     </div>
   );
->>>>>>> main
 }
