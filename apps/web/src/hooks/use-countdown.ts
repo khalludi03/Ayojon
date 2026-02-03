@@ -37,10 +37,14 @@ export function useCountdown(endDate: string | Date): CountdownState {
     };
   }, [endDate]);
 
-  const [timeLeft, setTimeLeft] = useState<CountdownState>(calculateTimeLeft);
+  const [timeLeft, setTimeLeft] = useState<CountdownState>(() => calculateTimeLeft());
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Update immediately
+    // Mark as mounted to prevent hydration mismatch
+    setMounted(true);
+
+    // Update immediately after mount
     setTimeLeft(calculateTimeLeft());
 
     // Then update every second
