@@ -34,18 +34,24 @@ function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }
 
   const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    setInputValue(value);
 
-    if (value === '') return;
+    if (value === '') {
+      setInputValue('');
+      return;
+    }
 
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 1) {
       if (numValue > item.product.stock) {
+        setInputValue(item.product.stock.toString());
         toast.error(`Only ${item.product.stock} items available in stock`);
         updateQuantity(item.id, item.product.stock);
       } else {
+        setInputValue(value);
         updateQuantity(item.id, numValue);
       }
+    } else {
+      setInputValue(value);
     }
   };
 
@@ -177,7 +183,7 @@ export function CartDrawer() {
 
   return (
     <Sheet open={isDrawerOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-full flex-col sm:max-w-lg">
+      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg">
         <SheetHeader className="flex-row items-center justify-between space-y-0 border-b pb-4">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -224,6 +230,10 @@ export function CartDrawer() {
 
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between text-base font-medium">
+                 <span>Subtotal</span>
+                 <span>{formatPrice(subtotal, currency)}</span>
+              </div>
+              <div className="flex gap-4">
                 <Button asChild variant="outline" className="w-full">
                   <Link to="/cart" onClick={closeDrawer}>
                     View Cart
