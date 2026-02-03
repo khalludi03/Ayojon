@@ -4,7 +4,7 @@ import { mockDb } from '@/mock/db';
 import { ProductDetailPage } from '@/components/product/ProductDetailPage';
 
 export const Route = createFileRoute('/product/$productSlug')({
-  component: ProductDetailPage,
+  component: RouteComponent,
   // Load data before rendering if possible, or handle in component
   loader: async ({ params }) => {
     // Ensure DB is initialized
@@ -13,7 +13,8 @@ export const Route = createFileRoute('/product/$productSlug')({
     if (!product) {
        throw notFound();
     }
-    return product;
+    const relatedProducts = mockDb.getRelatedProducts(product.id, 8);
+    return { product, relatedProducts };
   },
   notFoundComponent: () => {
     return (
@@ -29,6 +30,6 @@ export const Route = createFileRoute('/product/$productSlug')({
 });
 
 function RouteComponent() {
-  const product = Route.useLoaderData();
-  return <ProductDetailPage product={product} />;
+  const { product, relatedProducts } = Route.useLoaderData();
+  return <ProductDetailPage product={product} relatedProducts={relatedProducts} />;
 }

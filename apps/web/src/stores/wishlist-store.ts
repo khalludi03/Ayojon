@@ -96,16 +96,19 @@ function createWishlistStore(): WishlistStore {
     });
 
     // Subscribe to auth session changes using nanostores subscribe API
-    authClient.$sessionSignal.subscribe(() => {
-      authClient.getSession().then((session) => {
-        const newUserId = session?.user?.id || null;
-        if (newUserId !== currentUserId) {
-          currentUserId = newUserId;
-          loadWishlist(newUserId);
-          notify();
-        }
+    const sessionSignal = authClient.$store?.atoms?.$sessionSignal;
+    if (sessionSignal) {
+      sessionSignal.subscribe(() => {
+        authClient.getSession().then((session) => {
+          const newUserId = session?.user?.id || null;
+          if (newUserId !== currentUserId) {
+            currentUserId = newUserId;
+            loadWishlist(newUserId);
+            notify();
+          }
+        });
       });
-    });
+    }
   }
 
   const notify = () => {

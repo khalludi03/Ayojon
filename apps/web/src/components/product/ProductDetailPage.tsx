@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import { HorizontalScroller } from '@/components/deals/HorizontalScroller';
+import { ProductCard } from '@/components/product/ProductCard';
 import {
   Dialog,
   DialogContent,
@@ -32,9 +34,10 @@ import {
 
 interface ProductDetailPageProps {
   product: Product;
+  relatedProducts: Array<Product>;
 }
 
-export function ProductDetailPage({ product }: ProductDetailPageProps) {
+export function ProductDetailPage({ product, relatedProducts }: ProductDetailPageProps) {
   const { addItem } = useCart();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
@@ -419,6 +422,20 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
         {/* Customer Reviews Section */}
         <ReviewsSection productId={product.id} hasPurchased={false} />
+
+        {/* You May Also Like Section */}
+        {relatedProducts.length > 0 && (
+            <div className="mt-16 border-t border-[hsl(var(--border))] pt-10 mb-16">
+                <h2 className="text-2xl font-bold mb-6">You May Also Like</h2>
+                <HorizontalScroller>
+                    {relatedProducts.map((relatedProduct) => (
+                        <div key={relatedProduct.id} className="w-[160px] flex-shrink-0 sm:w-[200px] md:w-[240px]">
+                            <ProductCard product={relatedProduct} />
+                        </div>
+                    ))}
+                </HorizontalScroller>
+            </div>
+        )}
       </div>
 
       {/* Add to Cart Success Modal */}
