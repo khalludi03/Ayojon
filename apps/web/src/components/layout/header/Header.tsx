@@ -12,11 +12,14 @@ import { MainNav } from './MainNav';
 import { MegaMenu } from './MegaMenu';
 import { MobileNav } from './MobileNav';
 import { Button } from '@/components/ui/button';
+import { useCart } from '@/stores/cart-store';
+import { CartDrawer } from '@/components/cart/CartDrawer';
 
 export function Header() {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const { openDrawer } = useCart();
 
   return (
     <>
@@ -89,7 +92,7 @@ export function Header() {
               </div>
               <ThemeToggle />
               <WishlistIcon />
-              <CartIcon />
+              <CartIcon onClick={openDrawer} />
               <div className="ml-0 border-l border-[hsl(var(--border))] pl-0.5 sm:ml-1 sm:pl-1 md:ml-2 md:pl-2">
                 <UserMenu />
               </div>
@@ -127,6 +130,9 @@ export function Header() {
 
       {/* Mobile Search Modal */}
       <MobileSearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
+      
+      {/* Cart Drawer */}
+      <CartDrawer />
     </>
   );
 }

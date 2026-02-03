@@ -1,6 +1,8 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+console.log("Web Env Init:", (import.meta as any).env);
+
 export const env = createEnv({
   clientPrefix: "VITE_",
   client: {

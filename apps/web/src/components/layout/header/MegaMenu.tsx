@@ -101,7 +101,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                       </Link>
 
                       <div className="mt-3 space-y-1">
-                        {category.subcategories.slice(0, 5).map((sub) => (
+                        {category.subcategories.slice(0, 6).map((sub) => (
                           <Link
                             key={sub.id}
                             to="/category/$categorySlug"
@@ -113,14 +113,14 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                             {sub.name}
                           </Link>
                         ))}
-                        {category.subcategories.length > 5 && (
+                        {category.subcategories.length > 6 && (
                           <Link
                             to="/category/$categorySlug"
                             params={{ categorySlug: category.slug }}
                             onClick={onClose}
                             className="block text-sm font-medium text-[hsl(var(--primary))] hover:underline"
                           >
-                            +{category.subcategories.length - 5} more
+                            +{category.subcategories.length - 6} more
                           </Link>
                         )}
                       </div>
