@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCart, type CartItem } from '@/stores/cart-store'
 import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,6 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
   onRemove: (item: CartItem) => void
 }) {
   const [inputValue, setInputValue] = useState(item.quantity.toString())
-  const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
     setInputValue(item.quantity.toString())
@@ -50,13 +49,11 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
   const handleUpdate = () => {
     const numValue = parseInt(inputValue, 10)
     if (!isNaN(numValue) && numValue >= 1) {
-      setIsUpdating(true)
       updateQuantity(item.id, Math.min(numValue, item.product.stock))
-      setTimeout(() => setIsUpdating(false), 600)
     }
   }
 
-  const showUpdate = isUpdating || (inputValue !== '' && parseInt(inputValue, 10) !== item.quantity && !isNaN(parseInt(inputValue, 10)))
+  const showUpdate = inputValue !== '' && parseInt(inputValue, 10) !== item.quantity && !isNaN(parseInt(inputValue, 10))
 
   return (
     <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 sm:p-4">
@@ -115,7 +112,7 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
                   size="icon"
                   className="h-7 w-7 sm:h-8 sm:w-8"
                   onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
-                  disabled={item.quantity <= 1 || isUpdating}
+                  disabled={item.quantity <= 1}
                 >
                   <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
@@ -125,7 +122,6 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
                   value={inputValue}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  disabled={isUpdating}
                   aria-label="Quantity"
                   className="min-w-[2rem] w-10 text-center text-sm font-medium sm:min-w-[2.5rem] sm:w-12 sm:text-base border border-[hsl(var(--border))] rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] py-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -134,18 +130,14 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
                   size="icon"
                   className="h-7 w-7 sm:h-8 sm:w-8"
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  disabled={item.quantity >= item.product.stock || isUpdating}
+                  disabled={item.quantity >= item.product.stock}
                 >
                   <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                 </Button>
               </div>
               {showUpdate && (
-                <Button size="sm" className="h-6 px-3 text-xs" onClick={handleUpdate} disabled={isUpdating}>
-                  {isUpdating ? (
-                    <><Loader2 className="mr-1 h-3 w-3 animate-spin" />Updating...</>
-                  ) : (
-                    'Update'
-                  )}
+                <Button size="sm" className="h-6 px-3 text-xs" onClick={handleUpdate}>
+                  Update
                 </Button>
               )}
               {item.quantity >= item.product.stock && (
