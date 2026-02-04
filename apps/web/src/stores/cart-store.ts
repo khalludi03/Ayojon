@@ -112,7 +112,6 @@ function createCartStore(): CartStore {
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
-          isDrawerOpen: true, // Open drawer when adding item
         };
       } else {
         // Add new item
@@ -127,7 +126,6 @@ function createCartStore(): CartStore {
         state = {
           ...state,
           items: [...state.items, newItem],
-          isDrawerOpen: true, // Open drawer when adding item
         };
       }
 
@@ -183,7 +181,6 @@ function createCartStore(): CartStore {
         state = {
           ...state,
           items: [...state.items, newItem],
-          isDrawerOpen: true, // Open drawer when adding item
         };
       }
 

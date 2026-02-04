@@ -213,7 +213,7 @@ export function CartDrawer() {
 
   return (
     <Sheet open={isDrawerOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg" onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
+      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg" onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetHeader className="flex-row items-center justify-between space-y-0 border-b pb-4">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
