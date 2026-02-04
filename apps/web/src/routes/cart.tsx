@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { Minus, Plus, ShoppingBag, Trash2, ChevronDown, ChevronUp, X, Tag } from 'lucide-react'
+import { toast } from 'sonner'
 import { useCart, type CartItem } from '@/stores/cart-store'
 import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal'
 import { Button } from '@/components/ui/button'
@@ -14,10 +15,11 @@ export const Route = createFileRoute('/cart')({
   component: CartPage,
 })
 
-function CartItemRow({ item, updateQuantity, onRemove }: {
+function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
   item: CartItem
   updateQuantity: (itemId: string, quantity: number) => void
   onRemove: (item: CartItem) => void
+  onSaveForLater: (itemId: string) => void
 }) {
   const [inputValue, setInputValue] = useState(item.quantity.toString())
 
@@ -148,6 +150,16 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
             </div>
           </div>
 
+          {/* Save for Later Link */}
+          <div className="mt-2 flex items-center gap-3">
+            <button
+              onClick={() => onSaveForLater(item.id)}
+              className="text-xs text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--primary))] hover:underline sm:text-sm"
+            >
+              Save for Later
+            </button>
+          </div>
+
           {/* Subtotal for this item (mobile only) */}
           <div className="mt-2 flex items-center justify-between border-t border-[hsl(var(--border))] pt-2 sm:hidden">
             <p className="text-xs text-[hsl(var(--muted-foreground))]">Subtotal:</p>
@@ -169,11 +181,88 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
   )
 }
 
+function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
+  item: CartItem
+  onMoveToCart: (itemId: string) => void
+  onRemove: (itemId: string) => void
+}) {
+  return (
+    <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 sm:p-4">
+      <div className="flex gap-3 sm:gap-4">
+        {/* Product Image — clickable to PDP */}
+        <Link to={`/product/${item.product.slug}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))] sm:h-24 sm:w-24">
+          <img
+            src={item.product.images[0]?.url}
+            alt={item.product.title}
+            className="h-full w-full object-cover"
+          />
+        </Link>
+
+        {/* Product Details */}
+        <div className="flex flex-1 flex-col justify-between">
+          {/* Top Section - Title and Remove Button */}
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <Link to={`/product/${item.product.slug}`}>
+                <h3 className="line-clamp-2 text-sm font-medium text-[hsl(var(--foreground))] hover:text-[hsl(var(--primary))] sm:text-base">
+                  {item.product.title}
+                </h3>
+              </Link>
+              <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
+                by {item.product.vendor.name}
+              </p>
+            </div>
+            <button
+              onClick={() => onRemove(item.id)}
+              className="shrink-0 rounded-full p-1 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--destructive))]"
+              aria-label="Remove item"
+            >
+              <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+          </div>
+
+          {/* Bottom Section - Price and Actions */}
+          <div className="mt-2 flex items-end justify-between">
+            {/* Price */}
+            <div>
+              <p className="text-base font-bold text-[hsl(var(--brand-orange))] sm:text-lg">
+                {formatPrice(item.product.pricing.currentPrice)}
+              </p>
+              {item.product.pricing.originalPrice > item.product.pricing.currentPrice && (
+                <p className="text-xs text-[hsl(var(--muted-foreground))] line-through sm:text-sm">
+                  {formatPrice(item.product.pricing.originalPrice)}
+                </p>
+              )}
+            </div>
+
+            {/* Move to Cart Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onMoveToCart(item.id)}
+              className="h-8"
+            >
+              Move to Cart
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CartPage() {
-  const { items, updateQuantity, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { items, savedForLater, discount, updateQuantity, saveForLater, moveToCart, removeSavedItem, applyCoupon, removeCoupon, getDiscount, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
   const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval()
   const [clearConfirm, setClearConfirm] = useState(false)
   const [suggested, setSuggested] = useState<Product[]>([])
+  const [mounted, setMounted] = useState(false)
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
+  const [couponCode, setCouponCode] = useState('')
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (items.length === 0) {
@@ -181,7 +270,41 @@ function CartPage() {
     }
   }, [items.length])
 
-  if (items.length === 0) {
+  const handleApplyCoupon = () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code')
+      return
+    }
+    
+    // Demo coupons - in real app, this would be validated on backend
+    const validCoupons: Record<string, { type: 'percentage' | 'fixed', value: number }> = {
+      'SAVE10': { type: 'percentage', value: 10 },
+      'SAVE20': { type: 'percentage', value: 20 },
+      'FLAT100': { type: 'fixed', value: 100 },
+      'FLAT200': { type: 'fixed', value: 200 },
+    }
+    
+    const coupon = validCoupons[couponCode.toUpperCase()]
+    
+    if (coupon) {
+      applyCoupon(couponCode.toUpperCase(), coupon.type, coupon.value)
+      toast.success(`Coupon "${couponCode.toUpperCase()}" applied!`)
+      setCouponCode('')
+    } else {
+      toast.error('Invalid coupon code')
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    removeCoupon()
+    toast.success('Coupon removed')
+  }
+
+  if (!mounted) {
+    return null
+  }
+
+  if (items.length === 0 && savedForLater.length === 0) {
     return (
       <div className="min-h-[60vh] bg-[hsl(var(--background))]">
         <div className="mx-auto max-w-7xl px-4 py-16">
@@ -270,54 +393,179 @@ function CartPage() {
         {/* Cart Layout - Single column on mobile, two columns on desktop */}
         <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-8">
           {/* Cart Items */}
-          <div className="space-y-3 sm:space-y-4">
-            {items.map((item) => (
-              <CartItemRow
-                key={item.id}
-                item={item}
-                updateQuantity={updateQuantity}
-                onRemove={(item) => setPendingRemoveItem(item)}
-              />
-            ))}
+          <div className="space-y-6">
+            {items.length > 0 && (
+              <div className="space-y-3 sm:space-y-4">
+                {items.map((item) => (
+                  <CartItemRow
+                    key={item.id}
+                    item={item}
+                    updateQuantity={updateQuantity}
+                    onRemove={(item) => setPendingRemoveItem(item)}
+                    onSaveForLater={(itemId) => {
+                      saveForLater(itemId);
+                      toast.success('Item saved for later');
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Empty cart message when cart is empty but saved items exist */}
+            {items.length === 0 && savedForLater.length > 0 && (
+              <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
+                <div className="mb-4 flex justify-center">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--muted))]">
+                    <ShoppingBag className="h-8 w-8 text-[hsl(var(--muted-foreground))]" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">
+                  Your cart is empty
+                </h3>
+                <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+                  Add some items to get started!
+                </p>
+                <Link to="/">
+                  <Button className="mt-4" variant="outline">
+                    Continue Shopping
+                  </Button>
+                </Link>
+              </div>
+            )}
+
+            {/* Saved for Later Section */}
+            {savedForLater.length > 0 && (
+              <div className={items.length > 0 ? "mt-8 border-t border-[hsl(var(--border))] pt-6" : ""}>
+                <h2 className="mb-4 text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
+                  Saved for Later ({savedForLater.length})
+                </h2>
+                <div className="space-y-3 sm:space-y-4">
+                  {savedForLater.map((item) => (
+                    <SavedForLaterItemRow
+                      key={item.id}
+                      item={item}
+                      onMoveToCart={(itemId) => {
+                        moveToCart(itemId);
+                        toast.success('Item moved to cart');
+                      }}
+                      onRemove={(itemId) => {
+                        removeSavedItem(itemId);
+                        toast.success('Item removed');
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Order Summary - Sticky on desktop */}
-          <div className="lg:sticky lg:top-24 lg:h-fit">
-            <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-6">
-              <h2 className="text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
-                Order Summary
-              </h2>
+          {/* Order Summary - Sticky on desktop - Only show when cart has items */}
+          {items.length > 0 && (
+            <div className="lg:sticky lg:top-24 lg:h-fit">
+              <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-6">
+                <h2 className="text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
+                  Order Summary
+                </h2>
+
+                {/* Coupon Input */}
+                <div className="mt-4 sm:mt-6">
+                  <label className="text-sm font-medium text-[hsl(var(--foreground))]">
+                    Have a coupon?
+                  </label>
+                  <div className="mt-2 flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
+                      placeholder="Enter code"
+                      disabled={!!discount}
+                      className="flex-1 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] disabled:opacity-50"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={handleApplyCoupon}
+                      disabled={!!discount}
+                      className="shrink-0"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                    Try: SAVE10, SAVE20, FLAT100, FLAT200
+                  </p>
+                </div>
 
               <div className="mt-4 space-y-3 border-b border-[hsl(var(--border))] pb-4 sm:mt-6 sm:space-y-4">
+                {/* Items Subtotal */}
                 <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-[hsl(var(--muted-foreground))]">Subtotal</span>
+                  <span className="text-[hsl(var(--muted-foreground))]">
+                    Items Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})
+                  </span>
                   <span className="font-medium text-[hsl(var(--foreground))]">
                     {formatPrice(getSubtotal())}
                   </span>
                 </div>
+
+                {/* Discount */}
+                {discount && getDiscount() > 0 && (
+                  <div className="flex items-center justify-between text-sm sm:text-base">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-600 dark:text-green-400">
+                        Discount ({discount.code})
+                      </span>
+                      <button
+                        onClick={handleRemoveCoupon}
+                        className="rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+                        aria-label="Remove coupon"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <span className="font-medium text-green-600 dark:text-green-400">
+                      -{formatPrice(getDiscount())}
+                    </span>
+                  </div>
+                )}
+
+                {/* Shipping */}
                 <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-[hsl(var(--muted-foreground))]">Shipping</span>
+                  <span className="text-[hsl(var(--muted-foreground))]">Delivery Fee</span>
                   <span className="font-medium text-[hsl(var(--foreground))]">
                     {getShipping() === 0 ? (
-                      <Badge variant="freeShipping">Free</Badge>
+                      <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
                     ) : (
                       formatPrice(getShipping())
                     )}
                   </span>
                 </div>
+
+                {/* Tax */}
                 <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-[hsl(var(--muted-foreground))]">Tax</span>
+                  <span className="text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
                   <span className="font-medium text-[hsl(var(--foreground))]">
                     {formatPrice(getTax())}
                   </span>
                 </div>
               </div>
 
-              <div className="mt-4 flex justify-between">
+              {/* Savings Highlight */}
+              {discount && getDiscount() > 0 && (
+                <div className="mt-3 rounded-md bg-green-50 dark:bg-green-950/20 p-3 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Tag className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                      You're saving {formatPrice(getDiscount())}!
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-4 flex justify-between items-baseline">
                 <span className="text-base font-bold text-[hsl(var(--foreground))] sm:text-lg">
-                  Total
+                  Grand Total
                 </span>
-                <span className="text-xl font-bold text-[hsl(var(--brand-orange))] sm:text-2xl">
+                <span className="text-2xl font-bold text-[hsl(var(--brand-orange))] sm:text-3xl">
                   {formatPrice(getTotal())}
                 </span>
               </div>
@@ -357,29 +605,121 @@ function CartPage() {
               </div>
             </div>
           </div>
+          )}
         </div>
       </div>
 
-      {/* Mobile sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-10 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg lg:hidden">
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                {items.length} {items.length === 1 ? 'item' : 'items'}
-              </span>
-              <span className="text-base font-bold text-[hsl(var(--foreground))]">
-                {formatPrice(getTotal())}
-              </span>
+      {/* Mobile sticky bottom bar with collapsible summary - Only show when cart has items */}
+      {items.length > 0 && (
+        <>
+          {/* Collapsible Summary Overlay */}
+          {isSummaryOpen && (
+            <div 
+              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              onClick={() => setIsSummaryOpen(false)}
+            />
+          )}
+
+          {/* Summary Panel */}
+          <div className={`fixed bottom-0 left-0 right-0 z-50 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg transition-transform duration-300 lg:hidden ${isSummaryOpen ? 'translate-y-0' : ''}`}>
+            {/* Collapsible Details */}
+            {isSummaryOpen && (
+              <div className="max-h-[70vh] overflow-y-auto border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]">
+                <div className="mx-auto max-w-7xl px-4 py-4">
+                  <h3 className="mb-4 text-lg font-bold text-[hsl(var(--foreground))]">
+                    Order Summary
+                  </h3>
+
+                  {/* Price Breakdown */}
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[hsl(var(--muted-foreground))]">
+                        Items Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})
+                      </span>
+                      <span className="font-medium text-[hsl(var(--foreground))]">
+                        {formatPrice(getSubtotal())}
+                      </span>
+                    </div>
+
+                    {discount && getDiscount() > 0 && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-green-600 dark:text-green-400">
+                          Discount ({discount.code})
+                        </span>
+                        <span className="font-medium text-green-600 dark:text-green-400">
+                          -{formatPrice(getDiscount())}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[hsl(var(--muted-foreground))]">Delivery Fee</span>
+                      <span className="font-medium text-[hsl(var(--foreground))]">
+                        {getShipping() === 0 ? (
+                          <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
+                        ) : (
+                          formatPrice(getShipping())
+                        )}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between text-sm">
+                      <span className="text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
+                      <span className="font-medium text-[hsl(var(--foreground))]">
+                        {formatPrice(getTax())}
+                      </span>
+                    </div>
+
+                    {discount && getDiscount() > 0 && (
+                      <div className="rounded-md bg-green-50 dark:bg-green-950/20 p-2 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Tag className="h-3 w-3 text-green-600 dark:text-green-400" />
+                          <span className="text-xs font-semibold text-green-600 dark:text-green-400">
+                            You're saving {formatPrice(getDiscount())}!
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Bar */}
+            <div className="mx-auto max-w-7xl px-4 py-3">
+              <button
+                onClick={() => setIsSummaryOpen(!isSummaryOpen)}
+                className="mb-3 flex w-full items-center justify-between text-sm"
+              >
+                <span className="font-medium text-[hsl(var(--foreground))]">
+                  {isSummaryOpen ? 'Hide' : 'View'} order summary
+                </span>
+                {isSummaryOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Grand Total
+                  </span>
+                  <span className="text-xl font-bold text-[hsl(var(--brand-orange))]">
+                    {formatPrice(getTotal())}
+                  </span>
+                </div>
+                <Link to="/checkout" className="flex-1 max-w-xs">
+                  <Button className="w-full" size="lg">
+                    Checkout
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <Link to="/checkout" className="flex-1 max-w-xs">
-              <Button className="w-full" size="lg">
-                Proceed to Checkout
-              </Button>
-            </Link>
           </div>
-        </div>
-      </div>
+        </>
+      )}
 
       <CartRemoveConfirmDialog
         pendingRemoveItem={pendingRemoveItem}

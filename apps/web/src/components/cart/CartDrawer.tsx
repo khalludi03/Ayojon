@@ -22,10 +22,11 @@ interface CartItemRowProps {
   currency: CurrencyCode;
   updateQuantity: (itemId: string, quantity: number) => void;
   onRemove: (item: CartItem) => void;
+  onSaveForLater: (itemId: string) => void;
   closeDrawer: () => void;
 }
 
-function CartItemRow({ item, currency, updateQuantity, onRemove, closeDrawer }: CartItemRowProps) {
+function CartItemRow({ item, currency, updateQuantity, onRemove, onSaveForLater, closeDrawer }: CartItemRowProps) {
   const [inputValue, setInputValue] = useState(item.quantity.toString());
 
   // Sync local state with store when store updates (e.g. via +/- buttons)
@@ -108,42 +109,52 @@ function CartItemRow({ item, currency, updateQuantity, onRemove, closeDrawer }: 
           </p>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center rounded-md border">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-md border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-r-none"
+                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                disabled={item.quantity <= 1}
+              >
+                <Minus className="h-3 w-3" />
+                <span className="sr-only">Decrease</span>
+              </Button>
+              <input
+                type="number"
+                min="1"
+                max={item.product.stock}
+                value={inputValue}
+                aria-label="Quantity"
+                onChange={handleManualChange}
+                onBlur={handleBlur}
+                className="h-8 w-12 border-x border-input bg-transparent text-center text-sm font-medium focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-l-none"
+                onClick={() => {
+                  if (item.quantity < item.product.stock) {
+                    updateQuantity(item.id, item.quantity + 1);
+                  } else {
+                    toast.error(`Only ${item.product.stock} items available`);
+                  }
+                }}
+                disabled={item.quantity >= item.product.stock}
+              >
+                <Plus className="h-3 w-3" />
+                <span className="sr-only">Increase</span>
+              </Button>
+            </div>
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-r-none"
-              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-              disabled={item.quantity <= 1}
+              variant="link"
+              size="sm"
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-primary"
+              onClick={() => onSaveForLater(item.id)}
             >
-              <Minus className="h-3 w-3" />
-              <span className="sr-only">Decrease</span>
-            </Button>
-            <input
-              type="number"
-              min="1"
-              max={item.product.stock}
-              value={inputValue}
-              aria-label="Quantity"
-              onChange={handleManualChange}
-              onBlur={handleBlur}
-              className="h-8 w-12 border-x border-input bg-transparent text-center text-sm font-medium focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-l-none"
-              onClick={() => {
-                if (item.quantity < item.product.stock) {
-                  updateQuantity(item.id, item.quantity + 1);
-                } else {
-                  toast.error(`Only ${item.product.stock} items available`);
-                }
-              }}
-              disabled={item.quantity >= item.product.stock}
-            >
-              <Plus className="h-3 w-3" />
-              <span className="sr-only">Increase</span>
+              Save for Later
             </Button>
           </div>
           <Button
@@ -167,6 +178,7 @@ export function CartDrawer() {
     itemCount,
     subtotal,
     updateQuantity,
+    saveForLater,
     currency,
     isDrawerOpen,
     closeDrawer,
@@ -225,6 +237,10 @@ export function CartDrawer() {
                     currency={currency}
                     updateQuantity={updateQuantity}
                     onRemove={(item) => setPendingRemoveItem(item)}
+                    onSaveForLater={(itemId) => {
+                      saveForLater(itemId);
+                      toast.success('Item saved for later');
+                    }}
                     closeDrawer={closeDrawer}
                   />
                 ))}
