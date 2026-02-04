@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import Loader from "./components/loader";
 import { routeTree } from "./routeTree.gen";
-import { orpc } from "./utils/trpc";
+import { orpc } from "./utils/orpc";
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
