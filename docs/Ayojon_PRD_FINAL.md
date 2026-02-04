@@ -1,4 +1,4 @@
-# Ayojon — Multi-Vendor E-Commerce Platform for Event Products & Rentals
+# Ayojon — Multi-Vendor E-Commerce Platform for Event Products
 
 ## Product Requirements Document (PRD) - MVP Edition
 
@@ -17,7 +17,7 @@
 5. [Epic 1: User Registration & Authentication](#epic-1-user-registration--authentication)
 6. [Epic 2: Homepage & Core Navigation](#epic-2-homepage--core-navigation)
 7. [Epic 3: Product Browsing & Search](#epic-3-product-browsing--search)
-8. [Epic 4: Product Details & Rental Options](#epic-4-product-details--rental-options)
+8. [Epic 4: Product Details ](#epic-4-product-details)
 9. [Epic 5: Shopping Cart Management](#epic-5-shopping-cart-management)
 10. [Epic 6: Checkout & Payment Flow](#epic-6-checkout--payment-flow)
 11. [Epic 7: User Account & Profile](#epic-7-user-account--profile)
@@ -31,9 +31,9 @@
 
 ## Executive Summary
 
-Ayojon is a multi-vendor e-commerce platform specializing in event-related products and rentals, targeting South Asian users, primarily in Bangladesh. The platform enables multiple vendors to sell and rent event products (decorations, sound systems, lighting, furniture, catering supplies, photography equipment, etc.) while providing consumers with a unified shopping experience.
+Ayojon is a multi-vendor e-commerce platform specializing in event-related products, targeting South Asian users, primarily in Bangladesh. The platform enables multiple vendors to sell event products (decorations, sound systems, lighting, furniture, catering supplies, photography equipment, etc.) while providing consumers with a unified shopping experience.
 
-**One-Line Pitch:** "The Daraz for events—shop and rent everything you need for any occasion, from hundreds of vendors in one place."
+**One-Line Pitch:** "The Daraz for events—shop everything you need for any occasion, from hundreds of vendors in one place."
 
 **Scope:** Frontend prototype with mock data simulation demonstrating the complete e-commerce experience for both customers and vendors.
 
@@ -50,7 +50,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Build secure authentication flows for both users and vendors
 - Build a fully functional e-commerce UI with product-centric browsing
 - Implement comprehensive product filtering and sorting
-- Support both rental and purchase product flows
+- Support purchase product flows
 - Demonstrate local payment flows (COD, bKash, Nagad, card)
 - Enable vendor self-service portal for product and order management
 - Achieve Lighthouse performance score > 90
@@ -77,14 +77,14 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 | 1 | User Registration & Authentication | Complete user sign-up, login, and session management | 32 |
 | 2 | Homepage & Core Navigation | Landing page with featured products and navigation | 50 |
 | 3 | Product Browsing & Search | Product discovery with filters and search | 52 |
-| 4 | Product Details & Rental Options | Comprehensive product pages with rental scheduling | 48 |
-| 5 | Shopping Cart Management | Cart operations for both purchase and rental items | 40 |
+| 4 | Product Details & Purchase Options | Comprehensive product pages with purchase options | 38 |
+| 5 | Shopping Cart Management | Cart operations for purchase items | 32 |
 | 6 | Checkout & Payment Flow | Complete checkout with local payment methods | 58 |
 | 7 | User Account & Profile | User dashboard and profile management | 38 |
-| 8 | Order Tracking & History | Order management and rental tracking | 42 |
+| 8 | Order Tracking & History | Order management and tracking | 32 |
 | 9 | Vendor Dashboard & Management | Vendor portal for products and orders | 52 |
 | 10 | Reviews & Ratings System | Product and vendor review capabilities | 18 |
-| **TOTAL** | | | **430** |
+| **TOTAL** | | | **382** |
 
 ---
 
@@ -270,7 +270,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Category mega menu dropdown (desktop only)
 - Icons: Cart (with item count badge), User menu, Theme toggle
 - Mobile: Hamburger menu with drawer navigation
-- User menu dropdown: My Orders, My Rentals, Profile, Settings, Sign Out
+- User menu dropdown: My Orders, Profile, Settings, Sign Out
 - Guest user menu: Sign In, Sign Up
 - Responsive design: full header on desktop, compact on mobile
 - Active page indicator in navigation
@@ -340,7 +340,6 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - "Featured Products" section
 - Grid layout: 4 columns (desktop), 2 columns (mobile)
 - Product card components: Image, Name, Price, Rating (stars + count), "Add to Cart" button, Heart icon (wishlist)
-- Rental products show: "From ৳X/day" pricing
 - "Ayojon Choice" badge on curated products
 - Hover effects: elevated shadow, show quick actions
 - "Load More" button to extend grid (pagination simulation)
@@ -373,7 +372,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 **Acceptance Criteria:**
 - Footer sections: About Us, Customer Service, Vendor, Quick Links, Payment Methods, Social Media
-- Links: About, Contact, FAQ, Terms, Privacy Policy, Return Policy, Vendor Registration, How to Rent
+- Links: About, Contact, FAQ, Terms, Privacy Policy, Return Policy, Vendor Registration
 - Display accepted payment icons: bKash, Nagad, Visa, Mastercard, Cash on Delivery
 - Social media icons: Facebook, Instagram, Twitter (mock links)
 - Copyright notice with year
@@ -515,7 +514,6 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Filter sidebar (desktop: left side, mobile: drawer/modal)
 - Filter categories:
   - **Price Range:** Slider with min/max inputs (৳0 - ৳50,000)
-  - **Availability:** Rental, Purchase, Both
   - **Event Type:** Checkboxes (Wedding, Birthday, Corporate, etc.)
   - **Product Condition:** New, Like New, Good
   - **Rating:** Star filter (4+ stars, 3+ stars, etc.)
@@ -530,26 +528,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-3.5: Rental Duration Filter
-**`5 points`**
-
-**As a** shopper looking for rentals  
-**I want to** filter by rental duration  
-**So that** I can find items available for my event dates
-
-**Acceptance Criteria:**
-- Rental-specific filter section appears when "Rental" selected
-- Date range picker: Start Date, End Date
-- Duration display: "X days" auto-calculated
-- Check product availability for selected dates
-- Show "Available" or "Not Available" on product cards
-- Unavailable products grayed out or moved to bottom
-- Option to show only available items
-- Clear date selection button
-
----
-
-### US-3.6: Sorting Options
+### US-3.5: Sorting Options
 **`3 points`**
 
 **As a** shopper  
@@ -566,7 +545,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-3.7: Product Quick View
+### US-3.6: Product Quick View
 **`5 points`**
 
 **As a** shopper  
@@ -584,7 +563,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-3.8: Wishlist from Product Grid
+### US-3.7: Wishlist from Product Grid
 **`3 points`**
 
 **As a** shopper  
@@ -602,7 +581,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-3.9: "Compare Products" Feature
+### US-3.8: "Compare Products" Feature
 **`2 points`**
 
 **As a** shopper  
@@ -620,13 +599,13 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-## Epic 4: Product Details & Rental Options
+## Epic 4: Product Details & Purchase Options
 
-**Description:** Comprehensive product detail pages with image galleries, specifications, pricing, rental scheduling, and vendor information.
+**Description:** Comprehensive product detail pages with image galleries, specifications, pricing, and vendor information.
 
-**Business Value:** Provides complete information for purchase decisions and rental bookings
+**Business Value:** Provides complete information for purchase decisions
 
-**Total Points:** 48
+**Total Points:** 38
 
 ---
 
@@ -684,41 +663,13 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
   - Discount percentage badge (e.g., "25% OFF")
   - "You save ৳X" text
   - Tax/VAT information (if applicable)
-- **For Rental Items:**
-  - Daily rate: "৳X / day"
-  - Weekly rate: "৳X / week" (if available)
-  - Security deposit amount
-  - Minimum rental period notice
 - Quantity selector (- / number / +)
 - Max quantity limit display
 - Stock quantity display if low (< 10 items)
 
 ---
 
-### US-4.4: Rental Date Picker
-**`8 points`**
-
-**As a** shopper  
-**I want to** select rental dates  
-**So that** I can book the product for my event
-
-**Acceptance Criteria:**
-- Date range picker component (calendar view)
-- Select start date and end date
-- Blocked/unavailable dates marked in red
-- Already booked dates not selectable
-- Minimum rental duration enforced (e.g., 1 day)
-- Maximum future booking (e.g., 6 months)
-- Auto-calculate rental duration: "X days"
-- Auto-calculate total cost: Daily rate × Days + Security deposit
-- Delivery date: 1 day before event (calculated)
-- Return date: 1 day after event (calculated)
-- Date format: DD MMM YYYY
-- Mobile: native date picker or optimized calendar
-
----
-
-### US-4.5: Add to Cart Actions
+### US-4.4: Add to Cart Actions
 **`5 points`**
 
 **As a** shopper  
@@ -726,13 +677,8 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 **So that** I can proceed to checkout
 
 **Acceptance Criteria:**
-- **For Purchase:**
-  - "Add to Cart" button (primary CTA)
-  - "Buy Now" button (skip cart, go to checkout)
-- **For Rental:**
-  - Date selection required before adding to cart
-  - "Add to Cart" button disabled until dates selected
-  - Validation message if dates not selected
+- "Add to Cart" button (primary CTA)
+- "Buy Now" button (skip cart, go to checkout)
 - Loading state on button click
 - Success toast: "Added to cart"
 - Cart count badge updates
@@ -742,7 +688,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-4.6: Product Specifications Tab
+### US-4.5: Product Specifications Tab
 **`3 points`**
 
 **As a** shopper  
@@ -754,13 +700,12 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - **Specifications Tab:**
   - Table format with key-value pairs
   - Categories: Dimensions, Weight, Material, Color, Power Requirements, Capacity, etc.
-  - Rental-specific specs: Setup time, Teardown time, Space required
 - Expandable sections if too long
 - Mobile: full-width table, horizontal scroll if needed
 
 ---
 
-### US-4.7: Product Description Tab
+### US-4.6: Product Description Tab
 **`3 points`**
 
 **As a** shopper  
@@ -771,16 +716,14 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - **Description Tab:**
   - Full product description (rich text)
   - "What's Included" section (bulleted list)
-  - "Setup Instructions" (if applicable)
-  - "Usage Guidelines" (for rentals)
-  - "Damage Policy" (for rentals)
+  - "Usage Guidelines"
 - Formatted text: Bold, italics, lists, headings
 - Expandable "Read More" if text > 500 words
 - Mobile: optimized text sizing
 
 ---
 
-### US-4.8: Customer Reviews Display
+### US-4.7: Customer Reviews Display
 **`8 points`**
 
 **As a** shopper  
@@ -791,7 +734,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - **Reviews Tab:**
   - Overall rating summary: Large star rating + average score + total reviews
   - Rating breakdown: 5-star bar chart (% per star level)
-  - Filter reviews: All, With Photos, Verified Purchase, Rental Reviews
+  - Filter reviews: All, With Photos, Verified Purchase
   - Sort reviews: Most Recent, Most Helpful, Highest Rating, Lowest Rating
   - Individual review cards:
     - User name (or "Anonymous")
@@ -808,7 +751,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-4.9: Vendor Information Card
+### US-4.8: Vendor Information Card
 **`3 points`**
 
 **As a** shopper  
@@ -829,7 +772,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-4.10: Related Products Section
+### US-4.9: Related Products Section
 **`3 points`**
 
 **As a** shopper  
@@ -849,11 +792,11 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ## Epic 5: Shopping Cart Management
 
-**Description:** Full-featured shopping cart system handling both purchase and rental items with quantity management, price calculations, and cart persistence.
+**Description:** Full-featured shopping cart system handling purchase items with quantity management, price calculations, and cart persistence.
 
 **Business Value:** Critical step in the purchase funnel that impacts conversion
 
-**Total Points:** 40
+**Total Points:** 32
 
 ---
 
@@ -892,7 +835,6 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
   - Quantity selector (update button)
   - Subtotal for item
   - Remove button (trash icon)
-  - Rental items show: Date range, Duration, Daily rate
 - "Continue Shopping" button
 - "Clear Cart" button (with confirmation)
 - Sticky order summary sidebar (desktop) or bottom (mobile)
@@ -973,7 +915,6 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
   - Shipping cost (based on delivery option)
   - Tax/VAT (calculate as % of subtotal)
   - Discount (if coupon applied)
-  - Security deposits (for rentals, separate line)
   - **Grand Total** (bold, large font)
 - Breakdown updates on quantity change
 - Highlight savings if discount applied
@@ -1001,25 +942,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-5.8: Mixed Cart (Purchase + Rental)
-**`3 points`**
-
-**As a** shopper  
-**I want to** have both purchase and rental items in one cart  
-**So that** I can order everything together
-
-**Acceptance Criteria:**
-- Cart displays both purchase and rental items
-- Section headers: "Items to Purchase" and "Items to Rent"
-- Rental items show date range prominently
-- Security deposits summed separately
-- Delivery scheduling considers rental dates
-- Checkout handles both item types
-- Cart total includes both purchase + rental costs + deposits
-
----
-
-### US-5.9: Cart Persistence
+### US-5.8: Cart Persistence
 **`3 points`**
 
 **As a** shopper  
@@ -1033,7 +956,6 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Cart persists for 30 days
 - Show cart items from previous session on return
 - "You have X items in your cart" message on homepage if cart not empty
-- Expire rental item dates if past (show warning)
 
 ---
 
@@ -1055,8 +977,8 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 **So that** I know what steps to complete
 
 **Acceptance Criteria:**
-- Multi-step checkout: Shipping → Scheduling (rentals) → Payment → Confirmation
-- Progress indicator at top: Step 1 / 2 / 3 / 4
+- Multi-step checkout: Shipping → Payment → Confirmation
+- Progress indicator at top: Step 1 / 2 / 3
 - Each step highlighted when active
 - Breadcrumb-style progress bar
 - Order summary sidebar (always visible on desktop)
@@ -1109,34 +1031,10 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Estimated delivery date displayed
 - Delivery cost updates in order summary
 - Some products may not support all options (show notice)
-- Rental items: fixed delivery schedule based on event date
 
 ---
 
-### US-6.4: Rental Scheduling Details
-**`5 points`**
-
-**As a** shopper with rental items  
-**I want to** confirm delivery and return times  
-**So that** I have the items when needed
-
-**Acceptance Criteria:**
-- Rental scheduling step (only if cart has rentals)
-- Display rental items with date ranges
-- Delivery details:
-  - Delivery date: 1 day before event start
-  - Preferred delivery time slot: Morning (9-12) / Afternoon (12-3) / Evening (3-6)
-  - Setup assistance: Yes / No toggle
-- Return details:
-  - Return date: 1 day after event end
-  - Preferred pickup time slot
-- Special instructions text area
-- Security deposit amount reminder
-- "Confirm Schedule" button
-
----
-
-### US-6.5: Payment Method Selection
+### US-6.4: Payment Method Selection
 **`8 points`**
 
 **As a** shopper  
@@ -1153,11 +1051,11 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - COD: Additional ৳50 fee (if applicable)
 - Each method shows: Icon, Name, Brief description, Fees (if any)
 - "Payment Terms" link (opens modal with T&C)
-- Disable unavailable methods (e.g., COD for high-value rentals)
+- Disable unavailable methods for certain orders
 
 ---
 
-### US-6.6: bKash Payment Flow
+### US-6.5: bKash Payment Flow
 **`8 points`**
 
 **As a** shopper  
@@ -1179,7 +1077,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-6.7: Nagad Payment Flow
+### US-6.6: Nagad Payment Flow
 **`8 points`**
 
 **As a** shopper  
@@ -1200,7 +1098,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-6.8: Card Payment Form
+### US-6.7: Card Payment Form
 **`8 points`**
 
 **As a** shopper  
@@ -1223,7 +1121,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-6.9: Order Review Before Payment
+### US-6.8: Order Review Before Payment
 **`3 points`**
 
 **As a** shopper  
@@ -1264,12 +1162,12 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 **Acceptance Criteria:**
 - Account page at /account
-- Sidebar navigation: Overview, Orders, Rentals, Wishlist, Addresses, Profile, Settings
+- Sidebar navigation: Overview, Orders, Wishlist, Addresses, Profile, Settings
 - Overview section displays:
   - Welcome message: "Welcome back, [Name]!"
-  - Quick stats: Total orders, Active rentals, Wishlist items
+  - Quick stats: Total orders, Wishlist items
   - Recent orders (last 3) with status
-  - Quick actions: Track Order, Rent Again, View Wishlist
+  - Quick actions: Track Order, View Wishlist
 - Desktop: sidebar on left, content on right
 - Mobile: dropdown menu navigation
 
@@ -1371,7 +1269,6 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Notification settings page
 - Categories with toggle switches:
   - **Order Updates:** Order status, Delivery updates
-  - **Rentals:** Pickup reminders, Return reminders
   - **Promotions:** Sales, Flash deals, New arrivals
   - **Product Alerts:** Back in stock, Price drops
   - **Account:** Security alerts, Password changes
@@ -1397,7 +1294,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - "Deactivate" and "Cancel" buttons
 - On deactivate: Logout user, Hide account, Keep data for 90 days
 - Reactivation: Login again to reactivate
-- Pending orders/rentals prevent deactivation
+- Pending orders prevent deactivation
 
 ---
 
@@ -1443,11 +1340,11 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ## Epic 8: Order Tracking & History
 
-**Description:** Complete order management system for tracking purchases and rentals, viewing history, and managing returns.
+**Description:** Complete order management system for tracking purchases, viewing history, and managing returns.
 
 **Business Value:** Provides post-purchase support and transparency
 
-**Total Points:** 42
+**Total Points:** 32
 
 ---
 
@@ -1529,56 +1426,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-8.4: Active Rentals Dashboard
-**`5 points`**
-
-**As a** user  
-**I want to** see my current and upcoming rentals  
-**So that** I can manage rental schedules
-
-**Acceptance Criteria:**
-- Rentals page (/account/rentals)
-- Tabs: Active, Upcoming, Completed
-- Each rental card:
-  - Product image and name
-  - Rental ID
-  - Event date
-  - Rental duration (X days)
-  - Status: Upcoming, Active, Return Pending, Completed
-  - Delivery date
-  - Return date
-  - Security deposit status
-- Countdown timer for upcoming deliveries
-- "Extend Rental" button (if extension available)
-- "Contact Vendor" button
-- Return reminder: "Return in X days" (highlighted if close)
-
----
-
-### US-8.5: Rental Return Process
-**`5 points`**
-
-**As a** user with active rental  
-**I want to** initiate the return process  
-**So that** I can return items and get my deposit back
-
-**Acceptance Criteria:**
-- "Request Pickup" button on rental card
-- Return request form:
-  - Preferred pickup date/time slot
-  - Special instructions
-  - Item condition checklist (checkboxes for each rented item)
-  - Photo upload (optional, document condition)
-- Submit request
-- Confirmation: "Pickup request submitted. Vendor will contact you."
-- Vendor confirmation (mock notification)
-- Pickup scheduled in rental timeline
-- After pickup: Deposit refund processed (mock 3-5 days)
-- "Pickup Completed" status update
-
----
-
-### US-8.6: Cancel Order
+### US-8.4: Cancel Order
 **`3 points`**
 
 **As a** user  
@@ -1598,30 +1446,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-8.7: Extend Rental Duration
-**`5 points`**
-
-**As a** user with active rental  
-**I want to** extend my rental period  
-**So that** I can keep items longer
-
-**Acceptance Criteria:**
-- "Extend Rental" button on rental details
-- Extension form:
-  - Current return date displayed
-  - New return date picker (future dates only)
-  - Additional days calculated automatically
-  - Additional cost calculated: Daily rate × Extra days
-  - Extended security deposit (if applicable)
-- "Confirm Extension" button
-- Vendor approval required (mock instant approval)
-- Payment for extension: Use same payment method or select new
-- Success: "Rental extended! New return date: [Date]"
-- Cannot extend if unavailable (someone else booked)
-
----
-
-### US-8.8: Invoice Download
+### US-8.5: Invoice Download
 **`3 points`**
 
 **As a** user  
@@ -1686,11 +1511,10 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 **Acceptance Criteria:**
 - Vendor dashboard (/vendor/dashboard)
-- Top navigation: Dashboard, Products, Orders, Rentals, Store Settings
+- Top navigation: Dashboard, Products, Orders, Store Settings
 - KPI cards:
   - Total Revenue (this month, ৳X)
   - Orders This Month (count)
-  - Active Rentals (count)
   - Pending Orders (count, clickable)
   - Store Rating (stars + review count)
   - Store Views (this month)
@@ -1698,7 +1522,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 - Recent orders table (last 10):
   - Order ID, Customer name, Items, Total, Status, Actions
 - Quick actions: Add Product, View Orders, Update Store
-- Notifications panel: New orders, Return requests, Low stock alerts
+- Notifications panel: New orders, Low stock alerts
 
 ---
 
@@ -1715,13 +1539,14 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
   - **Basic Info:** Product Name, Brand, SKU (auto-generated or custom)
   - **Description:** Rich text editor for full description, Short description (160 chars)
   - **Category:** Category (dropdown), Subcategory (dropdown), Event Types (multi-select)
-  - **Pricing:** Product Type (Purchase/Rental/Both radio buttons)
-    - If Purchase: Regular Price, Sale Price (optional), Quantity in Stock
-    - If Rental: Daily Rate, Weekly Rate (optional), Monthly Rate (optional), Security Deposit, Minimum Rental Duration (days), Quantity Available
+  - **Pricing:**
+    - Regular Price
+    - Sale Price (optional)
+    - Quantity in Stock
   - **Images:** Upload 5-10 images (drag & drop), Set primary image, Image preview with reorder
   - **Specifications:** Key-Value pairs (add multiple), e.g., Dimensions: 10x20cm
   - **Shipping:** Weight, Dimensions (L×W×H), Fragile? checkbox, Setup Required? checkbox
-  - **Inventory:** Stock quantity (if purchase), Available units (if rental)
+  - **Inventory:** Stock quantity
 - "Save as Draft" and "Publish" buttons
 - Validation: Required fields, price > 0, at least 1 image
 - Success: "Product published successfully!" with "View Product" link
@@ -1738,8 +1563,8 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 **Acceptance Criteria:**
 - Products page (/vendor/products)
 - Products table/grid:
-  - Product image, Name, SKU, Category, Price/Rate, Stock/Available, Status (Active/Draft/Out of Stock), Actions (Edit, Delete, Duplicate)
-- Filters: Category, Status, Product Type
+  - Product image, Name, SKU, Category, Price, Stock, Status (Active/Draft/Out of Stock), Actions (Edit, Delete, Duplicate)
+- Filters: Category, Status
 - Search by name or SKU
 - Sort by: Name, Price, Stock, Date Added
 - Bulk actions: Activate, Deactivate, Delete (checkboxes)
@@ -1797,34 +1622,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-9.7: Manage Rental Bookings
-**`5 points`**
-
-**As a** vendor  
-**I want to** manage rental bookings  
-**So that** I can schedule deliveries and returns
-
-**Acceptance Criteria:**
-- Rentals page (/vendor/rentals)
-- Rentals table:
-  - Rental ID, Customer, Product, Event Date, Rental Period, Delivery Date, Return Date, Status, Actions
-- Status: Upcoming, Active, Return Pending, Completed, Cancelled
-- Calendar view option: See all rentals on a calendar
-- Click rental to see details:
-  - Customer contact info
-  - Product details
-  - Delivery address
-  - Security deposit status
-  - Special instructions
-- Actions:
-  - Upcoming → "Confirm Delivery" (mark as delivered)
-  - Active → "Request Return" (sends pickup reminder)
-  - Return Pending → "Confirm Return" (inspect item, release deposit)
-- Notes section for vendor-only remarks
-
----
-
-### US-9.8: Store Settings & Branding
+### US-9.7: Store Settings & Branding
 **`3 points`**
 
 **As a** vendor  
@@ -1865,7 +1663,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 **So that** I can share my experience with others
 
 **Acceptance Criteria:**
-- Review option appears only after order delivered/rental completed
+- Review option appears only after order delivered
 - "Write a Review" button on order details page
 - Review form modal:
   - Product image and name (for reference)
@@ -2010,8 +1808,8 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 ---
 
 **Document Version:** 2.0 - MVP Simplified Structure  
-**Last Updated:** January 26, 2026  
-**Total Story Points:** 430 (13-16 two-week sprints at 40 points/sprint)
+**Last Updated:** January 28, 2026  
+**Total Story Points:** 382 (10-12 two-week sprints at 40 points/sprint)
 
 ---
 
