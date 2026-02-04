@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { useCart, type CartItem } from '@/stores/cart-store'
+import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
@@ -13,10 +14,10 @@ export const Route = createFileRoute('/cart')({
   component: CartPage,
 })
 
-function CartItemRow({ item, updateQuantity, removeItem }: {
+function CartItemRow({ item, updateQuantity, onRemove }: {
   item: CartItem
   updateQuantity: (itemId: string, quantity: number) => void
-  removeItem: (itemId: string) => void
+  onRemove: (item: CartItem) => void
 }) {
   const [inputValue, setInputValue] = useState(item.quantity.toString())
 
@@ -81,7 +82,7 @@ function CartItemRow({ item, updateQuantity, removeItem }: {
               </p>
             </div>
             <button
-              onClick={() => removeItem(item.id)}
+              onClick={() => onRemove(item)}
               className="shrink-0 rounded-full p-1 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--destructive))]"
               aria-label="Remove item"
             >
@@ -122,7 +123,7 @@ function CartItemRow({ item, updateQuantity, removeItem }: {
                   onChange={handleChange}
                   onBlur={handleBlur}
                   aria-label="Quantity"
-                  className="min-w-[2rem] w-10 text-center text-sm font-medium sm:min-w-[2.5rem] sm:w-12 sm:text-base border border-[hsl(var(--border))] rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] py-0.5"
+                  className="min-w-[2rem] w-10 text-center text-sm font-medium sm:min-w-[2.5rem] sm:w-12 sm:text-base border border-[hsl(var(--border))] rounded bg-transparent focus:outline-none focus:ring-1 focus:ring-[hsl(var(--primary))] py-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <Button
                   variant="outline"
@@ -138,6 +139,11 @@ function CartItemRow({ item, updateQuantity, removeItem }: {
                 <Button size="sm" className="h-6 px-3 text-xs" onClick={handleUpdate}>
                   Update
                 </Button>
+              )}
+              {item.quantity >= item.product.stock && (
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  Only {item.product.stock} left in stock
+                </p>
               )}
             </div>
           </div>
@@ -164,7 +170,8 @@ function CartItemRow({ item, updateQuantity, removeItem }: {
 }
 
 function CartPage() {
-  const { items, updateQuantity, removeItem, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { items, updateQuantity, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval()
   const [clearConfirm, setClearConfirm] = useState(false)
   const [suggested, setSuggested] = useState<Product[]>([])
 
@@ -269,7 +276,7 @@ function CartPage() {
                 key={item.id}
                 item={item}
                 updateQuantity={updateQuantity}
-                removeItem={removeItem}
+                onRemove={(item) => setPendingRemoveItem(item)}
               />
             ))}
           </div>
@@ -373,6 +380,12 @@ function CartPage() {
           </div>
         </div>
       </div>
+
+      <CartRemoveConfirmDialog
+        pendingRemoveItem={pendingRemoveItem}
+        onClose={() => setPendingRemoveItem(null)}
+        onConfirm={handleConfirmRemove}
+      />
     </div>
   )
 }

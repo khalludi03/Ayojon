@@ -26,6 +26,7 @@ interface CartStore {
   getState: () => CartState;
   addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
   removeItem: (itemId: string) => void;
+  restoreItem: (item: CartItem) => void;
   removeByProductId: (productId: string) => void;
   toggleItem: (product: Product) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
@@ -111,7 +112,6 @@ function createCartStore(): CartStore {
               ? { ...item, quantity: item.quantity + quantity }
               : item
           ),
-          isDrawerOpen: true, // Open drawer when adding item
         };
       } else {
         // Add new item
@@ -126,7 +126,6 @@ function createCartStore(): CartStore {
         state = {
           ...state,
           items: [...state.items, newItem],
-          isDrawerOpen: true, // Open drawer when adding item
         };
       }
 
@@ -141,6 +140,14 @@ function createCartStore(): CartStore {
       };
       persist();
       notify();
+    },
+
+    restoreItem: (item: CartItem) => {
+      if (!state.items.some((existing) => existing.id === item.id)) {
+        state = { ...state, items: [...state.items, item] };
+        persist();
+        notify();
+      }
     },
 
     removeByProductId: (productId: string) => {
@@ -174,10 +181,9 @@ function createCartStore(): CartStore {
         state = {
           ...state,
           items: [...state.items, newItem],
-          isDrawerOpen: true, // Open drawer when adding item
         };
       }
-      
+
       persist();
       notify();
     },
@@ -296,6 +302,7 @@ export function useCart() {
     subtotal,
     addItem: cartStore.addItem,
     removeItem: cartStore.removeItem,
+    restoreItem: cartStore.restoreItem,
     removeByProductId: cartStore.removeByProductId,
     toggleItem: cartStore.toggleItem,
     updateQuantity: cartStore.updateQuantity,

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -12,6 +12,7 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useCart, type CartItem } from '@/stores/cart-store';
+import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { CurrencyCode } from '@/types';
@@ -20,11 +21,11 @@ interface CartItemRowProps {
   item: CartItem;
   currency: CurrencyCode;
   updateQuantity: (itemId: string, quantity: number) => void;
-  removeItem: (itemId: string) => void;
+  onRemove: (item: CartItem) => void;
   closeDrawer: () => void;
 }
 
-function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }: CartItemRowProps) {
+function CartItemRow({ item, currency, updateQuantity, onRemove, closeDrawer }: CartItemRowProps) {
   const [inputValue, setInputValue] = useState(item.quantity.toString());
 
   // Sync local state with store when store updates (e.g. via +/- buttons)
@@ -149,7 +150,7 @@ function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={() => removeItem(item.id)}
+            onClick={() => onRemove(item)}
           >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">Remove</span>
@@ -166,12 +167,13 @@ export function CartDrawer() {
     itemCount,
     subtotal,
     updateQuantity,
-    removeItem,
     currency,
     isDrawerOpen,
     closeDrawer,
     openDrawer,
   } = useCart();
+  const navigate = useNavigate();
+  const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval();
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -182,8 +184,9 @@ export function CartDrawer() {
   };
 
   return (
+    <>
     <Sheet open={isDrawerOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg">
+      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg" onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetHeader className="flex-row items-center justify-between space-y-0 border-b pb-4">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -221,7 +224,7 @@ export function CartDrawer() {
                     item={item}
                     currency={currency}
                     updateQuantity={updateQuantity}
-                    removeItem={removeItem}
+                    onRemove={(item) => setPendingRemoveItem(item)}
                     closeDrawer={closeDrawer}
                   />
                 ))}
@@ -230,25 +233,33 @@ export function CartDrawer() {
 
             <div className="space-y-4 border-t pt-4">
               <div className="flex items-center justify-between text-base font-medium">
-                 <span>Subtotal</span>
-                 <span>{formatPrice(subtotal, currency)}</span>
+                <span>Subtotal</span>
+                <span>{formatPrice(subtotal, currency)}</span>
               </div>
-              <div className="flex gap-4">
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/cart" onClick={closeDrawer}>
+              <div className="grid grid-cols-2 gap-4">
+                <SheetClose asChild>
+                  <Button variant="outline" className="w-full" onClick={() => navigate({ to: '/cart' })}>
                     View Cart
-                  </Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link to="/checkout" onClick={closeDrawer}>
+                  </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Button className="w-full" onClick={() => navigate({ to: '/checkout' })}>
                     Checkout
-                  </Link>
-                </Button>
+                  </Button>
+                </SheetClose>
               </div>
             </div>
           </>
         )}
+
       </SheetContent>
     </Sheet>
+
+    <CartRemoveConfirmDialog
+      pendingRemoveItem={pendingRemoveItem}
+      onClose={() => setPendingRemoveItem(null)}
+      onConfirm={handleConfirmRemove}
+    />
+    </>
   );
 }
