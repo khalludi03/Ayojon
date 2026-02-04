@@ -14,8 +14,6 @@
     "@my-better-t-app/auth": "workspace:*",
     "@my-better-t-app/db": "workspace:*",
     "@my-better-t-app/env": "workspace:*",
-    "@trpc/client": "catalog:",
-    "@trpc/server": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },

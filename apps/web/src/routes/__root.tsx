@@ -10,7 +10,7 @@ import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ProductModal } from "@/components/product/ProductModal";
-import { orpc } from "@/utils/trpc";
+import { orpc } from "@/utils/orpc";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {

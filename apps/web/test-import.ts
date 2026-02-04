@@ -1,2 +1,2 @@
-import { orpc } from "./src/utils/trpc";
+import { orpc } from "./src/utils/orpc";
 console.log("Import success", orpc);
