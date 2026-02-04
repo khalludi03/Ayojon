@@ -1,18 +1,9 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { useCart, type CartItem } from '@/stores/cart-store'
+import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -187,26 +178,9 @@ function CartItemRow({ item, updateQuantity, onRemove }: {
 }
 
 function CartPage() {
-  const { items, updateQuantity, removeItem, restoreItem, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { items, updateQuantity, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval()
   const [clearConfirm, setClearConfirm] = useState(false)
-  const [pendingRemoveItem, setPendingRemoveItem] = useState<CartItem | null>(null)
-
-  const handleConfirmRemove = () => {
-    if (!pendingRemoveItem) return;
-    const removedItem = pendingRemoveItem;
-    removeItem(removedItem.id);
-    setPendingRemoveItem(null);
-    const toastId = toast.success('Removed from cart', {
-      duration: 5000,
-      action: {
-        label: 'Undo',
-        onClick: () => {
-          restoreItem(removedItem);
-          toast.dismiss(toastId);
-        },
-      },
-    });
-  };
   const [suggested, setSuggested] = useState<Product[]>([])
 
   useEffect(() => {
@@ -415,20 +389,11 @@ function CartPage() {
         </div>
       </div>
 
-      <Dialog open={pendingRemoveItem !== null} onOpenChange={(open) => { if (!open) setPendingRemoveItem(null); }}>
-        <DialogContent showCloseButton={false}>
-          <DialogHeader>
-            <DialogTitle>Remove item</DialogTitle>
-            <DialogDescription>Remove &quot;{pendingRemoveItem?.product.title}&quot; from your cart?</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
-            </DialogClose>
-            <Button variant="destructive" onClick={handleConfirmRemove}>Remove</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CartRemoveConfirmDialog
+        pendingRemoveItem={pendingRemoveItem}
+        onClose={() => setPendingRemoveItem(null)}
+        onConfirm={handleConfirmRemove}
+      />
     </div>
   )
 }
