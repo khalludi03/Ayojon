@@ -11,6 +11,15 @@ import {
   SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog';
 import { useCart, type CartItem } from '@/stores/cart-store';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -20,11 +29,11 @@ interface CartItemRowProps {
   item: CartItem;
   currency: CurrencyCode;
   updateQuantity: (itemId: string, quantity: number) => void;
-  removeItem: (itemId: string) => void;
+  onRemove: (item: CartItem) => void;
   closeDrawer: () => void;
 }
 
-function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }: CartItemRowProps) {
+function CartItemRow({ item, currency, updateQuantity, onRemove, closeDrawer }: CartItemRowProps) {
   const [inputValue, setInputValue] = useState(item.quantity.toString());
 
   // Sync local state with store when store updates (e.g. via +/- buttons)
@@ -149,7 +158,7 @@ function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={() => removeItem(item.id)}
+            onClick={() => onRemove(item)}
           >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">Remove</span>
@@ -167,11 +176,31 @@ export function CartDrawer() {
     subtotal,
     updateQuantity,
     removeItem,
+    restoreItem,
     currency,
     isDrawerOpen,
     closeDrawer,
     openDrawer,
   } = useCart();
+
+  const [pendingRemoveItem, setPendingRemoveItem] = useState<CartItem | null>(null);
+
+  const handleConfirmRemove = () => {
+    if (!pendingRemoveItem) return;
+    const removedItem = pendingRemoveItem;
+    removeItem(removedItem.id);
+    setPendingRemoveItem(null);
+    const toastId = toast.success('Removed from cart', {
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          restoreItem(removedItem);
+          toast.dismiss(toastId);
+        },
+      },
+    });
+  };
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -183,7 +212,7 @@ export function CartDrawer() {
 
   return (
     <Sheet open={isDrawerOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg">
+      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg" onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         <SheetHeader className="flex-row items-center justify-between space-y-0 border-b pb-4">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -221,7 +250,7 @@ export function CartDrawer() {
                     item={item}
                     currency={currency}
                     updateQuantity={updateQuantity}
-                    removeItem={removeItem}
+                    onRemove={(item) => setPendingRemoveItem(item)}
                     closeDrawer={closeDrawer}
                   />
                 ))}
@@ -248,6 +277,21 @@ export function CartDrawer() {
             </div>
           </>
         )}
+
+        <Dialog open={pendingRemoveItem !== null} onOpenChange={(open) => { if (!open) setPendingRemoveItem(null); }}>
+          <DialogContent showCloseButton={false}>
+            <DialogHeader>
+              <DialogTitle>Remove item</DialogTitle>
+              <DialogDescription>Remove &quot;{pendingRemoveItem?.product.title}&quot; from your cart?</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button variant="destructive" onClick={handleConfirmRemove}>Remove</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </SheetContent>
     </Sheet>
   );

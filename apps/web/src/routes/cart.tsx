@@ -1,8 +1,18 @@
 import { useState, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Loader2, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { useCart, type CartItem } from '@/stores/cart-store'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+} from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
@@ -13,10 +23,10 @@ export const Route = createFileRoute('/cart')({
   component: CartPage,
 })
 
-function CartItemRow({ item, updateQuantity, removeItem }: {
+function CartItemRow({ item, updateQuantity, onRemove }: {
   item: CartItem
   updateQuantity: (itemId: string, quantity: number) => void
-  removeItem: (itemId: string) => void
+  onRemove: (item: CartItem) => void
 }) {
   const [inputValue, setInputValue] = useState(item.quantity.toString())
   const [isUpdating, setIsUpdating] = useState(false)
@@ -84,7 +94,7 @@ function CartItemRow({ item, updateQuantity, removeItem }: {
               </p>
             </div>
             <button
-              onClick={() => removeItem(item.id)}
+              onClick={() => onRemove(item)}
               className="shrink-0 rounded-full p-1 text-[hsl(var(--muted-foreground))] transition-colors hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--destructive))]"
               aria-label="Remove item"
             >
@@ -177,8 +187,26 @@ function CartItemRow({ item, updateQuantity, removeItem }: {
 }
 
 function CartPage() {
-  const { items, updateQuantity, removeItem, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { items, updateQuantity, removeItem, restoreItem, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
   const [clearConfirm, setClearConfirm] = useState(false)
+  const [pendingRemoveItem, setPendingRemoveItem] = useState<CartItem | null>(null)
+
+  const handleConfirmRemove = () => {
+    if (!pendingRemoveItem) return;
+    const removedItem = pendingRemoveItem;
+    removeItem(removedItem.id);
+    setPendingRemoveItem(null);
+    const toastId = toast.success('Removed from cart', {
+      duration: 5000,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          restoreItem(removedItem);
+          toast.dismiss(toastId);
+        },
+      },
+    });
+  };
   const [suggested, setSuggested] = useState<Product[]>([])
 
   useEffect(() => {
@@ -282,7 +310,7 @@ function CartPage() {
                 key={item.id}
                 item={item}
                 updateQuantity={updateQuantity}
-                removeItem={removeItem}
+                onRemove={(item) => setPendingRemoveItem(item)}
               />
             ))}
           </div>
@@ -386,6 +414,21 @@ function CartPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={pendingRemoveItem !== null} onOpenChange={(open) => { if (!open) setPendingRemoveItem(null); }}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Remove item</DialogTitle>
+            <DialogDescription>Remove &quot;{pendingRemoveItem?.product.title}&quot; from your cart?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button variant="destructive" onClick={handleConfirmRemove}>Remove</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
