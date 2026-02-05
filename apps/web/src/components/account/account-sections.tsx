@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Camera } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Camera, Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
@@ -10,6 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getStoredOrders } from "@/stores/order-store";
 import type { Order } from "@/types";
+import { useWishlist } from "@/stores/wishlist-store";
+import { useCart } from "@/stores/cart-store";
+import { formatPrice } from "@/lib/utils";
 
 export function AccountOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -153,6 +157,16 @@ export function AccountOrders() {
 }
 
 export function AccountWishlist() {
+  const { items, removeItem } = useWishlist();
+  const { addItem } = useCart();
+
+  const handleMoveToCart = (productId: string) => {
+    const item = items.find((wishlistItem) => wishlistItem.productId === productId);
+    if (!item) return;
+    addItem(item.product, 1, item.product.variants?.[0]);
+    removeItem(productId);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -168,7 +182,74 @@ export function AccountWishlist() {
           <CardDescription>Your wishlist collection</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Wishlist section coming soon...</p>
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[hsl(var(--border))] p-8 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[hsl(var(--muted))]/40">
+                <Heart className="h-6 w-6 text-[hsl(var(--muted-foreground))]" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">Your wishlist is empty</p>
+                <p className="text-xs text-muted-foreground">Save items to view them here.</p>
+              </div>
+              <Button size="sm" asChild>
+                <Link to="/products">Browse products</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-sm"
+                >
+                  <div className="flex items-start gap-4">
+                    <img
+                      src={item.product.images?.[0]?.url || "/placeholder.png"}
+                      alt={item.product.images?.[0]?.alt || item.product.title}
+                      className="h-16 w-16 rounded-lg border border-[hsl(var(--border))] object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[hsl(var(--foreground))] line-clamp-2">
+                        {item.product.title}
+                      </p>
+                      <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                        Saved on {new Date(item.addedAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </p>
+                      <p className="mt-2 text-sm font-bold text-[hsl(var(--foreground))]">
+                        {formatPrice(item.product.pricing.currentPrice)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleMoveToCart(item.productId)}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Move to Cart
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => removeItem(item.productId)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
