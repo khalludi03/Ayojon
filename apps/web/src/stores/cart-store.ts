@@ -23,7 +23,7 @@ interface CartState {
   isDrawerOpen: boolean;
   discount: {
     code: string;
-    type: 'percentage' | 'fixed';
+    type: 'percentage' | 'fixed' | 'free_shipping';
     value: number;
     amount: number;
   } | null;
@@ -41,7 +41,7 @@ interface CartStore {
   saveForLater: (itemId: string) => void;
   moveToCart: (itemId: string) => void;
   removeSavedItem: (itemId: string) => void;
-  applyCoupon: (code: string, type: 'percentage' | 'fixed', value: number) => void;
+  applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => void;
   removeCoupon: () => void;
   getDiscount: () => number;
   openDrawer: () => void;
@@ -269,18 +269,20 @@ function createCartStore(): CartStore {
       notify();
     },
 
-    applyCoupon: (code: string, type: 'percentage' | 'fixed', value: number) => {
+    applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => {
       const subtotal = cartStore.getSubtotal();
       let discountAmount = 0;
       
       if (type === 'percentage') {
         discountAmount = (subtotal * value) / 100;
-      } else {
+      } else if (type === 'fixed') {
         discountAmount = value;
+      } else if (type === 'free_shipping') {
+        discountAmount = cartStore.getShipping();
       }
       
-      // Don't allow discount to exceed subtotal
-      discountAmount = Math.min(discountAmount, subtotal);
+      // Don't allow discount to exceed subtotal + shipping (simplified)
+      discountAmount = Math.min(discountAmount, subtotal + (type === 'free_shipping' ? discountAmount : cartStore.getShipping()));
       
       state = {
         ...state,
@@ -312,8 +314,12 @@ function createCartStore(): CartStore {
       
       if (state.discount.type === 'percentage') {
         discountAmount = (subtotal * state.discount.value) / 100;
-      } else {
+      } else if (state.discount.type === 'fixed') {
         discountAmount = state.discount.value;
+      } else if (state.discount.type === 'free_shipping') {
+        // We handle free shipping by returning the shipping cost as discount
+        // but it's better to explicitly check it in getShipping
+        return 0; 
       }
       
       // Update the stored amount for consistency
@@ -359,6 +365,10 @@ function createCartStore(): CartStore {
     },
 
     getShipping: () => {
+      if (state.discount?.type === 'free_shipping') {
+        return 0;
+      }
+
       const subtotal = cartStore.getSubtotal();
       // Free shipping for orders over 999 BDT
       if (subtotal >= 999) {
@@ -399,13 +409,33 @@ const getCartServerSnapshot = () => ({ items: [], savedForLater: [], currency: '
 export function useCart() {
   const state = useSyncExternalStore(subscribeCart, getCartSnapshot, getCartServerSnapshot);
 
-  // Derive itemCount and subtotal from subscribed state for reactive updates
+  // Derive values from subscribed state for reactive updates
   const itemCount = state.items.reduce((total, item) => total + item.quantity, 0);
+  
   const subtotal = state.items.reduce((total, item) => {
     const price = item.product.pricing.currentPrice;
     const variantModifier = item.selectedVariant?.priceModifier || 0;
     return total + (price + variantModifier) * item.quantity;
   }, 0);
+
+  const tax = subtotal * 0.05;
+
+  let shipping = 0;
+  if (state.discount?.type !== 'free_shipping') {
+    shipping = subtotal >= 999 ? 0 : (state.items.length > 0 ? 60 : 0);
+  }
+
+  let discountAmount = 0;
+  if (state.discount) {
+    if (state.discount.type === 'percentage') {
+      discountAmount = (subtotal * state.discount.value) / 100;
+    } else if (state.discount.type === 'fixed') {
+      discountAmount = state.discount.value;
+    }
+    discountAmount = Math.min(discountAmount, subtotal);
+  }
+
+  const total = subtotal + tax + shipping - discountAmount;
 
   return {
     items: state.items,
@@ -415,6 +445,10 @@ export function useCart() {
     discount: state.discount,
     itemCount,
     subtotal,
+    tax,
+    shipping,
+    discountAmount,
+    total,
     addItem: cartStore.addItem,
     removeItem: cartStore.removeItem,
     restoreItem: cartStore.restoreItem,
