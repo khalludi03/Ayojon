@@ -3,7 +3,7 @@
 import {  useQuery } from '@tanstack/react-query';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { DealProduct } from '@/types';
-import { productService } from '@/mock/services/product-service';
+import { orpc } from '@/utils/orpc';
 
 // Query keys factory
 export const dealKeys = {
@@ -21,7 +21,7 @@ export function useTodayDeals(
 ) {
   return useQuery({
     queryKey: dealKeys.today(),
-    queryFn: () => productService.getTodayDeals(limit),
+    queryFn: () => orpc.products.todayDeals.call({ limit }) as Promise<DealProduct[]>,
     // Refetch every 5 minutes to keep deals fresh
     refetchInterval: 5 * 60 * 1000,
     ...options,
@@ -37,7 +37,7 @@ export function useFlashDeals(
 ) {
   return useQuery({
     queryKey: dealKeys.flash(),
-    queryFn: () => productService.getFlashDeals(limit),
+    queryFn: () => orpc.products.flashDeals.call({ limit }) as Promise<DealProduct[]>,
     // Refetch every minute for time-sensitive flash deals
     refetchInterval: 60 * 1000,
     ...options,

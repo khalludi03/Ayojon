@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Star, Filter, ChevronDown, Loader2, MessageSquarePlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ReviewCard } from './ReviewCard';
-import { mockDb } from '@/mock/db';
+import { orpc } from '@/utils/orpc';
 import type { Review, ReviewSummary, ReviewFilter, ReviewSort } from '@/types/product';
 import { cn } from '@/lib/utils';
 
@@ -24,13 +24,14 @@ export function ReviewsSection({ productId, hasPurchased = false }: ReviewsSecti
   const loadReviews = async (resetPage = false, nextPage?: number) => {
     setIsLoading(true);
     const currentPage = resetPage ? 1 : (nextPage || page);
-    
-    const result = mockDb.getProductReviews(productId, {
+
+    const result = await orpc.reviews.list.call({
+      productId,
       filter,
       sort,
       page: currentPage,
       limit: 10,
-    });
+    }) as { data: Review[]; hasMore: boolean };
 
     if (resetPage) {
       setReviews(result.data);
@@ -41,13 +42,13 @@ export function ReviewsSection({ productId, hasPurchased = false }: ReviewsSecti
         setPage(nextPage);
       }
     }
-    
+
     setHasMore(result.hasMore);
     setIsLoading(false);
   };
 
-  const loadSummary = () => {
-    const reviewSummary = mockDb.getReviewSummary(productId);
+  const loadSummary = async () => {
+    const reviewSummary = await orpc.reviews.summary.call({ productId }) as ReviewSummary;
     setSummary(reviewSummary);
   };
 

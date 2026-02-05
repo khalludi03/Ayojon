@@ -3,7 +3,7 @@
 import {  useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { Product, ProductFilters } from '@/types';
-import { productService } from '@/mock/services/product-service';
+import { orpc } from '@/utils/orpc';
 
 interface PaginatedResult<T> {
   data: Array<T>;
@@ -38,7 +38,7 @@ export function useProducts(
 ) {
   return useQuery({
     queryKey: productKeys.list(filters),
-    queryFn: () => productService.getProducts(filters),
+    queryFn: () => orpc.products.list.call(filters) as Promise<PaginatedResult<Product>>,
     ...options,
   });
 }
@@ -50,7 +50,7 @@ export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) 
   return useInfiniteQuery({
     queryKey: productKeys.infinite(filters),
     queryFn: ({ pageParam = 1 }) =>
-      productService.getProducts({ ...filters, page: pageParam }),
+      orpc.products.list.call({ ...filters, page: pageParam }) as Promise<PaginatedResult<Product>>,
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.hasMore) {
@@ -58,21 +58,6 @@ export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) 
       }
       return undefined;
     },
-  });
-}
-
-/**
- * Fetch single product by ID
- */
-export function useProduct(
-  id: string,
-  options?: Omit<UseQueryOptions<Product | undefined>, 'queryKey' | 'queryFn'>
-) {
-  return useQuery({
-    queryKey: productKeys.detail(id),
-    queryFn: () => productService.getProductById(id),
-    enabled: !!id,
-    ...options,
   });
 }
 
@@ -85,7 +70,7 @@ export function useProductBySlug(
 ) {
   return useQuery({
     queryKey: productKeys.slug(slug),
-    queryFn: () => productService.getProductBySlug(slug),
+    queryFn: () => orpc.products.detail.call({ slug }) as Promise<Product>,
     enabled: !!slug,
     ...options,
   });
@@ -101,7 +86,7 @@ export function useRelatedProducts(
 ) {
   return useQuery({
     queryKey: productKeys.related(productId),
-    queryFn: () => productService.getRelatedProducts(productId, limit),
+    queryFn: () => orpc.products.related.call({ productId, limit }) as Promise<Product[]>,
     enabled: !!productId,
     ...options,
   });
@@ -116,7 +101,7 @@ export function useNewArrivals(
 ) {
   return useQuery({
     queryKey: productKeys.newArrivals(),
-    queryFn: () => productService.getNewArrivals(limit),
+    queryFn: () => orpc.products.newArrivals.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -130,7 +115,7 @@ export function useTopRated(
 ) {
   return useQuery({
     queryKey: productKeys.topRated(),
-    queryFn: () => productService.getTopRated(limit),
+    queryFn: () => orpc.products.topRated.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -144,7 +129,7 @@ export function useBestSellers(
 ) {
   return useQuery({
     queryKey: productKeys.bestSellers(),
-    queryFn: () => productService.getBestSellers(limit),
+    queryFn: () => orpc.products.bestSellers.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -158,7 +143,7 @@ export function useFlashSale(
 ) {
   return useQuery({
     queryKey: [...productKeys.all, 'flash-sale'],
-    queryFn: () => productService.getFlashSale(limit),
+    queryFn: () => orpc.products.flashSale.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -172,7 +157,7 @@ export function useHotDeals(
 ) {
   return useQuery({
     queryKey: [...productKeys.all, 'hot-deals'],
-    queryFn: () => productService.getHotDeals(limit),
+    queryFn: () => orpc.products.hotDeals.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -186,7 +171,7 @@ export function useForYou(
 ) {
   return useQuery({
     queryKey: [...productKeys.all, 'for-you'],
-    queryFn: () => productService.getForYou(limit),
+    queryFn: () => orpc.products.forYou.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -200,7 +185,7 @@ export function useFeaturedProducts(
 ) {
   return useQuery({
     queryKey: [...productKeys.all, 'featured'],
-    queryFn: () => productService.getFeaturedProducts(limit),
+    queryFn: () => orpc.products.featured.call({ limit }) as Promise<Product[]>,
     ...options,
   });
 }
@@ -216,7 +201,7 @@ export function useProductsByCategory(
 ) {
   return useQuery({
     queryKey: [...productKeys.all, 'category', categoryId, limit],
-    queryFn: () => productService.getProducts({ category: categoryId, limit }).then(result => result.data),
+    queryFn: () => (orpc.products.list.call({ category: categoryId, limit }) as Promise<PaginatedResult<Product>>).then(result => result.data),
     enabled: !!categoryId,
     ...options,
   });
@@ -233,7 +218,7 @@ export function useCategoryProducts(
   const fullFilters = { ...filters, category: categorySlug };
   return useQuery({
     queryKey: [...productKeys.all, 'category-page', categorySlug, filters],
-    queryFn: () => productService.getProducts(fullFilters),
+    queryFn: () => orpc.products.list.call(fullFilters) as Promise<PaginatedResult<Product>>,
     enabled: !!categorySlug,
     ...options,
   });

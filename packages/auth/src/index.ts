@@ -15,17 +15,26 @@ export const auth = betterAuth({
   trustedOrigins: [env.CORS_ORIGIN],
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async ({ user, url, token }) => {
-      try {
-        await sendPasswordResetEmail({
-          to: user.email,
-          userName: user.name,
-          resetUrl: url,
-        });
-        console.log(`Password reset email sent to ${user.email}`);
-      } catch (error) {
-        console.error("Failed to send password reset email:", error);
-       
+    sendResetPassword: async ({ user, url }) => {
+      const maxAttempts = 3;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          await sendPasswordResetEmail({
+            to: user.email,
+            userName: user.name,
+            resetUrl: url,
+          });
+          console.log(`Password reset email sent to ${user.email}`);
+          return;
+        } catch (error) {
+          console.error(
+            `Password reset email attempt ${attempt}/${maxAttempts} failed:`,
+            error,
+          );
+          if (attempt === maxAttempts) throw error;
+          await new Promise((res) => setTimeout(res, 1000 * attempt));
+        }
       }
     },
   },

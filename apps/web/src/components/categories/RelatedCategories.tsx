@@ -1,6 +1,8 @@
-import { getRelatedCategories } from '@/mock/seeds/categories';
+import { useState, useEffect } from 'react';
+import { orpc } from '@/utils/orpc';
 import { CategoryCard } from './CategoryCard';
 import { cn } from '@/lib/utils';
+import type { Category } from '@/types';
 
 interface RelatedCategoriesProps {
   currentCategoryId: string;
@@ -13,7 +15,15 @@ export function RelatedCategories({
   limit = 6,
   className,
 }: RelatedCategoriesProps) {
-  const relatedCategories = getRelatedCategories(currentCategoryId, limit);
+  const [relatedCategories, setRelatedCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    (orpc.categories.list.call() as Promise<Category[]>).then((categories) => {
+      setRelatedCategories(
+        categories.filter((c) => c.id !== currentCategoryId).slice(0, limit)
+      );
+    });
+  }, [currentCategoryId, limit]);
 
   if (relatedCategories.length === 0) return null;
 

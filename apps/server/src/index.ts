@@ -80,13 +80,15 @@ app.get("/doc", async (c) => {
 });
 
 // Scalar API documentation
+// Scalar is typed as MiddlewareHandler but actually returns a response directly;
+// cast is needed due to a typing mismatch in @scalar/hono-api-reference.
 app.get(
   "/scalar",
   Scalar({
     url: "/doc",
     theme: "purple",
     pageTitle: "My Better T-App API Documentation",
-  }),
+  }) as any,
 );
 
 app.get("/", (c) => {

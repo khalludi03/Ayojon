@@ -5,7 +5,6 @@ import {
   timestamp,
   boolean,
   integer,
-  numeric,
   index,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";

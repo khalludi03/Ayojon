@@ -1,7 +1,15 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "../index";
+import { categoriesRouter } from "./categories";
+import { productsRouter } from "./products";
+import { reviewsRouter } from "./reviews";
+import { vendorsRouter } from "./vendors";
 
 export const appRouter = {
+  categories: categoriesRouter,
+  products: productsRouter,
+  reviews: reviewsRouter,
+  vendors: vendorsRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",

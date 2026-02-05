@@ -1,19 +1,14 @@
-import { createFileRoute, notFound, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
-import { mockDb } from '@/mock/db';
+import { orpc } from '@/utils/orpc';
+import type { Product } from '@/types';
 import { ProductDetailPage } from '@/components/product/ProductDetailPage';
 
 export const Route = createFileRoute('/product/$productSlug')({
   component: RouteComponent,
-  // Load data before rendering if possible, or handle in component
   loader: async ({ params }) => {
-    // Ensure DB is initialized
-    await mockDb.init();
-    const product = mockDb.getProductBySlug(params.productSlug);
-    if (!product) {
-       throw notFound();
-    }
-    const relatedProducts = mockDb.getRelatedProducts(product.id, 8);
+    const product = await orpc.products.detail.call({ slug: params.productSlug }) as Product;
+    const relatedProducts = await orpc.products.related.call({ productId: product.id }) as Product[];
     return { product, relatedProducts };
   },
   notFoundComponent: () => {

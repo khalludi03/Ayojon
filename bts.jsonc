@@ -16,7 +16,7 @@
   "payments": "none",
   "packageManager": "bun",
   "dbSetup": "supabase",
-  "api": "trpc",
+  "api": "orpc",
   "webDeploy": "none",
   "serverDeploy": "none",
 }

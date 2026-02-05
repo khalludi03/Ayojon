@@ -3,8 +3,7 @@
 import {  useQuery } from '@tanstack/react-query';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { Category } from '@/types';
-import { categoryService } from '@/mock/services/product-service';
-import { CATEGORIES } from '@/mock/seeds/categories';
+import { orpc } from '@/utils/orpc';
 
 // Query keys factory
 export const categoryKeys = {
@@ -22,26 +21,9 @@ export function useCategories(
 ) {
   return useQuery({
     queryKey: categoryKeys.lists(),
-    queryFn: () => categoryService.getCategories(),
-    initialData: CATEGORIES,
+    queryFn: () => orpc.categories.list.call() as Promise<Category[]>,
     // Categories rarely change, cache for longer
     staleTime: 10 * 60 * 1000, // 10 minutes
-    ...options,
-  });
-}
-
-/**
- * Fetch single category by ID
- */
-export function useCategory(
-  id: string,
-  options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>
-) {
-  return useQuery({
-    queryKey: categoryKeys.detail(id),
-    queryFn: () => categoryService.getCategoryById(id),
-    enabled: !!id,
-    staleTime: 10 * 60 * 1000,
     ...options,
   });
 }
@@ -55,7 +37,7 @@ export function useCategoryBySlug(
 ) {
   return useQuery({
     queryKey: categoryKeys.slug(slug),
-    queryFn: () => categoryService.getCategoryBySlug(slug),
+    queryFn: () => orpc.categories.bySlug.call({ slug }) as Promise<Category>,
     enabled: !!slug,
     staleTime: 10 * 60 * 1000,
     ...options,
