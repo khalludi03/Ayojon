@@ -1001,25 +1001,7 @@ Ayojon is a multi-vendor e-commerce platform specializing in event-related produ
 
 ---
 
-### US-5.8: Mixed Cart (Purchase + Rental)
-**`3 points`**
-
-**As a** shopper  
-**I want to** have both purchase and rental items in one cart  
-**So that** I can order everything together
-
-**Acceptance Criteria:**
-- Cart displays both purchase and rental items
-- Section headers: "Items to Purchase" and "Items to Rent"
-- Rental items show date range prominently
-- Security deposits summed separately
-- Delivery scheduling considers rental dates
-- Checkout handles both item types
-- Cart total includes both purchase + rental costs + deposits
-
----
-
-### US-5.9: Cart Persistence
+### US-5.8: Cart Persistence
 **`3 points`**
 
 **As a** shopper  
