@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { productService } from '@/mock/services/product-service'
+import { CouponSection } from '@/components/cart/CouponSection'
 import type { Product } from '@/types'
 
 export const Route = createFileRoute('/cart')({
@@ -252,13 +253,26 @@ function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
 }
 
 function CartPage() {
-  const { items, savedForLater, discount, updateQuantity, saveForLater, moveToCart, removeSavedItem, applyCoupon, removeCoupon, getDiscount, clearCart, getTotal, getSubtotal, getTax, getShipping } = useCart()
+  const { 
+    items, 
+    savedForLater, 
+    discount, 
+    updateQuantity, 
+    saveForLater, 
+    moveToCart, 
+    removeSavedItem, 
+    clearCart, 
+    subtotal, 
+    tax, 
+    shipping, 
+    discountAmount, 
+    total 
+  } = useCart()
   const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval()
   const [clearConfirm, setClearConfirm] = useState(false)
   const [suggested, setSuggested] = useState<Product[]>([])
   const [mounted, setMounted] = useState(false)
   const [isSummaryOpen, setIsSummaryOpen] = useState(false)
-  const [couponCode, setCouponCode] = useState('')
 
   useEffect(() => {
     setMounted(true)
@@ -269,36 +283,6 @@ function CartPage() {
       productService.getFeaturedProducts(8).then(setSuggested)
     }
   }, [items.length])
-
-  const handleApplyCoupon = () => {
-    if (!couponCode.trim()) {
-      toast.error('Please enter a coupon code')
-      return
-    }
-    
-    // Demo coupons - in real app, this would be validated on backend
-    const validCoupons: Record<string, { type: 'percentage' | 'fixed', value: number }> = {
-      'SAVE10': { type: 'percentage', value: 10 },
-      'SAVE20': { type: 'percentage', value: 20 },
-      'FLAT100': { type: 'fixed', value: 100 },
-      'FLAT200': { type: 'fixed', value: 200 },
-    }
-    
-    const coupon = validCoupons[couponCode.toUpperCase()]
-    
-    if (coupon) {
-      applyCoupon(couponCode.toUpperCase(), coupon.type, coupon.value)
-      toast.success(`Coupon "${couponCode.toUpperCase()}" applied!`)
-      setCouponCode('')
-    } else {
-      toast.error('Invalid coupon code')
-    }
-  }
-
-  const handleRemoveCoupon = () => {
-    removeCoupon()
-    toast.success('Coupon removed')
-  }
 
   if (!mounted) {
     return null
@@ -467,34 +451,8 @@ function CartPage() {
                   Order Summary
                 </h2>
 
-                {/* Coupon Input */}
-                <div className="mt-4 sm:mt-6">
-                  <label className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    Have a coupon?
-                  </label>
-                  <div className="mt-2 flex gap-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleApplyCoupon()}
-                      placeholder="Enter code"
-                      disabled={!!discount}
-                      className="flex-1 rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--background))] px-3 py-2 text-sm placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] disabled:opacity-50"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={handleApplyCoupon}
-                      disabled={!!discount}
-                      className="shrink-0"
-                    >
-                      Apply
-                    </Button>
-                  </div>
-                  <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                    Try: SAVE10, SAVE20, FLAT100, FLAT200
-                  </p>
-                </div>
+                {/* Coupon Section */}
+                <CouponSection />
 
               <div className="mt-4 space-y-3 border-b border-[hsl(var(--border))] pb-4 sm:mt-6 sm:space-y-4">
                 {/* Items Subtotal */}
@@ -503,27 +461,18 @@ function CartPage() {
                     Items Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})
                   </span>
                   <span className="font-medium text-[hsl(var(--foreground))]">
-                    {formatPrice(getSubtotal())}
+                    {formatPrice(subtotal)}
                   </span>
                 </div>
 
                 {/* Discount */}
-                {discount && getDiscount() > 0 && (
+                {discount && (
                   <div className="flex items-center justify-between text-sm sm:text-base">
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-600 dark:text-green-400">
-                        Discount ({discount.code})
-                      </span>
-                      <button
-                        onClick={handleRemoveCoupon}
-                        className="rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
-                        aria-label="Remove coupon"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
+                    <span className="text-green-600 dark:text-green-400">
+                      Discount ({discount.code})
+                    </span>
                     <span className="font-medium text-green-600 dark:text-green-400">
-                      -{formatPrice(getDiscount())}
+                      {discount.type === 'free_shipping' ? 'FREE Delivery' : `-${formatPrice(discountAmount)}`}
                     </span>
                   </div>
                 )}
@@ -532,10 +481,10 @@ function CartPage() {
                 <div className="flex justify-between text-sm sm:text-base">
                   <span className="text-[hsl(var(--muted-foreground))]">Delivery Fee</span>
                   <span className="font-medium text-[hsl(var(--foreground))]">
-                    {getShipping() === 0 ? (
+                    {shipping === 0 ? (
                       <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
                     ) : (
-                      formatPrice(getShipping())
+                      formatPrice(shipping)
                     )}
                   </span>
                 </div>
@@ -544,29 +493,17 @@ function CartPage() {
                 <div className="flex justify-between text-sm sm:text-base">
                   <span className="text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
                   <span className="font-medium text-[hsl(var(--foreground))]">
-                    {formatPrice(getTax())}
+                    {formatPrice(tax)}
                   </span>
                 </div>
               </div>
-
-              {/* Savings Highlight */}
-              {discount && getDiscount() > 0 && (
-                <div className="mt-3 rounded-md bg-green-50 dark:bg-green-950/20 p-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <Tag className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                      You're saving {formatPrice(getDiscount())}!
-                    </span>
-                  </div>
-                </div>
-              )}
 
               <div className="mt-4 flex justify-between items-baseline">
                 <span className="text-base font-bold text-[hsl(var(--foreground))] sm:text-lg">
                   Grand Total
                 </span>
                 <span className="text-2xl font-bold text-[hsl(var(--brand-orange))] sm:text-3xl">
-                  {formatPrice(getTotal())}
+                  {formatPrice(total)}
                 </span>
               </div>
 
@@ -637,17 +574,17 @@ function CartPage() {
                         Items Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})
                       </span>
                       <span className="font-medium text-[hsl(var(--foreground))]">
-                        {formatPrice(getSubtotal())}
+                        {formatPrice(subtotal)}
                       </span>
                     </div>
 
-                    {discount && getDiscount() > 0 && (
+                    {discount && (
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-green-600 dark:text-green-400">
                           Discount ({discount.code})
                         </span>
                         <span className="font-medium text-green-600 dark:text-green-400">
-                          -{formatPrice(getDiscount())}
+                          {discount.type === 'free_shipping' ? 'FREE Delivery' : `-${formatPrice(discountAmount)}`}
                         </span>
                       </div>
                     )}
@@ -655,10 +592,10 @@ function CartPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-[hsl(var(--muted-foreground))]">Delivery Fee</span>
                       <span className="font-medium text-[hsl(var(--foreground))]">
-                        {getShipping() === 0 ? (
+                        {shipping === 0 ? (
                           <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
                         ) : (
-                          formatPrice(getShipping())
+                          formatPrice(shipping)
                         )}
                       </span>
                     </div>
@@ -666,20 +603,9 @@ function CartPage() {
                     <div className="flex justify-between text-sm">
                       <span className="text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
                       <span className="font-medium text-[hsl(var(--foreground))]">
-                        {formatPrice(getTax())}
+                        {formatPrice(tax)}
                       </span>
                     </div>
-
-                    {discount && getDiscount() > 0 && (
-                      <div className="rounded-md bg-green-50 dark:bg-green-950/20 p-2 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <Tag className="h-3 w-3 text-green-600 dark:text-green-400" />
-                          <span className="text-xs font-semibold text-green-600 dark:text-green-400">
-                            You're saving {formatPrice(getDiscount())}!
-                          </span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -707,7 +633,7 @@ function CartPage() {
                     Grand Total
                   </span>
                   <span className="text-xl font-bold text-[hsl(var(--brand-orange))]">
-                    {formatPrice(getTotal())}
+                    {formatPrice(total)}
                   </span>
                 </div>
                 <Link to="/checkout" className="flex-1 max-w-xs">

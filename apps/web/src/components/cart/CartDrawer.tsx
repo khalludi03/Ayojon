@@ -16,6 +16,7 @@ import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-it
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { CurrencyCode } from '@/types';
+import { CouponSection } from './CouponSection';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -97,7 +98,7 @@ function CartItemRow({ item, currency, updateQuantity, onRemove, onSaveForLater,
           </Link>
           {item.selectedVariant && (
             <p className="text-sm text-muted-foreground">
-              Variant: {item.selectedVariant.name}
+              Variant: {item.selectedVariant.value}
             </p>
           )}
           <p className="font-medium">
@@ -177,6 +178,11 @@ export function CartDrawer() {
     items,
     itemCount,
     subtotal,
+    tax,
+    shipping,
+    discountAmount,
+    total,
+    discount,
     updateQuantity,
     saveForLater,
     currency,
@@ -221,7 +227,7 @@ export function CartDrawer() {
               </p>
             </div>
             <SheetClose asChild>
-              <Button variant="default" className="mt-4">
+              <Button variant="primary" className="mt-4">
                 Continue Shopping
               </Button>
             </SheetClose>
@@ -248,10 +254,47 @@ export function CartDrawer() {
             </div>
 
             <div className="space-y-4 border-t pt-4">
-              <div className="flex items-center justify-between text-base font-medium">
-                <span>Subtotal</span>
-                <span>{formatPrice(subtotal, currency)}</span>
+              <CouponSection />
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatPrice(subtotal, currency)}</span>
+                </div>
+                
+                {discount && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-green-600 dark:text-green-400">
+                      Discount ({discount.code})
+                    </span>
+                    <span className="text-green-600 dark:text-green-400">
+                      {discount.type === 'free_shipping' ? 'FREE Delivery' : `-${formatPrice(discountAmount, currency)}`}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Delivery Fee</span>
+                  <span>
+                    {shipping === 0 ? (
+                      <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
+                    ) : (
+                      formatPrice(shipping, currency)
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Tax (5%)</span>
+                  <span>{formatPrice(tax, currency)}</span>
+                </div>
+
+                <div className="flex items-center justify-between border-t pt-2 text-base font-bold">
+                  <span>Total</span>
+                  <span className="text-brand-orange">{formatPrice(total, currency)}</span>
+                </div>
               </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <SheetClose asChild>
                   <Button variant="outline" className="w-full" onClick={() => navigate({ to: '/cart' })}>
