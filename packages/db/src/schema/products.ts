@@ -76,9 +76,7 @@ export const products = pgTable(
     currency: text("currency").$type<CurrencyCode>().default("BDT").notNull(),
 
     // Ratings (denormalized for performance)
-    ratingAverage: numeric("rating_average", { precision: 2, scale: 1 }).default(
-      "0",
-    ),
+    ratingAverage: numeric("rating_average", { precision: 2, scale: 1, mode: "number" }).default(0),
     ratingCount: integer("rating_count").default(0).notNull(),
 
     // Shipping

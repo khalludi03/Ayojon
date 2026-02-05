@@ -24,7 +24,7 @@ function formatVendor(v: typeof vendors.$inferSelect) {
     name: v.name,
     slug: v.slug,
     isVerified: v.isVerified,
-    rating: parseFloat(v.ratingAverage),
+    rating: v.ratingAverage ?? 0,
     productCount: v.productCount,
     location: v.location,
     joinedAt: v.joinedAt.toISOString(),

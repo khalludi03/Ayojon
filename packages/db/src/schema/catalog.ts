@@ -108,9 +108,7 @@ export const vendors = pgTable(
     website: text("website"),
     isVerified: boolean("is_verified").default(false).notNull(),
     isActive: boolean("is_active").default(true).notNull(),
-    ratingAverage: numeric("rating_average", { precision: 2, scale: 1 }).default(
-      "0",
-    ),
+    ratingAverage: numeric("rating_average", { precision: 2, scale: 1, mode: "number" }).default(0),
     ratingCount: integer("rating_count").default(0).notNull(),
     productCount: integer("product_count").default(0).notNull(),
     totalSales: integer("total_sales").default(0).notNull(),

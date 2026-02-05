@@ -692,7 +692,7 @@ async function seedVendors(userIds: string[]) {
       description: vendor.description,
       location: vendor.location,
       isVerified: vendor.isVerified,
-      ratingAverage: (3.5 + Math.random() * 1.5).toFixed(1),
+      ratingAverage: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
       productCount: 0,
     });
   }
@@ -741,7 +741,7 @@ async function seedProducts(vendorIds: string[]) {
       currency: "BDT",
       content: product.content,
       isFeatured: product.isFeatured ?? false,
-      ratingAverage: (3.5 + Math.random() * 1.5).toFixed(1),
+      ratingAverage: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
       ratingCount: Math.floor(Math.random() * 100) + 10,
       freeShipping: Number(product.price) > 5000,
       shippingCost: Number(product.price) > 5000 ? null : "150",

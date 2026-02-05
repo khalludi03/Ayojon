@@ -142,7 +142,7 @@ interface ProductListRow {
   salePrice: string | null;
   discountPercentage: number | null;
   currency: string;
-  ratingAverage: string | null;
+  ratingAverage: number | null;
   ratingCount: number;
   freeShipping: boolean;
   shippingCost: string | null;
@@ -189,7 +189,7 @@ function formatListItem(p: ProductListRow) {
       discountPercentage: p.discountPercentage ?? 0,
     },
     rating: {
-      average: parseFloat(p.ratingAverage ?? "0"),
+      average: p.ratingAverage ?? 0,
       count: p.ratingCount,
     },
     shipping: {
@@ -303,7 +303,7 @@ export const productsRouter = {
       if (input.subcategory) conditions.push(eq(products.subcategoryId, input.subcategory));
       if (input.minPrice !== undefined) conditions.push(gte(products.price, String(input.minPrice)));
       if (input.maxPrice !== undefined) conditions.push(lte(products.price, String(input.maxPrice)));
-      if (input.minRating !== undefined) conditions.push(gte(products.ratingAverage, String(input.minRating)));
+      if (input.minRating !== undefined) conditions.push(gte(products.ratingAverage, input.minRating));
       if (input.freeShipping) conditions.push(eq(products.freeShipping, true));
       if (input.onSale) conditions.push(isNotNull(products.salePrice));
       if (input.inStock) conditions.push(ne(products.stockStatus, "out_of_stock"));
@@ -621,7 +621,7 @@ export const productsRouter = {
       const rows = await db.query.products.findMany({
         where: and(
           eq(products.status, "active"),
-          gte(products.ratingAverage, "4.0"),
+          gte(products.ratingAverage, 4.0),
           gte(products.ratingCount, 10),
         ),
         with: listWith,
@@ -685,7 +685,7 @@ export const productsRouter = {
         where: and(
           eq(products.status, "active"),
           gte(products.discountPercentage, 25),
-          gte(products.ratingAverage, "3.5"),
+          gte(products.ratingAverage, 3.5),
         ),
         with: listWith,
         orderBy: [desc(products.salesCount)],
