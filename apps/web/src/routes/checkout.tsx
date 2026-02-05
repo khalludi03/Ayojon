@@ -19,9 +19,13 @@ interface FormData {
   fullName: string;
   email: string;
   phone: string;
-  address: string;
+  addressLine1: string;
+  addressLine2: string;
   city: string;
+  division: string;
   postalCode: string;
+  addressType: 'home' | 'office';
+  saveAddress: boolean;
   // Scheduling
   deliveryDate: string;
   deliveryTime: string;
@@ -44,9 +48,13 @@ function CheckoutPage() {
     fullName: '',
     email: '',
     phone: '',
-    address: '',
+    addressLine1: '',
+    addressLine2: '',
     city: '',
+    division: '',
     postalCode: '',
+    addressType: 'home',
+    saveAddress: false,
     deliveryDate: '',
     deliveryTime: '',
     paymentMethod: '',
@@ -72,7 +80,7 @@ function CheckoutPage() {
     }
   }, [currentStep, orderNumber]);
 
-  const handleFormChange = (field: string, value: string) => {
+  const handleFormChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -123,9 +131,12 @@ function CheckoutPage() {
                 fullName: formData.fullName,
                 email: formData.email,
                 phone: formData.phone,
-                address: formData.address,
+                addressLine1: formData.addressLine1,
+                addressLine2: formData.addressLine2,
                 city: formData.city,
+                division: formData.division,
                 postalCode: formData.postalCode,
+                addressType: formData.addressType,
               },
               scheduling: {
                 deliveryDate: formData.deliveryDate,
