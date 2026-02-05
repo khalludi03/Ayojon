@@ -8,15 +8,58 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getStoredOrders } from "@/stores/order-store";
+import type { Order } from "@/types";
 
 export function AccountOrders() {
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  useEffect(() => {
+    setOrders(getStoredOrders());
+  }, []);
+
+  const getStatusBadge = (status: Order["status"]) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300";
+      case "processing":
+        return "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300";
+      case "shipped":
+        return "bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300";
+      case "delivered":
+        return "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300";
+      case "cancelled":
+        return "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300";
+      default:
+        return "bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]";
+    }
+  };
+
+  const formatDeliveryMethod = (method?: string) => {
+    switch (method) {
+      case "standard":
+        return "Standard Delivery";
+      case "express":
+        return "Express Delivery";
+      case "same-day":
+        return "Same-Day Delivery";
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
-        <p className="text-muted-foreground mt-2">
-          View and manage your order history
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Orders</h1>
+          <p className="text-muted-foreground mt-2">
+            View and manage your order history
+          </p>
+        </div>
+        <span className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 px-3 py-1 text-xs font-semibold text-[hsl(var(--foreground))]">
+          {orders.length} {orders.length === 1 ? "order" : "orders"}
+        </span>
       </div>
 
       <Card>
@@ -25,7 +68,84 @@ export function AccountOrders() {
           <CardDescription>All your past and current orders</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">Orders section coming soon...</p>
+          {orders.length === 0 ? (
+            <p className="text-muted-foreground">No orders yet. Place your first order to see it here.</p>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-sm"
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-3">
+                      {order.imageUrl ? (
+                        <img
+                          src={order.imageUrl}
+                          alt={order.orderNumber}
+                          className="h-12 w-12 rounded-md object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[hsl(var(--muted))] text-sm font-semibold">
+                          #{order.items}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-semibold">{order.orderNumber}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(order.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </p>
+                        {formatDeliveryMethod(order.deliveryMethod) && (
+                          <p className="text-xs text-muted-foreground">
+                            {formatDeliveryMethod(order.deliveryMethod)}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-sm">
+                      <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusBadge(order.status)}`}>
+                        {order.status}
+                      </span>
+                      <span className="text-muted-foreground">{order.items} items</span>
+                      <span className="font-semibold">৳{order.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {order.lineItems && order.lineItems.length > 0 && (
+                    <div className="grid gap-3 border-t border-[hsl(var(--border))] pt-3 sm:grid-cols-2">
+                      {order.lineItems.map((item) => (
+                        <div key={item.id} className="flex items-center gap-3">
+                          {item.imageUrl ? (
+                            <img
+                              src={item.imageUrl}
+                              alt={item.title}
+                              className="h-10 w-10 rounded-md object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-[hsl(var(--muted))] text-xs font-semibold">
+                              x{item.quantity}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-[hsl(var(--foreground))] line-clamp-1">
+                              {item.title}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Qty {item.quantity} · ৳{item.price.toFixed(2)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

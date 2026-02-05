@@ -1,7 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Smartphone, Banknote, ShieldCheck, Lock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Banknote, CreditCard, Lock, ShieldCheck, Smartphone, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PaymentStepProps {
@@ -26,13 +34,13 @@ export function PaymentStep({
 }: PaymentStepProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate based on payment method
     if (formData.paymentMethod === 'card') {
       if (formData.cardNumber && formData.cardName && formData.expiryDate && formData.cvv) {
         onNext();
       }
-    } else if (formData.paymentMethod === 'mobile') {
+    } else if (formData.paymentMethod === 'bkash' || formData.paymentMethod === 'nagad') {
       if (formData.mobileNumber) {
         onNext();
       }
@@ -41,27 +49,40 @@ export function PaymentStep({
     }
   };
 
+  const unavailableMethods = new Set<string>();
+
   const paymentMethods = [
+    {
+      id: 'cod',
+      label: 'Cash on Delivery (COD)',
+      icon: Banknote,
+      description: 'Pay when you receive your order',
+      fee: 50,
+      badge: '✨ Popular',
+    },
+    {
+      id: 'bkash',
+      label: 'bKash',
+      icon: Wallet,
+      description: 'Pay via bKash mobile wallet',
+      fee: 0,
+      badge: '⚡ Instant',
+    },
+    {
+      id: 'nagad',
+      label: 'Nagad',
+      icon: Smartphone,
+      description: 'Pay via Nagad mobile wallet',
+      fee: 0,
+      badge: '⚡ Instant',
+    },
     {
       id: 'card',
       label: 'Credit/Debit Card',
       icon: CreditCard,
-      description: 'Visa, Mastercard, Amex',
+      description: 'Visa, Mastercard accepted',
+      fee: 0,
       badge: '🔒 Secure',
-    },
-    {
-      id: 'mobile',
-      label: 'Mobile Payment',
-      icon: Smartphone,
-      description: 'bKash, Nagad, Rocket',
-      badge: '⚡ Instant',
-    },
-    {
-      id: 'cod',
-      label: 'Cash on Delivery',
-      icon: Banknote,
-      description: 'Pay when you receive',
-      badge: '✨ Popular',
     },
   ];
 
@@ -89,38 +110,70 @@ export function PaymentStep({
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Payment Method Selection */}
           <div className="space-y-3">
-            <Label className="text-base font-semibold">
-              Select Payment Method <span className="text-red-500">*</span>
-            </Label>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label className="text-base font-semibold">
+                Select Payment Method <span className="text-red-500">*</span>
+              </Label>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="text-sm font-medium text-[hsl(var(--primary))] hover:underline"
+                  >
+                    Payment Terms
+                  </button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Payment Terms & Conditions</DialogTitle>
+                    <DialogDescription>
+                      Please review the payment terms before completing your order.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
+                    <p>• All payments are processed securely and encrypted.</p>
+                    <p>• COD includes an additional ৳50 fee where applicable.</p>
+                    <p>• Mobile wallet payments must be completed within 15 minutes.</p>
+                    <p>• Card payments may require OTP or 3D Secure verification.</p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
               {paymentMethods.map((method) => {
                 const Icon = method.icon;
+                const isSelected = formData.paymentMethod === method.id;
+                const isAvailable = !unavailableMethods.has(method.id);
+
                 return (
                   <label
                     key={method.id}
                     className={cn(
                       "group relative flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 p-5 transition-all duration-200",
-                      formData.paymentMethod === method.id
+                      !isAvailable && "cursor-not-allowed opacity-60",
+                      isSelected && isAvailable
                         ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-md scale-[1.02]'
-                        : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
+                        : isAvailable
+                        ? 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
+                        : 'border-[hsl(var(--border))]'
                     )}
                   >
                     <input
                       type="radio"
                       name="paymentMethod"
                       value={method.id}
-                      checked={formData.paymentMethod === method.id}
+                      checked={isSelected}
                       onChange={(e) => onFormChange('paymentMethod', e.target.value)}
                       className="sr-only"
                       required
+                      disabled={!isAvailable}
                     />
-                    <Icon 
+                    <Icon
                       className={cn(
                         "h-8 w-8 transition-colors",
-                        formData.paymentMethod === method.id 
-                          ? "text-[hsl(var(--primary))]" 
-                          : "text-[hsl(var(--muted-foreground))]"
-                      )} 
+                        isSelected ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]"
+                      )}
                     />
                     <div className="text-center">
                       <p className="text-sm font-semibold text-[hsl(var(--foreground))]">
@@ -129,13 +182,17 @@ export function PaymentStep({
                       <p className="mt-0.5 text-xs text-[hsl(var(--muted-foreground))]">
                         {method.description}
                       </p>
-                      <span className="mt-2 inline-block text-xs font-medium text-[hsl(var(--primary))]">
-                        {method.badge}
-                      </span>
+                      <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
+                        <span className="rounded-full bg-[hsl(var(--muted))]/50 px-2 py-0.5 font-medium text-[hsl(var(--foreground))]">
+                          {method.fee > 0 ? `+৳${method.fee} fee` : 'No extra fee'}
+                        </span>
+                        <span className="font-medium text-[hsl(var(--primary))]">
+                          {method.badge}
+                        </span>
+                      </div>
                     </div>
-                    
-                    {/* Selected indicator */}
-                    {formData.paymentMethod === method.id && (
+
+                    {isSelected && isAvailable && (
                       <div className="absolute right-2 top-2 rounded-full bg-[hsl(var(--primary))] p-1">
                         <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -145,6 +202,10 @@ export function PaymentStep({
                   </label>
                 );
               })}
+            </div>
+
+            <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
+              Some items may restrict payment methods. Unavailable options will appear disabled.
             </div>
           </div>
 
@@ -225,12 +286,12 @@ export function PaymentStep({
           )}
 
           {/* Mobile Payment Details */}
-          {formData.paymentMethod === 'mobile' && (
+          {(formData.paymentMethod === 'bkash' || formData.paymentMethod === 'nagad') && (
             <div className="space-y-4 rounded-lg border-2 border-[hsl(var(--primary))]/20 bg-gradient-to-br from-[hsl(var(--muted))]/30 to-transparent p-5">
               <div className="flex items-center gap-2 pb-2 border-b border-[hsl(var(--border))]">
                 <Smartphone className="h-5 w-5 text-[hsl(var(--primary))]" />
                 <h3 className="font-semibold text-[hsl(var(--foreground))]">
-                  Mobile Payment Details
+                  {formData.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Payment Details
                 </h3>
               </div>
 
@@ -249,20 +310,14 @@ export function PaymentStep({
               <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 text-sm">
                 <span className="text-xl shrink-0">💡</span>
                 <p className="text-blue-700 dark:text-blue-300">
-                  You will receive a payment request on your mobile after placing the order. Please complete the payment within 15 minutes.
+                  You will receive a {formData.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} payment request after placing the order. Please complete the payment within 15 minutes.
                 </p>
               </div>
 
               {/* Supported providers */}
               <div className="flex items-center justify-center gap-4 pt-2">
                 <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
-                  📱 bKash
-                </div>
-                <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
-                  📱 Nagad
-                </div>
-                <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
-                  📱 Rocket
+                  📱 {formData.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'}
                 </div>
               </div>
             </div>
@@ -301,7 +356,7 @@ export function PaymentStep({
 
               <div className="mt-4 rounded-lg bg-amber-50 dark:bg-amber-950/20 p-3 text-sm">
                 <p className="text-amber-700 dark:text-amber-300">
-                  ⚠️ Additional ৳50 COD fee may apply
+                  ⚠️ Additional ৳50 COD fee applies
                 </p>
               </div>
             </div>
@@ -317,7 +372,7 @@ export function PaymentStep({
               size="lg"
               disabled={!formData.paymentMethod}
             >
-              Place Order →
+              Review Order →
             </Button>
           </div>
         </form>

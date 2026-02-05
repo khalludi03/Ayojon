@@ -18,6 +18,14 @@ export interface Order {
   status: OrderStatus['status'];
   items: number;
   imageUrl?: string;
+  deliveryMethod?: string;
+  lineItems?: Array<{
+    id: string;
+    title: string;
+    quantity: number;
+    price: number;
+    imageUrl?: string;
+  }>;
 }
 
 export type AccountSection =

@@ -7,9 +7,10 @@ interface CheckoutProgressProps {
 
 const steps = [
   { number: 1, label: "Shipping", description: "Delivery address" },
-  { number: 2, label: "Delivery", description: "Date & time" },
+  { number: 2, label: "Delivery", description: "Method" },
   { number: 3, label: "Payment", description: "Payment method" },
-  { number: 4, label: "Confirmation", description: "Order complete" },
+  { number: 4, label: "Review", description: "Confirm details" },
+  { number: 5, label: "Confirmation", description: "Order complete" },
 ];
 
 export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
