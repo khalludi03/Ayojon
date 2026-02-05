@@ -393,7 +393,14 @@ export const cartStore = createCartStore();
 // Stable callbacks for useSyncExternalStore
 const subscribeCart = (callback: () => void) => cartStore.subscribe(callback);
 const getCartSnapshot = () => cartStore.getState();
-const getCartServerSnapshot = () => ({ items: [], savedForLater: [], currency: 'BDT' as CurrencyCode, isDrawerOpen: false, discount: null });
+const CART_SERVER_SNAPSHOT = {
+  items: [],
+  savedForLater: [],
+  currency: 'BDT' as CurrencyCode,
+  isDrawerOpen: false,
+  discount: null,
+};
+const getCartServerSnapshot = () => CART_SERVER_SNAPSHOT;
 
 // React hook
 export function useCart() {

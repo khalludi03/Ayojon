@@ -90,7 +90,8 @@ export const currencyStore = createCurrencyStore();
 // Stable callbacks for useSyncExternalStore
 const subscribeCurrency = (callback: () => void) => currencyStore.subscribe(callback);
 const getCurrencySnapshot = () => currencyStore.getState();
-const getCurrencyServerSnapshot = () => ({ currency: 'BDT' as CurrencyCode });
+const CURRENCY_SERVER_SNAPSHOT = { currency: 'BDT' as CurrencyCode };
+const getCurrencyServerSnapshot = () => CURRENCY_SERVER_SNAPSHOT;
 
 // React hook
 export function useCurrency() {

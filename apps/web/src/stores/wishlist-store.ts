@@ -231,7 +231,8 @@ export const wishlistStore = createWishlistStore();
 // Stable callbacks for useSyncExternalStore
 const subscribeWishlist = (callback: () => void) => wishlistStore.subscribe(callback);
 const getWishlistSnapshot = () => wishlistStore.getState();
-const getWishlistServerSnapshot = () => ({ items: [] });
+const WISHLIST_SERVER_SNAPSHOT = { items: [] as WishlistItem[] };
+const getWishlistServerSnapshot = () => WISHLIST_SERVER_SNAPSHOT;
 
 // React hook
 export function useWishlist() {

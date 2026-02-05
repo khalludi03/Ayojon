@@ -1,7 +1,7 @@
 // Countdown Timer Hook
 
-import { useCallback, useEffect, useState } from 'react';
-import { formatCountdown, getTimeRemaining } from '@/lib/utils';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { formatCountdown } from '@/lib/utils';
 
 interface CountdownState {
   hours: string;
@@ -15,8 +15,12 @@ interface CountdownState {
  * Countdown timer hook for deal timers
  */
 export function useCountdown(endDate: string | Date): CountdownState {
+  const endTimestamp = useMemo(() => {
+    return typeof endDate === 'string' ? new Date(endDate).getTime() : endDate.getTime();
+  }, [endDate]);
+
   const calculateTimeLeft = useCallback((): CountdownState => {
-    const totalSeconds = getTimeRemaining(endDate);
+    const totalSeconds = Math.max(0, Math.floor((endTimestamp - Date.now()) / 1000));
     const isExpired = totalSeconds <= 0;
 
     if (isExpired) {
@@ -35,22 +39,25 @@ export function useCountdown(endDate: string | Date): CountdownState {
       totalSeconds,
       isExpired: false,
     };
-  }, [endDate]);
+  }, [endTimestamp]);
 
   const [timeLeft, setTimeLeft] = useState<CountdownState>(() => calculateTimeLeft());
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Mark as mounted to prevent hydration mismatch
-    setMounted(true);
-
     // Update immediately after mount
-    setTimeLeft(calculateTimeLeft());
+    setTimeLeft((prev) => {
+      const next = calculateTimeLeft();
+      return prev.totalSeconds === next.totalSeconds && prev.isExpired === next.isExpired ? prev : next;
+    });
 
     // Then update every second
     const timer = setInterval(() => {
       const newTimeLeft = calculateTimeLeft();
-      setTimeLeft(newTimeLeft);
+      setTimeLeft((prev) => {
+        return prev.totalSeconds === newTimeLeft.totalSeconds && prev.isExpired === newTimeLeft.isExpired
+          ? prev
+          : newTimeLeft;
+      });
 
       // Stop the timer if expired
       if (newTimeLeft.isExpired) {
