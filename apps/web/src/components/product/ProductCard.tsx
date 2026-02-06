@@ -63,7 +63,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <a
       href={productUrl}
-      className="group relative flex h-full flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 transition-all hover:shadow-[var(--shadow-card-hover)] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-2 sm:p-3"
+      className="group relative flex h-full flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-2 sm:p-3"
       aria-label={`View ${product.title} - ${formatPrice(product.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <img
           src={product.images[0]?.url}
           alt={product.title}
-          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:blur-sm cursor-pointer"
+          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 cursor-pointer"
           loading="lazy"
         />
 

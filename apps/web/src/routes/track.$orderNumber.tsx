@@ -118,18 +118,25 @@ function TrackOrderPage() {
     const phone = match.address?.phone?.toLowerCase();
     const canVerify = email || phone;
 
-    if (canVerify) {
-      const matches = contact === email || contact === phone;
-      if (!matches) {
-        setOrder(null);
-        setIsVerified(false);
-        toast.error("Email or phone does not match this order.");
-        return;
-      }
-    } else if (!contact) {
+    if (!contact) {
       setOrder(null);
       setIsVerified(false);
       toast.error("Please enter the email or phone used for the order.");
+      return;
+    }
+
+    if (!canVerify) {
+      setOrder(null);
+      setIsVerified(false);
+      toast.error("This order cannot be verified for guest tracking. Please sign in.");
+      return;
+    }
+
+    const matches = contact === email || contact === phone;
+    if (!matches) {
+      setOrder(null);
+      setIsVerified(false);
+      toast.error("Email or phone does not match this order.");
       return;
     }
 

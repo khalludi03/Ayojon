@@ -119,13 +119,13 @@ function CheckoutPage() {
     const shipping = getShipping();
     const tax = getTax();
     const discount = getDiscount();
-    const total = subtotal + tax + shipping - discount;
+    const orderTotal = subtotal + tax + shipping - discount;
 
     addOrder({
       id: newOrderId,
       orderNumber: orderNum,
       date: placedAt,
-      total: total,
+      total: orderTotal,
       status: 'processing',
       items: items.reduce((total, item) => total + item.quantity, 0),
       imageUrl: firstItemImage,
@@ -159,7 +159,7 @@ function CheckoutPage() {
         shipping,
         tax,
         discount,
-        total,
+        total: orderTotal,
       },
       timeline: {
         placedAt,

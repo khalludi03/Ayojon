@@ -71,7 +71,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
+        <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -84,7 +84,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
           </CardContent>
         </Card>
 
-        <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
+        <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Wishlist Items</CardTitle>
             <Heart className="h-4 w-4 text-muted-foreground" />
@@ -99,7 +99,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
       </div>
 
       {/* Recent Orders */}
-      <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
+      <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-sm">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Recent Orders</CardTitle>
           <CardDescription className="text-xs sm:text-sm">Your last 3 orders</CardDescription>
@@ -109,7 +109,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
             {recentOrders.map((order) => (
               <div
                 key={order.id}
-                className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-all hover:-translate-y-0.5 hover:shadow-(--shadow-card-hover) sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
+                className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
               >
                 {/* Left side: Image and Order Info */}
                 <div className="flex items-start gap-2 sm:items-center sm:gap-3 md:gap-4">
@@ -168,7 +168,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
       </Card>
 
       {/* Quick Actions */}
-      <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
+      <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-sm">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks and shortcuts</CardDescription>

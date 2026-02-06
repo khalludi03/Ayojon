@@ -79,8 +79,6 @@ export function MainNav({ onCategoryClick }: MainNavProps) {
         <NavDropdown label="Sound & Lighting" icon={Mic} items={soundDropdownItems} />
 
         {/* Catering Equipment */}
-        <NavDropdown label="Catering" icon={UtensilsCrossed} items={cateringDropdownItems} />
-
         <NavDropdown label="Catering" icon={UtensilsCrossed} items={cateringDropdownItems} highlight />
       </div>
 
