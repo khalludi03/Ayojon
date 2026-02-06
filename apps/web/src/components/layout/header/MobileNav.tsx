@@ -239,7 +239,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <div
             className={cn(
               'overflow-hidden transition-all duration-300',
-              showCategories ? 'max-h-125 mt-2' : 'max-h-0'
+              showCategories ? 'max-h-screen mt-2' : 'max-h-0'
             )}
           >
             {categoriesLoading ? (

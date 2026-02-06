@@ -116,12 +116,9 @@ export function PaymentStep({
               </Label>
               <Dialog>
                 <DialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="text-sm font-medium text-[hsl(var(--primary))] hover:underline"
-                  >
+                  <Button type="button" variant="link" className="h-auto p-0 text-sm">
                     Payment Terms
-                  </button>
+                  </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>

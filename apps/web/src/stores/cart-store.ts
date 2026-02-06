@@ -453,22 +453,7 @@ export function useCart() {
 
   const tax = subtotal * 0.05;
 
-  // Calculate shipping based on delivery method
-  let shipping = 0;
-  if (state.discount?.type !== 'free_shipping' && state.items.length > 0) {
-    const deliveryMethod = state.deliveryMethod;
-    
-    if (deliveryMethod === 'standard') {
-      shipping = subtotal >= 1000 ? 0 : 50;
-    } else if (deliveryMethod === 'express') {
-      shipping = 100;
-    } else if (deliveryMethod === 'same-day') {
-      shipping = 150;
-    } else {
-      // Default: Standard delivery logic if no method selected
-      shipping = subtotal >= 1000 ? 0 : 50;
-    }
-  }
+  const shipping = cartStore.getShipping();
 
   let discountAmount = 0;
   if (state.discount) {
