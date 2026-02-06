@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Camera, Heart, ShoppingCart, Trash2 } from "lucide-react";
+import { Camera, Heart, ShoppingCart, Trash2, MapPin, Plus, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
@@ -444,25 +444,562 @@ export function AccountWishlist() {
 }
 
 export function AccountAddresses() {
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
+  const [addressToDelete, setAddressToDelete] = useState<SavedAddress | null>(null);
+
+  // Load saved addresses from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('saved-addresses');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setAddresses(parsed);
+      } catch (e) {
+        console.error('Failed to parse saved addresses:', e);
+      }
+    }
+  }, []);
+
+  // Save addresses to localStorage whenever they change
+  const saveAddresses = (newAddresses: SavedAddress[]) => {
+    setAddresses(newAddresses);
+    localStorage.setItem('saved-addresses', JSON.stringify(newAddresses));
+  };
+
+  const handleAddAddress = (address: Omit<SavedAddress, 'id' | 'isDefault'>) => {
+    if (addresses.length >= 5) {
+      toast.error('Maximum 5 addresses allowed');
+      return;
+    }
+
+    const newAddress: SavedAddress = {
+      ...address,
+      id: `addr_${Date.now()}`,
+      isDefault: addresses.length === 0, // First address is default
+    };
+
+    saveAddresses([...addresses, newAddress]);
+    setIsAddDialogOpen(false);
+    toast.success('Address added successfully');
+  };
+
+  const handleEditAddress = (address: SavedAddress) => {
+    const updatedAddresses = addresses.map((addr) =>
+      addr.id === address.id ? address : addr
+    );
+    saveAddresses(updatedAddresses);
+    setIsEditDialogOpen(false);
+    setSelectedAddress(null);
+    toast.success('Address updated successfully');
+  };
+
+  const handleDeleteAddress = () => {
+    if (!addressToDelete) return;
+
+    const wasDefault = addressToDelete.isDefault;
+    const updatedAddresses = addresses.filter((addr) => addr.id !== addressToDelete.id);
+
+    // If deleted address was default and there are remaining addresses, make the first one default
+    if (wasDefault && updatedAddresses.length > 0) {
+      updatedAddresses[0].isDefault = true;
+    }
+
+    saveAddresses(updatedAddresses);
+    setIsDeleteDialogOpen(false);
+    setAddressToDelete(null);
+    toast.success('Address deleted successfully');
+  };
+
+  const handleSetAsDefault = (addressId: string) => {
+    const updatedAddresses = addresses.map((addr) => ({
+      ...addr,
+      isDefault: addr.id === addressId,
+    }));
+    saveAddresses(updatedAddresses);
+    toast.success('Default address updated');
+  };
+
+  const openEditDialog = (address: SavedAddress) => {
+    setSelectedAddress(address);
+    setIsEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (address: SavedAddress) => {
+    setAddressToDelete(address);
+    setIsDeleteDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Addresses</h1>
-        <p className="text-muted-foreground mt-2">
-          Manage your shipping and billing addresses
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Saved Addresses</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your delivery addresses (Maximum 5 addresses)
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsAddDialogOpen(true)}
+          disabled={addresses.length >= 5}
+          size="lg"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add New Address
+        </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Saved Addresses</CardTitle>
-          <CardDescription>Your delivery locations</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Addresses section coming soon...</p>
-        </CardContent>
-      </Card>
+      {addresses.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <MapPin className="h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No saved addresses</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              Add your first delivery address to make checkout faster
+            </p>
+            <Button onClick={() => setIsAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Your First Address
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {addresses.map((address) => (
+            <AddressCard
+              key={address.id}
+              address={address}
+              onEdit={() => openEditDialog(address)}
+              onDelete={() => openDeleteDialog(address)}
+              onSetDefault={() => handleSetAsDefault(address.id)}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Add Address Dialog */}
+      <AddressDialog
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onSave={handleAddAddress}
+        title="Add New Address"
+        description="Enter your delivery address details"
+      />
+
+      {/* Edit Address Dialog */}
+      <AddressDialog
+        open={isEditDialogOpen}
+        onClose={() => {
+          setIsEditDialogOpen(false);
+          setSelectedAddress(null);
+        }}
+        onSave={handleEditAddress}
+        initialAddress={selectedAddress}
+        title="Edit Address"
+        description="Update your delivery address details"
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Address</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this address? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {addressToDelete && (
+            <div className="rounded-lg border border-border bg-muted/50 p-4">
+              <p className="font-semibold">{addressToDelete.fullName}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {addressToDelete.addressLine1}
+                {addressToDelete.addressLine2 && `, ${addressToDelete.addressLine2}`}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {addressToDelete.city}, {addressToDelete.division}
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAddress}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Address
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+  );
+}
+
+interface SavedAddress {
+  id: string;
+  fullName: string;
+  phone: string;
+  addressLine1: string;
+  addressLine2: string;
+  city: string;
+  division: string;
+  postalCode: string;
+  addressType: 'home' | 'office';
+  isDefault: boolean;
+}
+
+interface AddressCardProps {
+  address: SavedAddress;
+  onEdit: () => void;
+  onDelete: () => void;
+  onSetDefault: () => void;
+}
+
+function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardProps) {
+  return (
+    <Card className={address.isDefault ? 'border-primary border-2' : ''}>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <CardTitle className="text-lg">{address.fullName}</CardTitle>
+            {address.isDefault && (
+              <Badge variant="default" className="text-xs">
+                Default
+              </Badge>
+            )}
+          </div>
+          <Badge variant="secondary" className="text-xs">
+            {address.addressType === 'home' ? '🏠 Home' : '🏢 Office'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="text-sm space-y-1">
+          <p className="font-medium">📞 {address.phone}</p>
+          <p className="text-muted-foreground">
+            {address.addressLine1}
+            {address.addressLine2 && `, ${address.addressLine2}`}
+          </p>
+          <p className="text-muted-foreground">
+            {address.city}, {address.division}
+            {address.postalCode && ` - ${address.postalCode}`}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2 border-t">
+          {!address.isDefault && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSetDefault}
+              className="text-xs h-8"
+            >
+              <Check className="mr-1 h-3 w-3" />
+              Set as Default
+            </Button>
+          )}
+          <Button variant="ghost" size="sm" onClick={onEdit} className="text-xs h-8">
+            Edit
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onDelete}
+            className="text-xs h-8 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="mr-1 h-3 w-3" />
+            Delete
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+interface AddressDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSave: (address: any) => void;
+  initialAddress?: SavedAddress | null;
+  title: string;
+  description: string;
+}
+
+function AddressDialog({
+  open,
+  onClose,
+  onSave,
+  initialAddress,
+  title,
+  description,
+}: AddressDialogProps) {
+  const [formData, setFormData] = useState({
+    fullName: '',
+    phone: '',
+    addressLine1: '',
+    addressLine2: '',
+    division: '',
+    city: '',
+    postalCode: '',
+    addressType: 'home' as 'home' | 'office',
+  });
+  const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Load initial address data when editing
+  useEffect(() => {
+    if (initialAddress) {
+      setFormData({
+        fullName: initialAddress.fullName,
+        phone: initialAddress.phone,
+        addressLine1: initialAddress.addressLine1,
+        addressLine2: initialAddress.addressLine2,
+        division: initialAddress.division,
+        city: initialAddress.city,
+        postalCode: initialAddress.postalCode,
+        addressType: initialAddress.addressType,
+      });
+    } else {
+      // Reset form when adding new address
+      setFormData({
+        fullName: '',
+        phone: '',
+        addressLine1: '',
+        addressLine2: '',
+        division: '',
+        city: '',
+        postalCode: '',
+        addressType: 'home',
+      });
+    }
+    setErrors({});
+  }, [initialAddress, open]);
+
+  // Update available cities when division changes
+  useEffect(() => {
+    const BD_CITIES: Record<string, string[]> = {
+      Dhaka: ['Dhaka', 'Gazipur', 'Narayanganj', 'Tangail', 'Manikganj'],
+      Chittagong: ['Chittagong', 'Cox\'s Bazar', 'Comilla', 'Feni'],
+      Rajshahi: ['Rajshahi', 'Bogra', 'Pabna', 'Sirajganj'],
+      Khulna: ['Khulna', 'Jessore', 'Satkhira', 'Bagerhat'],
+      Sylhet: ['Sylhet', 'Moulvibazar', 'Habiganj', 'Sunamganj'],
+      Barisal: ['Barisal', 'Patuakhali', 'Bhola', 'Pirojpur'],
+      Rangpur: ['Rangpur', 'Dinajpur', 'Kurigram', 'Thakurgaon'],
+      Mymensingh: ['Mymensingh', 'Jamalpur', 'Netrokona', 'Sherpur'],
+    };
+
+    if (formData.division && BD_CITIES[formData.division]) {
+      setAvailableCities(BD_CITIES[formData.division]);
+      if (formData.city && !BD_CITIES[formData.division].includes(formData.city)) {
+        setFormData(prev => ({ ...prev, city: '' }));
+      }
+    } else {
+      setAvailableCities([]);
+    }
+  }, [formData.division]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
+    if (!formData.division) newErrors.division = 'Division is required';
+    if (!formData.city) newErrors.city = 'City is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    if (initialAddress) {
+      onSave({ ...initialAddress, ...formData });
+    } else {
+      onSave(formData);
+    }
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const BD_DIVISIONS = ['Dhaka', 'Chittagong', 'Rajshahi', 'Khulna', 'Sylhet', 'Barisal', 'Rangpur', 'Mymensingh'];
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">
+                Full Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="fullName"
+                value={formData.fullName}
+                onChange={(e) => handleChange('fullName', e.target.value)}
+                placeholder="Enter your full name"
+                className={errors.fullName ? 'border-red-500' : ''}
+              />
+              {errors.fullName && (
+                <p className="text-xs text-red-500">{errors.fullName}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone">
+                Phone Number <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="01712345678"
+                className={errors.phone ? 'border-red-500' : ''}
+              />
+              {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="addressLine1">
+              Address Line 1 <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="addressLine1"
+              value={formData.addressLine1}
+              onChange={(e) => handleChange('addressLine1', e.target.value)}
+              placeholder="House/Flat number and road name"
+              className={errors.addressLine1 ? 'border-red-500' : ''}
+            />
+            {errors.addressLine1 && (
+              <p className="text-xs text-red-500">{errors.addressLine1}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="addressLine2">Address Line 2 (Optional)</Label>
+            <Input
+              id="addressLine2"
+              value={formData.addressLine2}
+              onChange={(e) => handleChange('addressLine2', e.target.value)}
+              placeholder="Area, landmark"
+            />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="division">
+                Division <span className="text-red-500">*</span>
+              </Label>
+              <Select value={formData.division} onValueChange={(value) => handleChange('division', value)}>
+                <SelectTrigger className={errors.division ? 'border-red-500' : ''}>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BD_DIVISIONS.map((division) => (
+                    <SelectItem key={division} value={division}>
+                      {division}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.division && (
+                <p className="text-xs text-red-500">{errors.division}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">
+                City <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={formData.city}
+                onValueChange={(value) => handleChange('city', value)}
+                disabled={!formData.division}
+              >
+                <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
+                  <SelectValue placeholder={formData.division ? "Select" : "Select division first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableCities.map((city) => (
+                    <SelectItem key={city} value={city}>
+                      {city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.city && <p className="text-xs text-red-500">{errors.city}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="postalCode">Postal Code</Label>
+              <Input
+                id="postalCode"
+                value={formData.postalCode}
+                onChange={(e) => handleChange('postalCode', e.target.value)}
+                placeholder="1200"
+                maxLength={4}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>
+              Address Type <span className="text-red-500">*</span>
+            </Label>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="addressType"
+                  value="home"
+                  checked={formData.addressType === 'home'}
+                  onChange={(e) => handleChange('addressType', e.target.value)}
+                  className="w-4 h-4"
+                />
+                <span>🏠 Home</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="addressType"
+                  value="office"
+                  checked={formData.addressType === 'office'}
+                  onChange={(e) => handleChange('addressType', e.target.value)}
+                  className="w-4 h-4"
+                />
+                <span>🏢 Office</span>
+              </label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {initialAddress ? 'Update Address' : 'Add Address'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
 
