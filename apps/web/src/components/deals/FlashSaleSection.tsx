@@ -29,87 +29,89 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
   };
 
   return (
-    <section className={cn('py-5 sm:py-6 md:py-8', className)}>
+    <section className={cn('bg-[radial-gradient(70%_40%_at_50%_0%,hsla(12,85%,55%,0.12)_0%,transparent_70%)] py-5 sm:py-6 md:py-8', className)}>
       <div className="mx-auto max-w-7xl px-2 sm:px-4">
-        {/* Section Header */}
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] sm:h-10 sm:w-10">
-              <Zap className="h-4 w-4 text-white sm:h-5 sm:w-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
-                Flash Deals
-              </h2>
-              <p className="text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                Limited time offers - Grab them fast!
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Countdown Timer */}
-            <div className="flex items-center gap-1.5 text-[hsl(var(--accent))] sm:gap-2">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="hidden text-sm font-medium sm:inline">Ends in:</span>
-              <div className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg" suppressHydrationWarning>
-                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
-                  {countdown.hours}
-                </span>
-                <span className="text-xs sm:text-base">:</span>
-                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
-                  {countdown.minutes}
-                </span>
-                <span className="text-xs sm:text-base">:</span>
-                <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
-                  {countdown.seconds}
-                </span>
+        <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-card)] sm:p-5 md:p-6">
+          {/* Section Header */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] sm:h-10 sm:w-10">
+                <Zap className="h-4 w-4 text-white sm:h-5 sm:w-5" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
+                  Flash Deals
+                </h2>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
+                  Limited time offers - Grab them fast!
+                </p>
               </div>
             </div>
-            <a
-              href="/deals/flash"
-              className="hidden text-sm font-medium text-[hsl(var(--primary))] hover:underline sm:inline"
-            >
-              View All Deals
-            </a>
-            <button
-              onClick={() => scroll('left')}
-              className="hidden rounded-full border border-[hsl(var(--border))] p-2 hover:bg-[hsl(var(--muted))] sm:block"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="hidden rounded-full border border-[hsl(var(--border))] p-2 hover:bg-[hsl(var(--muted))] sm:block"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Horizontal Scroll Container */}
-        <div
-          ref={scrollRef}
-          className="scrollbar-hide -mx-2 flex flex-row items-stretch gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2 sm:-mx-4 sm:gap-3 sm:px-4 md:gap-4"
-        >
-          {isLoading
-            ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                  <ProductCardSkeleton />
+            <div className="flex items-center gap-2">
+              {/* Countdown Timer */}
+              <div className="flex items-center gap-1.5 text-[hsl(var(--accent))] sm:gap-2">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden text-sm font-medium sm:inline">Ends in:</span>
+                <div className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg" suppressHydrationWarning>
+                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                    {countdown.hours}
+                  </span>
+                  <span className="text-xs sm:text-base">:</span>
+                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                    {countdown.minutes}
+                  </span>
+                  <span className="text-xs sm:text-base">:</span>
+                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                    {countdown.seconds}
+                  </span>
                 </div>
-              ))
-            : deals && deals.length > 0 ? (
-                deals.map((deal) => (
-                  <div key={deal.id} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                    <DealCard deal={deal} />
+              </div>
+              <a
+                href="/deals/flash"
+                className="hidden text-sm font-medium text-[hsl(var(--primary))] hover:underline sm:inline"
+              >
+                View All Deals
+              </a>
+              <button
+                onClick={() => scroll('left')}
+                className="hidden rounded-full border border-[hsl(var(--border))] p-2 hover:bg-[hsl(var(--muted))] sm:block"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => scroll('right')}
+                className="hidden rounded-full border border-[hsl(var(--border))] p-2 hover:bg-[hsl(var(--muted))] sm:block"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Horizontal Scroll Container */}
+          <div
+            ref={scrollRef}
+            className="scrollbar-hide -mx-2 flex flex-row items-stretch gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2 sm:-mx-4 sm:gap-3 sm:px-4 md:gap-4"
+          >
+            {isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
+                    <ProductCardSkeleton />
                   </div>
                 ))
-              ) : (
-                <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
-                  No flash deals available at the moment
-                </div>
-              )}
+              : deals && deals.length > 0 ? (
+                  deals.map((deal) => (
+                    <div key={deal.id} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
+                      <DealCard deal={deal} />
+                    </div>
+                  ))
+                ) : (
+                  <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
+                    No flash deals available at the moment
+                  </div>
+                )}
+          </div>
         </div>
       </div>
     </section>

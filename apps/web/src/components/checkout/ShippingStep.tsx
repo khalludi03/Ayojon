@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getSessionFromLocalStorage } from "@/lib/session";
+import { toast } from "sonner";
 import { 
   BD_DIVISIONS, 
   BD_CITIES, 
@@ -24,6 +25,7 @@ interface SavedAddress {
   division: Division;
   postalCode: string;
   addressType: 'home' | 'office';
+  isDefault: boolean;
 }
 
 interface ShippingStepProps {
@@ -55,21 +57,43 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
   // Check if user is logged in
   useEffect(() => {
     const userSession = getSessionFromLocalStorage();
+    console.log('🔐 Checkout - User session:', userSession ? 'Logged in' : 'Not logged in');
     setSession(userSession);
-    
-    if (userSession) {
-      // Load saved addresses from localStorage (mock data)
-      const saved = localStorage.getItem(`saved-addresses-${userSession.userId}`);
-      if (saved) {
-        setSavedAddresses(JSON.parse(saved));
+
+    // Load saved addresses from localStorage (same key as account page)
+    const saved = localStorage.getItem('saved-addresses');
+    console.log('📍 Checkout - Saved addresses in localStorage:', saved);
+
+    if (saved) {
+      try {
+        const addresses = JSON.parse(saved);
+        console.log('📍 Checkout - Parsed addresses:', addresses);
+        setSavedAddresses(addresses);
+
+        // If user has saved addresses, hide new form initially
+        if (addresses.length > 0) {
+          setShowNewAddressForm(false);
+          console.log('✅ Checkout - Showing saved addresses, hiding form');
+        } else {
+          console.log('⚠️ Checkout - No saved addresses found');
+        }
+      } catch (e) {
+        console.error('❌ Failed to parse saved addresses:', e);
       }
-      
-      // If user has saved addresses, hide new form initially
-      if (saved && JSON.parse(saved).length > 0) {
-        setShowNewAddressForm(false);
-      }
+    } else {
+      console.log('⚠️ Checkout - No saved-addresses key in localStorage');
     }
   }, []);
+
+  // Auto-select default address when addresses are loaded
+  useEffect(() => {
+    if (savedAddresses.length > 0 && !formData.fullName && !selectedAddressId) {
+      const defaultAddress = savedAddresses.find((addr) => addr.isDefault);
+      if (defaultAddress) {
+        handleUseSavedAddress(defaultAddress.id);
+      }
+    }
+  }, [savedAddresses]);
 
   // Update available cities when division changes
   useEffect(() => {
@@ -134,6 +158,13 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
 
     // Save address to localStorage if checkbox is checked and user is logged in
     if (formData.saveAddress && session) {
+      // Check if we already have 5 addresses
+      if (savedAddresses.length >= 5) {
+        toast.error('Maximum 5 addresses allowed. Please delete an address from your account.');
+        onNext();
+        return;
+      }
+
       const newAddress: SavedAddress = {
         id: `addr_${Date.now()}`,
         fullName: formData.fullName,
@@ -144,13 +175,12 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
         division: formData.division as Division,
         postalCode: formData.postalCode,
         addressType: formData.addressType,
+        isDefault: savedAddresses.length === 0, // First address is default
       };
-      
+
       const existingAddresses = [...savedAddresses, newAddress];
-      localStorage.setItem(
-        `saved-addresses-${session.userId}`,
-        JSON.stringify(existingAddresses)
-      );
+      localStorage.setItem('saved-addresses', JSON.stringify(existingAddresses));
+      toast.success('Address saved to your account');
     }
 
     onNext();
@@ -200,7 +230,7 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               Shipping Information
             </h2>
             <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-              {session 
+              {savedAddresses.length > 0
                 ? "Use a saved address or add a new one" 
                 : "Enter your delivery address details"}
             </p>
@@ -208,16 +238,36 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
         </div>
       </div>
 
-      {/* Saved Addresses for Logged-in Users */}
-      {session && savedAddresses.length > 0 && (
+      {/* Message for users with no saved addresses */}
+      {savedAddresses.length === 0 && (
+        <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 p-4">
+          <p className="text-sm text-[hsl(var(--muted-foreground))]">
+            📍 You don't have any saved addresses yet. Fill out the form below to add your first address.
+            You can save it for future orders by checking the box at the bottom.
+          </p>
+        </div>
+      )}
+
+      {/* Saved Addresses */}
+      {savedAddresses.length > 0 && (
         <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
-            <Label className="text-base font-semibold">Saved Addresses</Label>
-            {savedAddresses.length > 0 && (
-              <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                {savedAddresses.length} {savedAddresses.length === 1 ? 'address' : 'addresses'}
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              <Label className="text-base font-semibold">Saved Addresses</Label>
+              {savedAddresses.length > 0 && (
+                <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                  {savedAddresses.length} {savedAddresses.length === 1 ? 'address' : 'addresses'}
+                </span>
+              )}
+            </div>
+            <a
+              href="/account?section=addresses"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[hsl(var(--primary))] hover:underline"
+            >
+              Manage Addresses
+            </a>
           </div>
           <div className="grid gap-3">
             {savedAddresses.map((address) => (
