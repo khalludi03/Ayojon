@@ -32,14 +32,16 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
       .slice(0, 2);
   };
 
+  const latestOrder = recentOrders[0];
+
   return (
     <div className="space-y-6">
       {/* Welcome Message with Avatar */}
-      <Card>
+      <Card className="overflow-hidden border-0 bg-[linear-gradient(120deg,rgba(244,78,55,0.12),rgba(51,163,153,0.12))]">
         <CardContent className="pt-4 sm:pt-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
             {/* Avatar - Responsive size */}
-            <Avatar className="h-20 w-20 border-2 shadow-lg sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 sm:border-4">
+            <Avatar className="h-20 w-20 border-2 border-white/60 shadow-lg sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 sm:border-4">
               <AvatarImage src={userImage || undefined} alt={userName} />
               <AvatarFallback className="text-2xl font-semibold sm:text-3xl lg:text-4xl">
                 {getInitials(userName)}
@@ -48,7 +50,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
 
             {/* Text Content */}
             <div className="flex-1">
-              <h1 className="text-xl font-bold tracking-tight sm:text-2xl lg:text-3xl">
+              <h1 className="account-heading text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl">
                 Welcome back, {userName}!
               </h1>
               <p className="text-muted-foreground mt-1 text-sm sm:text-base">
@@ -69,7 +71,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -82,7 +84,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Wishlist Items</CardTitle>
             <Heart className="h-4 w-4 text-muted-foreground" />
@@ -97,7 +99,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
       </div>
 
       {/* Recent Orders */}
-      <Card>
+      <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
         <CardHeader className="pb-3 sm:pb-6">
           <CardTitle className="text-lg sm:text-xl">Recent Orders</CardTitle>
           <CardDescription className="text-xs sm:text-sm">Your last 3 orders</CardDescription>
@@ -107,7 +109,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
             {recentOrders.map((order) => (
               <div
                 key={order.id}
-                className="flex flex-col gap-3 rounded-lg border p-3 transition-colors hover:bg-accent sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
+                className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-all hover:-translate-y-0.5 hover:shadow-(--shadow-card-hover) sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
               >
                 {/* Left side: Image and Order Info */}
                 <div className="flex items-start gap-2 sm:items-center sm:gap-3 md:gap-4">
@@ -115,7 +117,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                     <img
                       src={order.imageUrl}
                       alt="Order"
-                      className="h-12 w-12 flex-shrink-0 rounded object-cover sm:h-14 sm:w-14 md:h-16 md:w-16"
+                      className="h-12 w-12 shrink-0 rounded object-cover sm:h-14 sm:w-14 md:h-16 md:w-16"
                     />
                   )}
                   <div className="flex-1 min-w-0">
@@ -155,7 +157,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                       {statusConfig[order.status].label}
                     </Badge>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 sm:h-9 sm:w-9">
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 sm:h-9 sm:w-9">
                     <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
@@ -166,19 +168,28 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
       </Card>
 
       {/* Quick Actions */}
-      <Card>
+      <Card className="border-0 bg-[hsl(var(--card))]/90 shadow-(--shadow-card)">
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Common tasks and shortcuts</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 md:grid-cols-2">
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <Link to="/account" search={{ section: "orders" }}>
-                <Package className="h-4 w-4 mr-2" />
-                Track Order
-              </Link>
-            </Button>
+            {latestOrder ? (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link to="/track/$orderNumber" params={{ orderNumber: latestOrder.orderNumber }}>
+                  <Package className="h-4 w-4 mr-2" />
+                  Track Order
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" className="w-full justify-start" asChild>
+                <Link to="/account" search={{ section: "orders" }}>
+                  <Package className="h-4 w-4 mr-2" />
+                  Track Order
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" className="w-full justify-start" asChild>
               <Link to="/account" search={{ section: "wishlist" }}>
                 <Heart className="h-4 w-4 mr-2" />

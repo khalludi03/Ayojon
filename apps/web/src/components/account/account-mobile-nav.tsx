@@ -32,7 +32,10 @@ export function AccountMobileNav({ activeSection, onSectionChange }: AccountMobi
     <div className="lg:hidden mb-6">
       <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="w-full justify-between">
+          <Button
+            variant="outline"
+            className="w-full justify-between border-[hsl(var(--border))] bg-[hsl(var(--card))]/90 shadow-[var(--shadow-card)]"
+          >
             <span>{activeItem?.label || "Select Section"}</span>
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>

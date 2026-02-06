@@ -33,6 +33,23 @@ export const addOrder = (order: Order) => {
   writeOrders([order, ...orders]);
 };
 
+export const updateOrder = (orderId: string, updates: Partial<Order>) => {
+  const orders = readOrders();
+  const updatedOrders = orders.map((order) =>
+    order.id === orderId ? { ...order, ...updates } : order
+  );
+  writeOrders(updatedOrders);
+};
+
+export const upsertOrder = (order: Order) => {
+  const orders = readOrders();
+  const hasOrder = orders.some((existing) => existing.id === order.id);
+  const updatedOrders = hasOrder
+    ? orders.map((existing) => (existing.id === order.id ? order : existing))
+    : [order, ...orders];
+  writeOrders(updatedOrders);
+};
+
 export const clearStoredOrders = () => {
   writeOrders([]);
 };

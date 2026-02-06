@@ -4,6 +4,7 @@ import { CheckCircle2, Package, Calendar, Mail, Phone, MapPin, CreditCard, Arrow
 
 interface ConfirmationStepProps {
   orderDetails: {
+    orderId?: string;
     orderNumber: string;
     shipping: {
       fullName: string;
@@ -263,16 +264,29 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
 
       {/* Action Buttons */}
       <div className="flex flex-col gap-4 sm:flex-row">
-        <Link to="/account" className="flex-1">
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="group w-full border-2 font-semibold transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
-          >
-            <Package className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-            View Order Details
-          </Button>
-        </Link>
+        {orderDetails.orderId ? (
+          <Link to="/account/orders/$orderId" params={{ orderId: orderDetails.orderId }} className="flex-1">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="group w-full border-2 font-semibold transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
+            >
+              <Package className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+              View Order Details
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/account" search={{ section: "orders" }} className="flex-1">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="group w-full border-2 font-semibold transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
+            >
+              <Package className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+              View Order Details
+            </Button>
+          </Link>
+        )}
         <Link to="/" className="flex-1">
           <Button 
             size="lg" 

@@ -26,30 +26,35 @@ const navigationItems = [
 
 export function AccountSidebar({ activeSection, className }: AccountSidebarProps) {
   return (
-    <aside className={cn("w-full lg:w-64 space-y-1", className)}>
-      <nav className="space-y-1">
-        {navigationItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeSection === item.id;
-          
-          return (
-            <Link
-              key={item.id}
-              to="/account"
-              search={{ section: item.id }}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <Icon className="h-5 w-5" />
-              <span className="font-medium">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+    <aside className={cn("w-full lg:w-64 space-y-3", className)}>
+      <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]/90 p-4 shadow-lg">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
+          Navigation
+        </p>
+        <nav className="mt-4 space-y-1">
+          {navigationItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeSection === item.id;
+
+            return (
+              <Link
+                key={item.id}
+                to="/account"
+                search={{ section: item.id }}
+                className={cn(
+                  "flex items-center gap-3 rounded-xl px-4 py-3 transition-colors",
+                  isActive
+                    ? "bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm"
+                    : "text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+                )}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
     </aside>
   );
 }

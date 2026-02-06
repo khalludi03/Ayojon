@@ -41,10 +41,20 @@ interface FormData {
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const { items, getTotal, clearCart, setDeliveryMethod } = useCart();
+  const {
+    items,
+    getSubtotal,
+    getShipping,
+    getTax,
+    getDiscount,
+    getTotal,
+    clearCart,
+    setDeliveryMethod,
+  } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [orderId, setOrderId] = useState('');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -102,13 +112,20 @@ function CheckoutPage() {
 
   const handlePlaceOrder = () => {
     const orderNum = orderNumber || `AYJ${Date.now().toString().slice(-8)}`;
+    const newOrderId = `${Date.now()}`;
     const firstItemImage = items[0]?.product?.images?.[0]?.url;
+    const placedAt = new Date().toISOString();
+    const subtotal = getSubtotal();
+    const shipping = getShipping();
+    const tax = getTax();
+    const discount = getDiscount();
+    const total = subtotal + tax + shipping - discount;
 
     addOrder({
-      id: `${Date.now()}`,
+      id: newOrderId,
       orderNumber: orderNum,
-      date: new Date().toISOString(),
-      total: getTotal(),
+      date: placedAt,
+      total: total,
       status: 'processing',
       items: items.reduce((total, item) => total + item.quantity, 0),
       imageUrl: firstItemImage,
@@ -119,10 +136,38 @@ function CheckoutPage() {
         quantity: item.quantity,
         price: item.product.pricing.currentPrice,
         imageUrl: item.product.images?.[0]?.url,
+        productId: item.product.id,
+        product: item.product,
       })),
+      address: {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        addressLine1: formData.addressLine1,
+        addressLine2: formData.addressLine2,
+        city: formData.city,
+        division: formData.division,
+        postalCode: formData.postalCode,
+        addressType: formData.addressType,
+      },
+      payment: {
+        method: formData.paymentMethod,
+        last4: formData.cardNumber?.slice(-4),
+      },
+      pricing: {
+        subtotal,
+        shipping,
+        tax,
+        discount,
+        total,
+      },
+      timeline: {
+        placedAt,
+      },
     });
 
     setOrderNumber(orderNum);
+    setOrderId(newOrderId);
     setIsOrderPlaced(true);
     setCurrentStep(5);
     clearCart();
@@ -171,6 +216,7 @@ function CheckoutPage() {
         return (
           <ConfirmationStep
             orderDetails={{
+              orderId: orderId,
               orderNumber: orderNumber,
               shipping: {
                 fullName: formData.fullName,
