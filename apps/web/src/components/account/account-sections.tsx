@@ -346,6 +346,20 @@ export function AccountOrders() {
 export function AccountWishlist() {
   const { items, removeItem } = useWishlist();
   const { addItem } = useCart();
+  const [sortBy, setSortBy] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
+
+  const sortedItems = useMemo(() => {
+    const sorted = [...items];
+    switch (sortBy) {
+      case 'price-asc':
+        return sorted.sort((a, b) => a.product.pricing.currentPrice - b.product.pricing.currentPrice);
+      case 'price-desc':
+        return sorted.sort((a, b) => b.product.pricing.currentPrice - a.product.pricing.currentPrice);
+      case 'recent':
+      default:
+        return sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
+    }
+  }, [items, sortBy]);
 
   const handleMoveToCart = (productId: string) => {
     const item = items.find((wishlistItem) => wishlistItem.productId === productId);
@@ -354,19 +368,53 @@ export function AccountWishlist() {
     removeItem(productId);
   };
 
+  const handleMoveAllToCart = () => {
+    let movedCount = 0;
+    for (const item of items) {
+      addItem(item.product, 1, item.product.variants?.[0]);
+      removeItem(item.productId);
+      movedCount++;
+    }
+    toast.success(`Moved ${movedCount} item${movedCount > 1 ? 's' : ''} to cart`);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Wishlist</h1>
-        <p className="text-muted-foreground mt-2">
-          Items you've saved for later
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Wishlist</h1>
+          <p className="text-muted-foreground mt-2">
+            Items you've saved for later
+          </p>
+        </div>
+        {items.length >= 2 && (
+          <Button onClick={handleMoveAllToCart} size="sm" className="shrink-0">
+            <ShoppingCart className="mr-2 h-4 w-4" />
+            Move All to Cart ({items.length})
+          </Button>
+        )}
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Saved Items</CardTitle>
-          <CardDescription>Your wishlist collection</CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Saved Items</CardTitle>
+              <CardDescription>Your wishlist collection</CardDescription>
+            </div>
+            {items.length > 1 && (
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recent">Recently Added</SelectItem>
+                  <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                  <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {items.length === 0 ? (
@@ -384,7 +432,7 @@ export function AccountWishlist() {
             </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
-              {items.map((item) => (
+              {sortedItems.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-sm"
