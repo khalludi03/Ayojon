@@ -8,7 +8,7 @@ import { auth } from "@my-better-t-app/auth";
 import { generateOTP, sendOTPEmail } from "@my-better-t-app/auth/lib/email";
 import { storeOTP, verifyOTP } from "@my-better-t-app/auth/lib/otp-store";
 import { db } from "@my-better-t-app/db";
-import { user as userTable } from "@my-better-t-app/db/schema/auth";
+import { user as userTable, account as accountTable } from "@my-better-t-app/db/schema/auth";
 import { env } from "@my-better-t-app/env/server";
 import { and, eq, ne } from "drizzle-orm";
 import { Hono } from "hono";
@@ -135,6 +135,7 @@ app.post("/api/email-change/verify-otp", async (c) => {
 
     // Update the user's email directly in the database
     try {
+      // Update user email
       await db
         .update(userTable)
         .set({
@@ -143,6 +144,34 @@ app.post("/api/email-change/verify-otp", async (c) => {
           updatedAt: new Date(),
         })
         .where(eq(userTable.id, userId));
+
+      // CRITICAL: Update credential account's providerId
+      // This ensures old email cannot be used for login
+      await db
+        .update(accountTable)
+        .set({
+          providerId: email,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(accountTable.userId, userId),
+            eq(accountTable.accountId, "credential")
+          )
+        );
+
+      // CRITICAL: Unlink OAuth accounts (Google, Facebook, etc.)
+      // OAuth providers send their own email during login, which could
+      // overwrite the manually-changed email. Unlinking forces users to
+      // re-authenticate with OAuth if they want to use it again.
+      await db
+        .delete(accountTable)
+        .where(
+          and(
+            eq(accountTable.userId, userId),
+            ne(accountTable.accountId, "credential")
+          )
+        );
     } catch (updateError) {
       console.error("Error updating email:", updateError);
       // Since the OTP has already been consumed by verifyOTP,
