@@ -115,8 +115,8 @@ export function ProductCard({
 
       {/* Product Link - wraps image and details */}
       <Link
-        to="/products/$productId"
-        params={{ productId: product.id }}
+        to="/product/$productSlug"
+        params={{ productSlug: product.slug }}
         className="flex flex-1 flex-col"
       >
         {/* Image Section */}

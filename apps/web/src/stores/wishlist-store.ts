@@ -1,6 +1,6 @@
 // Wishlist Store
 
-import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { Product } from '@/types';
 import { generateId } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -46,7 +46,7 @@ function createWishlistStore(): WishlistStore {
 
   const syncFromSession = (keepCurrentOnNull: boolean = false) => {
     authClient.getSession().then((session) => {
-      const sessionUserId = session?.user?.id || null;
+      const sessionUserId = session.data?.user?.id || null;
       const resolvedUserId = sessionUserId ?? (keepCurrentOnNull ? currentUserId : null);
 
       if (resolvedUserId !== currentUserId) {

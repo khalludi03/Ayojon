@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, ShoppingCart, Trash2, ArrowUpDown } from "lucide-react";
+import { Heart, ShoppingCart, ArrowUpDown } from "lucide-react";
 import { useWishlist } from "@/stores/wishlist-store";
 import { useCart } from "@/stores/cart-store";
 import { ProductCard } from "@/components/products/product-card";

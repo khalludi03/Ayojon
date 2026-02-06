@@ -26,7 +26,6 @@ type AuthSession = Awaited<ReturnType<typeof authClient.getSession>>;
 import { getRecentOrders } from "@/mock/services/account";
 import type { Order } from "@/types";
 import { useWishlist } from "@/stores/wishlist-store";
-import { useCart } from "@/stores/cart-store";
 import { formatPrice } from "@/lib/utils";
 
 export function AccountOrders() {
