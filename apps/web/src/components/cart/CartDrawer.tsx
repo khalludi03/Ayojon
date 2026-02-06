@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -12,19 +12,22 @@ import {
   SheetClose,
 } from '@/components/ui/sheet';
 import { useCart, type CartItem } from '@/stores/cart-store';
+import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { CurrencyCode } from '@/types';
+import { CouponSection } from './CouponSection';
 
 interface CartItemRowProps {
   item: CartItem;
   currency: CurrencyCode;
   updateQuantity: (itemId: string, quantity: number) => void;
-  removeItem: (itemId: string) => void;
+  onRemove: (item: CartItem) => void;
+  onSaveForLater: (itemId: string) => void;
   closeDrawer: () => void;
 }
 
-function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }: CartItemRowProps) {
+function CartItemRow({ item, currency, updateQuantity, onRemove, onSaveForLater, closeDrawer }: CartItemRowProps) {
   const [inputValue, setInputValue] = useState(item.quantity.toString());
 
   // Sync local state with store when store updates (e.g. via +/- buttons)
@@ -95,7 +98,7 @@ function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }
           </Link>
           {item.selectedVariant && (
             <p className="text-sm text-muted-foreground">
-              Variant: {item.selectedVariant.name}
+              Variant: {item.selectedVariant.value}
             </p>
           )}
           <p className="font-medium">
@@ -107,49 +110,59 @@ function CartItemRow({ item, currency, updateQuantity, removeItem, closeDrawer }
           </p>
         </div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center rounded-md border">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-md border">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-r-none"
+                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                disabled={item.quantity <= 1}
+              >
+                <Minus className="h-3 w-3" />
+                <span className="sr-only">Decrease</span>
+              </Button>
+              <input
+                type="number"
+                min="1"
+                max={item.product.stock}
+                value={inputValue}
+                aria-label="Quantity"
+                onChange={handleManualChange}
+                onBlur={handleBlur}
+                className="h-8 w-12 border-x border-input bg-transparent text-center text-sm font-medium focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-l-none"
+                onClick={() => {
+                  if (item.quantity < item.product.stock) {
+                    updateQuantity(item.id, item.quantity + 1);
+                  } else {
+                    toast.error(`Only ${item.product.stock} items available`);
+                  }
+                }}
+                disabled={item.quantity >= item.product.stock}
+              >
+                <Plus className="h-3 w-3" />
+                <span className="sr-only">Increase</span>
+              </Button>
+            </div>
             <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-r-none"
-              onClick={() => updateQuantity(item.id, item.quantity - 1)}
-              disabled={item.quantity <= 1}
+              variant="link"
+              size="sm"
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-primary"
+              onClick={() => onSaveForLater(item.id)}
             >
-              <Minus className="h-3 w-3" />
-              <span className="sr-only">Decrease</span>
-            </Button>
-            <input
-              type="number"
-              min="1"
-              max={item.product.stock}
-              value={inputValue}
-              aria-label="Quantity"
-              onChange={handleManualChange}
-              onBlur={handleBlur}
-              className="h-8 w-12 border-x border-input bg-transparent text-center text-sm font-medium focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-l-none"
-              onClick={() => {
-                if (item.quantity < item.product.stock) {
-                  updateQuantity(item.id, item.quantity + 1);
-                } else {
-                  toast.error(`Only ${item.product.stock} items available`);
-                }
-              }}
-              disabled={item.quantity >= item.product.stock}
-            >
-              <Plus className="h-3 w-3" />
-              <span className="sr-only">Increase</span>
+              Save for Later
             </Button>
           </div>
           <Button
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-destructive"
-            onClick={() => removeItem(item.id)}
+            onClick={() => onRemove(item)}
           >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">Remove</span>
@@ -165,13 +178,20 @@ export function CartDrawer() {
     items,
     itemCount,
     subtotal,
+    tax,
+    shipping,
+    discountAmount,
+    total,
+    discount,
     updateQuantity,
-    removeItem,
+    saveForLater,
     currency,
     isDrawerOpen,
     closeDrawer,
     openDrawer,
   } = useCart();
+  const navigate = useNavigate();
+  const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval();
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -182,8 +202,9 @@ export function CartDrawer() {
   };
 
   return (
+    <>
     <Sheet open={isDrawerOpen} onOpenChange={handleOpenChange}>
-      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg">
+      <SheetContent className="flex w-[80%] flex-col sm:max-w-lg" onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetHeader className="flex-row items-center justify-between space-y-0 border-b pb-4">
           <SheetTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
@@ -206,7 +227,7 @@ export function CartDrawer() {
               </p>
             </div>
             <SheetClose asChild>
-              <Button variant="default" className="mt-4">
+              <Button variant="primary" className="mt-4">
                 Continue Shopping
               </Button>
             </SheetClose>
@@ -221,7 +242,11 @@ export function CartDrawer() {
                     item={item}
                     currency={currency}
                     updateQuantity={updateQuantity}
-                    removeItem={removeItem}
+                    onRemove={(item) => setPendingRemoveItem(item)}
+                    onSaveForLater={(itemId) => {
+                      saveForLater(itemId);
+                      toast.success('Item saved for later');
+                    }}
                     closeDrawer={closeDrawer}
                   />
                 ))}
@@ -229,26 +254,71 @@ export function CartDrawer() {
             </div>
 
             <div className="space-y-4 border-t pt-4">
-              <div className="flex items-center justify-between text-base font-medium">
-                 <span>Subtotal</span>
-                 <span>{formatPrice(subtotal, currency)}</span>
+              <CouponSection />
+              
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span>{formatPrice(subtotal, currency)}</span>
+                </div>
+                
+                {discount && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-green-600 dark:text-green-400">
+                      Discount ({discount.code})
+                    </span>
+                    <span className="text-green-600 dark:text-green-400">
+                      {discount.type === 'free_shipping' ? 'FREE Delivery' : `-${formatPrice(discountAmount, currency)}`}
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Delivery Fee</span>
+                  <span>
+                    {shipping === 0 ? (
+                      <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
+                    ) : (
+                      formatPrice(shipping, currency)
+                    )}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Tax (5%)</span>
+                  <span>{formatPrice(tax, currency)}</span>
+                </div>
+
+                <div className="flex items-center justify-between border-t pt-2 text-base font-bold">
+                  <span>Total</span>
+                  <span className="text-brand-orange">{formatPrice(total, currency)}</span>
+                </div>
               </div>
-              <div className="flex gap-4">
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/cart" onClick={closeDrawer}>
+
+              <div className="grid grid-cols-2 gap-4">
+                <SheetClose asChild>
+                  <Button variant="outline" className="w-full" onClick={() => navigate({ to: '/cart' })}>
                     View Cart
-                  </Link>
-                </Button>
-                <Button asChild className="w-full">
-                  <Link to="/checkout" onClick={closeDrawer}>
+                  </Button>
+                </SheetClose>
+                <SheetClose asChild>
+                  <Button className="w-full" onClick={() => navigate({ to: '/checkout' })}>
                     Checkout
-                  </Link>
-                </Button>
+                  </Button>
+                </SheetClose>
               </div>
             </div>
           </>
         )}
+
       </SheetContent>
     </Sheet>
+
+    <CartRemoveConfirmDialog
+      pendingRemoveItem={pendingRemoveItem}
+      onClose={() => setPendingRemoveItem(null)}
+      onConfirm={handleConfirmRemove}
+    />
+    </>
   );
 }

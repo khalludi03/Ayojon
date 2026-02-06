@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { HelpCircle, Menu, Phone, Search, Truck } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchBar } from './SearchBar';
@@ -20,6 +21,7 @@ export function Header() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const { openDrawer } = useCart();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -91,7 +93,9 @@ export function Header() {
                 <CurrencySelector />
               </div>
               <ThemeToggle />
-              <WishlistIcon />
+              <WishlistIcon
+                onClick={() => navigate({ to: '/account', search: { section: 'wishlist' } })}
+              />
               <CartIcon onClick={openDrawer} />
               <div className="ml-0 border-l border-[hsl(var(--border))] pl-0.5 sm:ml-1 sm:pl-1 md:ml-2 md:pl-2">
                 <UserMenu />

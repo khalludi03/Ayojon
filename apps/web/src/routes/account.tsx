@@ -11,6 +11,7 @@ import {
   AccountProfile,
   AccountSettings,
 } from "@/components/account/account-sections";
+import { useWishlist } from "@/stores/wishlist-store";
 import {
   getAccountStats,
   getRecentOrders,
@@ -44,10 +45,11 @@ function RouteComponent() {
   const { session } = Route.useRouteContext();
   const { section = "overview" } = Route.useSearch();
   const navigate = useNavigate();
+  const { itemCount } = useWishlist();
 
   const userName = session?.user.name || "User";
   const userImage = session?.user.image ?? undefined;
-  const stats = getAccountStats();
+  const stats = { ...getAccountStats(), wishlistItems: itemCount };
   const recentOrders = getRecentOrders();
 
   const handleSectionChange = (newSection: AccountSection) => {
@@ -66,7 +68,7 @@ function RouteComponent() {
       case "addresses":
         return <AccountAddresses />;
       case "profile":
-        return <AccountProfile userName={userName} userEmail={session?.user.email} />;
+        return <AccountProfile session={session} />;
       case "settings":
         return <AccountSettings />;
       case "overview":
@@ -83,21 +85,39 @@ function RouteComponent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <AccountMobileNav
-        activeSection={section}
-        onSectionChange={handleSectionChange}
-      />
+    <div className="account-shell relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-10 h-56 w-56 rounded-full bg-[radial-gradient(circle,rgba(244,78,55,0.25),transparent_60%)]" />
+        <div className="absolute right-0 top-36 h-64 w-64 rounded-full bg-[radial-gradient(circle,rgba(51,163,153,0.22),transparent_60%)]" />
+        <div className="absolute bottom-0 left-1/3 h-52 w-52 rounded-full bg-[radial-gradient(circle,rgba(251,171,27,0.18),transparent_60%)]" />
+      </div>
 
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* Sidebar - Hidden on mobile */}
-        <div className="hidden lg:block">
-          <AccountSidebar activeSection={section} />
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="mb-6 rounded-2xl border border-[hsl(var(--border))] bg-[linear-gradient(135deg,rgba(244,78,55,0.08),rgba(51,163,153,0.08))] p-6 shadow-[var(--shadow-card)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">Account</p>
+          <h1 className="account-heading mt-2 text-2xl font-semibold text-[hsl(var(--foreground))] sm:text-3xl">
+            Your account, at a glance
+          </h1>
+          <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+            Track orders, manage profile details, and keep your wishlist close.
+          </p>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 min-w-0">
-          {renderSection()}
+        <AccountMobileNav
+          activeSection={section}
+          onSectionChange={handleSectionChange}
+        />
+
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar - Hidden on mobile */}
+          <div className="hidden lg:block">
+            <AccountSidebar activeSection={section} />
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 min-w-0">
+            {renderSection()}
+          </div>
         </div>
       </div>
     </div>

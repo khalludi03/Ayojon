@@ -1,6 +1,6 @@
 {
-  "id": "eac70f70-67b0-4e3a-b176-44e4f6e72900",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "6b3c399b-da2a-4ec6-a771-a3de18db8ae0",
+  "prevId": "eac70f70-67b0-4e3a-b176-44e4f6e72900",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -747,7 +747,7 @@
           "type": "numeric(2, 1)",
           "primaryKey": false,
           "notNull": false,
-          "default": "'0'"
+          "default": 0
         },
         "rating_count": {
           "name": "rating_count",
@@ -1655,7 +1655,7 @@
           "type": "numeric(2, 1)",
           "primaryKey": false,
           "notNull": false,
-          "default": "'0'"
+          "default": 0
         },
         "rating_count": {
           "name": "rating_count",
