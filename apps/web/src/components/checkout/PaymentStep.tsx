@@ -57,7 +57,7 @@ export function PaymentStep({
       label: 'Cash on Delivery (COD)',
       icon: Banknote,
       description: 'Pay when you receive your order',
-      fee: 50,
+      fee: 0,
       badge: '✨ Popular',
     },
     {
@@ -129,7 +129,6 @@ export function PaymentStep({
                   </DialogHeader>
                   <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
                     <p>• All payments are processed securely and encrypted.</p>
-                    <p>• COD includes an additional ৳50 fee where applicable.</p>
                     <p>• Mobile wallet payments must be completed within 15 minutes.</p>
                     <p>• Card payments may require OTP or 3D Secure verification.</p>
                   </div>
