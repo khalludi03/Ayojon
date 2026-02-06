@@ -29,51 +29,55 @@ function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-[hsl(var(--muted))]/50 to-transparent py-3 sm:py-4 md:py-6">
+      <section className="relative overflow-hidden bg-[radial-gradient(80%_60%_at_50%_0%,hsla(12,85%,55%,0.18)_0%,transparent_70%)] py-4 sm:py-6 md:py-8">
         <div className="mx-auto max-w-7xl px-2 sm:px-4">
-          {/* Hero Carousel */}
-          <HeroCarousel />
+          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-[var(--shadow-card)]">
+            {/* Hero Carousel */}
+            <HeroCarousel />
+          </div>
         </div>
       </section>
 
       {/* Trust Badges / Features Bar */}
-      <section className="border-y border-[hsl(var(--border))] bg-[hsl(var(--card))] py-4 sm:py-5 md:py-6">
+      <section className="bg-[radial-gradient(70%_40%_at_50%_0%,hsla(40,95%,55%,0.12)_0%,transparent_70%)] py-5 sm:py-6 md:py-8">
         <div className="mx-auto max-w-7xl px-2 sm:px-4">
-          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 lg:gap-5 xl:gap-6">
-            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
-                <TrendingUp className="h-5 w-5 text-[hsl(var(--primary))] sm:h-6 sm:w-6" />
+          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 shadow-[var(--shadow-card)] sm:p-3 md:p-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4 md:gap-4 lg:gap-5 xl:gap-6">
+              <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                  <TrendingUp className="h-5 w-5 text-[hsl(var(--primary))] sm:h-6 sm:w-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Free Shipping</p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">On orders over ৳999</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Free Shipping</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">On orders over ৳999</p>
+              <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--secondary))]/20 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                  <Award className="h-5 w-5 text-[hsl(var(--secondary))] sm:h-6 sm:w-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Best Quality</p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">Verified products</p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--secondary))]/20 sm:h-12 sm:w-12 md:h-14 md:w-14">
-                <Award className="h-5 w-5 text-[hsl(var(--secondary))] sm:h-6 sm:w-6" />
+              <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))]/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                  <Zap className="h-5 w-5 text-[hsl(var(--accent))] sm:h-6 sm:w-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Fast Delivery</p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">24/7 express service</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Best Quality</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">Verified products</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--accent))]/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
-                <Zap className="h-5 w-5 text-[hsl(var(--accent))] sm:h-6 sm:w-6" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Fast Delivery</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">24/7 express service</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
-                <Sparkles className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Secure Payment</p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">100% protected</p>
+              <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 sm:h-12 sm:w-12 md:h-14 md:w-14">
+                  <Sparkles className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Secure Payment</p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">100% protected</p>
+                </div>
               </div>
             </div>
           </div>
@@ -158,35 +162,37 @@ function HomePage() {
       />
 
       {/* All Products Section with Filters */}
-      <section className="py-6 sm:py-8 md:py-10">
+      <section className="bg-[radial-gradient(70%_40%_at_50%_0%,hsla(12,85%,55%,0.08)_0%,transparent_70%)] py-6 sm:py-8 md:py-10">
         <div className="mx-auto max-w-7xl px-2 sm:px-4">
-          {/* Section Header */}
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-xl font-bold text-[hsl(var(--foreground))] sm:text-2xl">
-              All Products
-            </h2>
-            <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-              Explore our wide selection of quality products
-            </p>
-          </div>
-
-          {/* Filters + Products Layout */}
-          <div className="flex gap-6 lg:gap-8">
-            {/* Filter Sidebar - Hidden on mobile and tablet */}
-            <div className="hidden lg:block lg:w-64 xl:w-72">
-              <FilterSidebar />
+          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-card)] sm:p-6 md:p-8">
+            {/* Section Header */}
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-xl font-bold text-[hsl(var(--foreground))] sm:text-2xl">
+                All Products
+              </h2>
+              <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
+                Explore our wide selection of quality products
+              </p>
             </div>
 
-            {/* Products Area */}
-            <div className="flex-1 min-w-0">
-              {/* Sort & Active Filters */}
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <ActiveFilters />
-                <SortDropdown />
+            {/* Filters + Products Layout */}
+            <div className="flex gap-6 lg:gap-8">
+              {/* Filter Sidebar - Hidden on mobile and tablet */}
+              <div className="hidden lg:block lg:w-64 xl:w-72">
+                <FilterSidebar />
               </div>
 
-              {/* Product Grid with Load More */}
-              <InfiniteProductGrid />
+              {/* Products Area */}
+              <div className="flex-1 min-w-0">
+                {/* Sort & Active Filters */}
+                <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <ActiveFilters />
+                  <SortDropdown />
+                </div>
+
+                {/* Product Grid with Load More */}
+                <InfiniteProductGrid />
+              </div>
             </div>
           </div>
         </div>
