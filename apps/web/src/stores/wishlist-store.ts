@@ -44,6 +44,20 @@ function createWishlistStore(): WishlistStore {
   let currentUserId: string | null = null;
   const listeners = new Set<() => void>();
 
+  const syncFromSession = (keepCurrentOnNull: boolean = false) => {
+    authClient.getSession().then((session) => {
+      const sessionUserId = session?.user?.id || null;
+      const resolvedUserId = sessionUserId ?? (keepCurrentOnNull ? currentUserId : null);
+
+      if (resolvedUserId !== currentUserId) {
+        currentUserId = resolvedUserId;
+      }
+
+      loadWishlist(resolvedUserId);
+      notify();
+    });
+  };
+
   // Helper to load wishlist for a specific user
   const loadWishlist = (userId: string | null) => {
     if (typeof window === 'undefined') return;
@@ -52,10 +66,14 @@ function createWishlistStore(): WishlistStore {
       const storageKey = getStorageKey(userId);
       const stored = localStorage.getItem(storageKey);
 
+      console.log('[Wishlist] Loading wishlist:', { userId, storageKey, hasData: !!stored });
+
       if (stored) {
         state = JSON.parse(stored);
+        console.log('[Wishlist] Loaded items:', state.items.length);
       } else {
         state = { items: [] };
+        console.log('[Wishlist] No stored data, initialized empty');
       }
 
       // One-time migration from old global key to user-specific key
@@ -88,27 +106,24 @@ function createWishlistStore(): WishlistStore {
 
   // Initial load - check if there's a session
   if (typeof window !== 'undefined') {
-    authClient.getSession().then((session) => {
-      const userId = session?.user?.id || null;
-      currentUserId = userId;
-      loadWishlist(userId);
-      notify();
-    });
+    syncFromSession();
 
     // Subscribe to auth session changes using nanostores subscribe API
     const sessionSignal = authClient.$store?.atoms?.$sessionSignal;
     if (sessionSignal) {
       sessionSignal.subscribe(() => {
-        authClient.getSession().then((session) => {
-          const newUserId = session?.user?.id || null;
-          if (newUserId !== currentUserId) {
-            currentUserId = newUserId;
-            loadWishlist(newUserId);
-            notify();
-          }
-        });
+        syncFromSession(true);
       });
     }
+
+    // Fix: Reload wishlist when tab becomes visible
+    // This handles the case where localStorage might have changed in another tab
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Wishlist] Tab became visible, reloading for user:', currentUserId);
+        syncFromSession(true);
+      }
+    });
   }
 
   const notify = () => {
@@ -119,6 +134,11 @@ function createWishlistStore(): WishlistStore {
     if (typeof window !== 'undefined') {
       const storageKey = getStorageKey(currentUserId);
       localStorage.setItem(storageKey, JSON.stringify(state));
+      console.log('[Wishlist] Persisted to localStorage:', {
+        storageKey,
+        itemCount: state.items.length,
+        userId: currentUserId
+      });
     }
   };
 
@@ -218,6 +238,8 @@ function createWishlistStore(): WishlistStore {
     },
 
     loadUserWishlist: (userId: string | null) => {
+      if (userId === currentUserId) return;
+      console.log('[Wishlist] Switching user from', currentUserId, 'to', userId);
       currentUserId = userId;
       loadWishlist(userId);
       notify();
@@ -236,13 +258,17 @@ const getWishlistServerSnapshot = () => ({ items: [] });
 // React hook
 export function useWishlist() {
   const state = useSyncExternalStore(subscribeWishlist, getWishlistSnapshot, getWishlistServerSnapshot);
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending } = authClient.useSession();
 
   // Sync wishlist when session changes
   useEffect(() => {
-    const userId = session?.user?.id || null;
-    wishlistStore.loadUserWishlist(userId);
-  }, [session?.user?.id]);
+    // ONLY sync if we're not pending. If isPending is true, the session data is not yet reliable.
+    // This prevents resetting to guest wishlist (null userId) during session revalidation.
+    if (!isPending) {
+      const userId = session?.user?.id || null;
+      wishlistStore.loadUserWishlist(userId);
+    }
+  }, [session?.user?.id, isPending]);
 
   // Derive itemCount from subscribed state for reactive updates
   const itemCount = state.items.length;

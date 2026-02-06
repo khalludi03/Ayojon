@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as LoginRouteImport } from './routes/login'
@@ -24,6 +25,11 @@ import { Route as ProductProductSlugRouteImport } from './routes/product.$produc
 import { Route as CategoryCategorySlugRouteImport } from './routes/category.$categorySlug'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -106,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/products'
     | '/reset-password'
+    | '/wishlist'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/products'
     | '/reset-password'
+    | '/wishlist'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/products'
     | '/reset-password'
+    | '/wishlist'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -206,6 +218,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProductsRoute: typeof ProductsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  WishlistRoute: typeof WishlistRoute
   CategoryCategorySlugRoute: typeof CategoryCategorySlugRoute
   ProductProductSlugRoute: typeof ProductProductSlugRoute
   TrackOrderNumberRoute: typeof TrackOrderNumberRoute
@@ -213,6 +226,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -336,6 +356,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProductsRoute: ProductsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  WishlistRoute: WishlistRoute,
   CategoryCategorySlugRoute: CategoryCategorySlugRoute,
   ProductProductSlugRoute: ProductProductSlugRoute,
   TrackOrderNumberRoute: TrackOrderNumberRoute,
