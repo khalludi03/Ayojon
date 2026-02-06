@@ -3,7 +3,8 @@ import * as schema from "@my-better-t-app/db/schema/auth";
 import { env } from "@my-better-t-app/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { sendPasswordResetEmail } from "./lib/email";
+import { emailOTP } from "better-auth/plugins";
+import { sendPasswordResetEmail, sendOTPEmail } from "./lib/email";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -11,6 +12,13 @@ export const auth = betterAuth({
 
     schema: schema,
   }),
+  user: {
+    additionalFields: {
+      phoneNumber: { type: "string" },
+      dateOfBirth: { type: "date" },
+      gender: { type: "string" },
+    },
+  },
   baseURL: env.BETTER_AUTH_URL,
   trustedOrigins: [env.CORS_ORIGIN],
   emailAndPassword: {
@@ -25,7 +33,7 @@ export const auth = betterAuth({
         console.log(`Password reset email sent to ${user.email}`);
       } catch (error) {
         console.error("Failed to send password reset email:", error);
-       
+
       }
     },
   },
@@ -39,6 +47,10 @@ export const auth = betterAuth({
       clientSecret: env.FACEBOOK_CLIENT_SECRET,
     },
   },
+  emailVerification: {
+    enabled: true,
+    sendOnSignUp: false,
+  },
   advanced: {
     defaultCookieAttributes: {
       sameSite: "none",
@@ -46,5 +58,23 @@ export const auth = betterAuth({
       httpOnly: true,
     },
   },
-  plugins: [],
+  plugins: [
+    emailOTP({
+      async sendVerificationOTP({ email, otp, type }) {
+        try {
+          await sendOTPEmail({
+            to: email,
+            otp,
+            type,
+          });
+        } catch (error) {
+          console.error("Failed to send OTP email:", error);
+          throw error;
+        }
+      },
+      otpLength: 6,
+      expiresIn: 300, // 5 minutes
+      allowedAttempts: 3,
+    }),
+  ],
 });
