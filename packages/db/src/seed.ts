@@ -14,6 +14,7 @@
 
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as schema from "./schema";
 
@@ -601,77 +602,96 @@ const SAMPLE_PRODUCTS = [
 // =============================================================================
 
 async function seedCategories() {
-  console.log("Seeding categories...");
+  console.log("Seeding categories (idempotent upsert)...");
 
-  // Check if categories already exist
-  const existingCategories = await db.select().from(schema.categories);
-  if (existingCategories.length > 0) {
-    console.log(`  ✓ Found ${existingCategories.length} existing categories (skipping)`);
-    return;
-  }
+  let categoriesUpserted = 0;
+  let subcategoriesUpserted = 0;
 
   for (let i = 0; i < CATEGORIES_DATA.length; i++) {
     const cat = CATEGORIES_DATA[i]!;
-    await db.insert(schema.categories).values({
-      id: cat.id,
-      name: cat.name,
-      slug: cat.slug,
-      icon: cat.icon,
-      description: cat.description,
-      imageUrl: cat.imageUrl,
-      sortOrder: i,
-    });
 
-    // Insert subcategories
+    await db
+      .insert(schema.categories)
+      .values({
+        id: cat.id,
+        name: cat.name,
+        slug: cat.slug,
+        icon: cat.icon,
+        description: cat.description,
+        imageUrl: cat.imageUrl,
+        sortOrder: i,
+      })
+      .onConflictDoUpdate({
+        target: schema.categories.id,
+        set: {
+          name: cat.name,
+          slug: cat.slug,
+          icon: cat.icon,
+          description: cat.description,
+          imageUrl: cat.imageUrl,
+          sortOrder: i,
+        },
+      });
+    categoriesUpserted++;
+
+    // Upsert subcategories
     for (let j = 0; j < cat.subcategories.length; j++) {
       const sub = cat.subcategories[j]!;
-      await db.insert(schema.subcategories).values({
-        id: sub.id,
-        parentId: cat.id,
-        name: sub.name,
-        slug: sub.slug,
-        sortOrder: j,
-      });
+      await db
+        .insert(schema.subcategories)
+        .values({
+          id: sub.id,
+          parentId: cat.id,
+          name: sub.name,
+          slug: sub.slug,
+          sortOrder: j,
+        })
+        .onConflictDoUpdate({
+          target: schema.subcategories.id,
+          set: {
+            parentId: cat.id,
+            name: sub.name,
+            slug: sub.slug,
+            sortOrder: j,
+          },
+        });
+      subcategoriesUpserted++;
     }
   }
 
   console.log(
-    `  ✓ Seeded ${CATEGORIES_DATA.length} categories with ${CATEGORIES_DATA.reduce((acc, c) => acc + c.subcategories.length, 0)} subcategories`,
+    `  ✓ Upserted ${categoriesUpserted} categories with ${subcategoriesUpserted} subcategories`,
   );
 }
 
 async function seedEventTypes() {
-  console.log("Seeding event types...");
-
-  // Check if event types already exist
-  const existingEventTypes = await db.select().from(schema.eventTypes);
-  if (existingEventTypes.length > 0) {
-    console.log(`  ✓ Found ${existingEventTypes.length} existing event types (skipping)`);
-    return;
-  }
+  console.log("Seeding event types (idempotent upsert)...");
 
   for (let i = 0; i < EVENT_TYPES_DATA.length; i++) {
     const evt = EVENT_TYPES_DATA[i]!;
-    await db.insert(schema.eventTypes).values({
-      id: evt.id,
-      name: evt.name,
-      slug: evt.slug,
-      sortOrder: i,
-    });
+    await db
+      .insert(schema.eventTypes)
+      .values({
+        id: evt.id,
+        name: evt.name,
+        slug: evt.slug,
+        sortOrder: i,
+      })
+      .onConflictDoUpdate({
+        target: schema.eventTypes.id,
+        set: {
+          name: evt.name,
+          slug: evt.slug,
+          sortOrder: i,
+        },
+      });
   }
 
-  console.log(`  ✓ Seeded ${EVENT_TYPES_DATA.length} event types`);
+  console.log(`  ✓ Upserted ${EVENT_TYPES_DATA.length} event types`);
 }
 
 async function seedVendors(userIds: string[]) {
-  console.log("Seeding vendors...");
-
-  // Check for existing vendors
-  const existingVendors = await db.select().from(schema.vendors);
-  if (existingVendors.length > 0) {
-    console.log(`  ✓ Found ${existingVendors.length} existing vendors`);
-    return existingVendors.map((v) => v.id);
-  }
+  console.log("Seeding vendors (idempotent upsert)...");
 
   const vendorIds: string[] = [];
 
@@ -681,72 +701,141 @@ async function seedVendors(userIds: string[]) {
   for (let i = 0; i < vendorsToCreate.length; i++) {
     const vendor = vendorsToCreate[i]!;
     const userId = userIds[i]!;
-    const vendorId = nanoid();
-    vendorIds.push(vendorId);
 
-    await db.insert(schema.vendors).values({
-      id: vendorId,
-      userId: userId,
-      name: vendor.name,
-      slug: vendor.slug,
-      description: vendor.description,
-      location: vendor.location,
-      isVerified: vendor.isVerified,
-      ratingAverage: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-      productCount: 0,
-    });
+    // Check if a vendor already exists for this user
+    const existing = await db
+      .select({ id: schema.vendors.id })
+      .from(schema.vendors)
+      .where(eq(schema.vendors.userId, userId))
+      .limit(1);
+
+    if (existing.length > 0) {
+      // Update existing vendor
+      const vendorId = existing[0]!.id;
+      vendorIds.push(vendorId);
+      await db
+        .update(schema.vendors)
+        .set({
+          name: vendor.name,
+          slug: vendor.slug,
+          description: vendor.description,
+          location: vendor.location,
+          isVerified: vendor.isVerified,
+        })
+        .where(eq(schema.vendors.id, vendorId));
+    } else {
+      // Insert new vendor
+      const vendorId = nanoid();
+      vendorIds.push(vendorId);
+      await db.insert(schema.vendors).values({
+        id: vendorId,
+        userId: userId,
+        name: vendor.name,
+        slug: vendor.slug,
+        description: vendor.description,
+        location: vendor.location,
+        isVerified: vendor.isVerified,
+        ratingAverage: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
+        productCount: 0,
+      });
+    }
   }
 
-  console.log(`  ✓ Seeded ${vendorsToCreate.length} vendors`);
+  console.log(`  ✓ Upserted ${vendorsToCreate.length} vendors`);
   return vendorIds;
 }
 
 async function seedProducts(vendorIds: string[]) {
-  console.log("Seeding products...");
+  console.log("Seeding products (idempotent upsert)...");
 
-  // Check if products already exist
-  const existingProducts = await db.select().from(schema.products);
-  if (existingProducts.length > 0) {
-    console.log(`  ✓ Found ${existingProducts.length} existing products (skipping)`);
-    return;
-  }
+  let upserted = 0;
 
   for (let i = 0; i < SAMPLE_PRODUCTS.length; i++) {
     const product = SAMPLE_PRODUCTS[i]!;
-    const productId = nanoid();
     const vendorId = vendorIds[i % vendorIds.length]!;
 
-    // Insert product
-    await db.insert(schema.products).values({
-      id: productId,
-      vendorId: vendorId,
-      categoryId: product.categoryId,
-      subcategoryId: product.subcategoryId,
-      title: product.title,
-      slug: product.slug,
-      description: product.description,
-      descriptionShort: product.descriptionShort,
-      status: "active",
-      stockStatus: product.stock > 10 ? "in_stock" : "low_stock",
-      stock: product.stock,
-      price: product.price,
-      salePrice: product.salePrice,
-      discountPercentage: product.salePrice
-        ? Math.round(
-            ((Number(product.price) - Number(product.salePrice)) /
-              Number(product.price)) *
-              100,
-          )
-        : null,
-      currency: "BDT",
-      content: product.content,
-      isFeatured: product.isFeatured ?? false,
-      ratingAverage: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
-      ratingCount: Math.floor(Math.random() * 100) + 10,
-      freeShipping: Number(product.price) > 5000,
-      shippingCost: Number(product.price) > 5000 ? null : "150",
-      shippingEstimatedDays: 3,
-    });
+    // Check if product already exists by slug
+    const existing = await db
+      .select({ id: schema.products.id })
+      .from(schema.products)
+      .where(eq(schema.products.slug, product.slug))
+      .limit(1);
+
+    let productId: string;
+
+    if (existing.length > 0) {
+      // Update existing product
+      productId = existing[0]!.id;
+      await db
+        .update(schema.products)
+        .set({
+          vendorId: vendorId,
+          categoryId: product.categoryId,
+          subcategoryId: product.subcategoryId,
+          title: product.title,
+          description: product.description,
+          descriptionShort: product.descriptionShort,
+          status: "active",
+          stockStatus: product.stock > 10 ? "in_stock" : "low_stock",
+          stock: product.stock,
+          price: product.price,
+          salePrice: product.salePrice,
+          discountPercentage: product.salePrice
+            ? Math.round(
+                ((Number(product.price) - Number(product.salePrice)) /
+                  Number(product.price)) *
+                  100,
+              )
+            : null,
+          currency: "BDT",
+          content: product.content,
+          isFeatured: product.isFeatured ?? false,
+          freeShipping: Number(product.price) > 5000,
+          shippingCost: Number(product.price) > 5000 ? null : "150",
+          shippingEstimatedDays: 3,
+        })
+        .where(eq(schema.products.id, productId));
+
+      // Delete and re-insert child records to ensure completeness
+      await db.delete(schema.productImages).where(eq(schema.productImages.productId, productId));
+      await db.delete(schema.productVariants).where(eq(schema.productVariants.productId, productId));
+      await db.delete(schema.productEventTypes).where(eq(schema.productEventTypes.productId, productId));
+      await db.delete(schema.productShippingOptions).where(eq(schema.productShippingOptions.productId, productId));
+      await db.delete(schema.productSpecifications).where(eq(schema.productSpecifications.productId, productId));
+    } else {
+      // Insert new product
+      productId = nanoid();
+      await db.insert(schema.products).values({
+        id: productId,
+        vendorId: vendorId,
+        categoryId: product.categoryId,
+        subcategoryId: product.subcategoryId,
+        title: product.title,
+        slug: product.slug,
+        description: product.description,
+        descriptionShort: product.descriptionShort,
+        status: "active",
+        stockStatus: product.stock > 10 ? "in_stock" : "low_stock",
+        stock: product.stock,
+        price: product.price,
+        salePrice: product.salePrice,
+        discountPercentage: product.salePrice
+          ? Math.round(
+              ((Number(product.price) - Number(product.salePrice)) /
+                Number(product.price)) *
+                100,
+            )
+          : null,
+        currency: "BDT",
+        content: product.content,
+        isFeatured: product.isFeatured ?? false,
+        ratingAverage: parseFloat((3.5 + Math.random() * 1.5).toFixed(1)),
+        ratingCount: Math.floor(Math.random() * 100) + 10,
+        freeShipping: Number(product.price) > 5000,
+        shippingCost: Number(product.price) > 5000 ? null : "150",
+        shippingEstimatedDays: 3,
+      });
+    }
 
     // Insert images
     for (let j = 0; j < product.images.length; j++) {
@@ -801,7 +890,7 @@ async function seedProducts(vendorIds: string[]) {
       isDefault: false,
     });
 
-    // Insert some specifications
+    // Insert specification
     await db.insert(schema.productSpecifications).values({
       id: nanoid(),
       productId: productId,
@@ -809,58 +898,70 @@ async function seedProducts(vendorIds: string[]) {
       value: product.categoryId,
       sortOrder: 0,
     });
+
+    upserted++;
   }
 
-  console.log(`  ✓ Seeded ${SAMPLE_PRODUCTS.length} products`);
+  console.log(`  ✓ Upserted ${upserted} products with images, variants, event types, and shipping`);
 }
 
 async function seedSampleUsers() {
-  console.log("Checking for existing users...");
+  console.log("Ensuring sample users exist (idempotent)...");
 
-  // Check if users exist
+  // Get all existing users
   const existingUsers = await db.select().from(schema.user);
-
-  if (existingUsers.length >= 5) {
-    console.log(`  ✓ Found ${existingUsers.length} existing users`);
-    return existingUsers.map((u) => u.id);
-  }
-
-  // Create additional users if needed
-  console.log("Creating sample users...");
   const userIds = existingUsers.map((u) => u.id);
-  const usersNeeded = 5 - existingUsers.length;
 
-  for (let i = 0; i < usersNeeded; i++) {
-    const userId = nanoid();
-    userIds.push(userId);
-
-    await db.insert(schema.user).values({
-      id: userId,
-      name: `Test Vendor ${i + 1}`,
-      email: `testvendor${i + 1}@ayojon.com`,
-      emailVerified: true,
-    });
+  if (userIds.length >= 5) {
+    console.log(`  ✓ Found ${userIds.length} existing users (sufficient)`);
+    return userIds;
   }
 
-  console.log(`  ✓ Now have ${userIds.length} users (created ${usersNeeded} new)`);
+  // Create additional users if needed — upsert by email to avoid duplicates
+  const usersNeeded = 5 - userIds.length;
+  for (let i = 0; i < usersNeeded; i++) {
+    const email = `testvendor${i + 1}@ayojon.com`;
+
+    // Check if this email already exists (shouldn't given the count check, but safe)
+    const existing = await db
+      .select({ id: schema.user.id })
+      .from(schema.user)
+      .where(eq(schema.user.email, email))
+      .limit(1);
+
+    if (existing.length > 0) {
+      if (!userIds.includes(existing[0]!.id)) {
+        userIds.push(existing[0]!.id);
+      }
+    } else {
+      const userId = nanoid();
+      userIds.push(userId);
+      await db.insert(schema.user).values({
+        id: userId,
+        name: `Test Vendor ${i + 1}`,
+        email,
+        emailVerified: true,
+      });
+    }
+  }
+
+  console.log(`  ✓ Now have ${userIds.length} users (ensured ${usersNeeded} new)`);
   return userIds;
 }
 
 async function seedReviews(userIds: string[]) {
-  console.log("Seeding reviews...");
+  console.log("Seeding reviews (idempotent)...");
 
-  // Check if reviews already exist
-  const existingReviews = await db.select().from(schema.reviews);
-  if (existingReviews.length > 0) {
-    console.log(`  ✓ Found ${existingReviews.length} existing reviews (skipping)`);
-    return;
-  }
-
-  // Get some products
+  // Get products that need reviews
   const products = await db
     .select({ id: schema.products.id })
     .from(schema.products)
     .limit(5);
+
+  if (products.length === 0) {
+    console.log("  ⚠ No products found, skipping reviews");
+    return;
+  }
 
   const comments = [
     "Great product! Exactly as described and arrived on time.",
@@ -870,11 +971,25 @@ async function seedReviews(userIds: string[]) {
     "Amazing! My event was a huge success thanks to this.",
   ];
 
-  for (const product of products) {
-    // Add 2-4 reviews per product
-    const numReviews = Math.floor(Math.random() * 3) + 2;
+  let upserted = 0;
 
-    for (let i = 0; i < numReviews; i++) {
+  for (const product of products) {
+    // Check existing review count for this product
+    const existingReviews = await db
+      .select({ id: schema.reviews.id })
+      .from(schema.reviews)
+      .where(eq(schema.reviews.productId, product.id));
+
+    if (existingReviews.length >= 2) {
+      // Already has enough reviews
+      continue;
+    }
+
+    // Add reviews up to 2-4 total
+    const targetReviews = Math.floor(Math.random() * 3) + 2;
+    const reviewsToAdd = targetReviews - existingReviews.length;
+
+    for (let i = 0; i < reviewsToAdd; i++) {
       const userId = userIds[Math.floor(Math.random() * userIds.length)]!;
       const reviewId = nanoid();
 
@@ -889,10 +1004,11 @@ async function seedReviews(userIds: string[]) {
         helpfulVotes: Math.floor(Math.random() * 20),
         notHelpfulVotes: Math.floor(Math.random() * 3),
       });
+      upserted++;
     }
   }
 
-  console.log(`  ✓ Seeded reviews for ${products.length} products`);
+  console.log(`  ✓ Ensured reviews for ${products.length} products (${upserted} new reviews added)`);
 }
 
 // =============================================================================
@@ -900,7 +1016,7 @@ async function seedReviews(userIds: string[]) {
 // =============================================================================
 
 async function main() {
-  console.log("\n🌱 Starting database seed...\n");
+  console.log("\n🌱 Starting database seed (idempotent mode)...\n");
 
   try {
     // Seed in order of dependencies
@@ -912,6 +1028,36 @@ async function main() {
 
     await seedProducts(vendorIds);
     await seedReviews(userIds);
+
+    // Completeness report
+    console.log("\n📊 Completeness Report:");
+    const catCount = (await db.select().from(schema.categories)).length;
+    const subCount = (await db.select().from(schema.subcategories)).length;
+    const evtCount = (await db.select().from(schema.eventTypes)).length;
+    const vendorCount = (await db.select().from(schema.vendors)).length;
+    const prodCount = (await db.select().from(schema.products)).length;
+    const imgCount = (await db.select().from(schema.productImages)).length;
+    const varCount = (await db.select().from(schema.productVariants)).length;
+    const revCount = (await db.select().from(schema.reviews)).length;
+
+    const expectedCats = CATEGORIES_DATA.length;
+    const expectedSubs = CATEGORIES_DATA.reduce((acc, c) => acc + c.subcategories.length, 0);
+    const expectedEvts = EVENT_TYPES_DATA.length;
+    const expectedProds = SAMPLE_PRODUCTS.length;
+
+    const check = (label: string, actual: number, expected: number) => {
+      const status = actual >= expected ? "✅" : "⚠️";
+      console.log(`  ${status} ${label}: ${actual}/${expected}`);
+    };
+
+    check("Categories", catCount, expectedCats);
+    check("Subcategories", subCount, expectedSubs);
+    check("Event Types", evtCount, expectedEvts);
+    check("Vendors", vendorCount, Math.min(VENDORS_DATA.length, 5));
+    check("Products", prodCount, expectedProds);
+    console.log(`  📎 Product Images: ${imgCount}`);
+    console.log(`  📎 Product Variants: ${varCount}`);
+    console.log(`  📎 Reviews: ${revCount}`);
 
     console.log("\n✅ Database seeding completed successfully!\n");
   } catch (error) {
