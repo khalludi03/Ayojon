@@ -8,16 +8,17 @@ import {
   ChevronRight,
   Download,
   Dumbbell,
+  Flower,
+  Gamepad2,
   Home,
+  LayoutPanelTop,
   Menu,
-  Package,
+  Mic,
   Shirt,
   ShoppingBasket,
   Smartphone,
   Sparkles,
-  Tag,
-  User,
-  UserRound,
+  UtensilsCrossed,
   X,
   Zap
 } from 'lucide-react';
@@ -36,6 +37,11 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   Baby,
   Car,
   Download,
+  Mic,
+  UtensilsCrossed,
+  LayoutPanelTop,
+  Flower,
+  Gamepad2,
 };
 
 interface MobileNavProps {
@@ -52,53 +58,42 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    id: 'womens',
-    label: "Women's",
-    icon: UserRound,
+    id: 'decor',
+    label: 'Decor',
+    icon: Sparkles,
     items: [
-      { href: '/category/womens-clothing/dresses', label: 'Dresses' },
-      { href: '/category/womens-clothing/tops', label: 'Tops & Blouses' },
-      { href: '/category/womens-clothing/sarees', label: 'Sarees' },
-      { href: '/category/womens-clothing/kurtis', label: 'Kurtis & Salwar' },
-      { href: '/category/womens-clothing/western', label: 'Western Wear' },
-      { href: '/category/womens-clothing', label: 'View All' },
+      { href: '/category/decorations-balloons?subcategory=balloon-arches', label: 'Balloon Arches & Bouquets' },
+      { href: '/category/decorations-balloons?subcategory=backdrops', label: 'Backdrops & Photo Walls' },
+      { href: '/category/decorations-balloons?subcategory=led-decor', label: 'LED Lights & Neon Signs' },
+      { href: '/category/decorations-balloons?subcategory=themed-decor', label: 'Themed Decorations' },
+      { href: '/category/decorations-balloons?subcategory=entrance-decor', label: 'Entrance & Gate Decor' },
+      { href: '/category/decorations-balloons', label: 'View All' },
     ],
   },
   {
-    id: 'mens',
-    label: "Men's",
-    icon: User,
+    id: 'sound-lighting',
+    label: 'Sound & Lighting',
+    icon: Mic,
     items: [
-      { href: '/category/mens-clothing/shirts', label: 'Shirts' },
-      { href: '/category/mens-clothing/t-shirts', label: 'T-Shirts' },
-      { href: '/category/mens-clothing/pants', label: 'Pants & Jeans' },
-      { href: '/category/mens-clothing/traditional', label: 'Traditional Wear' },
-      { href: '/category/mens-clothing/activewear', label: 'Activewear' },
-      { href: '/category/mens-clothing', label: 'View All' },
+      { href: '/category/sound-lighting?subcategory=pa-systems', label: 'PA Systems & Speakers' },
+      { href: '/category/sound-lighting?subcategory=microphones', label: 'Microphones & Wireless' },
+      { href: '/category/sound-lighting?subcategory=dj-equipment', label: 'DJ Equipment' },
+      { href: '/category/sound-lighting?subcategory=stage-lights', label: 'Stage Lights & Effects' },
+      { href: '/category/sound-lighting?subcategory=projectors', label: 'Projectors & Screens' },
+      { href: '/category/sound-lighting', label: 'View All' },
     ],
   },
   {
-    id: 'sales',
-    label: 'Sales',
-    icon: Tag,
+    id: 'catering',
+    label: 'Catering',
+    icon: UtensilsCrossed,
     items: [
-      { href: '/deals/flash', label: 'Flash Sale', description: 'Up to 70% off' },
-      { href: '/deals/clearance', label: 'Clearance', description: 'Final markdowns' },
-      { href: '/deals/bundle', label: 'Bundle Offers', description: 'Buy more, save more' },
-      { href: '/deals/seasonal', label: 'Seasonal Sale', description: 'Limited time offers' },
-      { href: '/deals', label: 'All Deals' },
-    ],
-  },
-  {
-    id: 'bundles',
-    label: 'Bundle Deals',
-    icon: Package,
-    items: [
-      { href: '/bundle-deals/electronics', label: 'Electronics Bundles' },
-      { href: '/bundle-deals/fashion', label: 'Fashion Combos' },
-      { href: '/bundle-deals/home', label: 'Home Essentials' },
-      { href: '/bundle-deals/gifts', label: 'Gift Sets' },
-      { href: '/bundle-deals', label: 'All Bundles' },
+      { href: '/category/catering-equipment?subcategory=chafing-dishes', label: 'Chafing Dishes & Warmers' },
+      { href: '/category/catering-equipment?subcategory=glassware', label: 'Glassware & Drinkware' },
+      { href: '/category/catering-equipment?subcategory=bar-equipment', label: 'Bar Equipment' },
+      { href: '/category/catering-equipment?subcategory=serving-platters', label: 'Serving Platters & Bowls' },
+      { href: '/category/catering-equipment?subcategory=beverage-dispensers', label: 'Beverage Dispensers' },
+      { href: '/category/catering-equipment', label: 'View All' },
     ],
   },
 ];
@@ -217,7 +212,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <a
             href="/deals/flash"
             onClick={onClose}
-            className="mt-4 flex items-center gap-3 rounded-lg bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))] px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg"
+            className="mt-4 flex items-center gap-3 rounded-lg bg-linear-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))] px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg"
           >
             <Zap className="h-5 w-5" />
             <span>Flash Deals</span>
@@ -244,7 +239,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <div
             className={cn(
               'overflow-hidden transition-all duration-300',
-              showCategories ? 'max-h-[500px] mt-2' : 'max-h-0'
+              showCategories ? 'max-h-125 mt-2' : 'max-h-0'
             )}
           >
             {categoriesLoading ? (

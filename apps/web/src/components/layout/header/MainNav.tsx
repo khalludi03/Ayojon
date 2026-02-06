@@ -1,43 +1,38 @@
 import { Link } from '@tanstack/react-router';
-import { ChevronDown, Home, Menu, Package, Tag, User, UserRound, Zap } from 'lucide-react';
-import {  NavDropdown } from './NavDropdown';
+import { ChevronDown, Home, Menu, Mic, Sparkles, UtensilsCrossed, Zap } from 'lucide-react';
+import { NavDropdown } from './NavDropdown';
 import type {DropdownItem} from './NavDropdown';
 import { cn } from '@/lib/utils';
 
-// Dropdown items for each category
-const womensDropdownItems: Array<DropdownItem> = [
-  { href: '/category/womens-clothing/dresses', label: 'Dresses' },
-  { href: '/category/womens-clothing/tops', label: 'Tops & Blouses' },
-  { href: '/category/womens-clothing/sarees', label: 'Sarees' },
-  { href: '/category/womens-clothing/kurtis', label: 'Kurtis & Salwar' },
-  { href: '/category/womens-clothing/western', label: 'Western Wear' },
-  { href: '/category/womens-clothing', label: 'View All', description: 'Browse all women\'s clothing' },
+// Dropdown items for event categories
+const decorDropdownItems: Array<DropdownItem> = [
+  { href: '/category/decorations-balloons?subcategory=balloon-arches', label: 'Balloon Arches & Bouquets' },
+  { href: '/category/decorations-balloons?subcategory=backdrops', label: 'Backdrops & Photo Walls' },
+  { href: '/category/decorations-balloons?subcategory=led-decor', label: 'LED Lights & Neon Signs' },
+  { href: '/category/decorations-balloons?subcategory=themed-decor', label: 'Themed Decorations' },
+  { href: '/category/decorations-balloons?subcategory=entrance-decor', label: 'Entrance & Gate Decor' },
+  { href: '/category/decorations-balloons', label: 'View All', description: 'Browse decorations & balloons' },
 ];
 
-const mensDropdownItems: Array<DropdownItem> = [
-  { href: '/category/mens-clothing/shirts', label: 'Shirts' },
-  { href: '/category/mens-clothing/t-shirts', label: 'T-Shirts' },
-  { href: '/category/mens-clothing/pants', label: 'Pants & Jeans' },
-  { href: '/category/mens-clothing/traditional', label: 'Traditional Wear' },
-  { href: '/category/mens-clothing/activewear', label: 'Activewear' },
-  { href: '/category/mens-clothing', label: 'View All', description: 'Browse all men\'s clothing' },
+const soundDropdownItems: Array<DropdownItem> = [
+  { href: '/category/sound-lighting?subcategory=pa-systems', label: 'PA Systems & Speakers' },
+  { href: '/category/sound-lighting?subcategory=microphones', label: 'Microphones & Wireless' },
+  { href: '/category/sound-lighting?subcategory=dj-equipment', label: 'DJ Equipment' },
+  { href: '/category/sound-lighting?subcategory=stage-lights', label: 'Stage Lights & Effects' },
+  { href: '/category/sound-lighting?subcategory=projectors', label: 'Projectors & Screens' },
+  { href: '/category/sound-lighting', label: 'View All', description: 'Browse sound & lighting' },
 ];
 
-const salesDropdownItems: Array<DropdownItem> = [
-  { href: '/deals/flash', label: 'Flash Sale', description: 'Up to 70% off' },
-  { href: '/deals/clearance', label: 'Clearance', description: 'Final markdowns' },
-  { href: '/deals/bundle', label: 'Bundle Offers', description: 'Buy more, save more' },
-  { href: '/deals/seasonal', label: 'Seasonal Sale', description: 'Limited time offers' },
-  { href: '/deals', label: 'All Deals', description: 'View all promotions' },
+const cateringDropdownItems: Array<DropdownItem> = [
+  { href: '/category/catering-equipment?subcategory=chafing-dishes', label: 'Chafing Dishes & Warmers' },
+  { href: '/category/catering-equipment?subcategory=glassware', label: 'Glassware & Drinkware' },
+  { href: '/category/catering-equipment?subcategory=bar-equipment', label: 'Bar Equipment' },
+  { href: '/category/catering-equipment?subcategory=serving-platters', label: 'Serving Platters & Bowls' },
+  { href: '/category/catering-equipment?subcategory=beverage-dispensers', label: 'Beverage Dispensers' },
+  { href: '/category/catering-equipment', label: 'View All', description: 'Browse catering equipment' },
 ];
 
-const bundleDropdownItems: Array<DropdownItem> = [
-  { href: '/bundle-deals/electronics', label: 'Electronics Bundles' },
-  { href: '/bundle-deals/fashion', label: 'Fashion Combos' },
-  { href: '/bundle-deals/home', label: 'Home Essentials' },
-  { href: '/bundle-deals/gifts', label: 'Gift Sets' },
-  { href: '/bundle-deals', label: 'All Bundles', description: 'View all bundle deals' },
-];
+
 
 interface MainNavProps {
   onCategoryClick?: () => void;
@@ -77,34 +72,16 @@ export function MainNav({ onCategoryClick }: MainNavProps) {
           <span>Home</span>
         </Link>
 
-        {/* Women's - With dropdown */}
-        <NavDropdown
-          label="Women's"
-          icon={UserRound}
-          items={womensDropdownItems}
-        />
+        {/* Decorations - With dropdown */}
+        <NavDropdown label="Decor" icon={Sparkles} items={decorDropdownItems} />
 
-        {/* Men's - With dropdown */}
-        <NavDropdown
-          label="Men's"
-          icon={User}
-          items={mensDropdownItems}
-        />
+        {/* Sound & Lighting */}
+        <NavDropdown label="Sound & Lighting" icon={Mic} items={soundDropdownItems} />
 
-        {/* Sales - With dropdown, highlighted */}
-        <NavDropdown
-          label="Sales"
-          icon={Tag}
-          items={salesDropdownItems}
-          highlight
-        />
+        {/* Catering Equipment */}
+        <NavDropdown label="Catering" icon={UtensilsCrossed} items={cateringDropdownItems} />
 
-        {/* Bundle Deals - With dropdown */}
-        <NavDropdown
-          label="Bundle Deals"
-          icon={Package}
-          items={bundleDropdownItems}
-        />
+        <NavDropdown label="Catering" icon={UtensilsCrossed} items={cateringDropdownItems} highlight />
       </div>
 
       {/* Flash Deals Highlight */}
