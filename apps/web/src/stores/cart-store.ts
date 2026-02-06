@@ -16,11 +16,14 @@ export interface CartItem {
   addedAt: string;
 }
 
+export type DeliveryMethodType = 'standard' | 'express' | 'same-day';
+
 interface CartState {
   items: Array<CartItem>;
   savedForLater: Array<CartItem>;
   currency: CurrencyCode;
   isDrawerOpen: boolean;
+  deliveryMethod: DeliveryMethodType | null;
   discount: {
     code: string;
     type: 'percentage' | 'fixed' | 'free_shipping';
@@ -41,6 +44,7 @@ interface CartStore {
   saveForLater: (itemId: string) => void;
   moveToCart: (itemId: string) => void;
   removeSavedItem: (itemId: string) => void;
+  setDeliveryMethod: (method: DeliveryMethodType | null) => void;
   applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => void;
   removeCoupon: () => void;
   getDiscount: () => number;
@@ -62,6 +66,7 @@ function createCartStore(): CartStore {
     savedForLater: [],
     currency: 'BDT',
     isDrawerOpen: false,
+    deliveryMethod: null,
     discount: null,
   };
   const listeners = new Set<() => void>();
@@ -92,6 +97,7 @@ function createCartStore(): CartStore {
           ...state, 
           items: parsed.items || [], 
           savedForLater: parsed.savedForLater || [],
+          deliveryMethod: parsed.deliveryMethod || null,
           discount: parsed.discount || null,
           currency: parsed.currency || 'BDT' 
         };
@@ -306,6 +312,12 @@ function createCartStore(): CartStore {
       notify();
     },
 
+    setDeliveryMethod: (method: DeliveryMethodType | null) => {
+      state = { ...state, deliveryMethod: method };
+      persist();
+      notify();
+    },
+
     getDiscount: () => {
       if (!state.discount) return 0;
       
@@ -365,17 +377,31 @@ function createCartStore(): CartStore {
     },
 
     getShipping: () => {
+      // Free shipping coupon overrides everything
       if (state.discount?.type === 'free_shipping') {
         return 0;
       }
 
       const subtotal = cartStore.getSubtotal();
-      // Free shipping for orders over 999 BDT
-      if (subtotal >= 999) {
+      const deliveryMethod = state.deliveryMethod;
+
+      // If no items, no shipping
+      if (state.items.length === 0) {
         return 0;
       }
-      // Otherwise, flat rate of 60 BDT
-      return 60;
+
+      // Calculate based on delivery method
+      if (deliveryMethod === 'standard') {
+        // Free shipping for orders over 1000 BDT
+        return subtotal >= 1000 ? 0 : 50;
+      } else if (deliveryMethod === 'express') {
+        return 100;
+      } else if (deliveryMethod === 'same-day') {
+        return 150;
+      }
+
+      // Default: Standard delivery logic if no method selected
+      return subtotal >= 1000 ? 0 : 50;
     },
 
     getTotal: () => {
@@ -403,7 +429,14 @@ export const cartStore = createCartStore();
 // Stable callbacks for useSyncExternalStore
 const subscribeCart = (callback: () => void) => cartStore.subscribe(callback);
 const getCartSnapshot = () => cartStore.getState();
-const getCartServerSnapshot = () => ({ items: [], savedForLater: [], currency: 'BDT' as CurrencyCode, isDrawerOpen: false, discount: null });
+const getCartServerSnapshot = () => ({ 
+  items: [], 
+  savedForLater: [], 
+  currency: 'BDT' as CurrencyCode, 
+  isDrawerOpen: false, 
+  deliveryMethod: null,
+  discount: null 
+});
 
 // React hook
 export function useCart() {
@@ -420,10 +453,7 @@ export function useCart() {
 
   const tax = subtotal * 0.05;
 
-  let shipping = 0;
-  if (state.discount?.type !== 'free_shipping') {
-    shipping = subtotal >= 999 ? 0 : (state.items.length > 0 ? 60 : 0);
-  }
+  const shipping = cartStore.getShipping();
 
   let discountAmount = 0;
   if (state.discount) {
@@ -442,6 +472,7 @@ export function useCart() {
     savedForLater: state.savedForLater,
     currency: state.currency,
     isDrawerOpen: state.isDrawerOpen,
+    deliveryMethod: state.deliveryMethod,
     discount: state.discount,
     itemCount,
     subtotal,
@@ -459,6 +490,7 @@ export function useCart() {
     saveForLater: cartStore.saveForLater,
     moveToCart: cartStore.moveToCart,
     removeSavedItem: cartStore.removeSavedItem,
+    setDeliveryMethod: cartStore.setDeliveryMethod,
     applyCoupon: cartStore.applyCoupon,
     removeCoupon: cartStore.removeCoupon,
     getDiscount: cartStore.getDiscount,

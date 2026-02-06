@@ -56,7 +56,7 @@ export function DealCard({ deal }: DealCardProps) {
         <img
           src={deal.images[0]?.url}
           alt={deal.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 cursor-pointer"
           loading="lazy"
         />
 

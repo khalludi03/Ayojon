@@ -219,6 +219,16 @@ html.theme-transition-enabled * {
   animation: slide-up 0.3s ease-out;
 }
 
+/* Account UI styling */
+.account-shell {
+  font-family: "Space Grotesk", "DM Sans", sans-serif;
+}
+
+.account-heading {
+  font-family: "Fraunces", "Times New Roman", serif;
+  letter-spacing: 0.01em;
+}
+
 .animate-slide-down {
   animation: slide-down 0.3s ease-out;
 }

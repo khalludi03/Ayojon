@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/stores/cart-store';
+import { addOrder } from '@/stores/order-store';
 import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
-import { SchedulingStep } from '@/components/checkout/SchedulingStep';
+import { DeliveryMethodStep } from '@/components/checkout/DeliveryMethodStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
+import { OrderReviewStep } from '@/components/checkout/OrderReviewStep';
 import { ConfirmationStep } from '@/components/checkout/ConfirmationStep';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -26,9 +28,8 @@ interface FormData {
   postalCode: string;
   addressType: 'home' | 'office';
   saveAddress: boolean;
-  // Scheduling
-  deliveryDate: string;
-  deliveryTime: string;
+  // Delivery
+  deliveryMethod: string;
   // Payment
   paymentMethod: string;
   cardNumber?: string;
@@ -40,10 +41,21 @@ interface FormData {
 
 function CheckoutPage() {
   const navigate = useNavigate();
-  const { items } = useCart();
+  const {
+    items,
+    getSubtotal,
+    getShipping,
+    getTax,
+    getDiscount,
+    getTotal,
+    clearCart,
+    setDeliveryMethod,
+  } = useCart();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
+  const [orderId, setOrderId] = useState('');
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -55,8 +67,7 @@ function CheckoutPage() {
     postalCode: '',
     addressType: 'home',
     saveAddress: false,
-    deliveryDate: '',
-    deliveryTime: '',
+    deliveryMethod: '',
     paymentMethod: '',
     cardNumber: undefined,
     cardName: undefined,
@@ -67,14 +78,14 @@ function CheckoutPage() {
 
   // Redirect to cart if no items
   useEffect(() => {
-    if (items.length === 0 && currentStep !== 4) {
+    if (items.length === 0 && currentStep !== 5 && !isOrderPlaced) {
       navigate({ to: '/cart' });
     }
-  }, [items, navigate, currentStep]);
+  }, [items, navigate, currentStep, isOrderPlaced]);
 
   // Generate order number when reaching confirmation
   useEffect(() => {
-    if (currentStep === 4 && !orderNumber) {
+    if (currentStep === 5 && !orderNumber) {
       const orderNum = `AYJ${Date.now().toString().slice(-8)}`;
       setOrderNumber(orderNum);
     }
@@ -82,15 +93,85 @@ function CheckoutPage() {
 
   const handleFormChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    
+    // Sync delivery method with cart store
+    if (field === 'deliveryMethod' && typeof value === 'string') {
+      setDeliveryMethod(value as 'standard' | 'express' | 'same-day');
+    }
   };
 
   const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
+    setCurrentStep((prev) => Math.min(prev + 1, 5));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBackStep = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePlaceOrder = () => {
+    const orderNum = orderNumber || `AYJ${Date.now().toString().slice(-8)}`;
+    const newOrderId = `${Date.now()}`;
+    const firstItemImage = items[0]?.product?.images?.[0]?.url;
+    const placedAt = new Date().toISOString();
+    const subtotal = getSubtotal();
+    const shipping = getShipping();
+    const tax = getTax();
+    const discount = getDiscount();
+    const orderTotal = subtotal + tax + shipping - discount;
+
+    addOrder({
+      id: newOrderId,
+      orderNumber: orderNum,
+      date: placedAt,
+      total: orderTotal,
+      status: 'processing',
+      items: items.reduce((total, item) => total + item.quantity, 0),
+      imageUrl: firstItemImage,
+      deliveryMethod: formData.deliveryMethod,
+      lineItems: items.map((item) => ({
+        id: item.id,
+        title: item.product.title,
+        quantity: item.quantity,
+        price: item.product.pricing.currentPrice,
+        imageUrl: item.product.images?.[0]?.url,
+        productId: item.product.id,
+        product: item.product,
+      })),
+      address: {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        addressLine1: formData.addressLine1,
+        addressLine2: formData.addressLine2,
+        city: formData.city,
+        division: formData.division,
+        postalCode: formData.postalCode,
+        addressType: formData.addressType,
+      },
+      payment: {
+        method: formData.paymentMethod,
+        last4: formData.cardNumber?.slice(-4),
+      },
+      pricing: {
+        subtotal,
+        shipping,
+        tax,
+        discount,
+        total: orderTotal,
+      },
+      timeline: {
+        placedAt,
+      },
+    });
+
+    setOrderNumber(orderNum);
+    setOrderId(newOrderId);
+    setIsOrderPlaced(true);
+    setCurrentStep(5);
+    clearCart();
+    setDeliveryMethod(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -106,7 +187,7 @@ function CheckoutPage() {
         );
       case 2:
         return (
-          <SchedulingStep
+          <DeliveryMethodStep
             onNext={handleNextStep}
             onBack={handleBackStep}
             formData={formData}
@@ -124,8 +205,18 @@ function CheckoutPage() {
         );
       case 4:
         return (
+          <OrderReviewStep
+            onBack={handleBackStep}
+            onPlaceOrder={handlePlaceOrder}
+            onEditStep={(step) => setCurrentStep(step)}
+            formData={formData}
+          />
+        );
+      case 5:
+        return (
           <ConfirmationStep
             orderDetails={{
+              orderId: orderId,
               orderNumber: orderNumber,
               shipping: {
                 fullName: formData.fullName,
@@ -139,8 +230,7 @@ function CheckoutPage() {
                 addressType: formData.addressType,
               },
               scheduling: {
-                deliveryDate: formData.deliveryDate,
-                deliveryTime: formData.deliveryTime,
+                deliveryMethod: formData.deliveryMethod,
               },
               payment: {
                 paymentMethod: formData.paymentMethod,
@@ -153,7 +243,7 @@ function CheckoutPage() {
     }
   };
 
-  if (items.length === 0 && currentStep !== 4) {
+  if (items.length === 0 && currentStep !== 5 && !isOrderPlaced) {
     return null;
   }
 
@@ -166,15 +256,15 @@ function CheckoutPage() {
             Checkout
           </h1>
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-            Complete your order in {currentStep === 4 ? '4' : '4 simple'} steps
+            Complete your order in {currentStep === 5 ? '5' : '5 simple'} steps
           </p>
         </div>
 
         {/* Progress Indicator */}
         <CheckoutProgress currentStep={currentStep} />
 
-        {/* Mobile Summary Toggle (only show on steps 1-3) */}
-        {currentStep < 4 && (
+        {/* Mobile Summary Toggle (only show on steps 1-4) */}
+        {currentStep < 5 && (
           <div className="mb-4 lg:hidden">
             <Button
               variant="outline"
@@ -192,7 +282,7 @@ function CheckoutPage() {
         )}
 
         {/* Mobile Collapsible Summary */}
-        {currentStep < 4 && isSummaryOpen && (
+        {currentStep < 5 && isSummaryOpen && (
           <div className="mb-6 lg:hidden">
             <CheckoutOrderSummary />
           </div>
@@ -203,8 +293,8 @@ function CheckoutPage() {
           {/* Checkout Steps - 2/3 width on desktop */}
           <div className="lg:col-span-2">{renderStep()}</div>
 
-          {/* Order Summary Sidebar - 1/3 width, sticky on desktop, only show on steps 1-3 */}
-          {currentStep < 4 && (
+          {/* Order Summary Sidebar - 1/3 width, sticky on desktop, only show on steps 1-4 */}
+          {currentStep < 5 && (
             <div className="hidden lg:block">
               <div className="lg:sticky lg:top-24">
                 <CheckoutOrderSummary />
