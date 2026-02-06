@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Package, Truck, Calendar, Mail, Phone, MapPin, CreditCard, ArrowRight, Home, Building2 } from "lucide-react";
+import { CheckCircle2, Package, Calendar, Mail, Phone, MapPin, CreditCard, ArrowRight, Home, Building2, Zap, Clock } from "lucide-react";
 
 interface ConfirmationStepProps {
   orderDetails: {
+    orderId?: string;
     orderNumber: string;
     shipping: {
       fullName: string;
@@ -17,8 +18,7 @@ interface ConfirmationStepProps {
       addressType: 'home' | 'office';
     };
     scheduling: {
-      deliveryDate: string;
-      deliveryTime: string;
+      deliveryMethod: string;
     };
     payment: {
       paymentMethod: string;
@@ -27,21 +27,73 @@ interface ConfirmationStepProps {
 }
 
 export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
+  const getDeliveryMethodDetails = (method: string) => {
+    switch (method) {
+      case 'standard':
+        return {
+          name: 'Standard Delivery',
+          duration: '3-5 Business Days',
+          icon: Package,
+          iconColor: 'from-blue-500 to-blue-600',
+        };
+      case 'express':
+        return {
+          name: 'Express Delivery',
+          duration: '1-2 Business Days',
+          icon: Zap,
+          iconColor: 'from-orange-500 to-red-500',
+        };
+      case 'same-day':
+        return {
+          name: 'Same-Day Delivery',
+          duration: 'Today',
+          icon: Clock,
+          iconColor: 'from-purple-500 to-pink-500',
+        };
+      default:
+        return {
+          name: 'Standard Delivery',
+          duration: '3-5 Business Days',
+          icon: Package,
+          iconColor: 'from-blue-500 to-blue-600',
+        };
+    }
+  };
+
+  const getEstimatedDeliveryDate = (method: string) => {
+    const today = new Date();
+    let minDays = 3;
+    let maxDays = 5;
+
+    if (method === 'express') {
+      minDays = 1;
+      maxDays = 2;
+    } else if (method === 'same-day') {
+      return 'Today';
+    }
+
+    const minDate = new Date(today);
+    const maxDate = new Date(today);
+    minDate.setDate(today.getDate() + minDays);
+    maxDate.setDate(today.getDate() + maxDays);
+
+    return `${minDate.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
-      year: 'numeric',
-    });
+    })} - ${maxDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    })}`;
   };
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
       case 'card':
         return 'Credit/Debit Card';
-      case 'mobile':
-        return 'Mobile Payment';
+      case 'bkash':
+        return 'bKash';
+      case 'nagad':
+        return 'Nagad';
       case 'cod':
         return 'Cash on Delivery';
       default:
@@ -75,28 +127,28 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
       </div>
 
       {/* What's Next Section */}
-      <div className="rounded-xl border-2 border-[hsl(var(--border))] bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-6 dark:from-blue-950/20 dark:to-indigo-950/20">
-        <h3 className="mb-4 text-lg font-bold text-[hsl(var(--foreground))]">📦 What happens next?</h3>
+      <div className="rounded-xl border-2 border-[hsl(var(--border))] bg-[hsl(var(--muted))]/20 p-6">
+        <h3 className="mb-4 text-lg font-bold text-[hsl(var(--foreground))]">What happens next</h3>
         <div className="space-y-3">
           <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-sm font-bold text-white shadow-md">1</div>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-sm font-bold text-white">1</div>
             <div className="flex-1">
               <p className="font-semibold text-[hsl(var(--foreground))]">Order Confirmation</p>
               <p className="text-sm text-[hsl(var(--muted-foreground))]">You'll receive an email with your order details</p>
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-sm font-bold text-white shadow-md">2</div>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-sm font-bold text-white">2</div>
             <div className="flex-1">
               <p className="font-semibold text-[hsl(var(--foreground))]">Processing & Packing</p>
               <p className="text-sm text-[hsl(var(--muted-foreground))]">We'll carefully prepare your items for delivery</p>
             </div>
           </div>
           <div className="flex gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-green-600 text-sm font-bold text-white shadow-md">3</div>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-sm font-bold text-white">3</div>
             <div className="flex-1">
               <p className="font-semibold text-[hsl(var(--foreground))]">On the Way</p>
-              <p className="text-sm text-[hsl(var(--muted-foreground))]">Track your delivery in real-time via SMS/email updates</p>
+              <p className="text-sm text-[hsl(var(--muted-foreground))]">Track your delivery via SMS and email updates</p>
             </div>
           </div>
         </div>
@@ -128,7 +180,7 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
                   {orderDetails.shipping.fullName}
                 </p>
                 <p className="text-xs font-medium uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
-                  {orderDetails.shipping.addressType === 'home' ? '🏠 Home' : '🏢 Office'} Address
+                  {orderDetails.shipping.addressType === 'home' ? 'Home' : 'Office'} Address
                 </p>
               </div>
             </div>
@@ -160,30 +212,33 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
 
         {/* Delivery Schedule & Payment */}
         <div className="space-y-6">
-          {/* Delivery Schedule */}
+          {/* Delivery Method */}
           <div className="group rounded-xl border-2 border-[hsl(var(--border))] bg-gradient-to-br from-[hsl(var(--card))] to-[hsl(var(--card))]/80 p-6 shadow-sm transition-all hover:border-[hsl(var(--primary))]/50 hover:shadow-md">
             <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-indigo-500 shadow-md">
-                <Truck className="h-5 w-5 text-white" strokeWidth={2.5} />
+              <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br shadow-md ${getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).iconColor}`}>
+                {(() => {
+                  const Icon = getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).icon;
+                  return <Icon className="h-5 w-5 text-white" strokeWidth={2.5} />;
+                })()}
               </div>
               <h3 className="text-lg font-bold text-[hsl(var(--foreground))]">
-                Delivery Schedule
+                Delivery Method
               </h3>
             </div>
-            <div className="rounded-lg bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-4 dark:from-blue-950/20 dark:to-indigo-950/20">
-              <div className="flex items-start gap-3">
-                <Calendar className="mt-1 h-5 w-5 text-[hsl(var(--primary))]" strokeWidth={2.5} />
-                <div className="flex-1 space-y-1">
-                  <p className="text-lg font-bold text-[hsl(var(--foreground))]">
-                    {formatDate(orderDetails.scheduling.deliveryDate)}
-                  </p>
-                  <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-                    {orderDetails.scheduling.deliveryTime}
-                  </p>
-                  <p className="mt-2 text-xs text-[hsl(var(--muted-foreground))]">
-                    💚 Expected delivery between the selected time slot
-                  </p>
-                </div>
+            <div className="space-y-3">
+              <div className="rounded-lg bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-4 dark:from-blue-950/20 dark:to-indigo-950/20">
+                <p className="text-lg font-bold text-[hsl(var(--foreground))]">
+                  {getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).name}
+                </p>
+                <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+                  {getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).duration}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))]/30 px-3 py-2">
+                <Calendar className="h-4 w-4 text-[hsl(var(--primary))]" />
+                <span className="text-sm font-medium text-[hsl(var(--foreground))]">
+                  Expected: {getEstimatedDeliveryDate(orderDetails.scheduling.deliveryMethod)}
+                </span>
               </div>
             </div>
           </div>
@@ -209,16 +264,29 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
 
       {/* Action Buttons */}
       <div className="flex flex-col gap-4 sm:flex-row">
-        <Link to="/account" className="flex-1">
-          <Button 
-            variant="outline" 
-            size="lg" 
-            className="group w-full border-2 font-semibold transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
-          >
-            <Package className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
-            View Order Details
-          </Button>
-        </Link>
+        {orderDetails.orderId ? (
+          <Link to="/account/orders/$orderId" params={{ orderId: orderDetails.orderId }} className="flex-1">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="group w-full border-2 font-semibold transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
+            >
+              <Package className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+              View Order Details
+            </Button>
+          </Link>
+        ) : (
+          <Link to="/account" search={{ section: "orders" }} className="flex-1">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="group w-full border-2 font-semibold transition-all hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
+            >
+              <Package className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
+              View Order Details
+            </Button>
+          </Link>
+        )}
         <Link to="/" className="flex-1">
           <Button 
             size="lg" 
