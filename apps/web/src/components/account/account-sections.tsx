@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Camera, CheckCircle2, AlertCircle, X, Trash2 } from "lucide-react";
+import { Camera, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
+import { env } from "@my-better-t-app/env/web";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+type UpdateUserData = Parameters<typeof authClient.updateUser>[0];
+type AuthSession = Awaited<ReturnType<typeof authClient.getSession>>;
 
 export function AccountOrders() {
   return (
@@ -89,7 +93,7 @@ export function AccountAddresses() {
 }
 
 interface AccountProfileProps {
-  session: any; // Type should be more specific based on your auth client
+  session: AuthSession;
 }
 
 export function AccountProfile({ session }: AccountProfileProps) {
@@ -171,23 +175,58 @@ export function AccountProfile({ session }: AccountProfileProps) {
       return;
     }
 
-    if (!email.trim()) {
+    const normalizedEmail = email.trim();
+    const currentEmail = user?.email || "";
+
+    if (!normalizedEmail) {
       toast.error("Email is required");
       return;
     }
 
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(normalizedEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    const isSameEmail = normalizedEmail.toLowerCase() === currentEmail.toLowerCase();
+    if (isSameEmail && normalizedEmail !== currentEmail) {
+      setEmail(currentEmail);
+    }
+
     setIsSaving(true);
     try {
+      const updateData: UpdateUserData = {
+        name: name.trim(),
+        phoneNumber: phoneNumber.trim() || undefined,
+        gender: gender || undefined,
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+        image: profileImage,
+      };
+
+      const hasNonEmailChanges =
+        name.trim() !== (user?.name || "") ||
+        phoneNumber.trim() !== (user?.phoneNumber || "") ||
+        gender !== (user?.gender || "") ||
+        (dateOfBirth || "") !== (user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "") ||
+        profileImage !== (user?.image || null);
+
       // 1. Handle Email Change if it's different
-      if (email.trim() !== user?.email) {
+      if (!isSameEmail) {
+        // Save non-email changes first, so they aren't lost if OTP is canceled
+        if (hasNonEmailChanges) {
+          const { error: updateError } = await authClient.updateUser(updateData);
+          if (updateError) throw new Error(updateError.message || "Failed to update profile details");
+        }
+
         // Send OTP to the new email using custom endpoint
-        const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/email-change/send-otp`, {
+        const response = await fetch(`${env.VITE_SERVER_URL}/api/email-change/send-otp`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ email: email.trim() }),
+          body: JSON.stringify({ email: normalizedEmail }),
         });
 
         const result = await response.json();
@@ -199,22 +238,14 @@ export function AccountProfile({ session }: AccountProfileProps) {
         }
 
         // Store the pending email and show OTP dialog
-        setPendingEmail(email.trim());
+        setPendingEmail(normalizedEmail);
         setShowOTPDialog(true);
-        toast.success(`Verification code sent to ${email.trim()}`);
+        toast.success(`Verification code sent to ${normalizedEmail}`);
         setIsSaving(false);
         return; // Stop here and wait for OTP verification
       }
 
       // 2. Handle Profile Update for other fields (when email hasn't changed)
-      const updateData: any = {
-        name: name.trim(),
-        phoneNumber: phoneNumber.trim() || undefined,
-        gender: gender || undefined,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
-        image: profileImage,
-      };
-
       const { error: updateError } = await authClient.updateUser(updateData);
 
       if (updateError) throw new Error(updateError.message || "Failed to update profile details");
@@ -243,7 +274,7 @@ export function AccountProfile({ session }: AccountProfileProps) {
     setIsVerifyingOTP(true);
     try {
       // Verify the OTP and update email using custom endpoint
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/email-change/verify-otp`, {
+      const response = await fetch(`${env.VITE_SERVER_URL}/api/email-change/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -252,7 +283,6 @@ export function AccountProfile({ session }: AccountProfileProps) {
         body: JSON.stringify({
           email: pendingEmail,
           otp: otp.trim(),
-          userId: user?.id,
         }),
       });
 
@@ -267,7 +297,7 @@ export function AccountProfile({ session }: AccountProfileProps) {
       // Email has been updated on the server
 
       // Update other profile fields
-      const updateData: any = {
+      const updateData: UpdateUserData = {
         name: name.trim(),
         phoneNumber: phoneNumber.trim() || undefined,
         gender: gender || undefined,
@@ -294,7 +324,7 @@ export function AccountProfile({ session }: AccountProfileProps) {
 
   const handleResendOTP = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SERVER_URL}/api/email-change/send-otp`, {
+      const response = await fetch(`${env.VITE_SERVER_URL}/api/email-change/send-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -486,7 +516,16 @@ export function AccountProfile({ session }: AccountProfileProps) {
       </div>
 
       {/* OTP Verification Dialog */}
-      <Dialog open={showOTPDialog} onOpenChange={setShowOTPDialog}>
+      <Dialog
+        open={showOTPDialog}
+        onOpenChange={(open) => {
+          if (open) {
+            setShowOTPDialog(true);
+          } else {
+            handleCloseOTPDialog();
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Verify Your Email</DialogTitle>

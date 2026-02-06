@@ -1,4 +1,5 @@
 import { env } from "@my-better-t-app/env/server";
+import { randomInt } from "crypto";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -25,7 +26,7 @@ interface SendOTPEmailParams {
 
 // Generate a random 6-digit OTP
 export function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 1000000).toString();
 }
 
 export async function sendOTPEmail({
