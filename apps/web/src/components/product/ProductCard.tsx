@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <img
           src={product.images[0]?.url}
           alt={product.title}
-          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 cursor-pointer"
+          className="h-full w-full object-cover transition-all duration-300 group-hover:scale-105 group-hover:blur-sm cursor-pointer"
           loading="lazy"
         />
 

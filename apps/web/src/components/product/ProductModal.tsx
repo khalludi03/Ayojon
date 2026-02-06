@@ -97,12 +97,12 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden bg-[hsl(var(--card))] p-0 shadow-2xl">
         <div className="grid gap-6 p-6 md:grid-cols-2">
           {/* Left: Image Gallery */}
-          <div>
+          <div className="rounded-xl border border-[hsl(var(--border))] bg-gradient-to-br from-[hsl(var(--muted))] to-[hsl(var(--background))] p-4">
             {/* Main Image */}
-            <div className="relative aspect-square overflow-hidden rounded-lg bg-[hsl(var(--muted))]">
+            <div className="relative aspect-square overflow-hidden rounded-lg bg-[hsl(var(--muted))] ring-1 ring-black/5">
               <img
                 src={product.images[selectedImageIndex]?.url}
                 alt={product.title}
@@ -114,13 +114,13 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                 <>
                   <button
                     onClick={goToPreviousImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow hover:bg-white"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition hover:bg-white"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <button
                     onClick={goToNextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow hover:bg-white"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-2 shadow-md transition hover:bg-white"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -143,7 +143,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
                     className={cn(
-                      'h-16 w-16 shrink-0 overflow-hidden rounded-md border-2',
+                      'h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 bg-white/80',
                       selectedImageIndex === index
                         ? 'border-[hsl(var(--primary))]'
                         : 'border-transparent'
@@ -161,12 +161,15 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
           </div>
 
           {/* Right: Product Details */}
-          <div>
+          <div className="flex flex-col">
             <DialogHeader className="pr-8">
-              <DialogTitle className="text-xl">{product.title}</DialogTitle>
+              <span className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
+                Quick View
+              </span>
+              <DialogTitle className="text-2xl leading-tight">{product.title}</DialogTitle>
               <a
                   href={`/product/${product.slug}`}
-                  className="flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline mt-1"
+                  className="mt-1 flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline"
                   target="_blank"
                   rel="noreferrer"
               >
@@ -176,7 +179,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
             </DialogHeader>
 
             {/* Vendor */}
-            <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">
+            <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
               Sold by:{' '}
               <span className="font-medium text-[hsl(var(--foreground))]">
                 {product.vendor.name}
@@ -208,6 +211,9 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
               <span className="text-sm text-[hsl(var(--muted-foreground))]">
                 {product.rating.average} ({product.rating.count} reviews)
               </span>
+              <Badge variant="secondary" className="ml-1 text-[10px]">
+                {product.stockStatus}
+              </Badge>
             </div>
             
             {/* Short Description */}
@@ -218,7 +224,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
             )}
 
             {/* Price */}
-            <div className="mt-4">
+            <div className="mt-4 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-3">
               <span className="text-2xl font-bold text-[hsl(var(--brand-orange))]">
                 {formatPrice(product.pricing.currentPrice)}
               </span>
@@ -248,7 +254,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                         setSelectedVariants((prev) => ({ ...prev, [type]: variant }))
                       }
                       className={cn(
-                        'rounded-md border px-3 py-1.5 text-sm',
+                        'rounded-md border px-3 py-1.5 text-sm transition',
                         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
                         selectedVariants[type]?.id === variant.id
                           ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white'
@@ -314,7 +320,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
             </div>
 
             {/* Shipping Info */}
-            <div className="mt-6 space-y-2 border-t border-[hsl(var(--border))] pt-4">
+            <div className="mt-6 space-y-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-3">
               <div className="flex items-center gap-2 text-sm">
                 <Truck className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                 {product.shipping.freeShipping ? (
