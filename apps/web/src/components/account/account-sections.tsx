@@ -1542,25 +1542,28 @@ export function AccountProfile({ session }: AccountProfileProps) {
   );
 }
 
-export function AccountSettings() {
+import { ChangePasswordForm } from "./change-password-form";
+
+export function AccountSettings({ session }: { session?: AuthSession }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground mt-2">
-          Configure your account preferences
+          Configure your account preferences and security
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-          <CardDescription>Preferences and configurations</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">Settings section coming soon...</p>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6">
+        <ChangePasswordForm userEmail={session?.user?.email} />
+        
+        <Card className="opacity-60">
+          <CardHeader>
+            <CardTitle>Notifications</CardTitle>
+            <CardDescription>Coming soon: Manage how you receive updates</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
     </div>
   );
 }

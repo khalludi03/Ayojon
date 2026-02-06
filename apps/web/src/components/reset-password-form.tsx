@@ -99,7 +99,8 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
         },
         {
           onSuccess: () => {
-            toast.success("Password reset successful");
+            toast.success("Password set successfully!");
+            toast.info("Please sign in with your email and new password (not via Google)");
             navigate({ to: "/login" });
           },
           onError: (error) => {
