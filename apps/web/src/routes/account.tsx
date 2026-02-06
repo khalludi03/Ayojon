@@ -66,7 +66,7 @@ function RouteComponent() {
       case "addresses":
         return <AccountAddresses />;
       case "profile":
-        return <AccountProfile userName={userName} userEmail={session?.user.email} />;
+        return <AccountProfile session={session} />;
       case "settings":
         return <AccountSettings />;
       case "overview":
