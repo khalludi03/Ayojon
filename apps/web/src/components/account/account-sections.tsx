@@ -26,7 +26,6 @@ type AuthSession = Awaited<ReturnType<typeof authClient.getSession>>;
 import { getRecentOrders } from "@/mock/services/account";
 import type { Order } from "@/types";
 import { useWishlist } from "@/stores/wishlist-store";
-import { useCart } from "@/stores/cart-store";
 import { formatPrice } from "@/lib/utils";
 
 export function AccountOrders() {
@@ -461,15 +460,6 @@ export function AccountWishlist() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="flex-1"
-                      onClick={() => handleMoveToCart(item.productId)}
-                    >
-                      <ShoppingCart className="mr-2 h-4 w-4" />
-                      Move to Cart
-                    </Button>
                     <Button
                       type="button"
                       size="sm"
