@@ -266,10 +266,16 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         type="button"
         className="mt-4 w-full"
         onClick={async () => {
-          await authClient.signIn.social({
-            provider: "google",
-            callbackURL: window.location.origin + "/",
-          });
+          await authClient.signIn.social(
+            {
+              provider: "google",
+              callbackURL: window.location.origin + "/",
+            },
+            {
+              // Force Google to show account picker
+              prompt: "select_account",
+            }
+          );
         }}
       >
         <svg
@@ -295,10 +301,16 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
         type="button"
         className="mt-2 w-full"
         onClick={async () => {
-          await authClient.signIn.social({
-            provider: "facebook",
-            callbackURL: window.location.origin + "/",
-          });
+          await authClient.signIn.social(
+            {
+              provider: "facebook",
+              callbackURL: window.location.origin + "/",
+            },
+            {
+              // Force account picker for consistency
+              prompt: "select_account",
+            }
+          );
         }}
       >
         <svg

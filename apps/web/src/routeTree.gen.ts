@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as LoginRouteImport } from './routes/login'
@@ -16,6 +17,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as AddressesRouteImport } from './routes/addresses'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackOrderNumberRouteImport } from './routes/track.$orderNumber'
@@ -23,6 +25,11 @@ import { Route as ProductProductSlugRouteImport } from './routes/product.$produc
 import { Route as CategoryCategorySlugRouteImport } from './routes/category.$categorySlug'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -56,6 +63,11 @@ const CheckoutRoute = CheckoutRouteImport.update({
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AddressesRoute = AddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -92,6 +104,7 @@ const AccountOrdersOrderIdRoute = AccountOrdersOrderIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/addresses': typeof AddressesRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -99,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -107,6 +121,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/addresses': typeof AddressesRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -114,6 +129,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -123,6 +139,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
+  '/addresses': typeof AddressesRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -130,6 +147,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/wishlist': typeof WishlistRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -140,6 +158,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/addresses'
     | '/cart'
     | '/checkout'
     | '/dashboard'
@@ -147,6 +166,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/products'
     | '/reset-password'
+    | '/wishlist'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -155,6 +175,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
+    | '/addresses'
     | '/cart'
     | '/checkout'
     | '/dashboard'
@@ -162,6 +183,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/products'
     | '/reset-password'
+    | '/wishlist'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -170,6 +192,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/account'
+    | '/addresses'
     | '/cart'
     | '/checkout'
     | '/dashboard'
@@ -177,6 +200,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/products'
     | '/reset-password'
+    | '/wishlist'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -186,6 +210,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRouteWithChildren
+  AddressesRoute: typeof AddressesRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
@@ -193,6 +218,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   ProductsRoute: typeof ProductsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  WishlistRoute: typeof WishlistRoute
   CategoryCategorySlugRoute: typeof CategoryCategorySlugRoute
   ProductProductSlugRoute: typeof ProductProductSlugRoute
   TrackOrderNumberRoute: typeof TrackOrderNumberRoute
@@ -200,6 +226,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -247,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/cart'
       fullPath: '/cart'
       preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/addresses': {
+      id: '/addresses'
+      path: '/addresses'
+      fullPath: '/addresses'
+      preLoaderRoute: typeof AddressesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -308,6 +348,7 @@ const AccountRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
+  AddressesRoute: AddressesRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
@@ -315,6 +356,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   ProductsRoute: ProductsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  WishlistRoute: WishlistRoute,
   CategoryCategorySlugRoute: CategoryCategorySlugRoute,
   ProductProductSlugRoute: ProductProductSlugRoute,
   TrackOrderNumberRoute: TrackOrderNumberRoute,

@@ -70,7 +70,7 @@ function RouteComponent() {
       case "profile":
         return <AccountProfile session={session} />;
       case "settings":
-        return <AccountSettings />;
+        return <AccountSettings session={session} />;
       case "overview":
       default:
         return (
