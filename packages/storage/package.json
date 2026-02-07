@@ -1,26 +1,19 @@
 {
-  "name": "@my-better-t-app/api",
+  "name": "@my-better-t-app/storage",
+  "version": "1.0.0",
   "type": "module",
   "exports": {
     ".": {
       "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
     }
   },
   "scripts": {},
   "dependencies": {
-    "@my-better-t-app/auth": "workspace:*",
-    "@my-better-t-app/db": "workspace:*",
     "@my-better-t-app/env": "workspace:*",
-    "@my-better-t-app/storage": "workspace:*",
-    "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@my-better-t-app/config": "workspace:*",
-    "hono": "catalog:",
     "typescript": "catalog:"
   }
 }

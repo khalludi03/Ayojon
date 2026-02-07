@@ -1,6 +1,7 @@
 import type { Context as HonoContext } from "hono";
 
 import { auth } from "@my-better-t-app/auth";
+import * as storage from "@my-better-t-app/storage";
 
 export type CreateContextOptions = {
   context: HonoContext;
@@ -12,6 +13,7 @@ export async function createContext({ context }: CreateContextOptions) {
   });
   return {
     session,
+    storage,
   };
 }
 

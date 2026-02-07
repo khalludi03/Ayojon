@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { ChevronDown, Home, Menu, Mic, Sparkles, UtensilsCrossed, Zap } from 'lucide-react';
+import { ChevronDown, Home, Menu, Mic, Sparkles, Store, UtensilsCrossed, Zap } from 'lucide-react';
 import { NavDropdown } from './NavDropdown';
 import type {DropdownItem} from './NavDropdown';
 import { cn } from '@/lib/utils';
@@ -90,6 +90,25 @@ export function MainNav({ onCategoryClick }: MainNavProps) {
         <Zap className="h-4 w-4" />
         <span>Flash Deals</span>
       </a>
+
+      {/* Become a Vendor - Highlighted CTA */}
+      <Link
+        to="/become-vendor"
+        className={cn(
+          'hidden lg:flex items-center gap-2 ml-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200',
+          'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-md',
+          'hover:shadow-lg hover:scale-105 hover:from-emerald-600 hover:to-teal-600',
+          'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2',
+          'active:scale-95'
+        )}
+        aria-label="Become a vendor and start selling"
+      >
+        <Store className="h-4 w-4" />
+        <span>Become a Vendor</span>
+        <span className="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
+          NEW
+        </span>
+      </Link>
     </nav>
   );
 }

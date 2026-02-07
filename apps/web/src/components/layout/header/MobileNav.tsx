@@ -18,6 +18,7 @@ import {
   ShoppingBasket,
   Smartphone,
   Sparkles,
+  Store,
   UtensilsCrossed,
   X,
   Zap
@@ -217,6 +218,22 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <Zap className="h-5 w-5" />
             <span>Flash Deals</span>
           </a>
+
+          {/* Become a Vendor - Highlighted CTA */}
+          <Link
+            to="/become-vendor"
+            onClick={onClose}
+            className="mt-3 flex items-center justify-between rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all hover:shadow-lg active:scale-95"
+            aria-label="Become a vendor and start selling"
+          >
+            <div className="flex items-center gap-3">
+              <Store className="h-5 w-5" />
+              <span>Become a Vendor</span>
+            </div>
+            <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
+              NEW
+            </span>
+          </Link>
 
           {/* All Categories Button */}
           <button
