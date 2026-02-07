@@ -5,6 +5,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { emailOTP } from "better-auth/plugins";
 import { sendPasswordResetEmail, sendOTPEmail } from "./lib/email";
+import { eq } from "drizzle-orm";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -17,6 +18,31 @@ export const auth = betterAuth({
       phoneNumber: { type: "string" },
       dateOfBirth: { type: "date" },
       gender: { type: "string" },
+      isDeactivated: { type: "boolean", defaultValue: false },
+      deactivatedAt: { type: "date" },
+      retentionUntil: { type: "date" },
+      deactivationReason: { type: "string" },
+      deactivationFeedback: { type: "string" },
+    },
+  },
+  session: {
+    async beforeCreate(session) {
+      // Reactivate deactivated users on successful login
+      const user = session.user as any;
+      if (user?.isDeactivated) {
+        await db
+          .update(schema.user)
+          .set({
+            isDeactivated: false,
+            deactivatedAt: null,
+            retentionUntil: null,
+            deactivationReason: null,
+            deactivationFeedback: null,
+            updatedAt: new Date(),
+          })
+          .where(eq(schema.user.id, user.id));
+      }
+      return session;
     },
   },
   baseURL: env.BETTER_AUTH_URL,

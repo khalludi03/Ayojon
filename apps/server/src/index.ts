@@ -9,8 +9,10 @@ import { generateOTP, sendOTPEmail } from "@my-better-t-app/auth/lib/email";
 import { storeOTP, verifyOTP } from "@my-better-t-app/auth/lib/otp-store";
 import { db } from "@my-better-t-app/db";
 import { user as userTable, account as accountTable } from "@my-better-t-app/db/schema/auth";
+import { session as sessionTable } from "@my-better-t-app/db/schema/auth";
+import { orders } from "@my-better-t-app/db/schema/orders";
 import { env } from "@my-better-t-app/env/server";
-import { and, eq, ne } from "drizzle-orm";
+import { and, eq, ne, notInArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -94,6 +96,74 @@ app.post("/api/email-change/send-otp", async (c) => {
       { error: "Failed to send verification code" },
       500
     );
+  }
+});
+
+// Deactivate account endpoint
+app.post("/api/account/deactivate", async (c) => {
+  try {
+    const session = await auth.api.getSession({
+      headers: c.req.raw.headers,
+    });
+
+    if (!session?.user?.id) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
+
+    const body = await c.req.json();
+    const { reason, feedback } = body;
+
+    if (!reason) {
+      return c.json({ error: "Deactivation reason is required" }, 400);
+    }
+
+    const userId = session.user.id;
+
+    // Check for pending orders
+    const pendingOrders = await db
+      .select({ id: orders.id })
+      .from(orders)
+      .where(
+        and(
+          eq(orders.userId, userId),
+          notInArray(orders.status, ["delivered", "cancelled"])
+        )
+      )
+      .limit(1);
+
+    if (pendingOrders.length > 0) {
+      return c.json(
+        { error: "Cannot deactivate account with pending orders. Please wait for orders to be delivered or cancel them." },
+        409
+      );
+    }
+
+    // Deactivate user
+    const now = new Date();
+    const retentionUntil = new Date(now);
+    retentionUntil.setDate(retentionUntil.getDate() + 90);
+
+    await db
+      .update(userTable)
+      .set({
+        isDeactivated: true,
+        deactivatedAt: now,
+        retentionUntil,
+        deactivationReason: reason,
+        deactivationFeedback: feedback || null,
+        updatedAt: now,
+      })
+      .where(eq(userTable.id, userId));
+
+    // Logout user by invalidating all sessions
+    await db
+      .delete(sessionTable)
+      .where(eq(sessionTable.userId, userId));
+
+    return c.json({ success: true, message: "Account deactivated successfully" });
+  } catch (error) {
+    console.error("Error deactivating account:", error);
+    return c.json({ error: "Failed to deactivate account" }, 500);
   }
 });
 
