@@ -4,7 +4,6 @@ import { HelpCircle, Menu, Phone, Search, Truck } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchBar } from './SearchBar';
 import { MobileSearchModal } from './MobileSearchModal';
-import { CurrencySelector } from './CurrencySelector';
 import { UserMenu } from './UserMenu';
 import { CartIcon } from './CartIcon';
 import { WishlistIcon } from './WishlistIcon';
@@ -89,9 +88,14 @@ export function Header() {
                 <Search className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
 
-              <div className="hidden md:block">
-                <CurrencySelector />
-              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden md:flex items-center gap-1.5 text-sm font-medium hover:bg-[hsl(var(--primary))]/10"
+                onClick={() => navigate({ to: '/become-vendor' })}
+              >
+                Become a Vendor
+              </Button>
               <ThemeToggle />
               <WishlistIcon
                 onClick={() => navigate({ to: '/account', search: { section: 'wishlist' } })}
