@@ -37,10 +37,12 @@ export function PaymentStep({
 
     // Validate based on payment method
     if (formData.paymentMethod === 'card') {
-      if (formData.cardNumber && formData.cardName && formData.expiryDate && formData.cvv) {
-        onNext();
-      }
-    } else if (formData.paymentMethod === 'bkash' || formData.paymentMethod === 'nagad') {
+      // Card payment will be handled in the next step with dedicated form
+      onNext();
+    } else if (formData.paymentMethod === 'bkash') {
+      // bKash payment will be handled in the next step with OTP flow
+      onNext();
+    } else if (formData.paymentMethod === 'nagad') {
       if (formData.mobileNumber) {
         onNext();
       }
@@ -205,89 +207,116 @@ export function PaymentStep({
             </div>
           </div>
 
-          {/* Credit/Debit Card Details */}
+          {/* Credit/Debit Card Info */}
           {formData.paymentMethod === 'card' && (
             <div className="space-y-4 rounded-lg border-2 border-[hsl(var(--primary))]/20 bg-gradient-to-br from-[hsl(var(--muted))]/30 to-transparent p-5">
               <div className="flex items-center gap-2 pb-2 border-b border-[hsl(var(--border))]">
                 <CreditCard className="h-5 w-5 text-[hsl(var(--primary))]" />
                 <h3 className="font-semibold text-[hsl(var(--foreground))]">
-                  Card Details
+                  Card Payment
                 </h3>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="cardNumber" className="text-sm font-semibold">Card Number *</Label>
-                <Input
-                  id="cardNumber"
-                  value={formData.cardNumber || ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('cardNumber', e.target.value)}
-                  placeholder="Enter your card number"
-                  maxLength={19}
-                  className="font-mono text-base"
-                  required
-                />
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="cardName" className="text-sm font-semibold">Cardholder Name *</Label>
-                <Input
-                  id="cardName"
-                  value={formData.cardName || ''}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('cardName', e.target.value)}
-                  placeholder="Enter name as shown on card"
-                  className="uppercase"
-                  required
-                />
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="expiryDate" className="text-sm font-semibold">Expiry Date *</Label>
-                  <Input
-                    id="expiryDate"
-                    value={formData.expiryDate || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('expiryDate', e.target.value)}
-                    placeholder="Enter expiry (MM/YY)"
-                    maxLength={5}
-                    className="font-mono"
-                    required
-                  />
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">✅</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    Pay securely with Visa or Mastercard
+                  </p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cvv" className="flex items-center gap-1 text-sm font-semibold">
-                    CVV *
-                    <span className="text-xs text-[hsl(var(--muted-foreground))]">(3-4 digits)</span>
-                  </Label>
-                  <Input
-                    id="cvv"
-                    value={formData.cvv || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('cvv', e.target.value)}
-                    placeholder="Enter CVV code"
-                    maxLength={4}
-                    type="password"
-                    className="font-mono"
-                    required
-                  />
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">🌍</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    International payment methods accepted
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">🔒</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    PCI DSS compliant - Your card details are encrypted
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">💾</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    Option to save card for faster future checkouts
+                  </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-950/20 p-3 text-sm">
-                <ShieldCheck className="h-4 w-4 text-green-600 dark:text-green-400 shrink-0" />
-                <p className="text-green-700 dark:text-green-300">
-                  Your card information is encrypted and secure
+              <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 text-sm border border-blue-200 dark:border-blue-800">
+                <span className="text-xl shrink-0">💡</span>
+                <p className="text-blue-700 dark:text-blue-300">
+                  You will enter your card details securely in the next step
                 </p>
+              </div>
+
+              {/* Supported card types */}
+              <div className="flex items-center justify-center gap-4 pt-2">
+                <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
+                  💳 Visa
+                </div>
+                <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
+                  💳 Mastercard
+                </div>
               </div>
             </div>
           )}
 
-          {/* Mobile Payment Details */}
-          {(formData.paymentMethod === 'bkash' || formData.paymentMethod === 'nagad') && (
+          {/* bKash Payment Info */}
+          {formData.paymentMethod === 'bkash' && (
             <div className="space-y-4 rounded-lg border-2 border-[hsl(var(--primary))]/20 bg-gradient-to-br from-[hsl(var(--muted))]/30 to-transparent p-5">
               <div className="flex items-center gap-2 pb-2 border-b border-[hsl(var(--border))]">
                 <Smartphone className="h-5 w-5 text-[hsl(var(--primary))]" />
                 <h3 className="font-semibold text-[hsl(var(--foreground))]">
-                  {formData.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} Payment Details
+                  bKash Payment
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">✅</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    Pay securely using your bKash mobile wallet
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">⚡</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    Instant payment confirmation via OTP
+                  </p>
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-lg shrink-0">🔒</span>
+                  <p className="text-[hsl(var(--foreground))]">
+                    Secure and encrypted payment processing
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 text-sm border border-blue-200 dark:border-blue-800">
+                <span className="text-xl shrink-0">💡</span>
+                <p className="text-blue-700 dark:text-blue-300">
+                  You will complete the payment in the next step. Please have your bKash mobile number ready.
+                </p>
+              </div>
+
+              {/* Supported providers */}
+              <div className="flex items-center justify-center gap-4 pt-2">
+                <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
+                  📱 bKash
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Nagad Payment Info */}
+          {formData.paymentMethod === 'nagad' && (
+            <div className="space-y-4 rounded-lg border-2 border-[hsl(var(--primary))]/20 bg-gradient-to-br from-[hsl(var(--muted))]/30 to-transparent p-5">
+              <div className="flex items-center gap-2 pb-2 border-b border-[hsl(var(--border))]">
+                <Smartphone className="h-5 w-5 text-[hsl(var(--primary))]" />
+                <h3 className="font-semibold text-[hsl(var(--foreground))]">
+                  Nagad Payment Details
                 </h3>
               </div>
 
@@ -306,14 +335,14 @@ export function PaymentStep({
               <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 text-sm">
                 <span className="text-xl shrink-0">💡</span>
                 <p className="text-blue-700 dark:text-blue-300">
-                  You will receive a {formData.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'} payment request after placing the order. Please complete the payment within 15 minutes.
+                  You will receive a Nagad payment request after placing the order. Please complete the payment within 15 minutes.
                 </p>
               </div>
 
               {/* Supported providers */}
               <div className="flex items-center justify-center gap-4 pt-2">
                 <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
-                  📱 {formData.paymentMethod === 'bkash' ? 'bKash' : 'Nagad'}
+                  📱 Nagad
                 </div>
               </div>
             </div>
