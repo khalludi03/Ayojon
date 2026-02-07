@@ -17,9 +17,14 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
+import { Route as BecomeVendorRouteImport } from './routes/become-vendor'
 import { Route as AddressesRouteImport } from './routes/addresses'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VendorSettingsRouteImport } from './routes/vendor/settings'
+import { Route as VendorProductsRouteImport } from './routes/vendor/products'
+import { Route as VendorOrdersRouteImport } from './routes/vendor/orders'
+import { Route as VendorDashboardRouteImport } from './routes/vendor/dashboard'
 import { Route as TrackOrderNumberRouteImport } from './routes/track.$orderNumber'
 import { Route as ProductProductSlugRouteImport } from './routes/product.$productSlug'
 import { Route as CategoryCategorySlugRouteImport } from './routes/category.$categorySlug'
@@ -65,6 +70,11 @@ const CartRoute = CartRouteImport.update({
   path: '/cart',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BecomeVendorRoute = BecomeVendorRouteImport.update({
+  id: '/become-vendor',
+  path: '/become-vendor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AddressesRoute = AddressesRouteImport.update({
   id: '/addresses',
   path: '/addresses',
@@ -78,6 +88,26 @@ const AccountRoute = AccountRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorSettingsRoute = VendorSettingsRouteImport.update({
+  id: '/vendor/settings',
+  path: '/vendor/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorProductsRoute = VendorProductsRouteImport.update({
+  id: '/vendor/products',
+  path: '/vendor/products',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorOrdersRoute = VendorOrdersRouteImport.update({
+  id: '/vendor/orders',
+  path: '/vendor/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorDashboardRoute = VendorDashboardRouteImport.update({
+  id: '/vendor/dashboard',
+  path: '/vendor/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackOrderNumberRoute = TrackOrderNumberRouteImport.update({
@@ -105,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/addresses': typeof AddressesRoute
+  '/become-vendor': typeof BecomeVendorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -116,12 +147,17 @@ export interface FileRoutesByFullPath {
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
+  '/vendor/dashboard': typeof VendorDashboardRoute
+  '/vendor/orders': typeof VendorOrdersRoute
+  '/vendor/products': typeof VendorProductsRoute
+  '/vendor/settings': typeof VendorSettingsRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/addresses': typeof AddressesRoute
+  '/become-vendor': typeof BecomeVendorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -133,6 +169,10 @@ export interface FileRoutesByTo {
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
+  '/vendor/dashboard': typeof VendorDashboardRoute
+  '/vendor/orders': typeof VendorOrdersRoute
+  '/vendor/products': typeof VendorProductsRoute
+  '/vendor/settings': typeof VendorSettingsRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
 }
 export interface FileRoutesById {
@@ -140,6 +180,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRouteWithChildren
   '/addresses': typeof AddressesRoute
+  '/become-vendor': typeof BecomeVendorRoute
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
@@ -151,6 +192,10 @@ export interface FileRoutesById {
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
+  '/vendor/dashboard': typeof VendorDashboardRoute
+  '/vendor/orders': typeof VendorOrdersRoute
+  '/vendor/products': typeof VendorProductsRoute
+  '/vendor/settings': typeof VendorSettingsRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
 }
 export interface FileRouteTypes {
@@ -159,6 +204,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/addresses'
+    | '/become-vendor'
     | '/cart'
     | '/checkout'
     | '/dashboard'
@@ -170,12 +216,17 @@ export interface FileRouteTypes {
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
+    | '/vendor/dashboard'
+    | '/vendor/orders'
+    | '/vendor/products'
+    | '/vendor/settings'
     | '/account/orders/$orderId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/account'
     | '/addresses'
+    | '/become-vendor'
     | '/cart'
     | '/checkout'
     | '/dashboard'
@@ -187,12 +238,17 @@ export interface FileRouteTypes {
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
+    | '/vendor/dashboard'
+    | '/vendor/orders'
+    | '/vendor/products'
+    | '/vendor/settings'
     | '/account/orders/$orderId'
   id:
     | '__root__'
     | '/'
     | '/account'
     | '/addresses'
+    | '/become-vendor'
     | '/cart'
     | '/checkout'
     | '/dashboard'
@@ -204,6 +260,10 @@ export interface FileRouteTypes {
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
+    | '/vendor/dashboard'
+    | '/vendor/orders'
+    | '/vendor/products'
+    | '/vendor/settings'
     | '/account/orders/$orderId'
   fileRoutesById: FileRoutesById
 }
@@ -211,6 +271,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRouteWithChildren
   AddressesRoute: typeof AddressesRoute
+  BecomeVendorRoute: typeof BecomeVendorRoute
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
@@ -222,6 +283,10 @@ export interface RootRouteChildren {
   CategoryCategorySlugRoute: typeof CategoryCategorySlugRoute
   ProductProductSlugRoute: typeof ProductProductSlugRoute
   TrackOrderNumberRoute: typeof TrackOrderNumberRoute
+  VendorDashboardRoute: typeof VendorDashboardRoute
+  VendorOrdersRoute: typeof VendorOrdersRoute
+  VendorProductsRoute: typeof VendorProductsRoute
+  VendorSettingsRoute: typeof VendorSettingsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -282,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/become-vendor': {
+      id: '/become-vendor'
+      path: '/become-vendor'
+      fullPath: '/become-vendor'
+      preLoaderRoute: typeof BecomeVendorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/addresses': {
       id: '/addresses'
       path: '/addresses'
@@ -301,6 +373,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor/settings': {
+      id: '/vendor/settings'
+      path: '/vendor/settings'
+      fullPath: '/vendor/settings'
+      preLoaderRoute: typeof VendorSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor/products': {
+      id: '/vendor/products'
+      path: '/vendor/products'
+      fullPath: '/vendor/products'
+      preLoaderRoute: typeof VendorProductsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor/orders': {
+      id: '/vendor/orders'
+      path: '/vendor/orders'
+      fullPath: '/vendor/orders'
+      preLoaderRoute: typeof VendorOrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor/dashboard': {
+      id: '/vendor/dashboard'
+      path: '/vendor/dashboard'
+      fullPath: '/vendor/dashboard'
+      preLoaderRoute: typeof VendorDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track/$orderNumber': {
@@ -349,6 +449,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRouteWithChildren,
   AddressesRoute: AddressesRoute,
+  BecomeVendorRoute: BecomeVendorRoute,
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
@@ -360,6 +461,10 @@ const rootRouteChildren: RootRouteChildren = {
   CategoryCategorySlugRoute: CategoryCategorySlugRoute,
   ProductProductSlugRoute: ProductProductSlugRoute,
   TrackOrderNumberRoute: TrackOrderNumberRoute,
+  VendorDashboardRoute: VendorDashboardRoute,
+  VendorOrdersRoute: VendorOrdersRoute,
+  VendorProductsRoute: VendorProductsRoute,
+  VendorSettingsRoute: VendorSettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

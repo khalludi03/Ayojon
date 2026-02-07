@@ -152,7 +152,9 @@ function CheckoutPage() {
       },
       payment: {
         method: formData.paymentMethod,
-        last4: formData.cardNumber?.slice(-4),
+        last4: formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
+        provider: formData.paymentMethod === 'bkash' ? 'bKash' : undefined,
+        status: 'PENDING',
       },
       pricing: {
         subtotal,
@@ -174,6 +176,7 @@ function CheckoutPage() {
     setDeliveryMethod(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   const renderStep = () => {
     switch (currentStep) {

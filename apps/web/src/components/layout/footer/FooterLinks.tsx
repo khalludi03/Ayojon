@@ -20,7 +20,7 @@ const linkGroups = [
   {
     title: 'Vendor',
     links: [
-      { href: '/vendor/register', label: 'Vendor Registration' },
+      { href: '/become-vendor', label: 'Become a Vendor' },
       { href: '/vendor/how-to-rent', label: 'How to Rent' },
     ],
   },
