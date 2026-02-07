@@ -28,6 +28,10 @@ export interface OrderPayment {
   method: string;
   last4?: string;
   provider?: string;
+  transactionId?: string;
+  amount?: number;
+  paidAt?: string;
+  status?: 'PENDING' | 'PAID' | 'FAILED';
 }
 
 export interface OrderPricing {
