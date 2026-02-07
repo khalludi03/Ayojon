@@ -12,6 +12,11 @@ export const user = pgTable("user", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
+  isDeactivated: boolean("is_deactivated").default(false).notNull(),
+  deactivatedAt: timestamp("deactivated_at"),
+  retentionUntil: timestamp("retention_until"),
+  deactivationReason: text("deactivation_reason"),
+  deactivationFeedback: text("deactivation_feedback"),
 });
 
 export const session = pgTable(

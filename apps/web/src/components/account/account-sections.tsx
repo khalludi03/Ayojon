@@ -1536,6 +1536,66 @@ export function AccountProfile({ session }: AccountProfileProps) {
 import { ChangePasswordForm } from "./change-password-form";
 
 export function AccountSettings({ session }: { session?: AuthSession }) {
+  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
+  const [deactivationReason, setDeactivationReason] = useState("");
+  const [deactivationFeedback, setDeactivationFeedback] = useState("");
+  const [isDeactivating, setIsDeactivating] = useState(false);
+
+  const reasons = [
+    "I'm taking a break from shopping",
+    "Privacy concerns",
+    "Too many notifications",
+    "Found a better alternative",
+    "Not satisfied with service",
+    "Other",
+  ];
+
+  const handleDeactivate = async () => {
+    if (!deactivationReason) {
+      toast.error("Please select a reason for deactivating your account");
+      return;
+    }
+
+    setIsDeactivating(true);
+    try {
+      const response = await fetch(`${env.VITE_SERVER_URL}/api/account/deactivate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          reason: deactivationReason,
+          feedback: deactivationFeedback.trim() || undefined,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || "Failed to deactivate account");
+      }
+
+      // Logout and redirect
+      await authClient.signOut();
+      toast.success("Your account has been deactivated. You can reactivate it anytime by logging in again.");
+
+      // Redirect to home page
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Deactivation error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to deactivate account");
+    } finally {
+      setIsDeactivating(false);
+    }
+  };
+
+  const handleOpenDialog = () => {
+    setDeactivationReason("");
+    setDeactivationFeedback("");
+    setIsDeactivateDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
@@ -1547,14 +1607,115 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
 
       <div className="grid gap-6">
         <ChangePasswordForm userEmail={session?.user?.email} />
-        
+
         <Card className="opacity-60">
           <CardHeader>
             <CardTitle>Notifications</CardTitle>
             <CardDescription>Coming soon: Manage how you receive updates</CardDescription>
           </CardHeader>
         </Card>
+
+        {/* Deactivate Account */}
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive">Deactivate Account</CardTitle>
+            <CardDescription>
+              Temporarily deactivate your account. Your data will be retained for 90 days, and you can reactivate by logging in again.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              When you deactivate your account:
+            </p>
+            <ul className="text-sm text-muted-foreground space-y-1 mb-4 list-disc list-inside">
+              <li>You will be immediately logged out</li>
+              <li>You cannot place new orders</li>
+              <li>Your data will be retained for 90 days</li>
+              <li>You can reactivate anytime by logging in</li>
+            </ul>
+          </CardContent>
+          <CardFooter className="border-t bg-muted/50 py-4">
+            <Button
+              variant="destructive"
+              onClick={handleOpenDialog}
+              className="w-full sm:w-auto"
+            >
+              Deactivate Account
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
+
+      {/* Deactivation Dialog */}
+      <Dialog open={isDeactivateDialogOpen} onOpenChange={setIsDeactivateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Deactivate Your Account</DialogTitle>
+            <DialogDescription>
+              We're sorry to see you go. Please let us know why you're deactivating your account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="reason">
+                Reason <span className="text-red-500">*</span>
+              </Label>
+              <Select value={deactivationReason} onValueChange={setDeactivationReason}>
+                <SelectTrigger id="reason">
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {reasons.map((reason) => (
+                    <SelectItem key={reason} value={reason}>
+                      {reason}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="feedback">Additional Feedback (Optional)</Label>
+              <textarea
+                id="feedback"
+                className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                placeholder="Tell us more about your decision..."
+                value={deactivationFeedback}
+                onChange={(e) => setDeactivationFeedback(e.target.value)}
+                maxLength={500}
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {deactivationFeedback.length}/500
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3">
+              <p className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 mb-1">
+                Important Notice
+              </p>
+              <p className="text-xs text-muted-foreground">
+                You cannot deactivate your account if you have pending orders. Please wait for them to be delivered or cancel them first.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeactivateDialogOpen(false)}
+              disabled={isDeactivating}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeactivate}
+              disabled={!deactivationReason || isDeactivating}
+            >
+              {isDeactivating ? "Deactivating..." : "Confirm Deactivation"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
