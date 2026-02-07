@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/stores/cart-store';
 import { addOrder } from '@/stores/order-store';
+import { addSavedCard } from '@/stores/saved-cards-store';
 import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
@@ -9,6 +10,9 @@ import { DeliveryMethodStep } from '@/components/checkout/DeliveryMethodStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
 import { OrderReviewStep } from '@/components/checkout/OrderReviewStep';
 import { ConfirmationStep } from '@/components/checkout/ConfirmationStep';
+import { BkashPaymentForm } from '@/components/checkout/BkashPaymentForm';
+import { CardPaymentForm } from '@/components/checkout/CardPaymentForm';
+import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -37,6 +41,19 @@ interface FormData {
   expiryDate?: string;
   cvv?: string;
   mobileNumber?: string;
+  // bKash Payment
+  bkashTransactionId?: string;
+  bkashAmount?: number;
+  bkashPaidAt?: string;
+  // Card Payment
+  cardTransactionId?: string;
+  cardAmount?: number;
+  cardPaidAt?: string;
+  cardType?: string;
+  cardLast4?: string;
+  cardHolderName?: string;
+  cardExpiryDate?: string;
+  cardSaveCard?: boolean;
 }
 
 function CheckoutPage() {
@@ -56,6 +73,9 @@ function CheckoutPage() {
   const [orderNumber, setOrderNumber] = useState('');
   const [orderId, setOrderId] = useState('');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+  const [showBkashPayment, setShowBkashPayment] = useState(false);
+  const [showCardPayment, setShowCardPayment] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -74,6 +94,17 @@ function CheckoutPage() {
     expiryDate: undefined,
     cvv: undefined,
     mobileNumber: undefined,
+    bkashTransactionId: undefined,
+    bkashAmount: undefined,
+    bkashPaidAt: undefined,
+    cardTransactionId: undefined,
+    cardAmount: undefined,
+    cardPaidAt: undefined,
+    cardType: undefined,
+    cardLast4: undefined,
+    cardHolderName: undefined,
+    cardExpiryDate: undefined,
+    cardSaveCard: false,
   });
 
   // Redirect to cart if no items
@@ -111,10 +142,24 @@ function CheckoutPage() {
   };
 
   const handlePlaceOrder = () => {
+    // If bKash payment and not yet paid, show bKash payment form
+    if (formData.paymentMethod === 'bkash' && !formData.bkashTransactionId) {
+      setShowBkashPayment(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // If card payment and not yet paid, show card payment form
+    if (formData.paymentMethod === 'card' && !formData.cardTransactionId) {
+      setShowCardPayment(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     const orderNum = orderNumber || `AYJ${Date.now().toString().slice(-8)}`;
     const newOrderId = `${Date.now()}`;
     const firstItemImage = items[0]?.product?.images?.[0]?.url;
-    const placedAt = new Date().toISOString();
+    const placedAt = formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString();
     const subtotal = getSubtotal();
     const shipping = getShipping();
     const tax = getTax();
@@ -126,7 +171,7 @@ function CheckoutPage() {
       orderNumber: orderNum,
       date: placedAt,
       total: orderTotal,
-      status: 'processing',
+      status: formData.paymentMethod === 'bkash' ? 'processing' : 'processing',
       items: items.reduce((total, item) => total + item.quantity, 0),
       imageUrl: firstItemImage,
       deliveryMethod: formData.deliveryMethod,
@@ -152,9 +197,12 @@ function CheckoutPage() {
       },
       payment: {
         method: formData.paymentMethod,
-        last4: formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
-        provider: formData.paymentMethod === 'bkash' ? 'bKash' : undefined,
-        status: 'PENDING',
+        last4: formData.cardLast4 || formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
+        provider: formData.paymentMethod === 'bkash' ? 'bKash' : formData.paymentMethod === 'card' ? formData.cardType : undefined,
+        transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+        amount: formData.bkashAmount || formData.cardAmount,
+        paidAt: formData.bkashPaidAt || formData.cardPaidAt,
+        status: (formData.bkashTransactionId || formData.cardTransactionId) ? 'PAID' : 'PENDING',
       },
       pricing: {
         subtotal,
@@ -168,6 +216,16 @@ function CheckoutPage() {
       },
     });
 
+    // Save card if requested
+    if (formData.paymentMethod === 'card' && formData.cardSaveCard && formData.cardLast4) {
+      addSavedCard(
+        formData.cardLast4,
+        formData.cardType || 'CARD',
+        formData.cardHolderName || '',
+        formData.cardExpiryDate || ''
+      );
+    }
+
     setOrderNumber(orderNum);
     setOrderId(newOrderId);
     setIsOrderPlaced(true);
@@ -177,6 +235,61 @@ function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleBkashPaymentSuccess = (transactionId: string, amount: number, paidAt: string) => {
+    // Store payment details in form data
+    setFormData((prev) => ({
+      ...prev,
+      bkashTransactionId: transactionId,
+      bkashAmount: amount,
+      bkashPaidAt: paidAt,
+    }));
+
+    // Show success modal
+    setShowPaymentSuccess(true);
+  };
+
+  const handleBackToOrder = () => {
+    // Close success modal
+    setShowPaymentSuccess(false);
+
+    // Place the order
+    handlePlaceOrder();
+  };
+
+  const handleCancelBkashPayment = () => {
+    setShowBkashPayment(false);
+  };
+
+  const handleCardPaymentSuccess = (
+    transactionId: string,
+    amount: number,
+    paidAt: string,
+    cardType: string,
+    last4: string,
+    cardHolderName: string,
+    expiryDate: string,
+    saveCard: boolean
+  ) => {
+    // Store payment details in form data
+    setFormData((prev) => ({
+      ...prev,
+      cardTransactionId: transactionId,
+      cardAmount: amount,
+      cardPaidAt: paidAt,
+      cardType: cardType,
+      cardLast4: last4,
+      cardHolderName: cardHolderName,
+      cardExpiryDate: expiryDate,
+      cardSaveCard: saveCard,
+    }));
+
+    // Show success modal
+    setShowPaymentSuccess(true);
+  };
+
+  const handleCancelCardPayment = () => {
+    setShowCardPayment(false);
+  };
 
   const renderStep = () => {
     switch (currentStep) {
@@ -207,6 +320,42 @@ function CheckoutPage() {
           />
         );
       case 4:
+        // Show bKash payment form if payment method is bKash and user clicked "Place Order"
+        if (showBkashPayment && formData.paymentMethod === 'bkash') {
+          return (
+            <div className="space-y-6">
+              <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
+                <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-6">
+                  Complete Payment
+                </h2>
+                <BkashPaymentForm
+                  totalAmount={getTotal()}
+                  onPaymentSuccess={handleBkashPaymentSuccess}
+                  onCancel={handleCancelBkashPayment}
+                />
+              </div>
+            </div>
+          );
+        }
+
+        // Show card payment form if payment method is card and user clicked "Place Order"
+        if (showCardPayment && formData.paymentMethod === 'card') {
+          return (
+            <div className="space-y-6">
+              <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
+                <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-6">
+                  Complete Payment
+                </h2>
+                <CardPaymentForm
+                  totalAmount={getTotal()}
+                  onPaymentSuccess={handleCardPaymentSuccess}
+                  onCancel={handleCancelCardPayment}
+                />
+              </div>
+            </div>
+          );
+        }
+
         return (
           <OrderReviewStep
             onBack={handleBackStep}
@@ -305,6 +454,20 @@ function CheckoutPage() {
             </div>
           )}
         </div>
+
+        {/* Payment Success Modal */}
+        {showPaymentSuccess && (formData.bkashTransactionId || formData.cardTransactionId) && (
+          <PaymentSuccessModal
+            isOpen={showPaymentSuccess}
+            transactionId={formData.bkashTransactionId || formData.cardTransactionId || ''}
+            amount={formData.bkashAmount || formData.cardAmount || getTotal()}
+            paidAt={formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString()}
+            paymentMethod={formData.paymentMethod}
+            cardType={formData.cardType}
+            last4={formData.cardLast4}
+            onBackToOrder={handleBackToOrder}
+          />
+        )}
       </div>
     </div>
   );
