@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Upload, GripVertical, Check } from 'lucide-react';
+import { X, Upload, GripVertical, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct, ProductFormData, ProductImage, ProductSpecification } from '@/types/vendor-product';
 import { addVendorProduct, updateVendorProduct, generateSKU, getVendorProducts } from '@/stores/vendor-product-store';
+import { uploadFile } from '@/lib/storage-utils';
 
 interface AddProductFormProps {
   vendorId: string;
@@ -73,6 +74,7 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
   const [showSuccess, setShowSuccess] = useState(false);
   const [savedProductId, setSavedProductId] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (existingProduct) {
@@ -313,67 +315,94 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
     }
   };
 
-  const handleSubmit = (asDraft: boolean) => {
+  const handleSubmit = async (asDraft: boolean) => {
     if (!validate()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
-    const product: VendorProduct = {
-      id: existingProduct?.id || `product-${Date.now()}`,
-      vendorId,
-      name: formData.name,
-      brand: formData.brand,
-      sku: formData.sku,
-      description: formData.description,
-      shortDescription: formData.shortDescription,
-      category: formData.category,
-      subcategory: formData.subcategory,
-      eventTypes: formData.eventTypes,
-      productType: formData.productType,
-      purchaseDetails: (formData.productType === 'purchase' || formData.productType === 'both')
-        ? {
-            regularPrice: parseFloat(formData.regularPrice),
-            salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-            quantity: parseInt(formData.quantity),
+    setIsUploading(true);
+    try {
+      // Upload images that have a file attached (newly added images)
+      const uploadedImages = await Promise.all(
+        formData.images.map(async (image) => {
+          if (image.file) {
+            try {
+              const publicUrl = await uploadFile(image.file, `products/${formData.sku || 'unnamed'}`);
+              return {
+                ...image,
+                url: publicUrl,
+                file: undefined, // Remove file reference after upload
+              };
+            } catch (error) {
+              console.error(`Failed to upload image ${image.id}:`, error);
+              throw error;
+            }
           }
-        : undefined,
-      rentalDetails: (formData.productType === 'rental' || formData.productType === 'both')
-        ? {
-            dailyRate: parseFloat(formData.dailyRate),
-            weeklyRate: formData.weeklyRate ? parseFloat(formData.weeklyRate) : undefined,
-            monthlyRate: formData.monthlyRate ? parseFloat(formData.monthlyRate) : undefined,
-            securityDeposit: parseFloat(formData.securityDeposit),
-            minimumRentalDuration: parseInt(formData.minimumRentalDuration),
-            quantityAvailable: parseInt(formData.quantityAvailable),
-          }
-        : undefined,
-      images: formData.images,
-      specifications: formData.specifications.filter(spec => spec.key && spec.value),
-      shipping: {
-        weight: parseFloat(formData.weight),
-        dimensions: {
-          length: parseFloat(formData.length),
-          width: parseFloat(formData.width),
-          height: parseFloat(formData.height),
+          return image;
+        })
+      );
+
+      const product: VendorProduct = {
+        id: existingProduct?.id || `product-${Date.now()}`,
+        vendorId,
+        name: formData.name,
+        brand: formData.brand,
+        sku: formData.sku,
+        description: formData.description,
+        shortDescription: formData.shortDescription,
+        category: formData.category,
+        subcategory: formData.subcategory,
+        eventTypes: formData.eventTypes,
+        productType: formData.productType,
+        purchaseDetails: (formData.productType === 'purchase' || formData.productType === 'both')
+          ? {
+              regularPrice: parseFloat(formData.regularPrice),
+              salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
+              quantity: parseInt(formData.quantity),
+            }
+          : undefined,
+        rentalDetails: (formData.productType === 'rental' || formData.productType === 'both')
+          ? {
+              dailyRate: parseFloat(formData.dailyRate),
+              weeklyRate: formData.weeklyRate ? parseFloat(formData.weeklyRate) : undefined,
+              monthlyRate: formData.monthlyRate ? parseFloat(formData.monthlyRate) : undefined,
+              securityDeposit: parseFloat(formData.securityDeposit),
+              minimumRentalDuration: parseInt(formData.minimumRentalDuration),
+              quantityAvailable: parseInt(formData.quantityAvailable),
+            }
+          : undefined,
+        images: uploadedImages,
+        specifications: formData.specifications.filter(spec => spec.key && spec.value),
+        shipping: {
+          weight: parseFloat(formData.weight),
+          dimensions: {
+            length: parseFloat(formData.length),
+            width: parseFloat(formData.width),
+            height: parseFloat(formData.height),
+          },
+          isFragile: formData.isFragile,
+          requiresSetup: formData.requiresSetup,
         },
-        isFragile: formData.isFragile,
-        requiresSetup: formData.requiresSetup,
-      },
-      status: asDraft ? 'draft' : 'published',
-      createdAt: existingProduct?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      publishedAt: !asDraft && !existingProduct?.publishedAt ? new Date().toISOString() : existingProduct?.publishedAt,
-    };
+        status: asDraft ? 'draft' : 'published',
+        createdAt: existingProduct?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        publishedAt: !asDraft && !existingProduct?.publishedAt ? new Date().toISOString() : existingProduct?.publishedAt,
+      };
 
-    if (existingProduct) {
-      updateVendorProduct(product.id, product);
-    } else {
-      addVendorProduct(product);
+      if (existingProduct) {
+        updateVendorProduct(product.id, product);
+      } else {
+        addVendorProduct(product);
+      }
+
+      setSavedProductId(product.id);
+      setShowSuccess(true);
+    } catch (error) {
+      alert('Failed to upload images. Please try again.');
+    } finally {
+      setIsUploading(false);
     }
-
-    setSavedProductId(product.id);
-    setShowSuccess(true);
   };
 
   if (showSuccess) {
@@ -1019,13 +1048,22 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
             <Button
               onClick={() => handleSubmit(false)}
               className="w-full"
+              disabled={isUploading}
             >
-              {existingProduct ? 'Update Product' : 'Publish Product'}
+              {isUploading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                existingProduct ? 'Update Product' : 'Publish Product'
+              )}
             </Button>
             <Button
               onClick={() => handleSubmit(true)}
               variant="outline"
               className="w-full"
+              disabled={isUploading}
             >
               Save as Draft
             </Button>
@@ -1034,6 +1072,7 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
                 onClick={handleMarkOutOfStock}
                 variant="outline"
                 className="w-full"
+                disabled={isUploading}
               >
                 Mark as Out of Stock
               </Button>
@@ -1042,6 +1081,7 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
               onClick={handleCancel}
               variant="ghost"
               className="w-full"
+              disabled={isUploading}
             >
               Cancel
             </Button>

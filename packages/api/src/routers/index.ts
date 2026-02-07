@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "../index";
+import { storageRouter } from "./storage";
 
 export const appRouter = {
+  ...storageRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",

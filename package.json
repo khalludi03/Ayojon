@@ -37,6 +37,7 @@
   "dependencies": {
     "@faker-js/faker": "^10.2.0",
     "@my-better-t-app/env": "workspace:*",
+    "@my-better-t-app/storage": "workspace:*",
     "@orpc/client": "^1.13.4",
     "@orpc/openapi": "^1.13.4",
     "@orpc/server": "^1.13.4",

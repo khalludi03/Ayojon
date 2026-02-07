@@ -7,6 +7,7 @@
       "dependencies": {
         "@faker-js/faker": "^10.2.0",
         "@my-better-t-app/env": "workspace:*",
+        "@my-better-t-app/storage": "workspace:*",
         "@orpc/client": "^1.13.4",
         "@orpc/openapi": "^1.13.4",
         "@orpc/server": "^1.13.4",
@@ -110,6 +111,7 @@
         "@my-better-t-app/auth": "workspace:*",
         "@my-better-t-app/db": "workspace:*",
         "@my-better-t-app/env": "workspace:*",
+        "@my-better-t-app/storage": "workspace:*",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
@@ -167,6 +169,18 @@
       "devDependencies": {
         "@my-better-t-app/config": "workspace:*",
         "@types/bun": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/storage": {
+      "name": "@my-better-t-app/storage",
+      "version": "1.0.0",
+      "dependencies": {
+        "@my-better-t-app/env": "workspace:*",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@my-better-t-app/config": "workspace:*",
         "typescript": "catalog:",
       },
     },
@@ -390,6 +404,8 @@
     "@my-better-t-app/db": ["@my-better-t-app/db@workspace:packages/db"],
 
     "@my-better-t-app/env": ["@my-better-t-app/env@workspace:packages/env"],
+
+    "@my-better-t-app/storage": ["@my-better-t-app/storage@workspace:packages/storage"],
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.1", "", { "dependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1", "@tybys/wasm-util": "^0.10.1" } }, "sha512-p64ah1M1ld8xjWv3qbvFwHiFVWrq1yFvV4f7w+mzaqiR4IlSgkqhcRdHwsGgomwzBH51sRY4NEowLxnaBjcW/A=="],
 
