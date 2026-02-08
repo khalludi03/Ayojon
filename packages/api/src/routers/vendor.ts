@@ -156,4 +156,60 @@ export const vendorRouter = {
         application: application[0] ?? null,
       };
     }),
+
+  updateVendorProfile: protectedProcedure
+    .route({
+      method: "PATCH",
+      path: "/vendor/profile",
+      operationId: "updateVendorProfile",
+      summary: "Update Vendor Profile",
+      description: "Allows a vendor to update their store profile information.",
+      tags: ["Vendor"],
+    })
+    .input(
+      z.object({
+        name: z.string().min(2).optional(),
+        description: z.string().optional(),
+        logoUrl: z.string().url().optional(),
+        bannerUrl: z.string().url().optional(),
+        address: z.string().optional(),
+        phone: z.string().optional(),
+      })
+    )
+    .output(
+      z.object({
+        success: z.boolean(),
+        vendor: z.any(),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // Ensure user is a vendor
+      if (context.session.user.role !== "vendor") {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Only vendors can update vendor profiles.",
+        });
+      }
+
+      const updated = await db
+        .update(vendors)
+        .set({
+          ...input,
+          updatedAt: new Date(),
+        })
+        .where(eq(vendors.userId, userId))
+        .returning();
+
+      if (updated.length === 0) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Vendor profile not found.",
+        });
+      }
+
+      return {
+        success: true,
+        vendor: updated[0],
+      };
+    }),
 };
