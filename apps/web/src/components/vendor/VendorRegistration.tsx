@@ -124,7 +124,7 @@ export function VendorRegistration() {
       }
 
       // 2. Submit application to backend
-      const response = await orpcClient.submitVendorApplication({
+      const response = await orpcClient.vendor.submitVendorApplication({
         businessName: formData.businessName,
         businessType: formData.businessType as any,
         taxId: formData.taxId,

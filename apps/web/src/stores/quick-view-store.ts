@@ -6,12 +6,14 @@ interface QuickViewState {
   product: Product | null;
 }
 
+const INITIAL_STATE: QuickViewState = {
+  isOpen: false,
+  product: null,
+};
+
 // Vanilla store implementation
 class QuickViewStore {
-  private state: QuickViewState = {
-    isOpen: false,
-    product: null,
-  };
+  private state: QuickViewState = INITIAL_STATE;
   private listeners = new Set<() => void>();
 
   subscribe = (listener: () => void) => {
@@ -29,7 +31,7 @@ class QuickViewStore {
   };
 
   closeQuickView = () => {
-    this.state = { isOpen: false, product: null };
+    this.state = INITIAL_STATE;
     this.emitChange();
   };
 
@@ -45,7 +47,7 @@ export function useQuickView() {
   const state = useSyncExternalStore(
     quickViewStore.subscribe,
     quickViewStore.getSnapshot,
-    quickViewStore.getSnapshot // Server snapshot (same as client for now, or default)
+    () => INITIAL_STATE
   );
 
   return {

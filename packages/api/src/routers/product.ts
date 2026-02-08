@@ -30,7 +30,7 @@ async function getVendorId(userId: string) {
   return vendor[0].id;
 }
 
-export const vendorProductRouter = os.router({
+export const vendorProductRouter = {
   listMyProducts: protectedProcedure
     .route({
       method: "GET",
@@ -201,4 +201,4 @@ export const vendorProductRouter = os.router({
 
       return { success: true };
     }),
-});
+};

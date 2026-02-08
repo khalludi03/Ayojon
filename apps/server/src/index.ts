@@ -20,6 +20,12 @@ import { z } from "zod";
 const app = new Hono();
 
 app.use(logger());
+
+app.onError((err, c) => {
+  console.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
+  return c.json({ error: err.message || "Internal Server Error" }, 500);
+});
+
 app.use(
   "/*",
   cors({
@@ -300,12 +306,15 @@ const rpcHandler = new RPCHandler(appRouter);
 
 // oRPC endpoints
 app.use("/api/*", async (c, next) => {
+  console.log(`[oRPC Debug] Incoming: ${c.req.method} ${c.req.url}`);
   const context = await createContext({ context: c });
 
   const { matched, response } = await rpcHandler.handle(c.req.raw, {
     prefix: "/api",
     context,
   });
+
+  console.log(`[oRPC Debug] Matched: ${matched}, Status: ${response?.status}`);
 
   if (matched) {
     return response;
