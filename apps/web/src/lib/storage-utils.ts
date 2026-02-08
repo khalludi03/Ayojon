@@ -1,5 +1,4 @@
 import { orpcClient } from "@/utils/orpc";
-import { env } from "@my-better-t-app/env/web";
 
 /**
  * Uploads a file to S3 using a presigned URL.

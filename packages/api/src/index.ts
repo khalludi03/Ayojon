@@ -1,5 +1,7 @@
 import { ORPCError, os } from "@orpc/server";
 
+export { os };
+
 import type { Context } from "./context";
 
 // Base procedure with context

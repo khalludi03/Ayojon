@@ -23,26 +23,38 @@ export const auth = betterAuth({
       retentionUntil: { type: "date" },
       deactivationReason: { type: "string" },
       deactivationFeedback: { type: "string" },
+      role: {
+        type: "string",
+        defaultValue: "customer",
+        required: true,
+      },
+      vendorStatus: {
+        type: "string",
+        defaultValue: "none",
+        required: true,
+      },
     },
   },
-  session: {
-    async beforeCreate(session) {
-      // Reactivate deactivated users on successful login
-      const user = session.user as any;
-      if (user?.isDeactivated) {
-        await db
-          .update(schema.user)
-          .set({
-            isDeactivated: false,
-            deactivatedAt: null,
-            retentionUntil: null,
-            deactivationReason: null,
-            deactivationFeedback: null,
-            updatedAt: new Date(),
-          })
-          .where(eq(schema.user.id, user.id));
-      }
-      return session;
+  hooks: {
+    session: {
+      async beforeCreate(session) {
+        // Reactivate deactivated users on successful login
+        const user = session.user as any;
+        if (user?.isDeactivated) {
+          await db
+            .update(schema.user)
+            .set({
+              isDeactivated: false,
+              deactivatedAt: null,
+              retentionUntil: null,
+              deactivationReason: null,
+              deactivationFeedback: null,
+              updatedAt: new Date(),
+            })
+            .where(eq(schema.user.id, user.id));
+        }
+        return { session };
+      },
     },
   },
   baseURL: env.BETTER_AUTH_URL,
@@ -74,7 +86,6 @@ export const auth = betterAuth({
     },
   },
   emailVerification: {
-    enabled: true,
     sendOnSignUp: false,
   },
   advanced: {

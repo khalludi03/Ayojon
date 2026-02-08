@@ -27,9 +27,22 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           password: value.password,
         },
         {
-          onSuccess: () => {
+          onSuccess: (ctx) => {
+            const user = ctx.data?.user as any;
+            let redirectPath = '/';
+
+            if (user?.role === 'admin') {
+              redirectPath = '/dashboard';
+            } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
+              redirectPath = '/vendor/dashboard';
+            } else if (user?.vendorStatus === 'pending') {
+              redirectPath = '/vendor/application-pending';
+            } else if (user?.vendorStatus === 'rejected') {
+              redirectPath = '/vendor/application-rejected';
+            }
+
             navigate({
-              to: "/",
+              to: redirectPath,
             });
             toast.success("Sign in successful");
           },

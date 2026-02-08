@@ -1,9 +1,13 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure } from "../index";
+import { protectedProcedure, publicProcedure, os } from "../index";
 import { storageRouter } from "./storage";
+import { vendorRouter } from "./vendor";
+import { vendorProductRouter } from "./product";
 
-export const appRouter = {
+export const appRouter = os.router({
   ...storageRouter,
+  ...vendorRouter,
+  ...vendorProductRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",
@@ -47,6 +51,6 @@ export const appRouter = {
         user: context.session.user,
       };
     }),
-};
+});
 
 export type AppRouter = typeof appRouter;

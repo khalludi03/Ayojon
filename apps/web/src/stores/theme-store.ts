@@ -34,7 +34,13 @@ function getStoredTheme(): Theme | null {
   if (stored === 'light' || stored === 'dark') {
     return stored;
   }
-  return null;
+
+  // Respect system preference if no stored value
+  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+
+  return 'light';
 }
 
 // Apply theme to document
@@ -56,6 +62,7 @@ function applyTheme(theme: Theme, enableTransitions: boolean = true): void {
 
 interface ThemeState {
   theme: Theme;
+  isInitialized: boolean;
 }
 
 interface InternalThemeStore extends ThemeStore {
@@ -65,7 +72,10 @@ interface InternalThemeStore extends ThemeStore {
 
 // Create a simple store using closure
 function createThemeStore(): InternalThemeStore {
-  let state: ThemeState = { theme: 'light' };
+  let state: ThemeState = { 
+    theme: 'light',
+    isInitialized: false
+  };
   const listeners: Set<() => void> = new Set();
 
   const notify = () => {
@@ -80,7 +90,7 @@ function createThemeStore(): InternalThemeStore {
       return state;
     },
     setTheme(newTheme: Theme) {
-      state = { theme: newTheme };
+      state = { ...state, theme: newTheme };
 
       // Persist to localStorage
       if (typeof window !== 'undefined') {
@@ -93,20 +103,24 @@ function createThemeStore(): InternalThemeStore {
       notify();
     },
     initialize() {
+      if (state.isInitialized) return;
+
       // Get stored theme or default to light
       const stored = getStoredTheme();
       const theme = stored || 'light';
-      state = { theme };
+      state = { theme, isInitialized: true };
 
-      // Apply initial theme without transitions to prevent flash
+      // Apply initial theme immediately
       applyTheme(theme, false);
 
-      // Enable transitions after a short delay for subsequent theme changes
-      setTimeout(() => {
+      // Enable transitions after a short delay
+      requestAnimationFrame(() => {
         if (typeof document !== 'undefined') {
           document.documentElement.classList.add('theme-transition-enabled');
         }
-      }, 100);
+      });
+
+      notify();
     },
     subscribe(callback: () => void) {
       listeners.add(callback);
@@ -118,7 +132,7 @@ function createThemeStore(): InternalThemeStore {
 // Export singleton instance
 export const themeStore = createThemeStore();
 
-const DEFAULT_THEME_STATE: ThemeState = { theme: 'light' };
+const DEFAULT_THEME_STATE: ThemeState = { theme: 'light', isInitialized: false };
 
 // Stable callbacks for useSyncExternalStore
 const subscribe = (callback: () => void) => themeStore.subscribe(callback);
@@ -130,6 +144,7 @@ export function useTheme() {
 
   return {
     theme: state.theme,
+    isInitialized: state.isInitialized,
     setTheme: themeStore.setTheme,
   };
 }

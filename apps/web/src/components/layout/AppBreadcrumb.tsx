@@ -14,8 +14,8 @@ export function AppBreadcrumb() {
   const location = useLocation();
   const pathname = location.pathname;
 
-  // Do not render breadcrumbs on the homepage
-  if (pathname === "/") {
+  // Do not render breadcrumbs on the homepage or vendor routes
+  if (pathname === "/" || pathname.startsWith("/vendor")) {
     return null;
   }
 

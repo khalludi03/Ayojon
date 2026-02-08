@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { Eye, Package } from 'lucide-react';
+import { Eye, Package, ChevronRight, User } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 
 interface Order {
@@ -18,52 +19,41 @@ const mockOrders: Order[] = [
   { id: '3', orderNumber: 'AYJ12345680', customerName: 'Bob Johnson', items: 2, total: 1200, status: 'shipped', date: '2026-02-06' },
   { id: '4', orderNumber: 'AYJ12345681', customerName: 'Alice Williams', items: 4, total: 3200, status: 'delivered', date: '2026-02-06' },
   { id: '5', orderNumber: 'AYJ12345682', customerName: 'Charlie Brown', items: 1, total: 450, status: 'pending', date: '2026-02-05' },
-  { id: '6', orderNumber: 'AYJ12345683', customerName: 'Diana Prince', items: 2, total: 1800, status: 'processing', date: '2026-02-05' },
-  { id: '7', orderNumber: 'AYJ12345684', customerName: 'Eve Adams', items: 3, total: 2100, status: 'shipped', date: '2026-02-04' },
-  { id: '8', orderNumber: 'AYJ12345685', customerName: 'Frank Miller', items: 1, total: 950, status: 'delivered', date: '2026-02-04' },
-  { id: '9', orderNumber: 'AYJ12345686', customerName: 'Grace Lee', items: 5, total: 4500, status: 'cancelled', date: '2026-02-03' },
-  { id: '10', orderNumber: 'AYJ12345687', customerName: 'Henry Ford', items: 2, total: 1500, status: 'delivered', date: '2026-02-03' },
 ];
 
-const getStatusColor = (status: Order['status']) => {
+const getStatusStyles = (status: Order['status']) => {
   switch (status) {
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800';
     case 'processing':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800';
     case 'shipped':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
+      return 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800';
     case 'delivered':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800';
     case 'cancelled':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+      return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+      return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700';
   }
 };
 
 export function RecentOrdersTable() {
-  const handleViewOrder = (orderId: string) => {
-    console.log('View order:', orderId);
-  };
-
-  const handleFulfillOrder = (orderId: string) => {
-    console.log('Fulfill order:', orderId);
-  };
-
   return (
-    <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden shadow-sm">
+      <div className="p-6 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--muted))]/30">
         <div>
-          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">
-            Recent Orders
+          <h3 className="text-xl font-bold text-[hsl(var(--foreground))] tracking-tight">
+            Incoming Orders
           </h3>
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            Last 10 orders
+          <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+            Review and fulfill your latest customer requests
           </p>
         </div>
-        <Button variant="outline" size="sm">
-          View All Orders
+        <Button variant="ghost" size="sm" className="font-bold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10" asChild>
+          <Link to="/vendor/orders">
+            View All <ChevronRight className="ml-1 h-4 w-4" />
+          </Link>
         </Button>
       </div>
 
@@ -71,73 +61,60 @@ export function RecentOrdersTable() {
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[hsl(var(--border))]">
-              <th className="pb-3 text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                Order ID
-              </th>
-              <th className="pb-3 text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                Customer
-              </th>
-              <th className="pb-3 text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                Items
-              </th>
-              <th className="pb-3 text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                Total
-              </th>
-              <th className="pb-3 text-left text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                Status
-              </th>
-              <th className="pb-3 text-right text-xs font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
-                Actions
-              </th>
+            <tr className="bg-[hsl(var(--muted))]/10">
+              <th className="px-6 py-4 text-left text-[10px] font-black text-[hsl(var(--muted-foreground))] uppercase tracking-[0.1em]">Order Details</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-[hsl(var(--muted-foreground))] uppercase tracking-[0.1em]">Customer</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-[hsl(var(--muted-foreground))] uppercase tracking-[0.1em]">Items</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-[hsl(var(--muted-foreground))] uppercase tracking-[0.1em]">Revenue</th>
+              <th className="px-6 py-4 text-left text-[10px] font-black text-[hsl(var(--muted-foreground))] uppercase tracking-[0.1em]">Status</th>
+              <th className="px-6 py-4 text-right text-[10px] font-black text-[hsl(var(--muted-foreground))] uppercase tracking-[0.1em]">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[hsl(var(--border))]">
             {mockOrders.map((order) => (
-              <tr key={order.id} className="hover:bg-[hsl(var(--muted))]/50 transition-colors">
-                <td className="py-4 text-sm font-medium text-[hsl(var(--foreground))]">
-                  {order.orderNumber}
+              <tr key={order.id} className="group hover:bg-[hsl(var(--muted))]/30 transition-colors">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-bold text-[hsl(var(--foreground))]">{order.orderNumber}</span>
+                    <span className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase">{new Date(order.date).toLocaleDateString()}</span>
+                  </div>
                 </td>
-                <td className="py-4 text-sm text-[hsl(var(--foreground))]">
-                  {order.customerName}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center">
+                      <User className="h-3.5 w-3.5 text-[hsl(var(--primary))]" />
+                    </div>
+                    <span className="text-sm font-semibold text-[hsl(var(--foreground))]">{order.customerName}</span>
+                  </div>
                 </td>
-                <td className="py-4 text-sm text-[hsl(var(--muted-foreground))]">
-                  {order.items} {order.items === 1 ? 'item' : 'items'}
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-[hsl(var(--muted-foreground))]">
+                  {order.items}
                 </td>
-                <td className="py-4 text-sm font-medium text-[hsl(var(--foreground))]">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[hsl(var(--foreground))]">
                   ৳{order.total.toLocaleString()}
                 </td>
-                <td className="py-4">
+                <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={cn(
-                      'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                      getStatusColor(order.status)
+                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border',
+                      getStatusStyles(order.status)
                     )}
                   >
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    <span className="mr-1 h-1 w-1 rounded-full bg-current" />
+                    {order.status}
                   </span>
                 </td>
-                <td className="py-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleViewOrder(order.id)}
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    {(order.status === 'pending' || order.status === 'processing') && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleFulfillOrder(order.id)}
-                      >
-                        <Package className="h-4 w-4 mr-1" />
-                        Fulfill
-                      </Button>
-                    )}
-                  </div>
+                <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 font-bold text-xs px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                    asChild
+                  >
+                    <Link to="/vendor/orders/$orderId" params={{ orderId: order.id }}>
+                      Manage
+                    </Link>
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -145,48 +122,22 @@ export function RecentOrdersTable() {
         </table>
       </div>
 
-      {/* Mobile Cards */}
-      <div className="md:hidden space-y-4">
+      {/* Mobile View remains similar but simplified */}
+      <div className="md:hidden divide-y divide-[hsl(var(--border))]">
         {mockOrders.map((order) => (
-          <div
-            key={order.id}
-            className="rounded-lg border border-[hsl(var(--border))] p-4 space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium text-sm">{order.orderNumber}</span>
-              <span
-                className={cn(
-                  'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                  getStatusColor(order.status)
-                )}
-              >
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+          <div key={order.id} className="p-4 flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-bold">{order.orderNumber}</p>
+              <p className="text-xs text-[hsl(var(--muted-foreground))] font-medium">{order.customerName}</p>
+            </div>
+            <div className="flex flex-col items-end gap-2">
+              <span className="text-sm font-black">৳{order.total.toLocaleString()}</span>
+              <span className={cn(
+                'rounded-full px-2 py-0.5 text-[9px] font-black uppercase border',
+                getStatusStyles(order.status)
+              )}>
+                {order.status}
               </span>
-            </div>
-            <div className="text-sm text-[hsl(var(--muted-foreground))]">
-              <p>{order.customerName}</p>
-              <p>{order.items} items • ৳{order.total.toLocaleString()}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1"
-                onClick={() => handleViewOrder(order.id)}
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                View
-              </Button>
-              {(order.status === 'pending' || order.status === 'processing') && (
-                <Button
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => handleFulfillOrder(order.id)}
-                >
-                  <Package className="h-4 w-4 mr-1" />
-                  Fulfill
-                </Button>
-              )}
             </div>
           </div>
         ))}
