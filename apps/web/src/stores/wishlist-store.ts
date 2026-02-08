@@ -73,9 +73,10 @@ function createWishlistStore(): WishlistStore {
 
       if (stored) {
         const parsed = JSON.parse(stored);
-        state = { 
-          ...parsed, 
-          isInitialized: true 
+        // Normalize/validate parsed data - ensure items is always an array
+        state = {
+          items: Array.isArray(parsed.items) ? parsed.items : [],
+          isInitialized: true
         };
         console.log('[Wishlist] Loaded items:', state.items.length);
       } else {
@@ -91,14 +92,20 @@ function createWishlistStore(): WishlistStore {
         if (legacyGlobal) {
           // Migrate global wishlist to this user
           const parsed = JSON.parse(legacyGlobal);
-          state = { ...parsed, isInitialized: true };
-          localStorage.setItem(storageKey, legacyGlobal);
+          state = {
+            items: Array.isArray(parsed.items) ? parsed.items : [],
+            isInitialized: true
+          };
+          localStorage.setItem(storageKey, JSON.stringify({ items: state.items }));
           localStorage.removeItem(STORAGE_KEY_PREFIX);
         } else if (legacyOld) {
           // Migrate very old wishlist
           const parsed = JSON.parse(legacyOld);
-          state = { ...parsed, isInitialized: true };
-          localStorage.setItem(storageKey, legacyOld);
+          state = {
+            items: Array.isArray(parsed.items) ? parsed.items : [],
+            isInitialized: true
+          };
+          localStorage.setItem(storageKey, JSON.stringify({ items: state.items }));
           localStorage.removeItem(LEGACY_STORAGE_KEY);
         }
       }

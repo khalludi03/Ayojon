@@ -12,11 +12,9 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
-  User,
   Mail,
   Calendar,
   DollarSign,
-  TrendingUp,
   ArrowUpRight,
   Filter,
   RefreshCw

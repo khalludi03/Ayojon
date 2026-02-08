@@ -19,13 +19,14 @@ export const adminRouter = os.router({
       method: "POST",
       operationId: "listUsers",
       summary: "List Users",
-      description: "Lists users with search, pagination and role filtering.",
+      description: "Lists users with search, pagination, role and vendor status filtering.",
       tags: ["Admin"],
     })
     .input(
       z.object({
         search: z.string().optional(),
         role: z.enum(["customer", "vendor", "admin"]).optional(),
+        vendorStatus: z.enum(["pending", "approved", "rejected", "suspended"]).optional(),
         limit: z.coerce.number().int().min(1).max(100).default(50),
         offset: z.coerce.number().int().min(0).default(0),
       })
@@ -33,6 +34,7 @@ export const adminRouter = os.router({
     .handler(async ({ input }) => {
       const conditions = [];
       if (input.role) conditions.push(eq(user.role, input.role));
+      if (input.vendorStatus) conditions.push(eq(user.vendorStatus, input.vendorStatus));
       if (input.search) {
         conditions.push(or(
           ilike(user.name, `%${input.search}%`),

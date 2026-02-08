@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from '@tanstack/react-router';
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Store,
@@ -76,38 +76,36 @@ function VendorApplicationsPage() {
   const [actionDialog, setActionDialog] = useState<'approve' | 'reject' | 'suspend' | null>(null);
   const [actionReason, setActionReason] = useState('');
 
-  // Queries
+  // Queries - fetch users with server-side vendor status filtering
   const { data: usersData, isLoading } = useQuery(orpc.admin.listUsers.queryOptions({
     input: {
       search: searchQuery || undefined,
+      vendorStatus: statusFilter !== 'all' ? (statusFilter as any) : undefined,
       limit: ITEMS_PER_PAGE,
       offset: (currentPage - 1) * ITEMS_PER_PAGE,
     }
   }));
 
-  // Filter users by vendor status
-  const filteredApplications = useMemo(() => {
-    if (!usersData?.users) return [];
+  // Fetch stats for each vendor status
+  const { data: pendingStats } = useQuery(orpc.admin.listUsers.queryOptions({
+    input: { vendorStatus: 'pending', limit: 1, offset: 0 }
+  }));
+  const { data: approvedStats } = useQuery(orpc.admin.listUsers.queryOptions({
+    input: { vendorStatus: 'approved', limit: 1, offset: 0 }
+  }));
+  const { data: rejectedStats } = useQuery(orpc.admin.listUsers.queryOptions({
+    input: { vendorStatus: 'rejected', limit: 1, offset: 0 }
+  }));
+  const { data: suspendedStats } = useQuery(orpc.admin.listUsers.queryOptions({
+    input: { vendorStatus: 'suspended', limit: 1, offset: 0 }
+  }));
 
-    return usersData.users.filter(user => {
-      if (statusFilter === 'all') {
-        return ['pending', 'approved', 'rejected', 'suspended'].includes(user.vendorStatus || '');
-      }
-      return user.vendorStatus === statusFilter;
-    });
-  }, [usersData, statusFilter]);
-
-  const stats = useMemo(() => {
-    if (!usersData?.users) return { pending: 0, approved: 0, rejected: 0, suspended: 0 };
-
-    const allUsers = usersData.users;
-    return {
-      pending: allUsers.filter(u => u.vendorStatus === 'pending').length,
-      approved: allUsers.filter(u => u.vendorStatus === 'approved').length,
-      rejected: allUsers.filter(u => u.vendorStatus === 'rejected').length,
-      suspended: allUsers.filter(u => u.vendorStatus === 'suspended').length,
-    };
-  }, [usersData]);
+  const stats = {
+    pending: pendingStats?.totalCount ?? 0,
+    approved: approvedStats?.totalCount ?? 0,
+    rejected: rejectedStats?.totalCount ?? 0,
+    suspended: suspendedStats?.totalCount ?? 0,
+  };
 
   // Mutations
   const updateStatusMutation = useMutation(orpc.admin.updateVendorApplicationStatus.mutationOptions({
@@ -147,7 +145,8 @@ function VendorApplicationsPage() {
     });
   };
 
-  const totalPages = Math.ceil(filteredApplications.length / ITEMS_PER_PAGE);
+  const applications = usersData?.users ?? [];
+  const totalPages = Math.ceil((usersData?.totalCount ?? 0) / ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/10 dark:to-slate-950 p-4 md:p-8">
@@ -260,7 +259,7 @@ function VendorApplicationsPage() {
                       <p className="text-slate-500 font-medium">Loading applications...</p>
                     </div>
                   </td></tr>
-                ) : filteredApplications.length === 0 ? (
+                ) : applications.length === 0 ? (
                   <tr><td colSpan={4} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="h-16 w-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -272,7 +271,7 @@ function VendorApplicationsPage() {
                       </div>
                     </div>
                   </td></tr>
-                ) : filteredApplications.map((application) => {
+                ) : applications.map((application) => {
                   const statusConfig = STATUS_CONFIG[application.vendorStatus as keyof typeof STATUS_CONFIG];
                   const StatusIcon = statusConfig?.icon || AlertCircle;
 
