@@ -13,7 +13,7 @@ import {
 import { count, eq, gte, sql, or, ilike, and, desc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 
-export const adminRouter = os.router({
+export const adminRouter = {
   listUsers: adminProcedure
     .route({
       method: "POST",
@@ -701,4 +701,4 @@ export const adminRouter = os.router({
         recentUsers,
       };
     }),
-});
+};
