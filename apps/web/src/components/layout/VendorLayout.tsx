@@ -83,13 +83,12 @@ export function VendorLayout({ children }: VendorLayoutProps) {
         )}
       >
         {/* Sidebar Header */}
-        <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-          {!sidebarCollapsed && <Logo />}
+        <div className="flex h-16 items-center justify-end px-4 border-b border-slate-200 dark:border-slate-800">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="ml-auto hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             {sidebarCollapsed ? (
               <ChevronRight className="h-5 w-5" />
@@ -166,7 +165,6 @@ export function VendorLayout({ children }: VendorLayoutProps) {
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <Logo />
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <Button
@@ -189,8 +187,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
             />
             <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col lg:hidden animate-in slide-in-from-left duration-300">
               {/* Mobile Sidebar Header */}
-              <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-                <Logo />
+              <div className="flex h-16 items-center justify-end px-4 border-b border-slate-200 dark:border-slate-800">
                 <Button
                   variant="ghost"
                   size="icon"
