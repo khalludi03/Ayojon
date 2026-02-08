@@ -93,7 +93,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       >
         {/* Sidebar Header */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-          {!sidebarCollapsed && <Logo />}
+          {!sidebarCollapsed && <Logo variant="admin" />}
           <Button
             variant="ghost"
             size="icon"
@@ -175,7 +175,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <Logo />
+          <Logo variant="admin" />
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <Button
@@ -199,7 +199,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col lg:hidden animate-in slide-in-from-left duration-300">
               {/* Mobile Sidebar Header */}
               <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-                <Logo />
+                <Logo variant="admin" />
                 <Button
                   variant="ghost"
                   size="icon"
