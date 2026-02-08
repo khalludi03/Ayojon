@@ -30,6 +30,7 @@ import { Route as VendorApplicationPendingRouteImport } from './routes/vendor/ap
 import { Route as TrackOrderNumberRouteImport } from './routes/track.$orderNumber'
 import { Route as ProductProductSlugRouteImport } from './routes/product.$productSlug'
 import { Route as CategoryCategorySlugRouteImport } from './routes/category.$categorySlug'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as VendorOrdersOrderIdRouteImport } from './routes/vendor/orders.$orderId'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
@@ -141,6 +142,11 @@ const CategoryCategorySlugRoute = CategoryCategorySlugRouteImport.update({
   path: '/category/$categorySlug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
@@ -171,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/users': typeof AdminUsersRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/users': typeof AdminUsersRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/users': typeof AdminUsersRoute
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/admin/dashboard'
+    | '/admin/users'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/admin/dashboard'
+    | '/admin/users'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/admin/dashboard'
+    | '/admin/users'
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
@@ -331,6 +343,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   WishlistRoute: typeof WishlistRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   CategoryCategorySlugRoute: typeof CategoryCategorySlugRoute
   ProductProductSlugRoute: typeof ProductProductSlugRoute
   TrackOrderNumberRoute: typeof TrackOrderNumberRoute
@@ -491,6 +504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoryCategorySlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -552,6 +572,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   WishlistRoute: WishlistRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminUsersRoute: AdminUsersRoute,
   CategoryCategorySlugRoute: CategoryCategorySlugRoute,
   ProductProductSlugRoute: ProductProductSlugRoute,
   TrackOrderNumberRoute: TrackOrderNumberRoute,
