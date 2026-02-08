@@ -6,11 +6,13 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header/Header";
+import { VendorHeader } from "@/components/layout/header/VendorHeader";
 import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
 import { ProductModal } from "@/components/product/ProductModal";
 import { orpc } from "@/utils/orpc";
+import { useLocation } from "@tanstack/react-router";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {
@@ -48,41 +50,43 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 });
 
 function RootDocument() {
+  const location = useLocation();
+  const isVendorRoute = location.pathname.startsWith('/vendor');
+
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
-        <HeadContent />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  var theme = localStorage.getItem('ayojon-theme') || localStorage.getItem('zynex-theme') || 'light';
-                  var root = document.documentElement;
-
-                  // Apply theme immediately without transitions
-                  root.classList.remove('light', 'dark');
-                  root.classList.add(theme);
-                } catch (e) {
-                  console.error('Failed to apply theme:', e);
-                }
+                  var theme = localStorage.getItem('ayojon-theme');
+                  var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  var activeTheme = theme || (supportDarkMode ? 'dark' : 'light');
+                  
+                  if (activeTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.style.colorScheme = 'light';
+                  }
+                } catch (e) {}
               })();
-
-              window.addEventListener('load', () => {
-                document.documentElement.classList.add('theme-transition-enabled');
-              });
             `,
           }}
         />
+        <HeadContent />
       </head>
       <body className="min-h-screen flex flex-col">
         <ToastProvider>
-          <Header />
+          {isVendorRoute ? <VendorHeader /> : <Header />}
           <main className="flex-1">
             <AppBreadcrumb />
             <Outlet />
           </main>
-          <Footer />
+          {!isVendorRoute && <Footer />}
           <ProductModal />
         </ToastProvider>
         <Toaster richColors />

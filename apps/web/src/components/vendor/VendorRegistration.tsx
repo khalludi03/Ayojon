@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import type { VendorFormData, VendorApplication } from '@/types/vendor';
-import { addVendorApplication } from '@/stores/vendor-application-store';
+import type { VendorFormData } from '@/types/vendor';
 import { authClient } from '@/lib/auth-client';
+import { orpcClient } from '@/utils/orpc';
+import { uploadFile } from '@/lib/storage-utils';
+import { toast } from 'sonner';
 import { VendorProgressBar } from './VendorProgressBar';
 import { AccountStep } from './steps/AccountStep';
 import { BusinessInfoStep } from './steps/BusinessInfoStep';
@@ -91,51 +93,67 @@ export function VendorRegistration() {
 
   const handleSubmit = async () => {
     if (!userId) {
-      console.error('No user ID found. User must be authenticated.');
+      toast.error('No user ID found. User must be authenticated.');
       return;
     }
 
-    // Create vendor application linked to authenticated user
-    const application: VendorApplication = {
-      id: `vendor-${Date.now()}`,
-      userId, // Link to authenticated user
-      email: formData.email,
-      businessName: formData.businessName,
-      businessType: formData.businessType as any,
-      taxId: formData.taxId,
-      businessPhone: formData.businessPhone,
-      businessAddress: {
-        street: formData.businessStreet,
-        city: formData.businessCity,
-        division: formData.businessDivision,
-        postalCode: formData.businessPostalCode,
-      },
-      yearsInBusiness: parseInt(formData.yearsInBusiness) || 0,
-      storeName: formData.storeName,
-      storeDescription: formData.storeDescription,
-      productCategories: formData.productCategories,
-      storeLogo: formData.storeLogo?.name, // In real app, upload to server
-      storeBanner: formData.storeBanner?.name,
-      documents: {
-        tradeLicense: formData.tradeLicense?.name,
-        identification: formData.identification?.name,
-        bankDetails: formData.bankDetails?.name,
-      },
-      status: 'pending',
-      submittedAt: new Date().toISOString(),
-    };
+    try {
+      toast.loading('Submitting application...', { id: 'submit-app' });
 
-    // Save application (in real app, this would be saved to backend)
-    addVendorApplication(application);
-    setApplicationId(application.id);
+      // 1. Upload files if they exist
+      let logoUrl = '';
+      let bannerUrl = '';
+      let tradeLicenseUrl = '';
+      let identificationUrl = '';
+      let bankDetailsUrl = '';
 
-    // Mock: Send email notification (in real app, this would be done on backend)
-    console.log('Vendor application submitted:', application);
-    console.log('User is now authenticated with ID:', userId);
+      if (formData.storeLogo instanceof File) {
+        logoUrl = await uploadFile(formData.storeLogo, 'vendor/logos');
+      }
+      if (formData.storeBanner instanceof File) {
+        bannerUrl = await uploadFile(formData.storeBanner, 'vendor/banners');
+      }
+      if (formData.tradeLicense instanceof File) {
+        tradeLicenseUrl = await uploadFile(formData.tradeLicense, 'vendor/documents');
+      }
+      if (formData.identification instanceof File) {
+        identificationUrl = await uploadFile(formData.identification, 'vendor/documents');
+      }
+      if (formData.bankDetails instanceof File) {
+        bankDetailsUrl = await uploadFile(formData.bankDetails, 'vendor/documents');
+      }
 
-    // Show confirmation
-    setIsSubmitted(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 2. Submit application to backend
+      const response = await orpcClient.submitVendorApplication({
+        businessName: formData.businessName,
+        businessType: formData.businessType as any,
+        taxId: formData.taxId,
+        businessPhone: formData.businessPhone,
+        businessAddress: {
+          street: formData.businessStreet,
+          city: formData.businessCity,
+          division: formData.businessDivision,
+          postalCode: formData.businessPostalCode,
+        },
+        yearsInBusiness: parseInt(formData.yearsInBusiness) || 0,
+        storeName: formData.storeName,
+        storeDescription: formData.storeDescription,
+        productCategories: formData.productCategories,
+        logoUrl: logoUrl || undefined,
+        bannerUrl: bannerUrl || undefined,
+        tradeLicenseUrl: tradeLicenseUrl || undefined,
+        identificationUrl: identificationUrl || undefined,
+        bankDetailsUrl: bankDetailsUrl || undefined,
+      });
+
+      setApplicationId(response.applicationId);
+      setIsSubmitted(true);
+      toast.success('Application submitted successfully!', { id: 'submit-app' });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error('Application submission error:', err);
+      toast.error('Failed to submit application. Please try again.', { id: 'submit-app' });
+    }
   };
 
   const renderStep = () => {

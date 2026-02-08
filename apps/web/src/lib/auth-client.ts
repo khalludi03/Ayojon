@@ -9,6 +9,8 @@ export const authClient = createAuthClient({
       phoneNumber: { type: "string" },
       dateOfBirth: { type: "date" },
       gender: { type: "string" },
+      role: { type: "string" },
+      vendorStatus: { type: "string" },
     },
   },
   plugins: [emailOTPClient()],

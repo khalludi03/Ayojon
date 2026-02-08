@@ -1,4 +1,4 @@
-import { Bell, ShoppingCart, RotateCcw, AlertTriangle } from 'lucide-react';
+import { Bell, ShoppingCart, RotateCcw, AlertTriangle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Notification {
@@ -16,7 +16,7 @@ const mockNotifications: Notification[] = [
     type: 'order',
     title: 'New Order Received',
     description: 'Order #AYJ12345678 for ৳2,500',
-    time: '5 minutes ago',
+    time: '5m ago',
     unread: true,
   },
   {
@@ -24,31 +24,23 @@ const mockNotifications: Notification[] = [
     type: 'order',
     title: 'New Order Received',
     description: 'Order #AYJ12345679 for ৳850',
-    time: '1 hour ago',
+    time: '1h ago',
     unread: true,
   },
   {
     id: '3',
     type: 'return',
     title: 'Return Request',
-    description: 'Customer requested return for Order #AYJ12345655',
-    time: '2 hours ago',
+    description: 'Order #AYJ12345655 needs attention',
+    time: '2h ago',
     unread: true,
   },
   {
     id: '4',
     type: 'stock',
     title: 'Low Stock Alert',
-    description: 'Product "Wireless Headphones" has only 3 items left',
-    time: '3 hours ago',
-    unread: false,
-  },
-  {
-    id: '5',
-    type: 'stock',
-    title: 'Low Stock Alert',
-    description: 'Product "Smart Watch" has only 2 items left',
-    time: '5 hours ago',
+    description: 'Only 3 items left for "Wireless Headphones"',
+    time: '3h ago',
     unread: false,
   },
 ];
@@ -56,26 +48,26 @@ const mockNotifications: Notification[] = [
 const getNotificationIcon = (type: Notification['type']) => {
   switch (type) {
     case 'order':
-      return <ShoppingCart className="h-5 w-5 text-blue-600 dark:text-blue-400" />;
+      return <ShoppingCart className="h-4 w-4" />;
     case 'return':
-      return <RotateCcw className="h-5 w-5 text-orange-600 dark:text-orange-400" />;
+      return <RotateCcw className="h-4 w-4" />;
     case 'stock':
-      return <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />;
+      return <AlertTriangle className="h-4 w-4" />;
     default:
-      return <Bell className="h-5 w-5" />;
+      return <Bell className="h-4 w-4" />;
   }
 };
 
-const getNotificationColor = (type: Notification['type']) => {
+const getNotificationStyles = (type: Notification['type']) => {
   switch (type) {
     case 'order':
-      return 'bg-blue-50 dark:bg-blue-950/20';
+      return 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400';
     case 'return':
-      return 'bg-orange-50 dark:bg-orange-950/20';
+      return 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400';
     case 'stock':
-      return 'bg-red-50 dark:bg-red-950/20';
+      return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
     default:
-      return 'bg-gray-50 dark:bg-gray-950/20';
+      return 'bg-slate-100 text-slate-600 dark:bg-slate-800/30 dark:text-slate-400';
   }
 };
 
@@ -83,54 +75,63 @@ export function NotificationsPanel() {
   const unreadCount = mockNotifications.filter((n) => n.unread).length;
 
   return (
-    <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm h-full">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col h-full shadow-sm overflow-hidden transition-all hover:shadow-md">
+      <div className="p-6 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--muted))]/30">
         <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">
-            Notifications
+          <h3 className="text-xl font-bold text-[hsl(var(--foreground))] tracking-tight">
+            Activity
           </h3>
           {unreadCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-xs font-semibold text-white">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-[10px] font-black text-white">
               {unreadCount}
             </span>
           )}
         </div>
-        <button className="text-sm text-[hsl(var(--primary))] hover:underline">
-          View All
+        <button className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest hover:text-[hsl(var(--primary))] transition-colors">
+          Clear
         </button>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex-1 divide-y divide-[hsl(var(--border))]">
         {mockNotifications.map((notification) => (
           <div
             key={notification.id}
             className={cn(
-              'rounded-lg p-3 transition-colors hover:bg-[hsl(var(--muted))]/50 cursor-pointer',
-              notification.unread && 'border-l-2 border-[hsl(var(--primary))]',
-              getNotificationColor(notification.type)
+              'group p-4 transition-all hover:bg-[hsl(var(--muted))]/50 cursor-pointer flex gap-4',
+              notification.unread && 'bg-[hsl(var(--primary))]/5'
             )}
           >
-            <div className="flex gap-3">
-              <div className="shrink-0 mt-0.5">
-                {getNotificationIcon(notification.type)}
-              </div>
-              <div className="flex-1 min-w-0">
+            <div className={cn(
+              'shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110',
+              getNotificationStyles(notification.type)
+            )}>
+              {getNotificationIcon(notification.type)}
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-2">
                 <p className={cn(
-                  'text-sm text-[hsl(var(--foreground))]',
-                  notification.unread && 'font-semibold'
+                  'text-sm leading-none tracking-tight',
+                  notification.unread ? 'font-bold text-[hsl(var(--foreground))]' : 'font-semibold text-[hsl(var(--muted-foreground))]'
                 )}>
                   {notification.title}
                 </p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                  {notification.description}
-                </p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
+                <span className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase whitespace-nowrap">
                   {notification.time}
-                </p>
+                </span>
               </div>
+              <p className="text-xs text-[hsl(var(--muted-foreground))] font-medium mt-1.5 line-clamp-1">
+                {notification.description}
+              </p>
             </div>
           </div>
         ))}
+      </div>
+      
+      <div className="p-4 bg-[hsl(var(--muted))]/10 border-t border-[hsl(var(--border))] text-center">
+        <button className="text-xs font-black text-[hsl(var(--primary))] uppercase tracking-[0.2em] flex items-center justify-center w-full hover:gap-2 transition-all">
+          View History <ChevronRight className="h-3 w-3" />
+        </button>
       </div>
     </div>
   );

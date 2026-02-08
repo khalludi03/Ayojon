@@ -77,6 +77,13 @@ export default function UserMenu() {
               Settings
             </Link>
           </DropdownMenuItem>
+          {(session.user as any).role === 'vendor' && (session.user as any).vendorStatus === 'approved' && (
+            <DropdownMenuItem asChild>
+              <Link to="/vendor/dashboard">
+                Vendor Dashboard
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"

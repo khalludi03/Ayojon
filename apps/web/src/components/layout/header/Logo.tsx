@@ -1,8 +1,24 @@
 import { Link } from '@tanstack/react-router';
+import { authClient } from '@/lib/auth-client';
 
 export function Logo() {
+  const { data: session } = authClient.useSession();
+  const user = session?.user as any;
+  
+  let redirectPath = '/';
+
+  if (user?.role === 'admin') {
+    redirectPath = '/dashboard';
+  } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
+    redirectPath = '/vendor/dashboard';
+  } else if (user?.vendorStatus === 'pending') {
+    redirectPath = '/vendor/application-pending';
+  } else if (user?.vendorStatus === 'rejected') {
+    redirectPath = '/vendor/application-rejected';
+  }
+
   return (
-    <Link to="/" className="flex items-center gap-1.5 sm:gap-2">
+    <Link to={redirectPath} className="flex items-center gap-1.5 sm:gap-2">
       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[hsl(var(--primary))] sm:h-9 sm:w-9">
         <span className="text-base font-bold text-white sm:text-lg">A</span>
       </div>

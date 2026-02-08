@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Filter, Calendar } from 'lucide-react';
+import { useSearch } from '@tanstack/react-router';
 import { getVendorOrders } from '@/stores/vendor-order-store';
 import type { VendorOrder, VendorOrderStatus, PaymentMethod } from '@/types/vendor-order';
 import { OrdersTable } from './OrdersTable';
@@ -9,6 +10,7 @@ import { OrderDetailModal } from './OrderDetailModal';
 import { cn } from '@/lib/utils';
 
 export function VendorOrdersPage() {
+  const search = useSearch({ from: '/vendor/orders' }) as any;
   const [orders, setOrders] = useState<VendorOrder[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +25,15 @@ export function VendorOrdersPage() {
   useEffect(() => {
     loadOrders();
   }, []);
+
+  useEffect(() => {
+    if (search.orderId && orders.length > 0) {
+      const order = orders.find(o => o.id === search.orderId);
+      if (order) {
+        setSelectedOrder(order);
+      }
+    }
+  }, [search.orderId, orders]);
 
   const loadOrders = () => {
     const vendorOrders = getVendorOrders(vendorId);

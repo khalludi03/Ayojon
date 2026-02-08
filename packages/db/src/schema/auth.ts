@@ -17,6 +17,14 @@ export const user = pgTable("user", {
   retentionUntil: timestamp("retention_until"),
   deactivationReason: text("deactivation_reason"),
   deactivationFeedback: text("deactivation_feedback"),
+  role: text("role", { enum: ["customer", "vendor", "admin"] })
+    .default("customer")
+    .notNull(),
+  vendorStatus: text("vendor_status", {
+    enum: ["none", "pending", "approved", "rejected", "suspended"],
+  })
+    .default("none")
+    .notNull(),
 });
 
 export const session = pgTable(
