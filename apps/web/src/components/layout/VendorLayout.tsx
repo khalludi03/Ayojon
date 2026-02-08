@@ -165,6 +165,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
           >
             <Menu className="h-6 w-6" />
           </Button>
+          <Logo />
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <Button
@@ -254,6 +255,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
       <div className={cn("lg:transition-all lg:duration-300", sidebarCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         {/* Top Header Bar (Desktop only) */}
         <header className="hidden lg:sticky lg:top-0 lg:z-30 lg:flex lg:h-16 lg:items-center lg:gap-4 lg:border-b lg:border-slate-200 dark:lg:border-slate-800 lg:bg-white/80 dark:lg:bg-slate-900/80 lg:backdrop-blur-sm lg:px-6">
+          <Logo />
           <div className="flex-1 flex items-center gap-4">
             {/* Search Bar */}
             <div className="relative w-full max-w-md">
