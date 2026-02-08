@@ -8,7 +8,7 @@ export function Logo() {
   let redirectPath = '/';
 
   if (user?.role === 'admin') {
-    redirectPath = '/dashboard';
+    redirectPath = '/admin/dashboard';
   } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
     redirectPath = '/vendor/dashboard';
   } else if (user?.vendorStatus === 'pending') {

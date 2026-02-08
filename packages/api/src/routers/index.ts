@@ -3,11 +3,13 @@ import { protectedProcedure, publicProcedure, os } from "../index";
 import { storageRouter } from "./storage";
 import { vendorRouter } from "./vendor";
 import { vendorProductRouter } from "./product";
+import { adminRouter } from "./admin";
 
 export const appRouter = os.router({
   ...storageRouter,
   ...vendorRouter,
   ...vendorProductRouter,
+  ...adminRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",
