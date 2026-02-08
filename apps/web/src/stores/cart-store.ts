@@ -1,11 +1,13 @@
 // Cart Store - Based on PRD Section 9.1
 
-import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import type { CurrencyCode, Product, ProductVariant } from '@/types';
 import { generateId } from '@/lib/utils';
+import { authClient } from '@/lib/auth-client';
 
 const STORAGE_KEY = 'ayojon-cart';
 const LEGACY_STORAGE_KEY = 'zynex-cart';
+const GUEST_USER_ID = 'guest';
 
 export interface CartItem {
   id: string;
@@ -30,7 +32,6 @@ interface CartState {
     value: number;
     amount: number;
   } | null;
-  isInitialized: boolean;
 }
 
 interface CartStore {
@@ -59,7 +60,12 @@ interface CartStore {
   getTotal: () => number;
   isInCart: (productId: string) => boolean;
   subscribe: (callback: () => void) => () => void;
-  initialize: () => void;
+  loadUserCart: (userId: string | null) => void;
+}
+
+// Helper function to get storage key based on user ID
+function getStorageKey(userId: string | null): string {
+  return userId ? `${STORAGE_KEY}-${userId}` : `${STORAGE_KEY}-${GUEST_USER_ID}`;
 }
 
 function createCartStore(): CartStore {
@@ -70,9 +76,109 @@ function createCartStore(): CartStore {
     isDrawerOpen: false,
     deliveryMethod: null,
     discount: null,
-    isInitialized: false,
   };
+  let currentUserId: string | null = null;
   const listeners = new Set<() => void>();
+
+  const syncFromSession = (keepCurrentOnNull: boolean = false) => {
+    authClient.getSession().then((session) => {
+      const sessionUserId = session.data?.user?.id || null;
+      const resolvedUserId = sessionUserId ?? (keepCurrentOnNull ? currentUserId : null);
+
+      if (resolvedUserId !== currentUserId) {
+        currentUserId = resolvedUserId;
+      }
+
+      loadCart(resolvedUserId);
+      notify();
+    });
+  };
+
+  // Helper to load cart for a specific user
+  const loadCart = (userId: string | null) => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const storageKey = getStorageKey(userId);
+      // Try to load from localStorage first (persistent)
+      let stored = localStorage.getItem(storageKey);
+
+      // Migration: Check sessionStorage for data that hasn't been moved to localStorage yet
+      if (!stored) {
+        const sessionStored = sessionStorage.getItem(STORAGE_KEY);
+        const legacySessionStored = sessionStorage.getItem(LEGACY_STORAGE_KEY);
+        
+        if (sessionStored) {
+          stored = sessionStored;
+          localStorage.setItem(storageKey, sessionStored);
+          sessionStorage.removeItem(STORAGE_KEY);
+        } else if (legacySessionStored) {
+          stored = legacySessionStored;
+          localStorage.setItem(storageKey, legacySessionStored);
+          sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+      }
+
+      // One-time migration from old global localStorage key to user-specific key
+      if (!stored && userId) {
+        const legacyGlobal = localStorage.getItem(STORAGE_KEY);
+        const legacyOld = localStorage.getItem(LEGACY_STORAGE_KEY);
+
+        if (legacyGlobal) {
+          stored = legacyGlobal;
+          localStorage.setItem(storageKey, legacyGlobal);
+          localStorage.removeItem(STORAGE_KEY);
+        } else if (legacyOld) {
+          stored = legacyOld;
+          localStorage.setItem(storageKey, legacyOld);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+      }
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        state = { 
+          ...state, 
+          items: parsed.items || [], 
+          savedForLater: parsed.savedForLater || [],
+          deliveryMethod: parsed.deliveryMethod || null,
+          discount: parsed.discount || null,
+          currency: parsed.currency || 'BDT' 
+        };
+      } else {
+        state = {
+          ...state,
+          items: [],
+          savedForLater: [],
+          deliveryMethod: null,
+          discount: null,
+          currency: 'BDT'
+        };
+      }
+    } catch (e) {
+      console.error('Failed to load cart from storage:', e);
+    }
+  };
+
+  // Initial load - check if there's a session
+  if (typeof window !== 'undefined') {
+    syncFromSession();
+
+    // Subscribe to auth session changes
+    const sessionSignal = authClient.$store?.atoms?.$sessionSignal;
+    if (sessionSignal) {
+      sessionSignal.subscribe(() => {
+        syncFromSession(true);
+      });
+    }
+
+    // Reload cart when tab becomes visible (handles multi-tab sync)
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncFromSession(true);
+      }
+    });
+  }
 
   const notify = () => {
     listeners.forEach((listener) => listener());
@@ -80,54 +186,15 @@ function createCartStore(): CartStore {
 
   const persist = () => {
     if (typeof window !== 'undefined') {
-      // Use sessionStorage - data clears when browser tab closes
-      // Don't persist UI state like isDrawerOpen or isInitialized
-      const { isDrawerOpen, isInitialized, ...persistedState } = state;
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(persistedState));
+      // Don't persist UI state like isDrawerOpen
+      const { isDrawerOpen, ...persistedState } = state;
+      const storageKey = getStorageKey(currentUserId);
+      localStorage.setItem(storageKey, JSON.stringify(persistedState));
     }
   };
 
   return {
     getState: () => state,
-
-    initialize: () => {
-      if (state.isInitialized || typeof window === 'undefined') return;
-
-      try {
-        let stored = sessionStorage.getItem(STORAGE_KEY);
-
-        if (!stored) {
-          const legacy = sessionStorage.getItem(LEGACY_STORAGE_KEY);
-          if (legacy) {
-            sessionStorage.setItem(STORAGE_KEY, legacy);
-            sessionStorage.removeItem(LEGACY_STORAGE_KEY);
-            stored = legacy;
-          }
-        }
-
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(LEGACY_STORAGE_KEY);
-
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          state = { 
-            ...state, 
-            items: parsed.items || [], 
-            savedForLater: parsed.savedForLater || [],
-            deliveryMethod: parsed.deliveryMethod || null,
-            discount: parsed.discount || null,
-            currency: parsed.currency || 'BDT',
-            isInitialized: true
-          };
-        } else {
-          state = { ...state, isInitialized: true };
-        }
-      } catch (e) {
-        console.error('Failed to load cart from sessionStorage:', e);
-        state = { ...state, isInitialized: true };
-      }
-      notify();
-    },
 
     addItem: (product: Product, quantity: number = 1, variant?: ProductVariant) => {
       const existingIndex = state.items.findIndex(
@@ -426,35 +493,43 @@ function createCartStore(): CartStore {
       listeners.add(callback);
       return () => listeners.delete(callback);
     },
+
+    loadUserCart: (userId: string | null) => {
+      if (userId === currentUserId) return;
+      currentUserId = userId;
+      loadCart(userId);
+      notify();
+    },
   };
 }
 
 // Singleton instance
 export const cartStore = createCartStore();
 
-const INITIAL_CART_STATE: CartState = { 
-  items: [], 
-  savedForLater: [], 
-  currency: 'BDT', 
-  isDrawerOpen: false, 
-  deliveryMethod: null,
-  discount: null,
-  isInitialized: false
-};
-
 // Stable callbacks for useSyncExternalStore
 const subscribeCart = (callback: () => void) => cartStore.subscribe(callback);
 const getCartSnapshot = () => cartStore.getState();
-const getCartServerSnapshot = () => INITIAL_CART_STATE;
+const getCartServerSnapshot = () => ({ 
+  items: [], 
+  savedForLater: [], 
+  currency: 'BDT' as CurrencyCode, 
+  isDrawerOpen: false, 
+  deliveryMethod: null,
+  discount: null 
+});
 
 // React hook
 export function useCart() {
   const state = useSyncExternalStore(subscribeCart, getCartSnapshot, getCartServerSnapshot);
+  const { data: session, isPending } = authClient.useSession();
 
-  // Initialize store on client side
+  // Sync cart when session changes
   useEffect(() => {
-    cartStore.initialize();
-  }, []);
+    if (!isPending) {
+      const userId = session?.user?.id || null;
+      cartStore.loadUserCart(userId);
+    }
+  }, [session?.user?.id, isPending]);
 
   // Derive values from subscribed state for reactive updates
   const itemCount = state.items.reduce((total, item) => total + item.quantity, 0);
