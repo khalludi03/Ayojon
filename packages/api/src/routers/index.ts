@@ -6,10 +6,10 @@ import { vendorProductRouter } from "./product";
 import { adminRouter } from "./admin";
 
 export const appRouter = os.router({
-  ...storageRouter,
-  ...vendorRouter,
-  ...vendorProductRouter,
-  ...adminRouter,
+  storage: storageRouter,
+  vendor: vendorRouter,
+  product: vendorProductRouter,
+  admin: adminRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",
