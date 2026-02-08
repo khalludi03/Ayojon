@@ -315,7 +315,11 @@ const rpcHandler = new RPCHandler(appRouter);
 
 // oRPC endpoints
 app.use("/api/*", async (c, next) => {
-  console.log(`[oRPC Debug] Incoming: ${c.req.method} ${c.req.url}`);
+  // Debug logging only in development to avoid log volume and sensitive URL exposure
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[oRPC Debug] Incoming: ${c.req.method} ${c.req.url}`);
+  }
+
   const context = await createContext({ context: c });
 
   const { matched, response } = await rpcHandler.handle(c.req.raw, {
@@ -323,7 +327,9 @@ app.use("/api/*", async (c, next) => {
     context,
   });
 
-  console.log(`[oRPC Debug] Matched: ${matched}, Status: ${response?.status}`);
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[oRPC Debug] Matched: ${matched}, Status: ${response?.status}`);
+  }
 
   if (matched) {
     return response;
