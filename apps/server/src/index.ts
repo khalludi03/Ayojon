@@ -20,6 +20,21 @@ import { z } from "zod";
 const app = new Hono();
 
 app.use(logger());
+
+app.onError((err, c) => {
+  // Always log full error details server-side for debugging
+  console.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
+
+  // In production, return generic error to avoid leaking internal details
+  // (SQL errors, stack traces, file paths, etc.)
+  const isProduction = process.env.NODE_ENV === "production";
+  const errorMessage = isProduction
+    ? "Internal Server Error"
+    : err.message || "Internal Server Error";
+
+  return c.json({ error: errorMessage }, 500);
+});
+
 app.use(
   "/*",
   cors({
@@ -300,12 +315,21 @@ const rpcHandler = new RPCHandler(appRouter);
 
 // oRPC endpoints
 app.use("/api/*", async (c, next) => {
+  // Debug logging only in development to avoid log volume and sensitive URL exposure
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[oRPC Debug] Incoming: ${c.req.method} ${c.req.url}`);
+  }
+
   const context = await createContext({ context: c });
 
   const { matched, response } = await rpcHandler.handle(c.req.raw, {
     prefix: "/api",
     context,
   });
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[oRPC Debug] Matched: ${matched}, Status: ${response?.status}`);
+  }
 
   if (matched) {
     return response;

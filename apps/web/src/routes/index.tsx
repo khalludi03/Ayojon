@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { Award, Camera, Flame, Heart, Home, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
 
 import { HeroCarousel } from '@/components/carousel/HeroCarousel'
@@ -12,8 +12,25 @@ import { InfiniteProductGrid } from '@/components/product/InfiniteProductGrid'
 import { EventsSection } from '@/components/events/EventsSection'
 import { FeaturedProductsSection } from '@/components/product/FeaturedProductsSection'
 import { useForYou, useHotDeals, useProductsByCategory } from '@/hooks/use-products'
+import { getUser } from '@/functions/get-user'
 
-export const Route = createFileRoute('/')({ component: HomePage })
+export const Route = createFileRoute('/')({
+  beforeLoad: async () => {
+    const session = await getUser();
+    if (session) {
+      const user = session.user as any;
+      // Redirect admin users to admin dashboard
+      if (user.role === 'admin') {
+        throw redirect({ to: '/admin/dashboard' });
+      }
+      // Redirect vendor users to vendor dashboard
+      if (user.role === 'vendor') {
+        throw redirect({ to: '/vendor/dashboard' });
+      }
+    }
+  },
+  component: HomePage
+})
 
 function HomePage() {
   // Fetch product sections

@@ -1,13 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header/Header";
-import { VendorHeader } from "@/components/layout/header/VendorHeader";
-import { AdminHeader } from "@/components/layout/header/AdminHeader";
+import { AdminLayout } from "@/components/layout/AdminLayout";
+import { VendorLayout } from "@/components/layout/VendorLayout";
 import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
@@ -72,10 +70,35 @@ function RootDocument() {
     }
   }, [theme]);
 
-  const renderHeader = () => {
-    if (isAdminRoute) return <AdminHeader />;
-    if (isVendorRoute) return <VendorHeader />;
-    return <Header />;
+  // Admin and Vendor routes use sidebar layouts
+  const renderContent = () => {
+    if (isAdminRoute) {
+      return (
+        <AdminLayout>
+          <Outlet />
+        </AdminLayout>
+      );
+    }
+
+    if (isVendorRoute) {
+      return (
+        <VendorLayout>
+          <Outlet />
+        </VendorLayout>
+      );
+    }
+
+    // Regular customer routes
+    return (
+      <>
+        <Header />
+        <main className="flex-1">
+          <AppBreadcrumb />
+          <Outlet />
+        </main>
+        <Footer />
+      </>
+    );
   };
 
   return (
@@ -89,7 +112,7 @@ function RootDocument() {
                   var theme = localStorage.getItem('ayojon-theme');
                   var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
                   var activeTheme = theme || (supportDarkMode ? 'dark' : 'light');
-                  
+
                   if (activeTheme === 'dark') {
                     document.documentElement.classList.add('dark');
                     document.documentElement.style.colorScheme = 'dark';
@@ -106,17 +129,10 @@ function RootDocument() {
       </head>
       <body className="min-h-screen flex flex-col">
         <ToastProvider>
-          {renderHeader()}
-          <main className="flex-1">
-            <AppBreadcrumb />
-            <Outlet />
-          </main>
-          {!isVendorRoute && !isAdminRoute && <Footer />}
+          {renderContent()}
           <ProductModal />
         </ToastProvider>
         <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
         <Scripts />
       </body>
     </html>

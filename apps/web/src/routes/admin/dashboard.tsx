@@ -6,10 +6,10 @@ import {
   Package, 
   ShoppingBag, 
   DollarSign, 
-  TrendingUp,
   UserPlus,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Activity
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -32,10 +32,17 @@ export const Route = createFileRoute('/admin/dashboard' as any)({
 });
 
 function AdminDashboardPage() {
-  const { data, isLoading } = useQuery(orpc.getPlatformMetrics.queryOptions());
+  const { data, isLoading } = useQuery(orpc.admin.getPlatformMetrics.queryOptions());
 
   if (isLoading) {
-    return <div className="p-8">Loading metrics...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+          <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Loading Platform Metrics...</p>
+        </div>
+      </div>
+    );
   }
 
   const metrics = data?.metrics;
@@ -51,12 +58,12 @@ function AdminDashboardPage() {
               Platform Overview
             </h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
-              Monitoring Ayojon Marketplace health and growth.
+              Real-time monitoring of Ayojon Marketplace ecosystem.
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="bg-white dark:bg-slate-900">Download Report</Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Live View</Button>
+          <div className="flex items-center gap-2 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] bg-white dark:bg-slate-900 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            System Live
           </div>
         </div>
 
@@ -67,35 +74,35 @@ function AdminDashboardPage() {
             value={metrics?.totalUsers} 
             icon={Users} 
             color="text-blue-600" 
-            bg="bg-blue-100" 
+            bg="bg-blue-100 dark:bg-blue-950/30" 
           />
           <MetricCard 
             title="Total Vendors" 
             value={metrics?.totalVendors} 
             icon={Store} 
             color="text-purple-600" 
-            bg="bg-purple-100" 
+            bg="bg-purple-100 dark:bg-purple-950/30" 
           />
           <MetricCard 
             title="Total Products" 
             value={metrics?.totalProducts} 
             icon={Package} 
             color="text-orange-600" 
-            bg="bg-orange-100" 
+            bg="bg-orange-100 dark:bg-orange-950/30" 
           />
           <MetricCard 
             title="Orders (MTD)" 
             value={metrics?.monthlyOrders} 
             icon={ShoppingBag} 
             color="text-emerald-600" 
-            bg="bg-emerald-100" 
+            bg="bg-emerald-100 dark:bg-emerald-950/30" 
           />
           <MetricCard 
             title="Revenue (MTD)" 
             value={`৳${metrics?.monthlyRevenue.toLocaleString()}`} 
             icon={DollarSign} 
             color="text-indigo-600" 
-            bg="bg-indigo-100" 
+            bg="bg-indigo-100 dark:bg-indigo-950/30" 
           />
         </div>
 
@@ -104,18 +111,20 @@ function AdminDashboardPage() {
           <ActivityWidget 
             title="Recent Orders" 
             link="/admin/orders"
-            icon={ShoppingBag}
+            icon={Activity}
           >
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {data?.recentOrders.map((order: any) => (
+              {data?.recentOrders.length === 0 ? (
+                <div className="py-8 text-center text-slate-500 font-medium">No orders recorded this month.</div>
+              ) : data?.recentOrders.map((order: any) => (
                 <div key={order.id} className="py-4 flex items-center justify-between group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-lg transition-colors">
                   <div className="flex flex-col">
                     <span className="text-sm font-bold text-slate-900 dark:text-white">Order #{order.id.slice(0, 8)}</span>
-                    <span className="text-xs text-slate-500 font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase">{new Date(order.createdAt).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-black text-slate-900 dark:text-white">৳{parseFloat(order.total).toLocaleString()}</span>
-                    <div className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-700">
+                    <div className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
                       {order.status}
                     </div>
                   </div>
@@ -134,17 +143,22 @@ function AdminDashboardPage() {
               {data?.recentUsers.map((user: any) => (
                 <div key={user.id} className="py-4 flex items-center justify-between group cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900/50 px-2 rounded-lg transition-colors">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                    <div className="h-9 w-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 font-black text-sm transition-transform group-hover:scale-110">
                       {user.name[0]}
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-900 dark:text-white">{user.name}</span>
-                      <span className="text-xs text-slate-500 font-medium">{user.email}</span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 transition-colors">{user.name}</span>
+                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-tight">{user.email}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400">{user.role}</span>
-                    <span className="text-[10px] text-slate-400 font-medium">{new Date(user.createdAt).toLocaleDateString()}</span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-tighter",
+                      user.role === 'admin' ? "bg-purple-100 text-purple-700" : "bg-slate-100 text-slate-700"
+                    )}>
+                      {user.role}
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-bold uppercase">{new Date(user.createdAt).toLocaleDateString()}</span>
                   </div>
                 </div>
               ))}
@@ -152,15 +166,18 @@ function AdminDashboardPage() {
           </ActivityWidget>
         </div>
 
-        {/* Quick Links */}
-        <div className="bg-indigo-600 rounded-2xl p-8 text-white relative overflow-hidden shadow-xl shadow-indigo-200 dark:shadow-none">
-          <div className="relative z-10 grid gap-8 md:grid-cols-4">
-            <QuickLink label="Manage Users" count={metrics?.totalUsers} to="/admin/users" />
-            <QuickLink label="Vendor Requests" count={metrics?.totalVendors} to="/admin/vendors" />
-            <QuickLink label="Live Inventory" count={metrics?.totalProducts} to="/admin/products" />
-            <QuickLink label="Total Fulfillment" count={metrics?.monthlyOrders} to="/admin/orders" />
+        {/* Quick Access Control Bar */}
+        <div className="bg-indigo-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl shadow-indigo-200 dark:shadow-none">
+          <div className="relative z-10">
+            <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-8 text-indigo-100">Management Console</h3>
+            <div className="grid gap-12 md:grid-cols-4">
+              <QuickLink label="Users & Permissions" count={metrics?.totalUsers} to="/admin/users" />
+              <QuickLink label="Active Vendors" count={metrics?.totalVendors} to="/admin/vendors" />
+              <QuickLink label="Global Inventory" count={metrics?.totalProducts} to="/admin/products" />
+              <QuickLink label="Sales & Fulfillment" count={metrics?.monthlyOrders} to="/admin/orders" />
+            </div>
           </div>
-          {/* Decorative shapes */}
+          {/* Decorative accents */}
           <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -left-10 -top-10 h-64 w-64 rounded-full bg-black/10 blur-3xl" />
         </div>
@@ -171,26 +188,26 @@ function AdminDashboardPage() {
 
 function MetricCard({ title, value, icon: Icon, color, bg }: any) {
   return (
-    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center mb-4", bg, color)}>
-        <Icon className="h-5 w-5" />
+    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all hover:shadow-lg hover:-translate-y-1 group">
+      <div className={cn("h-12 w-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110", bg, color)}>
+        <Icon className="h-6 w-6" />
       </div>
-      <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">{title}</p>
-      <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">{value}</h3>
+      <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em]">{title}</p>
+      <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">{value}</h3>
     </div>
   );
 }
 
 function ActivityWidget({ title, link, icon: Icon, children }: any) {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-        <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md">
+      <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+        <h3 className="font-black uppercase tracking-wider text-slate-900 dark:text-white text-xs flex items-center gap-2">
           <Icon className="h-4 w-4 text-indigo-600" />
           {title}
         </h3>
-        <Link to={link as any} className="text-xs font-bold text-indigo-600 hover:underline flex items-center">
-          Manage All <ArrowRight className="h-3 w-3 ml-1" />
+        <Link to={link as any} className="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:bg-indigo-50 dark:hover:bg-indigo-900/30 px-3 py-1.5 rounded-lg transition-all border border-transparent hover:border-indigo-100">
+          Manage All
         </Link>
       </div>
       <div className="p-6 flex-1">
@@ -203,10 +220,10 @@ function ActivityWidget({ title, link, icon: Icon, children }: any) {
 function QuickLink({ label, count, to }: any) {
   return (
     <Link to={to as any} className="flex flex-col group">
-      <span className="text-xs font-bold text-indigo-100 uppercase tracking-wider group-hover:text-white transition-colors">{label}</span>
-      <span className="text-3xl font-black mt-1 flex items-center gap-2">
+      <span className="text-[10px] font-black text-indigo-200 uppercase tracking-[0.15em] group-hover:text-white transition-colors">{label}</span>
+      <span className="text-4xl font-black mt-2 flex items-center gap-3 tracking-tighter">
         {count}
-        <ArrowRight className="h-5 w-5 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+        <ArrowRight className="h-6 w-6 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 text-indigo-300" />
       </span>
     </Link>
   );

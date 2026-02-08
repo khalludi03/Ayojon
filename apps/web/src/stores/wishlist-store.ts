@@ -19,6 +19,7 @@ export interface WishlistItem {
 
 interface WishlistState {
   items: Array<WishlistItem>;
+  isInitialized: boolean;
 }
 
 interface WishlistStore {
@@ -30,6 +31,7 @@ interface WishlistStore {
   getItemCount: () => number;
   subscribe: (callback: () => void) => () => void;
   loadUserWishlist: (userId: string | null) => void;
+  initialize: () => void;
 }
 
 // Helper function to get storage key based on user ID
@@ -40,6 +42,7 @@ function getStorageKey(userId: string | null): string {
 function createWishlistStore(): WishlistStore {
   let state: WishlistState = {
     items: [],
+    isInitialized: false,
   };
   let currentUserId: string | null = null;
   const listeners = new Set<() => void>();
@@ -69,10 +72,15 @@ function createWishlistStore(): WishlistStore {
       console.log('[Wishlist] Loading wishlist:', { userId, storageKey, hasData: !!stored });
 
       if (stored) {
-        state = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        // Normalize/validate parsed data - ensure items is always an array
+        state = {
+          items: Array.isArray(parsed.items) ? parsed.items : [],
+          isInitialized: true
+        };
         console.log('[Wishlist] Loaded items:', state.items.length);
       } else {
-        state = { items: [] };
+        state = { items: [], isInitialized: true };
         console.log('[Wishlist] No stored data, initialized empty');
       }
 
@@ -83,13 +91,21 @@ function createWishlistStore(): WishlistStore {
 
         if (legacyGlobal) {
           // Migrate global wishlist to this user
-          state = JSON.parse(legacyGlobal);
-          localStorage.setItem(storageKey, legacyGlobal);
+          const parsed = JSON.parse(legacyGlobal);
+          state = {
+            items: Array.isArray(parsed.items) ? parsed.items : [],
+            isInitialized: true
+          };
+          localStorage.setItem(storageKey, JSON.stringify({ items: state.items }));
           localStorage.removeItem(STORAGE_KEY_PREFIX);
         } else if (legacyOld) {
           // Migrate very old wishlist
-          state = JSON.parse(legacyOld);
-          localStorage.setItem(storageKey, legacyOld);
+          const parsed = JSON.parse(legacyOld);
+          state = {
+            items: Array.isArray(parsed.items) ? parsed.items : [],
+            isInitialized: true
+          };
+          localStorage.setItem(storageKey, JSON.stringify({ items: state.items }));
           localStorage.removeItem(LEGACY_STORAGE_KEY);
         }
       }
@@ -100,30 +116,13 @@ function createWishlistStore(): WishlistStore {
 
     } catch (e) {
       console.error('Failed to load wishlist from localStorage:', e);
-      state = { items: [] };
+      state = { items: [], isInitialized: true };
     }
   };
 
   // Initial load - check if there's a session
   if (typeof window !== 'undefined') {
-    syncFromSession();
-
-    // Subscribe to auth session changes using nanostores subscribe API
-    const sessionSignal = authClient.$store?.atoms?.$sessionSignal;
-    if (sessionSignal) {
-      sessionSignal.subscribe(() => {
-        syncFromSession(true);
-      });
-    }
-
-    // Fix: Reload wishlist when tab becomes visible
-    // This handles the case where localStorage might have changed in another tab
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        console.log('[Wishlist] Tab became visible, reloading for user:', currentUserId);
-        syncFromSession(true);
-      }
-    });
+    // We'll call initialize manually or via useEffect to avoid hydration mismatch
   }
 
   const notify = () => {
@@ -133,7 +132,8 @@ function createWishlistStore(): WishlistStore {
   const persist = () => {
     if (typeof window !== 'undefined') {
       const storageKey = getStorageKey(currentUserId);
-      localStorage.setItem(storageKey, JSON.stringify(state));
+      const { isInitialized, ...persistedState } = state;
+      localStorage.setItem(storageKey, JSON.stringify(persistedState));
       console.log('[Wishlist] Persisted to localStorage:', {
         storageKey,
         itemCount: state.items.length,
@@ -144,6 +144,11 @@ function createWishlistStore(): WishlistStore {
 
   return {
     getState: () => state,
+
+    initialize: () => {
+      if (state.isInitialized || typeof window === 'undefined') return;
+      syncFromSession();
+    },
 
     addItem: (product: Product) => {
       if (state.items.some((item) => item.productId === product.id)) {
@@ -250,15 +255,25 @@ function createWishlistStore(): WishlistStore {
 // Singleton instance
 export const wishlistStore = createWishlistStore();
 
+const INITIAL_WISHLIST_STATE: WishlistState = { 
+  items: [],
+  isInitialized: false
+};
+
 // Stable callbacks for useSyncExternalStore
 const subscribeWishlist = (callback: () => void) => wishlistStore.subscribe(callback);
 const getWishlistSnapshot = () => wishlistStore.getState();
-const getWishlistServerSnapshot = () => ({ items: [] });
+const getWishlistServerSnapshot = () => INITIAL_WISHLIST_STATE;
 
 // React hook
 export function useWishlist() {
   const state = useSyncExternalStore(subscribeWishlist, getWishlistSnapshot, getWishlistServerSnapshot);
   const { data: session, isPending } = authClient.useSession();
+
+  // Initialize store on client side
+  useEffect(() => {
+    wishlistStore.initialize();
+  }, []);
 
   // Sync wishlist when session changes
   useEffect(() => {

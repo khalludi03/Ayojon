@@ -9,7 +9,7 @@ export async function uploadFile(file: File, path: string): Promise<string> {
   const key = `${path}/${fileName}`;
 
   // 1. Get presigned URL from server
-  const { url, publicUrl } = await orpcClient.getUploadUrl({
+  const { url, publicUrl } = await orpcClient.storage.getUploadUrl({
     key,
     type: file.type,
   });
