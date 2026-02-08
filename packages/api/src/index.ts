@@ -32,3 +32,15 @@ export const protectedProcedure = baseProcedure.use(async ({ context, next }) =>
     },
   });
 });
+
+// Admin procedure (requires admin role)
+export const adminProcedure = protectedProcedure.use(async ({ context, next }) => {
+  const user = context.session.user as any;
+  if (user?.role !== 'admin') {
+    throw new ORPCError("FORBIDDEN", {
+      message: "Admin access required",
+    });
+  }
+
+  return next(context);
+});
