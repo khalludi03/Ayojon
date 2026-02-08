@@ -84,7 +84,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
       >
         {/* Sidebar Header */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-          {!sidebarCollapsed && <Logo variant="vendor" />}
+          {!sidebarCollapsed && <Logo />}
           <Button
             variant="ghost"
             size="icon"
@@ -166,7 +166,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
           >
             <Menu className="h-6 w-6" />
           </Button>
-          <Logo variant="vendor" />
+          <Logo />
           <div className="ml-auto flex items-center gap-2">
             <ThemeToggle />
             <Button
@@ -190,7 +190,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
             <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col lg:hidden animate-in slide-in-from-left duration-300">
               {/* Mobile Sidebar Header */}
               <div className="flex h-16 items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
-                <Logo variant="vendor" />
+                <Logo />
                 <Button
                   variant="ghost"
                   size="icon"
