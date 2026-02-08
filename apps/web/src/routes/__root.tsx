@@ -1,13 +1,11 @@
 import type { QueryClient } from "@tanstack/react-query";
 
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 
 import { Toaster } from "@/components/ui/sonner";
 import { Header } from "@/components/layout/header/Header";
-import { VendorHeader } from "@/components/layout/header/VendorHeader";
 import { AdminLayout } from "@/components/layout/AdminLayout";
+import { VendorLayout } from "@/components/layout/VendorLayout";
 import { Footer } from "@/components/layout/footer/Footer";
 import { ToastProvider } from "@/components/ui/toast";
 import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
@@ -72,13 +70,7 @@ function RootDocument() {
     }
   }, [theme]);
 
-  const renderHeader = () => {
-    if (isVendorRoute) return <VendorHeader />;
-    if (!isAdminRoute) return <Header />;
-    return null; // Admin uses sidebar layout
-  };
-
-  // For admin routes, use AdminLayout wrapper
+  // Admin and Vendor routes use sidebar layouts
   const renderContent = () => {
     if (isAdminRoute) {
       return (
@@ -88,14 +80,23 @@ function RootDocument() {
       );
     }
 
+    if (isVendorRoute) {
+      return (
+        <VendorLayout>
+          <Outlet />
+        </VendorLayout>
+      );
+    }
+
+    // Regular customer routes
     return (
       <>
-        {renderHeader()}
+        <Header />
         <main className="flex-1">
           <AppBreadcrumb />
           <Outlet />
         </main>
-        {!isVendorRoute && <Footer />}
+        <Footer />
       </>
     );
   };
@@ -132,8 +133,6 @@ function RootDocument() {
           <ProductModal />
         </ToastProvider>
         <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
         <Scripts />
       </body>
     </html>

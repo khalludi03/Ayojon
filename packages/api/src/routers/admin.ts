@@ -658,7 +658,7 @@ export const adminRouter = os.router({
         metrics: {
           totalUsers: userCount?.value ?? 0,
           totalVendors: vendorCount?.value ?? 0,
-          totalProducts: productCount???.value ?? 0,
+          totalProducts: productCount?.value ?? 0,
           monthlyOrders: monthlyOrderCount?.value ?? 0,
           monthlyRevenue: parseFloat(monthlyRevenue?.value ?? "0"),
         },
