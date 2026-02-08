@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { adminProcedure } from "../index";
+import { adminProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
-import { 
-  user, 
-  vendors, 
-  products, 
+import {
+  user,
+  vendors,
+  products,
   orders,
   platformSettings,
   productImages,
@@ -13,7 +13,7 @@ import {
 import { count, eq, gte, sql, or, ilike, and, desc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 
-export const adminRouter = {
+export const adminRouter = os.router({
   listUsers: adminProcedure
     .route({
       method: "POST",
@@ -658,7 +658,7 @@ export const adminRouter = {
         metrics: {
           totalUsers: userCount?.value ?? 0,
           totalVendors: vendorCount?.value ?? 0,
-          totalProducts: productCount?.value ?? 0,
+          totalProducts: productCount???.value ?? 0,
           monthlyOrders: monthlyOrderCount?.value ?? 0,
           monthlyRevenue: parseFloat(monthlyRevenue?.value ?? "0"),
         },
@@ -666,4 +666,4 @@ export const adminRouter = {
         recentUsers,
       };
     }),
-};
+});
