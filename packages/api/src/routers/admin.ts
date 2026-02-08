@@ -77,7 +77,9 @@ export const adminRouter = os.router({
       description: "Returns detailed information about a specific user.",
       tags: ["Admin"],
     })
-    .input(z.any())
+    .input(z.object({
+      id: z.string(),
+    }))
     .handler(async ({ input }) => {
       const userData = await db
         .select()
@@ -165,10 +167,15 @@ export const adminRouter = os.router({
       description: "Lists vendors with search, pagination and status filtering.",
       tags: ["Admin"],
     })
-    .input(z.any())
+    .input(z.object({
+      search: z.string().optional(),
+      status: z.enum(['pending', 'approved', 'rejected', 'suspended']).optional(),
+      limit: z.coerce.number().int().min(1).max(100).default(50),
+      offset: z.coerce.number().int().min(0).default(0),
+    }))
     .handler(async ({ input }) => {
       const conditions = [];
-      const parsedInput = input || {};
+      const parsedInput = input;
       if (parsedInput.search) {
         conditions.push(or(
           ilike(vendors.name, `%${parsedInput.search}%`),
@@ -216,7 +223,9 @@ export const adminRouter = os.router({
       description: "Returns detailed information about a specific vendor.",
       tags: ["Admin"],
     })
-    .input(z.any())
+    .input(z.object({
+      id: z.string(),
+    }))
     .handler(async ({ input }) => {
       const vendorData = await db
         .select()
@@ -251,7 +260,11 @@ export const adminRouter = os.router({
       description: "Updates vendor status or verification.",
       tags: ["Admin"],
     })
-    .input(z.any())
+    .input(z.object({
+      id: z.string(),
+      isActive: z.boolean().optional(),
+      isVerified: z.boolean().optional(),
+    }))
     .handler(async ({ input }) => {
       const result = await db
         .update(vendors)
@@ -356,7 +369,9 @@ export const adminRouter = os.router({
       description: "Deletes a vendor profile permanently. User account remains but role is reverted.",
       tags: ["Admin"],
     })
-    .input(z.any())
+    .input(z.object({
+      id: z.string(),
+    }))
     .handler(async ({ input }) => {
       const result = await db.transaction(async (tx) => {
         const vendorRecord = await tx
@@ -394,9 +409,15 @@ export const adminRouter = os.router({
       description: "Lists all products across the platform with advanced filtering.",
       tags: ["Admin"],
     })
-    .input(z.any())
+    .input(z.object({
+      vendorId: z.string().optional(),
+      categoryId: z.string().optional(),
+      search: z.string().optional(),
+      limit: z.coerce.number().int().min(1).max(100).default(50),
+      offset: z.coerce.number().int().min(0).default(0),
+    }))
     .handler(async ({ input }) => {
-      const parsedInput = input || {};
+      const parsedInput = input;
       const conditions = [];
       if (parsedInput.vendorId) conditions.push(eq(products.vendorId, parsedInput.vendorId));
       if (parsedInput.categoryId) conditions.push(eq(products.categoryId, parsedInput.categoryId));
@@ -509,16 +530,28 @@ export const adminRouter = os.router({
       })
     )
     .handler(async ({ input }) => {
+      // Use upsert to handle both insert and update cases
+      // This ensures settings are bootstrapped if they don't exist
       const result = await db
-        .update(platformSettings)
-        .set({
+        .insert(platformSettings)
+        .values({
+          id: "current",
           ...input,
+          // Provide defaults for required fields if not in input
+          contactEmail: input.contactEmail ?? "admin@ayojon.com",
+          supportPhone: input.supportPhone ?? "+880-1234-567890",
           updatedAt: new Date(),
         })
-        .where(eq(platformSettings.id, "current"))
+        .onConflictDoUpdate({
+          target: platformSettings.id,
+          set: {
+            ...input,
+            updatedAt: new Date(),
+          },
+        })
         .returning();
 
-      return result[0] ?? null;
+      return result[0];
     }),
 
   listOrders: adminProcedure

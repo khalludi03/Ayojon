@@ -22,8 +22,17 @@ const app = new Hono();
 app.use(logger());
 
 app.onError((err, c) => {
+  // Always log full error details server-side for debugging
   console.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
-  return c.json({ error: err.message || "Internal Server Error" }, 500);
+
+  // In production, return generic error to avoid leaking internal details
+  // (SQL errors, stack traces, file paths, etc.)
+  const isProduction = process.env.NODE_ENV === "production";
+  const errorMessage = isProduction
+    ? "Internal Server Error"
+    : err.message || "Internal Server Error";
+
+  return c.json({ error: errorMessage }, 500);
 });
 
 app.use(

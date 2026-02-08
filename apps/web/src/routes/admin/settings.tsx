@@ -46,8 +46,22 @@ function AdminSettingsPage() {
   useEffect(() => {
     if (settings) {
       setFormData(settings);
+    } else if (!isLoading && settings === null) {
+      // Initialize with default values if settings don't exist
+      setFormData({
+        platformName: "Ayojon",
+        contactEmail: "admin@ayojon.com",
+        supportPhone: "+880-1234-567890",
+        platformCommission: 10,
+        freeShippingThreshold: 2000,
+        insideDhakaRate: 60,
+        outsideDhakaRate: 120,
+        enableGuestCheckout: true,
+        enableVendorRegistration: true,
+        isMaintenanceMode: false,
+      });
     }
-  }, [settings]);
+  }, [settings, isLoading]);
 
   const updateMutation = useMutation(orpc.admin.updatePlatformSettings.mutationOptions({
     onSuccess: () => {
@@ -65,6 +79,12 @@ function AdminSettingsPage() {
     // Handle NaN by keeping the previous value or setting undefined
     const validValue = isNaN(value) ? undefined : value;
     setFormData((prev: any) => ({ ...prev, [field]: validValue }));
+  };
+
+  const handleBooleanChange = (field: string, value: boolean | "indeterminate") => {
+    // Coerce to boolean - treat "indeterminate" as false
+    const boolValue = value === true;
+    setFormData((prev: any) => ({ ...prev, [field]: boolValue }));
   };
 
   const handleSave = () => {
@@ -201,17 +221,17 @@ function AdminSettingsPage() {
           {/* Feature Toggles */}
           <Section icon={ShieldAlert} title="Feature Visibility">
             <div className="space-y-6">
-              <ToggleRow 
-                label="Allow Guest Checkout" 
+              <ToggleRow
+                label="Allow Guest Checkout"
                 description="Customers can place orders without creating an account."
                 checked={formData.enableGuestCheckout}
-                onChange={(v) => handleChange('enableGuestCheckout', v)}
+                onChange={(v) => handleBooleanChange('enableGuestCheckout', v)}
               />
-              <ToggleRow 
-                label="New Vendor Registration" 
+              <ToggleRow
+                label="New Vendor Registration"
                 description="Open the platform for new business signups."
                 checked={formData.enableVendorRegistration}
-                onChange={(v) => handleChange('enableVendorRegistration', v)}
+                onChange={(v) => handleBooleanChange('enableVendorRegistration', v)}
               />
               
               <div className="pt-4 border-t border-red-100 dark:border-red-900/30">
@@ -223,9 +243,9 @@ function AdminSettingsPage() {
                     </div>
                     <p className="text-xs text-red-700/70 dark:text-red-400/70 font-medium">Hides store from public and prevents all orders. Use only for updates.</p>
                   </div>
-                  <Checkbox 
-                    checked={formData.isMaintenanceMode} 
-                    onCheckedChange={(v) => handleChange('isMaintenanceMode', v)}
+                  <Checkbox
+                    checked={formData.isMaintenanceMode}
+                    onCheckedChange={(v) => handleBooleanChange('isMaintenanceMode', v)}
                     className="size-6 rounded-lg border-red-200 data-checked:bg-red-600"
                   />
                 </div>
