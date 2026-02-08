@@ -3,7 +3,7 @@ import { platformSettings } from "../packages/db/src/schema/settings";
 
 async function init() {
   console.log("Initializing platform settings...");
-  
+
   try {
     await db.insert(platformSettings).values({
       id: "current",
@@ -19,12 +19,26 @@ async function init() {
       isMaintenanceMode: false
     }).onConflictDoNothing();
 
-    console.log("✅ Platform settings initialized.");
+    console.log("✅ Platform settings initialized successfully.");
+    return 0; // Success
   } catch (error) {
-    console.error("Initialization failed:", error);
-  } finally {
-    process.exit();
+    console.error("❌ Initialization failed:", error);
+    return 1; // Failure
   }
 }
 
-init();
+async function main() {
+  const exitCode = await init();
+
+  // Close database connection if available
+  if (db && typeof (db as any).$client?.end === 'function') {
+    await (db as any).$client.end();
+  }
+
+  process.exit(exitCode);
+}
+
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});

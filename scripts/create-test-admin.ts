@@ -22,6 +22,7 @@ async function createAdmin() {
 
     if (!newUser) {
       console.error("❌ Failed to create user. It might already exist.");
+      return 1; // Failure
     }
 
     // 2. Promote to Admin
@@ -37,11 +38,25 @@ async function createAdmin() {
     console.log(`Email: ${email}`);
     console.log(`Password: ${password}`);
 
+    return 0; // Success
   } catch (error) {
     console.error("❌ Error:", error);
-  } finally {
-    process.exit();
+    return 1; // Failure
   }
 }
 
-createAdmin();
+async function main() {
+  const exitCode = await createAdmin();
+
+  // Close database connection if available
+  if (db && typeof (db as any).$client?.end === 'function') {
+    await (db as any).$client.end();
+  }
+
+  process.exit(exitCode);
+}
+
+main().catch((error) => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});

@@ -61,8 +61,18 @@ function AdminSettingsPage() {
     setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
+  const handleNumberChange = (field: string, value: number) => {
+    // Handle NaN by keeping the previous value or setting undefined
+    const validValue = isNaN(value) ? undefined : value;
+    setFormData((prev: any) => ({ ...prev, [field]: validValue }));
+  };
+
   const handleSave = () => {
-    updateMutation.mutate(formData);
+    // Filter out undefined values to avoid sending invalid data
+    const cleanedData = Object.fromEntries(
+      Object.entries(formData).filter(([_, value]) => value !== undefined)
+    );
+    updateMutation.mutate(cleanedData);
   };
 
   if (isLoading || !formData) {
@@ -109,11 +119,13 @@ function AdminSettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="platformCommission" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Marketplace Commission (%)</Label>
                 <div className="relative">
-                  <Input 
-                    id="platformCommission" 
+                  <Input
+                    id="platformCommission"
                     type="number"
-                    value={formData.platformCommission} 
-                    onChange={(e) => handleChange('platformCommission', parseInt(e.target.value))}
+                    min="0"
+                    max="100"
+                    value={formData.platformCommission ?? ''}
+                    onChange={(e) => handleNumberChange('platformCommission', e.target.valueAsNumber)}
                     className="h-12 rounded-xl border-slate-200 dark:border-slate-800 pr-10"
                   />
                   <Percent className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -152,31 +164,34 @@ function AdminSettingsPage() {
             <div className="grid gap-6 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="freeShippingThreshold" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Free Shipping Min (BDT)</Label>
-                <Input 
-                  id="freeShippingThreshold" 
+                <Input
+                  id="freeShippingThreshold"
                   type="number"
-                  value={formData.freeShippingThreshold} 
-                  onChange={(e) => handleChange('freeShippingThreshold', parseInt(e.target.value))}
+                  min="0"
+                  value={formData.freeShippingThreshold ?? ''}
+                  onChange={(e) => handleNumberChange('freeShippingThreshold', e.target.valueAsNumber)}
                   className="h-12 rounded-xl border-slate-200 dark:border-slate-800"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="insideDhakaRate" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Inside Dhaka (BDT)</Label>
-                <Input 
-                  id="insideDhakaRate" 
+                <Input
+                  id="insideDhakaRate"
                   type="number"
-                  value={formData.insideDhakaRate} 
-                  onChange={(e) => handleChange('insideDhakaRate', parseInt(e.target.value))}
+                  min="0"
+                  value={formData.insideDhakaRate ?? ''}
+                  onChange={(e) => handleNumberChange('insideDhakaRate', e.target.valueAsNumber)}
                   className="h-12 rounded-xl border-slate-200 dark:border-slate-800"
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="outsideDhakaRate" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Outside Dhaka (BDT)</Label>
-                <Input 
-                  id="outsideDhakaRate" 
+                <Input
+                  id="outsideDhakaRate"
                   type="number"
-                  value={formData.outsideDhakaRate} 
-                  onChange={(e) => handleChange('outsideDhakaRate', parseInt(e.target.value))}
+                  min="0"
+                  value={formData.outsideDhakaRate ?? ''}
+                  onChange={(e) => handleNumberChange('outsideDhakaRate', e.target.valueAsNumber)}
                   className="h-12 rounded-xl border-slate-200 dark:border-slate-800"
                 />
               </div>

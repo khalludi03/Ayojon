@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
 
 export const platformSettings = pgTable("platform_settings", {
   id: text("id").primaryKey(), // Usually just 'current'
