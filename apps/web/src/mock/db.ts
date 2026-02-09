@@ -72,6 +72,10 @@ class MockDatabase {
       result = result.filter((p) => p.categoryId === filters.category);
     }
 
+    if (filters.categoryIds && filters.categoryIds.length > 0) {
+      result = result.filter((p) => filters.categoryIds!.includes(p.categoryId));
+    }
+
     if (filters.subcategory) {
       const beforeCount = result.length;
       result = result.filter((p) => p.subcategoryId === filters.subcategory);

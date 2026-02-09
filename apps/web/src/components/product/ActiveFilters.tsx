@@ -7,7 +7,7 @@ import { formatPrice } from '@/lib/utils';
 import { EVENT_TYPES, DIVISIONS, PRODUCT_CONDITIONS, DELIVERY_OPTIONS } from '@/types';
 
 export function ActiveFilters() {
-  const { filters, clearFilter, clearAllFilters, activeFilterCount } = useFilters();
+  const { filters, setFilter, clearFilter, clearAllFilters, activeFilterCount } = useFilters();
   const { data: categories } = useCategories();
 
   if (activeFilterCount === 0) return null;
@@ -31,6 +31,21 @@ export function ActiveFilters() {
           </button>
         </Badge>
       )}
+
+      {filters.categoryIds && filters.categoryIds.length > 0 && filters.categoryIds.map(id => (
+        <Badge key={id} variant="outline" className="gap-1 pr-1">
+          Category: {getCategoryName(id)}
+          <button
+            onClick={() => {
+              const updated = filters.categoryIds?.filter(cid => cid !== id);
+              setFilter('categoryIds', updated && updated.length > 0 ? updated : undefined);
+            }}
+            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </Badge>
+      ))}
 
       {(filters.minPrice !== undefined || filters.maxPrice !== undefined) && (
         <Badge variant="outline" className="gap-1 pr-1">

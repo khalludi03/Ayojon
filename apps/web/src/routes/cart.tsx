@@ -81,7 +81,13 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
                 </h3>
               </Link>
               <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                by {item.product.vendor.name}
+                by <Link 
+                  to="/vendor/$vendorId" 
+                  params={{ vendorId: item.product.vendor.id }}
+                  className="hover:text-primary hover:underline transition-colors"
+                >
+                  {item.product.vendor.name}
+                </Link>
               </p>
             </div>
             <button
@@ -210,7 +216,13 @@ function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
                 </h3>
               </Link>
               <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                by {item.product.vendor.name}
+                by <Link 
+                  to="/vendor/$vendorId" 
+                  params={{ vendorId: item.product.vendor.id }}
+                  className="hover:text-primary hover:underline transition-colors"
+                >
+                  {item.product.vendor.name}
+                </Link>
               </p>
             </div>
             <button

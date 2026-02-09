@@ -12,11 +12,15 @@ export interface Vendor {
   slug: string;
   isVerified: boolean;
   rating: number;
+  reviewCount: number;
   productCount: number;
   location: VendorLocation;
   joinedAt: string;
   description?: string;
   logoUrl?: string;
+  bannerUrl?: string;
+  responseTime?: string;
+  phone?: string;
 }
 
 export interface VendorApplication {

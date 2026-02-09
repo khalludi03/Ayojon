@@ -52,8 +52,22 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   const location = useLocation();
-  const isVendorRoute = location.pathname.startsWith('/vendor');
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Vendor management routes use the VendorLayout (sidebar)
+  // The public vendor store page (/vendor/:vendorId) uses the regular customer layout
+  const reservedVendorRoutes = [
+    '/vendor/dashboard',
+    '/vendor/products',
+    '/vendor/orders',
+    '/vendor/settings',
+    '/vendor/application-pending',
+    '/vendor/application-rejected'
+  ];
+  const isVendorManagementRoute = reservedVendorRoutes.some(route =>
+    location.pathname === route || location.pathname.startsWith(route + '/')
+  );
+
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -80,7 +94,7 @@ function RootDocument() {
       );
     }
 
-    if (isVendorRoute) {
+    if (isVendorManagementRoute) {
       return (
         <VendorLayout>
           <Outlet />
