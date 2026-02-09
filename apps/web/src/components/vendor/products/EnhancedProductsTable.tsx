@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Edit, Trash2, Eye, Package, Copy, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct } from '@/types/vendor-product';
-import { deleteVendorProduct, updateProductStatus, addVendorProduct, updateVendorProduct } from '@/stores/vendor-product-store';
 
 interface EnhancedProductsTableProps {
   products: VendorProduct[];
@@ -12,6 +11,11 @@ interface EnhancedProductsTableProps {
   onSelectAll: (checked: boolean) => void;
   onSelectProduct: (productId: string, checked: boolean) => void;
   onEdit: (product: VendorProduct) => void;
+  onDelete: (productId: string) => void;
+  onToggleStatus: (product: VendorProduct) => void;
+  onDuplicate: (product: VendorProduct) => void;
+  onUpdatePrice: (productId: string, price: number) => void;
+  onUpdateStock: (productId: string, stock: number) => void;
   onRefresh: () => void;
   onSort: (field: 'name' | 'price' | 'stock' | 'createdAt') => void;
   sortField: string;
@@ -20,7 +24,7 @@ interface EnhancedProductsTableProps {
 
 const getStatusColor = (status: VendorProduct['status']) => {
   switch (status) {
-    case 'published':
+    case 'active':
       return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
     case 'draft':
       return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
@@ -51,6 +55,11 @@ export function EnhancedProductsTable({
   onSelectAll,
   onSelectProduct,
   onEdit,
+  onDelete,
+  onToggleStatus,
+  onDuplicate,
+  onUpdatePrice,
+  onUpdateStock,
   onRefresh,
   onSort,
   sortField,
@@ -61,30 +70,16 @@ export function EnhancedProductsTable({
 
   const handleDelete = (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      deleteVendorProduct(productId);
-      onRefresh();
+      onDelete(productId);
     }
   };
 
   const handleToggleStatus = (product: VendorProduct) => {
-    const newStatus = product.status === 'published' ? 'draft' : 'published';
-    updateProductStatus(product.id, newStatus);
-    onRefresh();
+    onToggleStatus(product);
   };
 
   const handleDuplicate = (product: VendorProduct) => {
-    const duplicatedProduct: VendorProduct = {
-      ...product,
-      id: `product-${Date.now()}`,
-      name: `${product.name} (Copy)`,
-      sku: `${product.sku}-COPY-${Date.now().toString(36).toUpperCase()}`,
-      status: 'draft',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      publishedAt: undefined,
-    };
-    addVendorProduct(duplicatedProduct);
-    onRefresh();
+    onDuplicate(product);
   };
 
   const handleSavePriceEdit = (product: VendorProduct) => {
@@ -96,24 +91,8 @@ export function EnhancedProductsTable({
       return;
     }
 
-    if (product.purchaseDetails) {
-      updateVendorProduct(product.id, {
-        purchaseDetails: {
-          ...product.purchaseDetails,
-          regularPrice: newPrice,
-        },
-      });
-    } else if (product.rentalDetails) {
-      updateVendorProduct(product.id, {
-        rentalDetails: {
-          ...product.rentalDetails,
-          dailyRate: newPrice,
-        },
-      });
-    }
-
+    onUpdatePrice(product.id, newPrice);
     setEditingPrice(null);
-    onRefresh();
   };
 
   const handleSaveStockEdit = (product: VendorProduct) => {
@@ -125,24 +104,8 @@ export function EnhancedProductsTable({
       return;
     }
 
-    if (product.purchaseDetails) {
-      updateVendorProduct(product.id, {
-        purchaseDetails: {
-          ...product.purchaseDetails,
-          quantity: newStock,
-        },
-      });
-    } else if (product.rentalDetails) {
-      updateVendorProduct(product.id, {
-        rentalDetails: {
-          ...product.rentalDetails,
-          quantityAvailable: newStock,
-        },
-      });
-    }
-
+    onUpdateStock(product.id, newStock);
     setEditingStock(null);
-    onRefresh();
   };
 
   const SortButton = ({ field, children }: { field: 'name' | 'price' | 'stock' | 'createdAt'; children: React.ReactNode }) => (
@@ -337,7 +300,7 @@ export function EnhancedProductsTable({
                       className={cn(
                         'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
                         getStatusColor(product.status),
-                        stock === 0 && product.status === 'published' && 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        stock === 0 && product.status === 'active' && 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                       )}
                     >
                       {getStatusLabel(product)}
@@ -349,7 +312,7 @@ export function EnhancedProductsTable({
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStatus(product)}
-                        title={product.status === 'published' ? 'Unpublish' : 'Publish'}
+                        title={product.status === 'active' ? 'Unpublish' : 'Publish'}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -417,7 +380,7 @@ export function EnhancedProductsTable({
                       className={cn(
                         'inline-flex rounded-full px-2 py-0.5 text-xs font-semibold',
                         getStatusColor(product.status),
-                        stock === 0 && product.status === 'published' && 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                        stock === 0 && product.status === 'active' && 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                       )}
                     >
                       {getStatusLabel(product)}
@@ -448,7 +411,7 @@ export function EnhancedProductsTable({
                   className="flex-1"
                   onClick={() => handleToggleStatus(product)}
                 >
-                  {product.status === 'published' ? 'Unpublish' : 'Publish'}
+                  {product.status === 'active' ? 'Unpublish' : 'Publish'}
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => onEdit(product)}>
                   <Edit className="h-4 w-4 mr-1" />

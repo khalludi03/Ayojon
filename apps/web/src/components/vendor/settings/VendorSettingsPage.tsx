@@ -102,14 +102,14 @@ export function VendorSettingsPage() {
   const handleRemoveLogo = () => {
     setLogoPreview('');
     setLogoFile(null);
-    setFormData(prev => ({ ...prev, logoUrl: '' }));
+    setFormData(prev => ({ ...prev, logoUrl: null as any }));
     setHasChanges(true);
   };
 
   const handleRemoveBanner = () => {
     setBannerPreview('');
     setBannerFile(null);
-    setFormData(prev => ({ ...prev, bannerUrl: '' }));
+    setFormData(prev => ({ ...prev, bannerUrl: null as any }));
     setHasChanges(true);
   };
 
@@ -147,28 +147,39 @@ export function VendorSettingsPage() {
 
       // 1. Upload new files if selected
       if (logoFile) {
+        console.log('[VendorSettings] Uploading new logo...');
         currentLogoUrl = await uploadFile(logoFile, 'vendor/logos');
       }
       if (bannerFile) {
+        console.log('[VendorSettings] Uploading new banner...');
         currentBannerUrl = await uploadFile(bannerFile, 'vendor/banners');
       }
 
-      // 2. Save to backend
-      await orpcClient.vendor.updateVendorProfile({
+      // 2. Save to backend (old images will be automatically deleted)
+      console.log('[VendorSettings] Saving profile with:', {
+        hasLogo: !!currentLogoUrl,
+        hasBanner: !!currentBannerUrl,
+      });
+
+      const result = await orpcClient.vendor.updateVendorProfile({
         name: formData.name,
         description: formData.description,
         address: formData.address,
         phone: formData.phone,
-        logoUrl: currentLogoUrl || undefined,
-        bannerUrl: currentBannerUrl || undefined,
+        logoUrl: currentLogoUrl === null ? null : (currentLogoUrl || undefined),
+        bannerUrl: currentBannerUrl === null ? null : (currentBannerUrl || undefined),
       });
+
+      if (result.deletedFiles && result.deletedFiles.length > 0) {
+        console.log('[VendorSettings] Deleted old files:', result.deletedFiles);
+      }
 
       setFormData(prev => ({
         ...prev,
         logoUrl: currentLogoUrl,
         bannerUrl: currentBannerUrl
       }));
-      
+
       setLogoFile(null);
       setBannerFile(null);
       setHasChanges(false);

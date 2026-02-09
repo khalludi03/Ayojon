@@ -1,23 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { VendorFormData } from '@/types/vendor';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, UserCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { authClient } from '@/lib/auth-client';
 
 interface AccountStepProps {
   formData: VendorFormData;
   onFormChange: (field: keyof VendorFormData, value: string) => void;
   onNext: () => void;
-  onAccountCreation: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; userId?: string }>;
 }
 
-export function AccountStep({ formData, onFormChange, onNext, onAccountCreation }: AccountStepProps) {
+export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps) {
+  const { data: session } = authClient.useSession();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+
+  // If already logged in, show a different UI
+  if (session?.user) {
+    return (
+      <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+            <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">
+            Already Logged In
+          </h2>
+          <p className="mt-2 text-[hsl(var(--muted-foreground))]">
+            You are currently logged in as <span className="font-semibold text-[hsl(var(--foreground))]">{session.user.email}</span>. 
+            We'll use this account for your vendor registration.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <Button
+            onClick={onNext}
+            size="lg"
+            className="w-full"
+          >
+            Continue as {session.user.name || 'User'} →
+          </Button>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              await authClient.signOut();
+              window.location.reload();
+            }}
+            className="w-full"
+          >
+            Use a different account
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -56,26 +97,8 @@ export function AccountStep({ formData, onFormChange, onNext, onAccountCreation 
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length === 0) {
-      // Create account with better-auth
-      setIsCreatingAccount(true);
-
-      const result = await onAccountCreation(
-        formData.email,
-        formData.password,
-        formData.email.split('@')[0] // Use email prefix as initial name
-      );
-
-      setIsCreatingAccount(false);
-
-      if (result.success) {
-        // Account created successfully, proceed to next step
-        onNext();
-      } else {
-        // Show error
-        setErrors({
-          email: result.error || 'Failed to create account. Please try again.',
-        });
-      }
+      // Proceed to next step without creating account yet
+      onNext();
     }
   };
 

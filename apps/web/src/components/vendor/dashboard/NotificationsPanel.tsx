@@ -1,5 +1,7 @@
 import { Bell, ShoppingCart, RotateCcw, AlertTriangle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { orpc } from '@/utils/orpc';
 
 interface Notification {
   id: string;
@@ -9,41 +11,6 @@ interface Notification {
   time: string;
   unread: boolean;
 }
-
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'order',
-    title: 'New Order Received',
-    description: 'Order #AYJ12345678 for ৳2,500',
-    time: '5m ago',
-    unread: true,
-  },
-  {
-    id: '2',
-    type: 'order',
-    title: 'New Order Received',
-    description: 'Order #AYJ12345679 for ৳850',
-    time: '1h ago',
-    unread: true,
-  },
-  {
-    id: '3',
-    type: 'return',
-    title: 'Return Request',
-    description: 'Order #AYJ12345655 needs attention',
-    time: '2h ago',
-    unread: true,
-  },
-  {
-    id: '4',
-    type: 'stock',
-    title: 'Low Stock Alert',
-    description: 'Only 3 items left for "Wireless Headphones"',
-    time: '3h ago',
-    unread: false,
-  },
-];
 
 const getNotificationIcon = (type: Notification['type']) => {
   switch (type) {
@@ -72,6 +39,11 @@ const getNotificationStyles = (type: Notification['type']) => {
 };
 
 export function NotificationsPanel() {
+  const { data: notifications, isLoading } = useQuery(
+    orpc.vendor.getNotifications.queryOptions()
+  );
+
+  const mockNotifications = notifications || [];
   const unreadCount = mockNotifications.filter((n) => n.unread).length;
 
   return (
@@ -93,39 +65,51 @@ export function NotificationsPanel() {
       </div>
 
       <div className="flex-1 divide-y divide-[hsl(var(--border))]">
-        {mockNotifications.map((notification) => (
-          <div
-            key={notification.id}
-            className={cn(
-              'group p-4 transition-all hover:bg-[hsl(var(--muted))]/50 cursor-pointer flex gap-4',
-              notification.unread && 'bg-[hsl(var(--primary))]/5'
-            )}
-          >
-            <div className={cn(
-              'shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110',
-              getNotificationStyles(notification.type)
-            )}>
-              {getNotificationIcon(notification.type)}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <p className={cn(
-                  'text-sm leading-none tracking-tight',
-                  notification.unread ? 'font-bold text-[hsl(var(--foreground))]' : 'font-semibold text-[hsl(var(--muted-foreground))]'
-                )}>
-                  {notification.title}
-                </p>
-                <span className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase whitespace-nowrap">
-                  {notification.time}
-                </span>
-              </div>
-              <p className="text-xs text-[hsl(var(--muted-foreground))] font-medium mt-1.5 line-clamp-1">
-                {notification.description}
-              </p>
-            </div>
+        {isLoading ? (
+          <div className="p-8 text-center">
+            <div className="h-8 w-8 border-4 border-[hsl(var(--primary))] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">Loading activity...</p>
           </div>
-        ))}
+        ) : mockNotifications.length > 0 ? (
+          mockNotifications.map((notification) => (
+            <div
+              key={notification.id}
+              className={cn(
+                'group p-4 transition-all hover:bg-[hsl(var(--muted))]/50 cursor-pointer flex gap-4',
+                notification.unread && 'bg-[hsl(var(--primary))]/5'
+              )}
+            >
+              <div className={cn(
+                'shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110',
+                getNotificationStyles(notification.type)
+              )}>
+                {getNotificationIcon(notification.type)}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <p className={cn(
+                    'text-sm leading-none tracking-tight',
+                    notification.unread ? 'font-bold text-[hsl(var(--foreground))]' : 'font-semibold text-[hsl(var(--muted-foreground))]'
+                  )}>
+                    {notification.title}
+                  </p>
+                  <span className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase whitespace-nowrap">
+                    {notification.time}
+                  </span>
+                </div>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] font-medium mt-1.5 line-clamp-1">
+                  {notification.description}
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-8 text-center">
+            <Bell className="h-10 w-10 text-[hsl(var(--muted-foreground))] opacity-20 mx-auto mb-2" />
+            <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">No new activity</p>
+          </div>
+        )}
       </div>
       
       <div className="p-4 bg-[hsl(var(--muted))]/10 border-t border-[hsl(var(--border))] text-center">

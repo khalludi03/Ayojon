@@ -40,16 +40,23 @@ export function DashboardOverview() {
         <div className="space-y-8">
           <NotificationsPanel />
           
-          {/* Quick Tips or Stats card could go here */}
-          <div className="rounded-xl bg-gradient-to-br from-[hsl(var(--primary))] to-[hsl(var(--accent))] p-6 text-white shadow-lg overflow-hidden relative group">
+          {/* Quick Setup Card */}
+          <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 p-6 text-white shadow-lg overflow-hidden relative group">
             <div className="relative z-10">
-              <h4 className="text-lg font-bold mb-2">Boost Your Sales! 🚀</h4>
+              <h4 className="text-lg font-bold mb-2">Get Started! 🚀</h4>
               <p className="text-sm text-white/80 mb-4 font-medium leading-relaxed">
-                Vendors who update their product descriptions weekly see a 20% increase in customer engagement.
+                Complete your store profile and list your first product to start reaching customers on Ayojon.
               </p>
-              <button className="bg-white text-[hsl(var(--primary))] text-xs font-black px-4 py-2 rounded-lg uppercase tracking-wider hover:bg-white/90 transition-colors">
-                Optimization Guide
-              </button>
+              <div className="space-y-2 mb-4">
+                <div className="flex items-center gap-2 text-xs font-bold text-white/90 bg-white/10 px-2 py-1.5 rounded-lg border border-white/10">
+                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</div>
+                  Update Store Settings
+                </div>
+                <div className="flex items-center gap-2 text-xs font-bold text-white/90 bg-white/10 px-2 py-1.5 rounded-lg border border-white/10">
+                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">2</div>
+                  Add Your Products
+                </div>
+              </div>
             </div>
             {/* Decorative circles */}
             <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl group-hover:scale-150 transition-transform duration-700" />
