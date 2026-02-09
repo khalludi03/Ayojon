@@ -116,20 +116,6 @@ export function VendorProductsPage() {
     })
   );
 
-  // Create product mutation (for duplication)
-  const createProductMutation = useMutation(
-    orpc.product.createProduct.mutationOptions({
-      onSuccess: () => {
-        toast.success('Product duplicated successfully');
-        refetch();
-      },
-      onError: (error: any) => {
-        toast.error('Failed to duplicate product');
-        console.error('Duplication error:', error);
-      },
-    })
-  );
-
   const handleToggleStatus = (product: VendorProduct) => {
     const newStatus = product.status === 'active' ? 'draft' : 'active';
     updateStatusMutation.mutate({ id: product.id, status: newStatus });
@@ -137,25 +123,6 @@ export function VendorProductsPage() {
 
   const handleDeleteProduct = (productId: string) => {
     deleteMutation.mutate({ id: productId });
-  };
-
-  const handleDuplicateProduct = (product: VendorProduct) => {
-    const duplicatedData = {
-      title: `${product.name} (Copy)`,
-      slug: `${product.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-copy-${Date.now()}`,
-      description: product.description,
-      descriptionShort: product.shortDescription,
-      categoryId: 'decorations', // Should ideally be product.categoryId if mapped
-      price: product.purchaseDetails?.regularPrice.toString() || '0',
-      stock: product.purchaseDetails?.quantity || 0,
-      status: 'draft' as const,
-      images: product.images.map(img => ({
-        url: img.url,
-        alt: img.name || '',
-        isPrimary: img.isPrimary,
-      })),
-    };
-    createProductMutation.mutate(duplicatedData);
   };
 
   const handleUpdatePrice = (productId: string, price: number) => {
@@ -512,7 +479,6 @@ export function VendorProductsPage() {
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
           onToggleStatus={handleToggleStatus}
-          onDuplicate={handleDuplicateProduct}
           onUpdatePrice={handleUpdatePrice}
           onUpdateStock={handleUpdateStock}
           onRefresh={refetch}

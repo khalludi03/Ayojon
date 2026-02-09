@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, Eye, Package, Copy, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
+import { Edit, Trash2, Eye, Package, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct } from '@/types/vendor-product';
 
@@ -13,7 +13,6 @@ interface EnhancedProductsTableProps {
   onEdit: (product: VendorProduct) => void;
   onDelete: (productId: string) => void;
   onToggleStatus: (product: VendorProduct) => void;
-  onDuplicate: (product: VendorProduct) => void;
   onUpdatePrice: (productId: string, price: number) => void;
   onUpdateStock: (productId: string, stock: number) => void;
   onRefresh: () => void;
@@ -57,7 +56,6 @@ export function EnhancedProductsTable({
   onEdit,
   onDelete,
   onToggleStatus,
-  onDuplicate,
   onUpdatePrice,
   onUpdateStock,
   onRefresh,
@@ -76,10 +74,6 @@ export function EnhancedProductsTable({
 
   const handleToggleStatus = (product: VendorProduct) => {
     onToggleStatus(product);
-  };
-
-  const handleDuplicate = (product: VendorProduct) => {
-    onDuplicate(product);
   };
 
   const handleSavePriceEdit = (product: VendorProduct) => {
@@ -322,14 +316,6 @@ export function EnhancedProductsTable({
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDuplicate(product)}
-                        title="Duplicate"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
                         onClick={() => handleDelete(product.id)}
                         title="Delete"
                       >
@@ -416,9 +402,6 @@ export function EnhancedProductsTable({
                 <Button variant="outline" size="sm" className="flex-1" onClick={() => onEdit(product)}>
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDuplicate(product)}>
-                  <Copy className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="sm" onClick={() => handleDelete(product.id)}>
                   <Trash2 className="h-4 w-4" />
