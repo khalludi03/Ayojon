@@ -8,10 +8,12 @@ import {
   orders,
   platformSettings,
   productImages,
-  categories
+  categories,
+  vendorApplications
 } from "@my-better-t-app/db/schema/index";
 import { count, eq, gte, sql, or, ilike, and, desc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
+import { nanoid } from "nanoid";
 
 export const adminRouter = {
   listUsers: adminProcedure
@@ -301,26 +303,136 @@ export const adminRouter = {
       })
     )
     .handler(async ({ input }) => {
-      // Update user vendor status
-      const result = await db
-        .update(user)
-        .set({
-          vendorStatus: input.vendorStatus,
-          role: input.vendorStatus === "approved" ? "vendor" : "customer",
-          updatedAt: new Date(),
-        })
-        .where(eq(user.id, input.userId))
-        .returning();
+      try {
+        console.log(`[Admin Action] Processing vendor status update to ${input.vendorStatus} for user ${input.userId}`);
+        const result = await db.transaction(async (tx) => {
+          // Update user vendor status and role
+          const updatedUsers = await tx
+            .update(user)
+            .set({
+              vendorStatus: input.vendorStatus,
+              role: input.vendorStatus === "approved" ? "vendor" : "customer",
+              updatedAt: new Date(),
+            })
+            .where(eq(user.id, input.userId))
+            .returning();
 
-      if (result.length === 0) {
-        throw new ORPCError("NOT_FOUND", { message: "User not found" });
+          if (updatedUsers.length === 0) {
+            console.error(`[Admin Action] User ${input.userId} not found during status update`);
+            throw new ORPCError("NOT_FOUND", { message: "User not found" });
+          }
+
+          // If approved, create/update vendor profile from application
+          if (input.vendorStatus === "approved") {
+            console.log(`[Admin Action] Application approved, looking up application details for user ${input.userId}`);
+            // Get the latest application for this user
+            const applications = await tx
+              .select()
+              .from(vendorApplications)
+              .where(eq(vendorApplications.userId, input.userId))
+              .orderBy(desc(vendorApplications.submittedAt))
+              .limit(1);
+
+            if (applications.length > 0) {
+              const app = applications[0]!;
+              console.log(`[Admin Action] Found application ${app.id}, promoting to vendor`);
+              
+              // Update application status
+              await tx
+                .update(vendorApplications)
+                .set({
+                  status: "approved",
+                  reviewedAt: new Date(),
+                  updatedAt: new Date(),
+                })
+                .where(eq(vendorApplications.id, app.id));
+
+              // Generate vendor slug from store name
+              const baseSlug = app.storeName
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, "-")
+                .replace(/(^-|-$)/g, "");
+              const vendorSlug = `${baseSlug}-${nanoid(4)}`;
+
+              // Parse address JSON to string for vendor table if needed
+              let businessAddr = "";
+              try {
+                if (app.businessAddress.startsWith("{")) {
+                  const addr = JSON.parse(app.businessAddress);
+                  businessAddr = `${addr.street || ""}, ${addr.city || ""}, ${addr.division || ""} ${addr.postalCode || ""}`;
+                } else {
+                  businessAddr = app.businessAddress;
+                }
+              } catch (e) {
+                businessAddr = app.businessAddress;
+              }
+
+              // Insert into vendors table
+              const vendorId = nanoid();
+              console.log(`[Admin Action] Inserting/Updating vendor record with slug ${vendorSlug}`);
+              await tx
+                .insert(vendors)
+                .values({
+                  id: vendorId,
+                  userId: input.userId,
+                  name: app.storeName,
+                  slug: vendorSlug,
+                  description: app.storeDescription,
+                  logoUrl: app.logoUrl,
+                  bannerUrl: app.bannerUrl,
+                  location: "Dhaka", // Default or extract from address
+                  address: businessAddr,
+                  phone: app.businessPhone,
+                  email: updatedUsers[0]!.email,
+                  isVerified: true,
+                  isActive: true,
+                })
+                .onConflictDoUpdate({
+                  target: vendors.userId,
+                  set: {
+                    name: app.storeName,
+                    description: app.storeDescription,
+                    logoUrl: app.logoUrl,
+                    bannerUrl: app.bannerUrl,
+                    address: businessAddr,
+                    phone: app.businessPhone,
+                    updatedAt: new Date(),
+                  }
+                });
+            } else {
+              console.warn(`[Admin Action] No application found for user ${input.userId}, but status was set to approved.`);
+            }
+          } else if (input.vendorStatus === "rejected") {
+             // Update latest application to rejected
+             await tx
+              .update(vendorApplications)
+              .set({
+                status: "rejected",
+                reviewedAt: new Date(),
+                rejectionReason: input.reason,
+                updatedAt: new Date(),
+              })
+              .where(and(
+                eq(vendorApplications.userId, input.userId),
+                eq(vendorApplications.status, "pending")
+              ));
+          }
+
+          return updatedUsers[0]!;
+        });
+
+        console.log(
+          `[Admin Action] Successfully updated vendor status to ${input.vendorStatus} for user ${input.userId}`
+        );
+
+        return result;
+      } catch (error) {
+        console.error(`[Admin Action] Error updating vendor status:`, error);
+        if (error instanceof ORPCError) throw error;
+        throw new ORPCError("INTERNAL_SERVER_ERROR", { 
+          message: error instanceof Error ? error.message : "Failed to update vendor application status" 
+        });
       }
-
-      console.log(
-        `[Admin Action] Vendor application ${input.vendorStatus} for user ${input.userId}${input.reason ? `. Reason: ${input.reason}` : ""}`
-      );
-
-      return result[0];
     }),
 
   listPendingVendors: adminProcedure
