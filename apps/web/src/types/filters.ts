@@ -19,6 +19,7 @@ export type DeliveryOption = 'same-day' | 'next-day' | 'standard';
 
 export interface ProductFilters {
   category?: string;
+  categoryIds?: Array<string>;
   subcategory?: string;
   minPrice?: number;
   maxPrice?: number;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck, ExternalLink } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, Link } from '@tanstack/react-router';
 import type { Product, ProductVariant } from '@/types';
 import { useCart } from '@/stores/cart-store';
 import { useWishlist } from '@/stores/wishlist-store';
@@ -181,9 +181,14 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
             {/* Vendor */}
             <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
               Sold by:{' '}
-              <span className="font-medium text-[hsl(var(--foreground))]">
+              <Link 
+                to="/vendor/$vendorId" 
+                params={{ vendorId: product.vendor.id }}
+                className="font-medium text-[hsl(var(--foreground))] hover:underline hover:text-primary transition-colors"
+                onClick={onClose}
+              >
                 {product.vendor.name}
-              </span>
+              </Link>
               {product.vendor.isVerified && (
                 <Badge variant="verified" className="ml-2">
                   Verified

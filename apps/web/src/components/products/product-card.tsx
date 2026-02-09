@@ -113,14 +113,13 @@ export function ProductCard({
         )}
       </div>
 
-      {/* Product Link - wraps image and details */}
-      <Link
-        to="/product/$productSlug"
-        params={{ productSlug: product.slug }}
-        className="flex flex-1 flex-col"
-      >
-        {/* Image Section */}
-        <div className="relative aspect-square overflow-hidden rounded-t-xl bg-[hsl(var(--muted))]/30">
+      <div className="flex flex-1 flex-col">
+        {/* Image Section - Links to product */}
+        <Link
+          to="/product/$productSlug"
+          params={{ productSlug: product.slug }}
+          className="relative aspect-square overflow-hidden rounded-t-xl bg-[hsl(var(--muted))]/30"
+        >
           <img
             src={product.images[0]?.url || "/placeholder-product.png"}
             alt={product.images[0]?.alt || product.title}
@@ -150,13 +149,19 @@ export function ProductCard({
               </Badge>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Product Details */}
         <div className="flex flex-1 flex-col gap-2 p-4">
-          {/* Vendor */}
+          {/* Vendor - Links to vendor store */}
           <div className="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
-            <span>{product.vendor.name}</span>
+            <Link 
+              to="/vendor/$vendorId" 
+              params={{ vendorId: product.vendor.id }}
+              className="hover:underline hover:text-primary transition-colors font-medium"
+            >
+              {product.vendor.name}
+            </Link>
             {product.vendor.isVerified && (
               <Badge variant="secondary" className="h-4 px-1 text-[10px]">
                 ✓
@@ -164,10 +169,16 @@ export function ProductCard({
             )}
           </div>
 
-          {/* Title */}
-          <h3 className="line-clamp-2 text-sm font-semibold text-[hsl(var(--foreground))] transition-colors group-hover:text-primary">
-            {product.title}
-          </h3>
+          {/* Title - Links to product */}
+          <Link
+            to="/product/$productSlug"
+            params={{ productSlug: product.slug }}
+            className="block"
+          >
+            <h3 className="line-clamp-2 text-sm font-semibold text-[hsl(var(--foreground))] transition-colors group-hover:text-primary">
+              {product.title}
+            </h3>
+          </Link>
 
           {/* Rating */}
           <div className="flex items-center gap-1">
@@ -202,7 +213,7 @@ export function ProductCard({
             <p className="text-xs font-medium text-green-600">Free Shipping</p>
           )}
         </div>
-      </Link>
+      </div>
 
       {/* Add to Cart Button - Bottom */}
       <div className="border-t border-[hsl(var(--border))] p-3">

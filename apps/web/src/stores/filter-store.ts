@@ -19,6 +19,7 @@ interface FilterStore {
 
 const DEFAULT_FILTERS: FilterState = {
   category: undefined,
+  categoryIds: undefined,
   subcategory: undefined,
   minPrice: undefined,
   maxPrice: undefined,
@@ -42,6 +43,7 @@ const DEFAULT_FILTERS: FilterState = {
 function calculateActiveFilterCount(filters: ProductFilters): number {
   let count = 0;
   if (filters.category) count++;
+  if (filters.categoryIds && filters.categoryIds.length > 0) count++;
   if (filters.subcategory) count++;
   if (filters.minPrice !== undefined) count++;
   if (filters.maxPrice !== undefined) count++;
