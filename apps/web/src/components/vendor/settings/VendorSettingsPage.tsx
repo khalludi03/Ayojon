@@ -7,70 +7,67 @@ import {
   Save,
   Upload,
   X,
-  Eye,
-  Check,
   Store,
-  FileText,
   Phone,
-  Globe,
   ImageIcon,
+  Loader2,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { VendorStoreFormData } from '@/types/vendor-store';
-import {
-  getVendorStoreSettings,
-  updateVendorStoreSettings,
-} from '@/stores/vendor-store-settings-store';
+import { orpcClient } from '@/utils/orpc';
+import { uploadFile } from '@/lib/storage-utils';
+import { toast } from 'sonner';
 
 export function VendorSettingsPage() {
-  // Mock vendor ID - in real app, get from auth context
-  const vendorId = 'vendor-1';
-
-  const [formData, setFormData] = useState<VendorStoreFormData>({
-    storeName: '',
-    storeDescription: '',
-    returnPolicy: '',
-    shippingPolicy: '',
-    cancellationPolicy: '',
-    businessPhone: '',
-    businessEmail: '',
-    businessHours: '',
-    facebookUrl: '',
-    instagramUrl: '',
-    websiteUrl: '',
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    address: '',
+    phone: '',
+    email: '',
+    logoUrl: '',
+    bannerUrl: '',
   });
 
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [bannerPreview, setBannerPreview] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    loadSettings();
+    loadVendorProfile();
   }, []);
 
-  const loadSettings = () => {
-    const settings = getVendorStoreSettings(vendorId);
-    setFormData({
-      storeName: settings.storeName,
-      storeDescription: settings.storeDescription,
-      returnPolicy: settings.returnPolicy,
-      shippingPolicy: settings.shippingPolicy,
-      cancellationPolicy: settings.cancellationPolicy,
-      businessPhone: settings.businessPhone,
-      businessEmail: settings.businessEmail,
-      businessHours: settings.businessHours,
-      facebookUrl: settings.facebookUrl || '',
-      instagramUrl: settings.instagramUrl || '',
-      websiteUrl: settings.websiteUrl || '',
-    });
-    setLogoPreview(settings.logo || '');
-    setBannerPreview(settings.banner || '');
+  const loadVendorProfile = async () => {
+    try {
+      setIsLoading(true);
+      const response = await orpcClient.vendor.getVendorProfile();
+      
+      if (response.vendor) {
+        const v = response.vendor;
+        setFormData({
+          name: v.name || '',
+          description: v.description || '',
+          address: v.address || '',
+          phone: v.phone || '',
+          email: v.email || '',
+          logoUrl: v.logoUrl || '',
+          bannerUrl: v.bannerUrl || '',
+        });
+        setLogoPreview(v.logoUrl || '');
+        setBannerPreview(v.bannerUrl || '');
+      }
+    } catch (err) {
+      console.error('Failed to load vendor profile:', err);
+      toast.error('Failed to load store settings');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleChange = (field: keyof VendorStoreFormData, value: string) => {
+  const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setHasChanges(true);
     if (errors[field]) {
@@ -85,134 +82,112 @@ export function VendorSettingsPage() {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-        setFormData((prev) => ({ ...prev, logo: file }));
-        setHasChanges(true);
-      };
-      reader.readAsDataURL(file);
+      setLogoFile(file);
+      const url = URL.createObjectURL(file);
+      setLogoPreview(url);
+      setHasChanges(true);
     }
   };
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBannerPreview(reader.result as string);
-        setFormData((prev) => ({ ...prev, banner: file }));
-        setHasChanges(true);
-      };
-      reader.readAsDataURL(file);
+      setBannerFile(file);
+      const url = URL.createObjectURL(file);
+      setBannerPreview(url);
+      setHasChanges(true);
     }
   };
 
   const handleRemoveLogo = () => {
     setLogoPreview('');
-    setFormData((prev) => ({ ...prev, logo: undefined }));
+    setLogoFile(null);
+    setFormData(prev => ({ ...prev, logoUrl: '' }));
     setHasChanges(true);
   };
 
   const handleRemoveBanner = () => {
     setBannerPreview('');
-    setFormData((prev) => ({ ...prev, banner: undefined }));
+    setBannerFile(null);
+    setFormData(prev => ({ ...prev, bannerUrl: '' }));
     setHasChanges(true);
   };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.storeName.trim()) {
-      newErrors.storeName = 'Store name is required';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Store name is required';
     }
 
-    if (!formData.storeDescription.trim()) {
-      newErrors.storeDescription = 'Store description is required';
+    if (!formData.description.trim()) {
+      newErrors.description = 'Store description is required';
     }
 
-    if (!formData.businessPhone.trim()) {
-      newErrors.businessPhone = 'Business phone is required';
-    } else if (!/^01[0-9]{9}$/.test(formData.businessPhone.replace(/[\s-]/g, ''))) {
-      newErrors.businessPhone = 'Invalid phone number format (01XXXXXXXXX)';
-    }
-
-    if (!formData.businessEmail.trim()) {
-      newErrors.businessEmail = 'Business email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.businessEmail)) {
-      newErrors.businessEmail = 'Invalid email format';
-    }
-
-    if (formData.facebookUrl && !isValidUrl(formData.facebookUrl)) {
-      newErrors.facebookUrl = 'Invalid URL format';
-    }
-
-    if (formData.instagramUrl && !isValidUrl(formData.instagramUrl)) {
-      newErrors.instagramUrl = 'Invalid URL format';
-    }
-
-    if (formData.websiteUrl && !isValidUrl(formData.websiteUrl)) {
-      newErrors.websiteUrl = 'Invalid URL format';
+    if (formData.phone && !/^01[0-9]{9}$/.test(formData.phone.replace(/[\s-]/g, ''))) {
+      newErrors.phone = 'Invalid phone number format (01XXXXXXXXX)';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const isValidUrl = (url: string): boolean => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validate()) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     setIsSaving(true);
+    const saveToastId = toast.loading('Saving changes...');
 
-    // Simulate API call
-    setTimeout(() => {
-      updateVendorStoreSettings(vendorId, {
-        storeName: formData.storeName,
-        storeDescription: formData.storeDescription,
-        logo: logoPreview || undefined,
-        banner: bannerPreview || undefined,
-        returnPolicy: formData.returnPolicy,
-        shippingPolicy: formData.shippingPolicy,
-        cancellationPolicy: formData.cancellationPolicy,
-        businessPhone: formData.businessPhone,
-        businessEmail: formData.businessEmail,
-        businessHours: formData.businessHours,
-        facebookUrl: formData.facebookUrl || undefined,
-        instagramUrl: formData.instagramUrl || undefined,
-        websiteUrl: formData.websiteUrl || undefined,
+    try {
+      let currentLogoUrl = formData.logoUrl;
+      let currentBannerUrl = formData.bannerUrl;
+
+      // 1. Upload new files if selected
+      if (logoFile) {
+        currentLogoUrl = await uploadFile(logoFile, 'vendor/logos');
+      }
+      if (bannerFile) {
+        currentBannerUrl = await uploadFile(bannerFile, 'vendor/banners');
+      }
+
+      // 2. Save to backend
+      await orpcClient.vendor.updateVendorProfile({
+        name: formData.name,
+        description: formData.description,
+        address: formData.address,
+        phone: formData.phone,
+        logoUrl: currentLogoUrl || undefined,
+        bannerUrl: currentBannerUrl || undefined,
       });
 
-      setIsSaving(false);
+      setFormData(prev => ({
+        ...prev,
+        logoUrl: currentLogoUrl,
+        bannerUrl: currentBannerUrl
+      }));
+      
+      setLogoFile(null);
+      setBannerFile(null);
       setHasChanges(false);
-      setShowSuccess(true);
-
-      // Hide success message after 3 seconds
-      setTimeout(() => {
-        setShowSuccess(false);
-      }, 3000);
-
-      // Scroll to top to show success message
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 500);
+      toast.success('Store settings updated successfully!', { id: saveToastId });
+    } catch (err) {
+      console.error('Failed to save vendor profile:', err);
+      toast.error('Failed to save changes. Please try again.', { id: saveToastId });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handlePreviewStore = () => {
-    // In a real app, this would navigate to the vendor's public store page
-    console.log('Preview store:', vendorId);
-    alert('Store preview feature coming soon!');
-  };
+  if (isLoading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--primary))]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -222,12 +197,12 @@ export function VendorSettingsPage() {
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">Store Settings</h1>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePreviewStore}>
-                <Eye className="h-4 w-4 mr-2" />
-                Preview Store
-              </Button>
               <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
-                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
@@ -236,21 +211,6 @@ export function VendorSettingsPage() {
             Customize your store appearance and information
           </p>
         </div>
-
-        {/* Success Message */}
-        {showSuccess && (
-          <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-3">
-            <Check className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-400">
-                Changes saved successfully!
-              </p>
-              <p className="text-xs text-green-700 dark:text-green-500 mt-1">
-                Your store settings have been updated
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Form */}
         <div className="space-y-6">
@@ -265,35 +225,32 @@ export function VendorSettingsPage() {
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="storeName">Store Name *</Label>
+                <Label htmlFor="name">Store Name *</Label>
                 <Input
-                  id="storeName"
-                  value={formData.storeName}
-                  onChange={(e) => handleChange('storeName', e.target.value)}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
                   placeholder="e.g., Fashion Paradise"
-                  className={errors.storeName ? 'border-red-500' : ''}
+                  className={errors.name ? 'border-red-500' : ''}
                 />
-                {errors.storeName && (
-                  <p className="text-sm text-red-500 mt-1">{errors.storeName}</p>
+                {errors.name && (
+                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="storeDescription">Store Description *</Label>
+                <Label htmlFor="description">Store Description *</Label>
                 <Textarea
-                  id="storeDescription"
-                  value={formData.storeDescription}
-                  onChange={(e) => handleChange('storeDescription', e.target.value)}
-                  placeholder="Describe your store and what makes it unique..."
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleChange('description', e.target.value)}
+                  placeholder="Describe your store..."
                   rows={4}
-                  className={errors.storeDescription ? 'border-red-500' : ''}
+                  className={errors.description ? 'border-red-500' : ''}
                 />
-                {errors.storeDescription && (
-                  <p className="text-sm text-red-500 mt-1">{errors.storeDescription}</p>
+                {errors.description && (
+                  <p className="text-sm text-red-500 mt-1">{errors.description}</p>
                 )}
-                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1">
-                  {formData.storeDescription.length} characters
-                </p>
               </div>
             </div>
           </div>
@@ -332,9 +289,6 @@ export function VendorSettingsPage() {
                     <p className="text-sm text-[hsl(var(--foreground))] mb-1">
                       Click to upload logo
                     </p>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                      PNG, JPG up to 5MB
-                    </p>
                     <input
                       type="file"
                       accept="image/*"
@@ -371,9 +325,6 @@ export function VendorSettingsPage() {
                     <p className="text-sm text-[hsl(var(--foreground))] mb-1">
                       Click to upload banner
                     </p>
-                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                      PNG, JPG up to 5MB
-                    </p>
                     <input
                       type="file"
                       accept="image/*"
@@ -382,51 +333,6 @@ export function VendorSettingsPage() {
                     />
                   </label>
                 )}
-              </div>
-            </div>
-          </div>
-
-          {/* Store Policies */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <FileText className="h-5 w-5 text-[hsl(var(--primary))]" />
-              <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-                Store Policies
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="returnPolicy">Return Policy</Label>
-                <Textarea
-                  id="returnPolicy"
-                  value={formData.returnPolicy}
-                  onChange={(e) => handleChange('returnPolicy', e.target.value)}
-                  placeholder="Describe your return policy..."
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="shippingPolicy">Shipping Policy</Label>
-                <Textarea
-                  id="shippingPolicy"
-                  value={formData.shippingPolicy}
-                  onChange={(e) => handleChange('shippingPolicy', e.target.value)}
-                  placeholder="Describe your shipping policy..."
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="cancellationPolicy">Cancellation Policy</Label>
-                <Textarea
-                  id="cancellationPolicy"
-                  value={formData.cancellationPolicy}
-                  onChange={(e) => handleChange('cancellationPolicy', e.target.value)}
-                  placeholder="Describe your cancellation policy..."
-                  rows={4}
-                />
               </div>
             </div>
           </div>
@@ -443,98 +349,28 @@ export function VendorSettingsPage() {
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="businessPhone">Business Phone *</Label>
+                  <Label htmlFor="phone">Business Phone</Label>
                   <Input
-                    id="businessPhone"
-                    value={formData.businessPhone}
-                    onChange={(e) => handleChange('businessPhone', e.target.value)}
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleChange('phone', e.target.value)}
                     placeholder="01XXXXXXXXX"
-                    className={errors.businessPhone ? 'border-red-500' : ''}
+                    className={errors.phone ? 'border-red-500' : ''}
                   />
-                  {errors.businessPhone && (
-                    <p className="text-sm text-red-500 mt-1">{errors.businessPhone}</p>
+                  {errors.phone && (
+                    <p className="text-sm text-red-500 mt-1">{errors.phone}</p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="businessEmail">Business Email *</Label>
+                  <Label htmlFor="address">Business Address</Label>
                   <Input
-                    id="businessEmail"
-                    type="email"
-                    value={formData.businessEmail}
-                    onChange={(e) => handleChange('businessEmail', e.target.value)}
-                    placeholder="business@example.com"
-                    className={errors.businessEmail ? 'border-red-500' : ''}
+                    id="address"
+                    value={formData.address}
+                    onChange={(e) => handleChange('address', e.target.value)}
+                    placeholder="Shop location..."
                   />
-                  {errors.businessEmail && (
-                    <p className="text-sm text-red-500 mt-1">{errors.businessEmail}</p>
-                  )}
                 </div>
-              </div>
-
-              <div>
-                <Label htmlFor="businessHours">Business Hours</Label>
-                <Textarea
-                  id="businessHours"
-                  value={formData.businessHours}
-                  onChange={(e) => handleChange('businessHours', e.target.value)}
-                  placeholder="e.g., Monday - Friday: 9:00 AM - 6:00 PM"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Social Media */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Globe className="h-5 w-5 text-[hsl(var(--primary))]" />
-              <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">
-                Social Media Links
-              </h2>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="facebookUrl">Facebook URL</Label>
-                <Input
-                  id="facebookUrl"
-                  value={formData.facebookUrl}
-                  onChange={(e) => handleChange('facebookUrl', e.target.value)}
-                  placeholder="https://facebook.com/yourstore"
-                  className={errors.facebookUrl ? 'border-red-500' : ''}
-                />
-                {errors.facebookUrl && (
-                  <p className="text-sm text-red-500 mt-1">{errors.facebookUrl}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="instagramUrl">Instagram URL</Label>
-                <Input
-                  id="instagramUrl"
-                  value={formData.instagramUrl}
-                  onChange={(e) => handleChange('instagramUrl', e.target.value)}
-                  placeholder="https://instagram.com/yourstore"
-                  className={errors.instagramUrl ? 'border-red-500' : ''}
-                />
-                {errors.instagramUrl && (
-                  <p className="text-sm text-red-500 mt-1">{errors.instagramUrl}</p>
-                )}
-              </div>
-
-              <div>
-                <Label htmlFor="websiteUrl">Website URL</Label>
-                <Input
-                  id="websiteUrl"
-                  value={formData.websiteUrl}
-                  onChange={(e) => handleChange('websiteUrl', e.target.value)}
-                  placeholder="https://yourstore.com"
-                  className={errors.websiteUrl ? 'border-red-500' : ''}
-                />
-                {errors.websiteUrl && (
-                  <p className="text-sm text-red-500 mt-1">{errors.websiteUrl}</p>
-                )}
               </div>
             </div>
           </div>
@@ -545,12 +381,12 @@ export function VendorSettingsPage() {
               {hasChanges ? 'You have unsaved changes' : 'All changes saved'}
             </p>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handlePreviewStore}>
-                <Eye className="h-4 w-4 mr-2" />
-                Preview Store
-              </Button>
               <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
-                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
