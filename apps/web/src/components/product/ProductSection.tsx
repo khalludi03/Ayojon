@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef } from 'react';
+import { Link } from '@tanstack/react-router';
 import { ProductCard } from './ProductCard';
 import type { Product } from '@/types';
 import { ProductCardSkeleton } from '@/components/ui/skeleton';
@@ -61,12 +62,12 @@ export function ProductSection({
             </div>
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               {viewAllLink && (
-                <a
-                  href={viewAllLink}
+                <Link
+                  to={viewAllLink}
                   className="hidden text-sm font-medium text-[hsl(var(--primary))] hover:underline sm:inline"
                 >
                   View All
-                </a>
+                </Link>
               )}
               <button
                 onClick={() => scroll('left')}

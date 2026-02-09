@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, Link } from '@tanstack/react-router';
 import { HelpCircle, Menu, Phone, Search, Truck } from 'lucide-react';
 import { Logo } from './Logo';
 import { SearchBar } from './SearchBar';
@@ -116,14 +116,14 @@ export function Header() {
               
               {/* Right side promo text */}
               <div className="hidden xl:flex items-center">
-                <a
-                  href="/deals"
+                <Link
+                  to="/hot-deals"
                   className="flex items-center gap-2 bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white px-4 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-all duration-200"
                   style={{ boxShadow: 'var(--shadow-festive)' }}
                 >
                   <span className="animate-pulse">🔥</span>
                   <span>Hot Deals: Up to 70% Off!</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

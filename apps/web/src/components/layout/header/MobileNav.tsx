@@ -210,14 +210,14 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           </div>
 
           {/* Flash Deals Highlight */}
-          <a
-            href="/deals/flash"
+          <Link
+            to="/flash-deals"
             onClick={onClose}
             className="mt-4 flex items-center gap-3 rounded-lg bg-linear-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))] px-4 py-3 text-sm font-bold text-white shadow-md transition-all hover:shadow-lg"
           >
             <Zap className="h-5 w-5" />
             <span>Flash Deals</span>
-          </a>
+          </Link>
 
           {/* Become a Vendor - Highlighted CTA */}
           <Link
