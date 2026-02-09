@@ -1,5 +1,5 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
-import { Award, Camera, Flame, Heart, Home, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
+import { createFileRoute, Link, redirect } from '@tanstack/react-router'
+import { Award, Flame, Heart, Home, ShoppingCart, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
 
 import { HeroCarousel } from '@/components/carousel/HeroCarousel'
 import { DealsSection } from '@/components/deals/DealsSection'
@@ -13,6 +13,8 @@ import { EventsSection } from '@/components/events/EventsSection'
 import { FeaturedProductsSection } from '@/components/product/FeaturedProductsSection'
 import { useForYou, useHotDeals, useProductsByCategory } from '@/hooks/use-products'
 import { getUser } from '@/functions/get-user'
+import { useCart } from '@/stores/cart-store'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -33,6 +35,7 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
+  const { itemCount } = useCart()
   // Fetch product sections
   const { data: forYouProducts, isLoading: forYouLoading } = useForYou(12)
   const { data: hotDealsProducts, isLoading: hotDealsLoading } = useHotDeals(12)
@@ -54,6 +57,33 @@ function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Cart Reminder - Only shown if cart has items */}
+      {itemCount > 0 && (
+        <section className="mx-auto max-w-7xl px-2 pt-2 sm:px-4">
+          <div className="flex items-center justify-between rounded-xl border border-[hsl(var(--primary))]/20 bg-[hsl(var(--primary))]/5 p-3 sm:p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10">
+                <ShoppingCart className="h-5 w-5 text-[hsl(var(--primary))]" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[hsl(var(--foreground))] sm:text-base">
+                  You have {itemCount} {itemCount === 1 ? 'item' : 'items'} in your cart
+                </p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
+                  Continue where you left off and complete your purchase.
+                </p>
+              </div>
+            </div>
+            <Button asChild size="sm" className="hidden sm:flex">
+              <Link to="/cart">View Cart</Link>
+            </Button>
+            <Button asChild size="icon" variant="ghost" className="sm:hidden">
+              <Link to="/cart"><ShoppingCart className="h-5 w-5" /></Link>
+            </Button>
+          </div>
+        </section>
+      )}
 
       {/* Trust Badges / Features Bar */}
       <section className="bg-[radial-gradient(70%_40%_at_50%_0%,hsla(40,95%,55%,0.12)_0%,transparent_70%)] py-5 sm:py-6 md:py-8">
