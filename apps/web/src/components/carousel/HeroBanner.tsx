@@ -16,7 +16,7 @@ const bannerSlides = [
     title: 'Mega Flash Sale',
     subtitle: 'Limited time offers on top brands. Hurry up! These deals won\'t last long.',
     ctaText: 'View Deals',
-    ctaLink: '/deals/flash',
+    ctaLink: '/flash-deals',
     gradient: 'from-[hsl(var(--accent))] via-[hsl(14,100%,50%)] to-[hsl(var(--secondary))]',
     accentColor: 'bg-white text-[hsl(var(--accent))]',
   },

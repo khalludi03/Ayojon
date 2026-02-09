@@ -83,13 +83,13 @@ export function MainNav({ onCategoryClick }: MainNavProps) {
       </div>
 
       {/* Flash Deals Highlight */}
-      <a
-        href="/deals/flash"
+      <Link
+        to="/flash-deals"
         className="hidden lg:flex items-center gap-2 ml-2 rounded-lg bg-gradient-to-r from-[hsl(var(--accent))] to-[hsl(var(--secondary))] px-4 py-2.5 text-sm font-bold text-white transition-all duration-200 hover:shadow-lg hover:scale-105"
       >
         <Zap className="h-4 w-4" />
         <span>Flash Deals</span>
-      </a>
+      </Link>
     </nav>
   );
 }

@@ -5,7 +5,7 @@ import type { CurrencyCode, Product, ProductVariant } from '@/types';
 import { generateId } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
 
-const STORAGE_KEY = 'ayojon-cart';
+const STORAGE_KEY_PREFIX = 'ayojon-cart';
 const LEGACY_STORAGE_KEY = 'zynex-cart';
 const GUEST_USER_ID = 'guest';
 
@@ -60,12 +60,13 @@ interface CartStore {
   getTotal: () => number;
   isInCart: (productId: string) => boolean;
   subscribe: (callback: () => void) => () => void;
+  initialize: () => void;
   loadUserCart: (userId: string | null) => void;
 }
 
 // Helper function to get storage key based on user ID
 function getStorageKey(userId: string | null): string {
-  return userId ? `${STORAGE_KEY}-${userId}` : `${STORAGE_KEY}-${GUEST_USER_ID}`;
+  return userId ? `${STORAGE_KEY_PREFIX}-${userId}` : `${STORAGE_KEY_PREFIX}-${GUEST_USER_ID}`;
 }
 
 function createCartStore(): CartStore {
@@ -184,17 +185,165 @@ function createCartStore(): CartStore {
     listeners.forEach((listener) => listener());
   };
 
+  const syncFromSession = (keepCurrentOnNull: boolean = false) => {
+    authClient.getSession().then((session) => {
+      const sessionUserId = session.data?.user?.id || null;
+      const resolvedUserId = sessionUserId ?? (keepCurrentOnNull ? currentUserId : null);
+
+      if (resolvedUserId !== currentUserId) {
+        currentUserId = resolvedUserId;
+      }
+
+      loadCart(resolvedUserId);
+      notify();
+    });
+  };
+
+  // Helper to load cart for a specific user
+  const loadCart = (userId: string | null) => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const storageKey = getStorageKey(userId);
+      const stored = localStorage.getItem(storageKey);
+      
+      let items = [];
+      let savedForLater = [];
+      let deliveryMethod = null;
+      let discount = null;
+      let currency = 'BDT';
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        items = parsed.items || [];
+        savedForLater = parsed.savedForLater || [];
+        deliveryMethod = parsed.deliveryMethod || null;
+        discount = parsed.discount || null;
+        currency = parsed.currency || 'BDT';
+      }
+
+      // If we are logging in, we SHOULD merge the guest cart items
+      if (userId) {
+        const guestKey = getStorageKey(null);
+        const guestStored = localStorage.getItem(guestKey);
+        
+        if (guestStored) {
+          const guestParsed = JSON.parse(guestStored);
+          const guestItems = guestParsed.items || [];
+          const guestSavedForLater = guestParsed.savedForLater || [];
+          
+          if (guestItems.length > 0 || guestSavedForLater.length > 0) {
+            // Merge items: add guest items that aren't already in user's cart
+            // or just append them (might result in duplicates but simpler)
+            // A better way is to merge by product ID + variant ID
+            const mergedItems = [...items];
+            guestItems.forEach((guestItem: CartItem) => {
+              const existingIndex = mergedItems.findIndex(
+                (item) =>
+                  item.productId === guestItem.productId &&
+                  item.selectedVariant?.id === guestItem.selectedVariant?.id
+              );
+              if (existingIndex >= 0) {
+                mergedItems[existingIndex].quantity += guestItem.quantity;
+              } else {
+                mergedItems.push(guestItem);
+              }
+            });
+
+            const mergedSaved = [...savedForLater];
+            guestSavedForLater.forEach((guestItem: CartItem) => {
+              const exists = mergedSaved.some(
+                (item) =>
+                  item.productId === guestItem.productId &&
+                  item.selectedVariant?.id === guestItem.selectedVariant?.id
+              );
+              if (!exists) {
+                mergedSaved.push(guestItem);
+              }
+            });
+
+            items = mergedItems;
+            savedForLater = mergedSaved;
+            
+            // If user had no delivery method/discount, take from guest
+            deliveryMethod = deliveryMethod || guestParsed.deliveryMethod || null;
+            discount = discount || guestParsed.discount || null;
+            
+            // Update state with merged data
+            state = {
+              ...state,
+              items,
+              savedForLater,
+              deliveryMethod,
+              discount,
+              currency: currency as CurrencyCode,
+              isInitialized: true
+            };
+
+            // Persist merged cart to user's key
+            persist();
+            
+            // Clear guest cart after successful merge
+            localStorage.removeItem(guestKey);
+          } else {
+            state = { ...state, items, savedForLater, deliveryMethod, discount, currency: currency as CurrencyCode, isInitialized: true };
+          }
+        } else {
+          state = { ...state, items, savedForLater, deliveryMethod, discount, currency: currency as CurrencyCode, isInitialized: true };
+        }
+      } else {
+        state = { ...state, items, savedForLater, deliveryMethod, discount, currency: currency as CurrencyCode, isInitialized: true };
+      }
+
+      // One-time migration from old keys
+      const legacyStorageKey = 'ayojon-cart'; // Old non-prefixed key
+      const legacyStored = localStorage.getItem(legacyStorageKey);
+      if (legacyStored && !stored) {
+        const parsed = JSON.parse(legacyStored);
+        state = {
+          ...state,
+          items: parsed.items || state.items,
+          savedForLater: parsed.savedForLater || state.savedForLater,
+          isInitialized: true
+        };
+        persist();
+        localStorage.removeItem(legacyStorageKey);
+      }
+      
+      // Clear session storage if any
+      sessionStorage.removeItem(STORAGE_KEY_PREFIX);
+      sessionStorage.removeItem(legacyStorageKey);
+      sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+
+    } catch (e) {
+      console.error('Failed to load cart from localStorage:', e);
+      state = { ...state, isInitialized: true };
+    }
+  };
+
   const persist = () => {
     if (typeof window !== 'undefined') {
-      // Don't persist UI state like isDrawerOpen
-      const { isDrawerOpen, ...persistedState } = state;
       const storageKey = getStorageKey(currentUserId);
+      // Don't persist UI state like isDrawerOpen or isInitialized
+      const { isDrawerOpen, isInitialized, ...persistedState } = state;
       localStorage.setItem(storageKey, JSON.stringify(persistedState));
     }
   };
 
   return {
     getState: () => state,
+
+    initialize: () => {
+      if (state.isInitialized || typeof window === 'undefined') return;
+      syncFromSession();
+    },
+
+    loadUserCart: (userId: string | null) => {
+      if (userId === currentUserId && state.isInitialized) return;
+      currentUserId = userId;
+      loadCart(userId);
+      notify();
+    },
 
     addItem: (product: Product, quantity: number = 1, variant?: ProductVariant) => {
       const existingIndex = state.items.findIndex(
@@ -522,6 +671,14 @@ const getCartServerSnapshot = () => ({
 export function useCart() {
   const state = useSyncExternalStore(subscribeCart, getCartSnapshot, getCartServerSnapshot);
   const { data: session, isPending } = authClient.useSession();
+
+  // Sync cart when session changes
+  useEffect(() => {
+    if (!isPending) {
+      const userId = session?.user?.id || null;
+      cartStore.loadUserCart(userId);
+    }
+  }, [session?.user?.id, isPending]);
 
   // Sync cart when session changes
   useEffect(() => {

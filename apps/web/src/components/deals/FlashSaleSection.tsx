@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
 import { useRef } from 'react';
+import { Link } from '@tanstack/react-router';
 import { DealCard } from './DealCard';
 import { useFlashDeals } from '@/hooks/use-deals';
 import { useCountdown } from '@/hooks/use-countdown';
@@ -66,12 +67,12 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
                   </span>
                 </div>
               </div>
-              <a
-                href="/deals/flash"
+              <Link
+                to="/flash-deals"
                 className="hidden text-sm font-medium text-[hsl(var(--primary))] hover:underline sm:inline"
               >
                 View All Deals
-              </a>
+              </Link>
               <button
                 onClick={() => scroll('left')}
                 className="hidden rounded-full border border-[hsl(var(--border))] p-2 hover:bg-[hsl(var(--muted))] sm:block"

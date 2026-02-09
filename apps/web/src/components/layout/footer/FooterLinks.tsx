@@ -29,7 +29,8 @@ const linkGroups = [
     links: [
       { href: '/', label: 'Home' },
       { href: '/products', label: 'Products' },
-      { href: '/deals', label: 'Deals' },
+      { href: '/hot-deals', label: 'Hot Deals' },
+      { href: '/flash-deals', label: 'Flash Deals' },
       { href: '/events', label: 'Events' },
     ],
   },
