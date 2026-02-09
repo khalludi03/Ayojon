@@ -1,22 +1,19 @@
 import type { VendorStoreSettings } from '@/types/vendor-store';
 
-const STORAGE_KEY = 'ayojon_vendor_store_settings';
+const STORAGE_KEY = 'ayojon_vendor_store_settings_v2';
 
 // Default template for new vendors
 const getDefaultSettings = (vendorId: string): VendorStoreSettings => ({
   id: `settings-${vendorId}`,
   vendorId,
-  storeName: 'My Store',
-  storeDescription: 'Welcome to my store! We offer high-quality products for all your needs.',
-  returnPolicy:
-    'We accept returns within 30 days of purchase. Items must be unused and in original packaging. Refunds will be processed within 5-7 business days.',
-  shippingPolicy:
-    'We ship nationwide within 3-5 business days. Express shipping available for an additional fee. Free shipping on orders over ৳2000.',
-  cancellationPolicy:
-    'Orders can be cancelled within 24 hours of placement. After 24 hours, cancellation may not be possible if the order has been processed.',
+  storeName: '',
+  storeDescription: '',
+  returnPolicy: '',
+  shippingPolicy: '',
+  cancellationPolicy: '',
   businessPhone: '',
   businessEmail: '',
-  businessHours: 'Monday - Saturday: 9:00 AM - 6:00 PM\nSunday: Closed',
+  businessHours: '',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 });

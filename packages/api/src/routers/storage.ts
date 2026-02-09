@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { protectedProcedure } from "../index";
+import { protectedProcedure, os } from "../index";
 
-export const storageRouter = {
+export const storageRouter = os.router({
   getUploadUrl: protectedProcedure
     .route({
       method: "POST",
@@ -54,6 +54,7 @@ export const storageRouter = {
     .output(
       z.object({
         success: z.boolean(),
+        existed: z.boolean().describe("Whether the file existed before deletion"),
       })
     )
     .handler(async ({ input, context }) => {
@@ -62,7 +63,66 @@ export const storageRouter = {
         throw new Error("Unauthorized to delete this file");
       }
 
-      await context.storage.deleteFile(input.key);
-      return { success: true };
+      const existed = await context.storage.deleteFile(input.key);
+      return { success: true, existed };
     }),
-};
+
+  deleteFiles: protectedProcedure
+    .route({
+      method: "POST",
+      path: "/storage/delete-batch",
+      operationId: "deleteFiles",
+      summary: "Delete Multiple Files from Storage",
+      description: "Deletes multiple files from S3 in a batch operation.",
+      tags: ["Storage"],
+    })
+    .input(
+      z.object({
+        keys: z.array(z.string()).min(1).max(100).describe("Array of S3 keys to delete (max 100)"),
+      })
+    )
+    .output(
+      z.object({
+        success: z.boolean(),
+        results: z.array(
+          z.object({
+            key: z.string(),
+            deleted: z.boolean(),
+            error: z.string().optional(),
+          })
+        ),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      const results: Array<{ key: string; deleted: boolean; error?: string }> = [];
+
+      for (const key of input.keys) {
+        // Ensure users can only delete their own files
+        if (!key.startsWith(`${userId}/`)) {
+          results.push({
+            key,
+            deleted: false,
+            error: "Unauthorized to delete this file",
+          });
+          continue;
+        }
+
+        try {
+          const existed = await context.storage.deleteFile(key);
+          results.push({ key, deleted: existed });
+        } catch (error: any) {
+          results.push({
+            key,
+            deleted: false,
+            error: error.message || "Unknown error",
+          });
+        }
+      }
+
+      return {
+        success: true,
+        results,
+      };
+    }),
+});

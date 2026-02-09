@@ -1,5 +1,5 @@
 export type ProductType = 'purchase' | 'rental' | 'both';
-export type ProductStatus = 'draft' | 'published' | 'archived';
+export type ProductStatus = 'draft' | 'active' | 'out_of_stock' | 'archived';
 
 export interface ProductSpecification {
   key: string;

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear All Caches - Ayojon</title>
+    <style>
+        body {
+            font-family: system-ui;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button:hover {
+            background: #dc2626;
+        }
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            display: none;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗑️ Clear All Caches</h1>
+        <p>Click the buttons below to clear all cached data:</p>
+
+        <button onclick="clearAll()">🔥 CLEAR EVERYTHING</button>
+
+        <button onclick="clearLocalStorage()">Clear localStorage</button>
+        <button onclick="clearSessionStorage()">Clear sessionStorage</button>
+        <button onclick="clearCaches()">Clear Cache Storage</button>
+        <button onclick="clearIndexedDB()">Clear IndexedDB</button>
+        <button onclick="clearCookies()">Clear Cookies</button>
+
+        <div id="success" class="success">
+            ✅ All caches cleared! Redirecting to applications page...
+        </div>
+
+        <h3>Current Storage:</h3>
+        <pre id="status">Loading...</pre>
+    </div>
+
+    <script>
+        function updateStatus() {
+            const status = {
+                localStorage: Object.keys(localStorage).length + ' items',
+                sessionStorage: Object.keys(sessionStorage).length + ' items',
+                cookies: document.cookie.split(';').filter(c => c.trim()).length + ' cookies'
+            };
+            document.getElementById('status').textContent = JSON.stringify(status, null, 2);
+        }
+
+        async function clearLocalStorage() {
+            localStorage.clear();
+            console.log('✅ localStorage cleared');
+            updateStatus();
+        }
+
+        async function clearSessionStorage() {
+            sessionStorage.clear();
+            console.log('✅ sessionStorage cleared');
+            updateStatus();
+        }
+
+        async function clearCaches() {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+            console.log('✅ Cache storage cleared:', keys.length, 'caches');
+        }
+
+        async function clearIndexedDB() {
+            const dbs = await indexedDB.databases();
+            for (const db of dbs) {
+                if (db.name) {
+                    indexedDB.deleteDatabase(db.name);
+                    console.log('✅ Deleted IndexedDB:', db.name);
+                }
+            }
+        }
+
+        function clearCookies() {
+            document.cookie.split(';').forEach(c => {
+                document.cookie = c.trim().split('=')[0] + '=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/';
+            });
+            console.log('✅ Cookies cleared');
+            updateStatus();
+        }
+
+        async function clearAll() {
+            console.log('🔥 Clearing everything...');
+            await clearLocalStorage();
+            await clearSessionStorage();
+            await clearCaches();
+            await clearIndexedDB();
+            clearCookies();
+
+            document.getElementById('success').style.display = 'block';
+            console.log('✅ All caches cleared!');
+
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3001/admin/vendor-applications';
+            }, 2000);
+        }
+
+        updateStatus();
+    </script>
+</body>
+</html>

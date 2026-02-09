@@ -70,7 +70,7 @@ const STATUS_CONFIG = {
 function VendorApplicationsPage() {
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [statusFilter, setStatusFilter] = useState<string>('pending'); // Default to pending to avoid showing admin users
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [actionDialog, setActionDialog] = useState<'approve' | 'reject' | 'suspend' | null>(null);
@@ -111,6 +111,7 @@ function VendorApplicationsPage() {
   const updateStatusMutation = useMutation(orpc.admin.updateVendorApplicationStatus.mutationOptions({
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: orpc.admin.listUsers.key() });
+      queryClient.invalidateQueries({ queryKey: orpc.admin.listVendors.key() });
       const statusMessages = {
         approved: 'Vendor application approved successfully',
         rejected: 'Vendor application rejected',
@@ -138,6 +139,7 @@ function VendorApplicationsPage() {
   const handleAction = () => {
     if (!selectedApplication || !actionDialog) return;
 
+    // Update user vendor status
     updateStatusMutation.mutate({
       userId: selectedApplication.id,
       vendorStatus: actionDialog === 'approve' ? 'approved' : actionDialog === 'reject' ? 'rejected' : 'suspended',
@@ -145,8 +147,13 @@ function VendorApplicationsPage() {
     });
   };
 
-  const applications = usersData?.users ?? [];
-  const totalPages = Math.ceil((usersData?.totalCount ?? 0) / ITEMS_PER_PAGE);
+  // Get applications from users data - filter out users without vendor status (e.g., admins)
+  const applications = (usersData?.users || []).filter((user: any) =>
+    user.vendorStatus && user.vendorStatus !== 'none'
+  );
+  const totalCount = usersData?.totalCount || 0;
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/10 dark:to-slate-950 p-4 md:p-8">

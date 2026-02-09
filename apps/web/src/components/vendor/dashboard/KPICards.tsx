@@ -1,5 +1,7 @@
 import { DollarSign, ShoppingCart, Calendar, Clock, Star, Eye, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { orpc } from '@/utils/orpc';
 
 interface KPICardProps {
   title: string;
@@ -12,9 +14,10 @@ interface KPICardProps {
   color?: string;
   clickable?: boolean;
   onClick?: () => void;
+  isLoading?: boolean;
 }
 
-function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick }: KPICardProps) {
+function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, isLoading }: KPICardProps) {
   return (
     <div
       className={cn(
@@ -30,16 +33,20 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick }:
           </p>
           <div className="flex items-baseline gap-1">
             <h3 className="text-3xl font-extrabold text-[hsl(var(--foreground))] tracking-tight">
-              {value}
+              {isLoading ? (
+                <span className="inline-block h-8 w-20 bg-[hsl(var(--muted))] animate-pulse rounded" />
+              ) : (
+                value
+              )}
             </h3>
           </div>
-          
-          {trend && (
+
+          {trend && !isLoading && (
             <div className="flex items-center gap-1.5 pt-1">
               <div className={cn(
                 "flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold",
-                trend.isPositive 
-                  ? "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400" 
+                trend.isPositive
+                  ? "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400"
                   : "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400"
               )}>
                 {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -59,7 +66,7 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick }:
           <Icon className="h-6 w-6" />
         </div>
       </div>
-      
+
       {/* Decorative background element */}
       <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-gradient-to-br from-transparent to-[hsl(var(--primary))]/5 opacity-0 transition-opacity group-hover:opacity-100" />
     </div>
@@ -67,47 +74,55 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick }:
 }
 
 export function KPICards() {
+  const { data: stats, isLoading } = useQuery(
+    orpc.vendor.getDashboardStats.queryOptions()
+  );
+
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <KPICard
         title="Total Revenue"
-        value="৳24,500"
+        value={stats ? `৳${parseFloat(stats.totalRevenue).toLocaleString()}` : '৳0'}
         icon={DollarSign}
-        trend={{ value: 12.5, isPositive: true }}
         color="bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+        isLoading={isLoading}
+        trend={stats?.revenueGrowth ? { value: stats.revenueGrowth, isPositive: stats.revenueGrowth > 0 } : undefined}
       />
       <KPICard
         title="Orders This Month"
-        value="87"
+        value={stats?.ordersThisMonth ?? 0}
         icon={ShoppingCart}
-        trend={{ value: 8.2, isPositive: true }}
         color="bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
+        isLoading={isLoading}
+        trend={stats?.ordersGrowth ? { value: stats.ordersGrowth, isPositive: stats.ordersGrowth > 0 } : undefined}
       />
       <KPICard
         title="Active Rentals"
-        value="23"
+        value={stats?.activeRentals ?? 0}
         icon={Calendar}
-        trend={{ value: 3.1, isPositive: false }}
         color="bg-purple-100 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400"
+        isLoading={isLoading}
       />
       <KPICard
         title="Pending Orders"
-        value="05"
+        value={stats?.pendingOrders ?? 0}
         icon={Clock}
         color="bg-amber-100 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"
+        isLoading={isLoading}
       />
       <KPICard
         title="Store Rating"
-        value="4.8"
+        value={stats?.storeRating.toFixed(1) ?? '0.0'}
         icon={Star}
         color="bg-orange-100 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400"
+        isLoading={isLoading}
       />
       <KPICard
         title="Store Views"
-        value="1,234"
+        value={stats?.storeViews ?? 0}
         icon={Eye}
-        trend={{ value: 15.3, isPositive: true }}
         color="bg-pink-100 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400"
+        isLoading={isLoading}
       />
     </div>
   );
