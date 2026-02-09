@@ -29,6 +29,7 @@ import { Route as VendorOrdersRouteImport } from './routes/vendor/orders'
 import { Route as VendorDashboardRouteImport } from './routes/vendor/dashboard'
 import { Route as VendorApplicationRejectedRouteImport } from './routes/vendor/application-rejected'
 import { Route as VendorApplicationPendingRouteImport } from './routes/vendor/application-pending'
+import { Route as VendorVendorIdRouteImport } from './routes/vendor.$vendorId'
 import { Route as TrackOrderNumberRouteImport } from './routes/track.$orderNumber'
 import { Route as ProductProductSlugRouteImport } from './routes/product.$productSlug'
 import { Route as CategoryCategorySlugRouteImport } from './routes/category.$categorySlug'
@@ -144,6 +145,11 @@ const VendorApplicationPendingRoute =
     path: '/vendor/application-pending',
     getParentRoute: () => rootRouteImport,
   } as any)
+const VendorVendorIdRoute = VendorVendorIdRouteImport.update({
+  id: '/vendor/$vendorId',
+  path: '/vendor/$vendorId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackOrderNumberRoute = TrackOrderNumberRouteImport.update({
   id: '/track/$orderNumber',
   path: '/track/$orderNumber',
@@ -230,6 +236,7 @@ export interface FileRoutesByFullPath {
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
+  '/vendor/$vendorId': typeof VendorVendorIdRoute
   '/vendor/application-pending': typeof VendorApplicationPendingRoute
   '/vendor/application-rejected': typeof VendorApplicationRejectedRoute
   '/vendor/dashboard': typeof VendorDashboardRoute
@@ -264,6 +271,7 @@ export interface FileRoutesByTo {
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
+  '/vendor/$vendorId': typeof VendorVendorIdRoute
   '/vendor/application-pending': typeof VendorApplicationPendingRoute
   '/vendor/application-rejected': typeof VendorApplicationRejectedRoute
   '/vendor/dashboard': typeof VendorDashboardRoute
@@ -299,6 +307,7 @@ export interface FileRoutesById {
   '/category/$categorySlug': typeof CategoryCategorySlugRoute
   '/product/$productSlug': typeof ProductProductSlugRoute
   '/track/$orderNumber': typeof TrackOrderNumberRoute
+  '/vendor/$vendorId': typeof VendorVendorIdRoute
   '/vendor/application-pending': typeof VendorApplicationPendingRoute
   '/vendor/application-rejected': typeof VendorApplicationRejectedRoute
   '/vendor/dashboard': typeof VendorDashboardRoute
@@ -335,6 +344,7 @@ export interface FileRouteTypes {
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
+    | '/vendor/$vendorId'
     | '/vendor/application-pending'
     | '/vendor/application-rejected'
     | '/vendor/dashboard'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
+    | '/vendor/$vendorId'
     | '/vendor/application-pending'
     | '/vendor/application-rejected'
     | '/vendor/dashboard'
@@ -403,6 +414,7 @@ export interface FileRouteTypes {
     | '/category/$categorySlug'
     | '/product/$productSlug'
     | '/track/$orderNumber'
+    | '/vendor/$vendorId'
     | '/vendor/application-pending'
     | '/vendor/application-rejected'
     | '/vendor/dashboard'
@@ -438,6 +450,7 @@ export interface RootRouteChildren {
   CategoryCategorySlugRoute: typeof CategoryCategorySlugRoute
   ProductProductSlugRoute: typeof ProductProductSlugRoute
   TrackOrderNumberRoute: typeof TrackOrderNumberRoute
+  VendorVendorIdRoute: typeof VendorVendorIdRoute
   VendorApplicationPendingRoute: typeof VendorApplicationPendingRoute
   VendorApplicationRejectedRoute: typeof VendorApplicationRejectedRoute
   VendorDashboardRoute: typeof VendorDashboardRoute
@@ -588,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VendorApplicationPendingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vendor/$vendorId': {
+      id: '/vendor/$vendorId'
+      path: '/vendor/$vendorId'
+      fullPath: '/vendor/$vendorId'
+      preLoaderRoute: typeof VendorVendorIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/track/$orderNumber': {
       id: '/track/$orderNumber'
       path: '/track/$orderNumber'
@@ -723,6 +743,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoryCategorySlugRoute: CategoryCategorySlugRoute,
   ProductProductSlugRoute: ProductProductSlugRoute,
   TrackOrderNumberRoute: TrackOrderNumberRoute,
+  VendorVendorIdRoute: VendorVendorIdRoute,
   VendorApplicationPendingRoute: VendorApplicationPendingRoute,
   VendorApplicationRejectedRoute: VendorApplicationRejectedRoute,
   VendorDashboardRoute: VendorDashboardRoute,

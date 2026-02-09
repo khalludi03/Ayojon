@@ -114,6 +114,7 @@
         "@my-better-t-app/env": "workspace:*",
         "@my-better-t-app/storage": "workspace:*",
         "dotenv": "catalog:",
+        "nanoid": "^5.0.9",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -145,6 +146,7 @@
     "packages/db": {
       "name": "@my-better-t-app/db",
       "dependencies": {
+        "@faker-js/faker": "^10.2.0",
         "@my-better-t-app/env": "workspace:*",
         "dotenv": "catalog:",
         "drizzle-orm": "^0.45.1",

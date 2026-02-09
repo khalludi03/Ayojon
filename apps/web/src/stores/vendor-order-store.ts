@@ -1,88 +1,6 @@
 import type { VendorOrder, VendorOrderStatus } from '@/types/vendor-order';
 
-const STORAGE_KEY = 'ayojon_vendor_orders';
-
-// Mock orders for development
-const generateMockOrders = (vendorId: string): VendorOrder[] => {
-  const statuses: VendorOrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
-  const paymentMethods = ['bkash', 'card', 'cod'] as const;
-  const customers = [
-    { name: 'John Doe', email: 'john@example.com', phone: '01712345678' },
-    { name: 'Jane Smith', email: 'jane@example.com', phone: '01812345678' },
-    { name: 'Bob Johnson', email: 'bob@example.com', phone: '01912345678' },
-    { name: 'Alice Williams', email: 'alice@example.com', phone: '01612345678' },
-    { name: 'Charlie Brown', email: 'charlie@example.com', phone: '01512345678' },
-  ];
-
-  const orders: VendorOrder[] = [];
-  const now = new Date();
-
-  for (let i = 0; i < 25; i++) {
-    const createdDate = new Date(now);
-    createdDate.setDate(createdDate.getDate() - Math.floor(Math.random() * 30));
-
-    const customer = customers[Math.floor(Math.random() * customers.length)];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-    const itemCount = Math.floor(Math.random() * 3) + 1;
-    const subtotal = Math.floor(Math.random() * 5000) + 500;
-    const shippingCost = Math.floor(Math.random() * 200) + 50;
-    const tax = Math.floor(subtotal * 0.05);
-
-    const items = Array.from({ length: itemCount }, (_, j) => ({
-      id: `item-${i}-${j}`,
-      productId: `product-${Math.floor(Math.random() * 100)}`,
-      productName: `Product ${Math.floor(Math.random() * 100)}`,
-      quantity: Math.floor(Math.random() * 3) + 1,
-      price: Math.floor(Math.random() * 2000) + 200,
-      imageUrl: undefined,
-    }));
-
-    orders.push({
-      id: `order-${i + 1}`,
-      orderNumber: `AYJ${Date.now().toString().slice(-8) + i}`,
-      vendorId,
-      customer: {
-        name: customer.name,
-        email: customer.email,
-        phone: customer.phone,
-        address: {
-          addressLine1: `${Math.floor(Math.random() * 999) + 1} Main Street`,
-          addressLine2: `Apartment ${Math.floor(Math.random() * 50) + 1}`,
-          city: 'Dhaka',
-          division: 'Dhaka',
-          postalCode: '1200',
-        },
-      },
-      items,
-      payment: {
-        method: paymentMethod,
-        status: status === 'cancelled' ? 'failed' : status === 'pending' ? 'pending' : 'paid',
-        amount: subtotal + shippingCost + tax,
-        transactionId: paymentMethod !== 'cod' ? `TXN${Date.now() + i}` : undefined,
-      },
-      shipping: {
-        method: Math.random() > 0.5 ? 'Standard Delivery' : 'Express Delivery',
-        trackingNumber: status === 'shipped' || status === 'delivered' ? `TRK${Date.now() + i}` : undefined,
-        shippedAt: status === 'shipped' || status === 'delivered' ? createdDate.toISOString() : undefined,
-      },
-      status,
-      subtotal,
-      shippingCost,
-      tax,
-      total: subtotal + shippingCost + tax,
-      deliveryInstructions: Math.random() > 0.5 ? 'Please call before delivery' : undefined,
-      createdAt: createdDate.toISOString(),
-      updatedAt: createdDate.toISOString(),
-      confirmedAt: status !== 'pending' && status !== 'cancelled' ? createdDate.toISOString() : undefined,
-      shippedAt: status === 'shipped' || status === 'delivered' ? createdDate.toISOString() : undefined,
-      deliveredAt: status === 'delivered' ? createdDate.toISOString() : undefined,
-      cancelledAt: status === 'cancelled' ? createdDate.toISOString() : undefined,
-    });
-  }
-
-  return orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-};
+const STORAGE_KEY = 'ayojon_vendor_orders_v2';
 
 export function getVendorOrders(vendorId: string): VendorOrder[] {
   if (typeof window === 'undefined') return [];
@@ -90,10 +8,7 @@ export function getVendorOrders(vendorId: string): VendorOrder[] {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) {
-      // Generate and save mock orders on first load
-      const mockOrders = generateMockOrders(vendorId);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mockOrders));
-      return mockOrders;
+      return [];
     }
 
     const orders = JSON.parse(data) as VendorOrder[];

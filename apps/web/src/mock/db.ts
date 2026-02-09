@@ -31,7 +31,8 @@ class MockDatabase {
   async init(): Promise<void> {
     if (this.initialized) return;
 
-    console.log('[MockDB] Initializing database...');
+    // Note: This mock DB is only used for the public product catalog and reviews.
+    // Admin panel and vendor dashboard use real API data.
 
     // Generate vendors first
     this.vendors = createVendors(50);
@@ -61,7 +62,10 @@ class MockDatabase {
     }));
 
     this.initialized = true;
-    console.log(`[MockDB] Initialized with ${this.products.length} products, ${this.vendors.length} vendors`);
+    // Reduced logging noise - only log in development if needed
+    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_MOCK_DB === 'true') {
+      console.log(`[MockDB] Initialized with ${this.products.length} products, ${this.vendors.length} vendors`);
+    }
   }
 
   getProducts(filters: ProductFilters = {}): PaginatedResult<Product> {
@@ -70,6 +74,10 @@ class MockDatabase {
     // Apply filters
     if (filters.category) {
       result = result.filter((p) => p.categoryId === filters.category);
+    }
+
+    if (filters.categoryIds && filters.categoryIds.length > 0) {
+      result = result.filter((p) => filters.categoryIds!.includes(p.categoryId));
     }
 
     if (filters.subcategory) {

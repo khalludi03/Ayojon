@@ -2,17 +2,18 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Eye, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct } from '@/types/vendor-product';
-import { deleteVendorProduct, updateProductStatus } from '@/stores/vendor-product-store';
 
 interface ProductsListProps {
   products: VendorProduct[];
   onEdit: (product: VendorProduct) => void;
+  onDelete: (productId: string) => void;
+  onToggleStatus: (product: VendorProduct) => void;
   onRefresh: () => void;
 }
 
 const getStatusColor = (status: VendorProduct['status']) => {
   switch (status) {
-    case 'published':
+    case 'active':
       return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
     case 'draft':
       return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
@@ -28,18 +29,15 @@ const getProductTypeLabel = (product: VendorProduct) => {
   return product.productType.charAt(0).toUpperCase() + product.productType.slice(1);
 };
 
-export function ProductsList({ products, onEdit, onRefresh }: ProductsListProps) {
+export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRefresh }: ProductsListProps) {
   const handleDelete = (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      deleteVendorProduct(productId);
-      onRefresh();
+      onDelete(productId);
     }
   };
 
   const handleToggleStatus = (product: VendorProduct) => {
-    const newStatus = product.status === 'published' ? 'draft' : 'published';
-    updateProductStatus(product.id, newStatus);
-    onRefresh();
+    onToggleStatus(product);
   };
 
   if (products.length === 0) {
@@ -143,7 +141,7 @@ export function ProductsList({ products, onEdit, onRefresh }: ProductsListProps)
                         onClick={() => handleToggleStatus(product)}
                       >
                         <Eye className="h-4 w-4 mr-1" />
-                        {product.status === 'published' ? 'Unpublish' : 'Publish'}
+                        {product.status === 'active' ? 'Unpublish' : 'Publish'}
                       </Button>
                       <Button
                         variant="ghost"
@@ -217,7 +215,7 @@ export function ProductsList({ products, onEdit, onRefresh }: ProductsListProps)
                   className="flex-1"
                   onClick={() => handleToggleStatus(product)}
                 >
-                  {product.status === 'published' ? 'Unpublish' : 'Publish'}
+                  {product.status === 'active' ? 'Unpublish' : 'Publish'}
                 </Button>
                 <Button
                   variant="outline"

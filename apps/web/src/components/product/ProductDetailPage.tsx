@@ -321,7 +321,13 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
                     </div>
                     <div>
                         <div className="flex items-center gap-1">
-                            <Link to="/products" className="font-semibold text-sm hover:underline">{product.vendor.name}</Link>
+                            <Link 
+                                to="/vendor/$vendorId" 
+                                params={{ vendorId: product.vendor.id }}
+                                className="font-semibold text-sm hover:underline"
+                            >
+                                {product.vendor.name}
+                            </Link>
                             {product.vendor.isVerified && (
                                 <CheckCircle className="h-3.5 w-3.5 text-blue-500" fill="currentColor" />
                             )}
@@ -330,7 +336,7 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
                     </div>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                    <Link to="/products">Visit Store</Link>
+                    <Link to="/vendor/$vendorId" params={{ vendorId: product.vendor.id }}>Visit Store</Link>
                 </Button>
             </div>
 

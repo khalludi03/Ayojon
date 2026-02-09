@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import type { VendorFormData } from '@/types/vendor';
 import { authClient } from '@/lib/auth-client';
 import { orpcClient } from '@/utils/orpc';
 import { uploadFile } from '@/lib/storage-utils';
 import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { VendorProgressBar } from './VendorProgressBar';
 import { AccountStep } from './steps/AccountStep';
 import { BusinessInfoStep } from './steps/BusinessInfoStep';
@@ -16,10 +17,13 @@ const TOTAL_STEPS = 4;
 
 export function VendorRegistration() {
   const navigate = useNavigate();
+  const { data: session, isPending: isSessionLoading } = authClient.useSession();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [applicationId, setApplicationId] = useState('');
   const [userId, setUserId] = useState<string>('');
+  const [isStep1Skipped, setIsStep1Skipped] = useState(false);
+  const [isAlreadyApplied, setIsAlreadyApplied] = useState(false);
 
   const [formData, setFormData] = useState<VendorFormData>({
     // Step 1 - Account
@@ -50,6 +54,30 @@ export function VendorRegistration() {
     identification: undefined,
     bankDetails: undefined,
   });
+
+  // Automatically skip step 1 if user is logged in
+  useEffect(() => {
+    if (session?.user && !isStep1Skipped) {
+      const user = session.user as any;
+      
+      // If already a vendor or application is in progress, mark as already applied
+      if (user.vendorStatus === 'pending' || (user.role === 'vendor' && user.vendorStatus === 'approved') || user.vendorStatus === 'rejected') {
+        setIsAlreadyApplied(true);
+        return;
+      }
+
+      if (currentStep === 1) {
+        setUserId(session.user.id);
+        setFormData(prev => ({
+          ...prev,
+          email: session.user.email
+        }));
+        setCurrentStep(2);
+        setIsStep1Skipped(true);
+        toast.info(`Logged in as ${session.user.email}. Skipping account creation.`);
+      }
+    }
+  }, [session, currentStep, isStep1Skipped]);
 
   const handleFormChange = (field: keyof VendorFormData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -92,15 +120,32 @@ export function VendorRegistration() {
   };
 
   const handleSubmit = async () => {
-    if (!userId) {
-      toast.error('No user ID found. User must be authenticated.');
-      return;
-    }
-
     try {
-      toast.loading('Submitting application...', { id: 'submit-app' });
+      toast.loading('Processing your application...', { id: 'submit-app' });
 
-      // 1. Upload files if they exist
+      // 1. Create account if not already logged in
+      let currentUserId = userId || (session?.user?.id as string);
+      
+      if (!currentUserId) {
+        toast.loading('Creating account...', { id: 'submit-app' });
+        const result = await handleAccountCreation(
+          formData.email,
+          formData.password,
+          formData.businessName || formData.email.split('@')[0]
+        );
+
+        if (!result.success || !result.userId) {
+          toast.error(result.error || 'Failed to create account', { id: 'submit-app' });
+          return;
+        }
+        currentUserId = result.userId;
+        
+        // Wait a small amount of time for the session to be established
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      toast.loading('Uploading documents...', { id: 'submit-app' });
+      // 2. Upload files if they exist
       let logoUrl = '';
       let bannerUrl = '';
       let tradeLicenseUrl = '';
@@ -123,7 +168,8 @@ export function VendorRegistration() {
         bankDetailsUrl = await uploadFile(formData.bankDetails, 'vendor/documents');
       }
 
-      // 2. Submit application to backend
+      // 3. Submit application to backend
+      toast.loading('Submitting application...', { id: 'submit-app' });
       const response = await orpcClient.vendor.submitVendorApplication({
         businessName: formData.businessName,
         businessType: formData.businessType as any,
@@ -164,7 +210,6 @@ export function VendorRegistration() {
             formData={formData}
             onFormChange={handleFormChange}
             onNext={handleNext}
-            onAccountCreation={handleAccountCreation}
           />
         );
       case 2:
@@ -198,6 +243,54 @@ export function VendorRegistration() {
         return null;
     }
   };
+
+  if (isSessionLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent"></div>
+        <span className="ml-3 text-[hsl(var(--muted-foreground))]">Loading...</span>
+      </div>
+    );
+  }
+
+  if (isAlreadyApplied) {
+    const user = session?.user as any;
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+        <div className="mb-6 flex justify-center">
+          <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/30">
+            <svg className="h-12 w-12 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <h2 className="mb-2 text-3xl font-bold text-[hsl(var(--foreground))]">
+          Registration Already Completed
+        </h2>
+        <p className="mb-8 text-[hsl(var(--muted-foreground))]">
+          {user?.vendorStatus === 'pending' 
+            ? "You have already completed all 4 steps of the registration process. Your application is currently under review by our team."
+            : user?.vendorStatus === 'approved'
+            ? "Your vendor account is already active! You can now manage your store from the dashboard."
+            : "Your previous application has been processed. Please contact support if you have any questions."}
+        </p>
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
+          <Button onClick={() => navigate({ to: '/' })} variant="outline">
+            Back to Home
+          </Button>
+          {user?.vendorStatus === 'approved' ? (
+            <Button onClick={() => navigate({ to: '/vendor/dashboard' })}>
+              Go to Dashboard
+            </Button>
+          ) : (
+            <Button onClick={() => navigate({ to: '/vendor/application-pending' })}>
+              View Application Status
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   if (isSubmitted) {
     return (
