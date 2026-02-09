@@ -1,6 +1,6 @@
 import type { VendorProduct, ProductStatus } from '@/types/vendor-product';
 
-const STORAGE_KEY = 'ayojon_vendor_products';
+const STORAGE_KEY = 'ayojon_vendor_products_v2';
 
 export function getVendorProducts(vendorId?: string): VendorProduct[] {
   if (typeof window === 'undefined') return [];

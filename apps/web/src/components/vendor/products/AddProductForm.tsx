@@ -4,15 +4,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Upload, GripVertical, Check, Loader2 } from 'lucide-react';
+import { useMutation } from '@tanstack/react-query';
+import { orpc } from '@/utils/orpc';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { VendorProduct, ProductFormData, ProductImage, ProductSpecification } from '@/types/vendor-product';
-import { addVendorProduct, updateVendorProduct, generateSKU, getVendorProducts } from '@/stores/vendor-product-store';
 import { uploadFile } from '@/lib/storage-utils';
 
+// Helper to generate SKU
+function generateSKU(): string {
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  return `AYJ-${timestamp}-${random}`;
+}
+
 interface AddProductFormProps {
-  vendorId: string;
   existingProduct?: VendorProduct | null;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
 const CATEGORIES = [
@@ -39,7 +48,37 @@ const EVENT_TYPES = [
   'Other',
 ];
 
-export function AddProductForm({ vendorId, existingProduct, onClose }: AddProductFormProps) {
+export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProductFormProps) {
+  // Create product mutation
+  const createProductMutation = useMutation(
+    orpc.product.createProduct.mutationOptions({
+      onSuccess: () => {
+        toast.success('Product created successfully!');
+        setShowSuccess(true);
+        onSuccess?.();
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || 'Failed to create product');
+        console.error('Create product error:', error);
+      },
+    })
+  );
+
+  // Update product mutation
+  const updateProductMutation = useMutation(
+    orpc.product.updateProduct.mutationOptions({
+      onSuccess: () => {
+        toast.success('Product updated successfully!');
+        setShowSuccess(true);
+        onSuccess?.();
+      },
+      onError: (error: any) => {
+        toast.error(error?.message || 'Failed to update product');
+        console.error('Update product error:', error);
+      },
+    })
+  );
+
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     brand: '',
@@ -209,10 +248,35 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
     if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
     if (!formData.sku.trim()) newErrors.sku = 'SKU is required';
 
-    // Description
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (!formData.shortDescription.trim()) newErrors.shortDescription = 'Short description is required';
-    if (formData.shortDescription.length > 160) newErrors.shortDescription = 'Short description must be 160 characters or less';
+        // Description
+
+        if (!formData.description.trim()) {
+
+          newErrors.description = 'Description is required';
+
+        } else if (formData.description.trim().length < 5) {
+
+          newErrors.description = 'Description must be at least 5 characters long';
+
+        }
+
+    
+
+        if (!formData.shortDescription.trim()) {
+
+          newErrors.shortDescription = 'Short description is required';
+
+        } else if (formData.shortDescription.trim().length < 5) {
+
+          newErrors.shortDescription = 'Short description must be at least 5 characters long';
+
+        } else if (formData.shortDescription.length > 160) {
+
+          newErrors.shortDescription = 'Short description must be 160 characters or less';
+
+        }
+
+    
 
     // Category
     if (!formData.category) newErrors.category = 'Category is required';
@@ -330,111 +394,93 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
             try {
               const publicUrl = await uploadFile(image.file, `products/${formData.sku || 'unnamed'}`);
               return {
-                ...image,
                 url: publicUrl,
-                file: undefined, // Remove file reference after upload
+                alt: image.id,
+                isPrimary: image.isPrimary,
               };
             } catch (error) {
               console.error(`Failed to upload image ${image.id}:`, error);
               throw error;
             }
           }
-          return image;
+          return {
+            url: image.url,
+            alt: image.id,
+            isPrimary: image.isPrimary,
+          };
         })
       );
 
-      const product: VendorProduct = {
-        id: existingProduct?.id || `product-${Date.now()}`,
-        vendorId,
-        name: formData.name,
-        brand: formData.brand,
-        sku: formData.sku,
+      // Generate slug from name
+      const slug = formData.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '');
+
+      // Map display category to ID
+      const categoryMap: Record<string, string> = {
+        'Apparel & Accessories': 'event-clothing',
+        'Jewelry & Watches': 'floral-arrangements', // Mapping best fit if not exact
+        'Home & Living': 'furniture-tents',
+        'Electronics': 'sound-lighting',
+        'Beauty & Personal Care': 'party-supplies', // Mapping best fit
+        'Art & Collectibles': 'decorations',
+        'Toys & Games': 'entertainment',
+        'Sports & Outdoors': 'entertainment', // Mapping best fit
+      };
+
+      // Map form data to API format - ensure correct types
+      const apiData = {
+        title: formData.name,
+        slug: `${slug}-${Date.now()}`,
         description: formData.description,
-        shortDescription: formData.shortDescription,
-        category: formData.category,
-        subcategory: formData.subcategory,
-        eventTypes: formData.eventTypes,
-        productType: formData.productType,
-        purchaseDetails: (formData.productType === 'purchase' || formData.productType === 'both')
-          ? {
-              regularPrice: parseFloat(formData.regularPrice),
-              salePrice: formData.salePrice ? parseFloat(formData.salePrice) : undefined,
-              quantity: parseInt(formData.quantity),
-            }
-          : undefined,
-        rentalDetails: (formData.productType === 'rental' || formData.productType === 'both')
-          ? {
-              dailyRate: parseFloat(formData.dailyRate),
-              weeklyRate: formData.weeklyRate ? parseFloat(formData.weeklyRate) : undefined,
-              monthlyRate: formData.monthlyRate ? parseFloat(formData.monthlyRate) : undefined,
-              securityDeposit: parseFloat(formData.securityDeposit),
-              minimumRentalDuration: parseInt(formData.minimumRentalDuration),
-              quantityAvailable: parseInt(formData.quantityAvailable),
-            }
-          : undefined,
-        images: uploadedImages,
-        specifications: formData.specifications.filter(spec => spec.key && spec.value),
-        shipping: {
-          weight: parseFloat(formData.weight),
-          dimensions: {
-            length: parseFloat(formData.length),
-            width: parseFloat(formData.width),
-            height: parseFloat(formData.height),
-          },
-          isFragile: formData.isFragile,
-          requiresSetup: formData.requiresSetup,
-        },
-        status: asDraft ? 'draft' : 'published',
-        createdAt: existingProduct?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        publishedAt: !asDraft && !existingProduct?.publishedAt ? new Date().toISOString() : existingProduct?.publishedAt,
+        descriptionShort: formData.shortDescription || undefined,
+        categoryId: categoryMap[formData.category] || 'decorations',
+        price: formData.regularPrice.toString(), // Must be string
+        salePrice: formData.salePrice ? formData.salePrice.toString() : null, // Send null if empty
+        stock: parseInt(formData.quantity) || 0,
+        status: asDraft ? ('draft' as const) : ('active' as const),
+        images: uploadedImages.length > 0 ? uploadedImages : undefined,
       };
 
       if (existingProduct) {
-        updateVendorProduct(product.id, product);
+        updateProductMutation.mutate({
+          id: existingProduct.id,
+          title: apiData.title,
+          description: apiData.description,
+          price: apiData.price,
+          stock: apiData.stock,
+          status: apiData.status,
+        });
       } else {
-        addVendorProduct(product);
+        createProductMutation.mutate(apiData);
       }
-
-      setSavedProductId(product.id);
-      setShowSuccess(true);
     } catch (error) {
-      alert('Failed to upload images. Please try again.');
+      toast.error('Failed to upload images. Please try again.');
+      console.error('Submit error:', error);
     } finally {
       setIsUploading(false);
     }
   };
 
   if (showSuccess) {
-    const product = getVendorProducts().find(p => p.id === savedProductId);
-    const wasPublished = product?.status === 'published';
-
     return (
       <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
         <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
           <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
         </div>
         <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-2">
-          {existingProduct ? 'Product updated successfully!' : 'Product published successfully!'}
+          {existingProduct ? 'Product updated successfully!' : 'Product created successfully!'}
         </h2>
         <p className="text-[hsl(var(--muted-foreground))] mb-6">
           {existingProduct
-            ? 'Your changes have been saved and are now live'
-            : wasPublished
-              ? 'Your product is now live and visible to customers'
-              : 'Your product has been saved as a draft'
+            ? 'Your changes have been saved to the database'
+            : 'Your product has been saved to the database'
           }
         </p>
         <div className="flex gap-3 justify-center">
-          <Button variant="outline" onClick={onClose}>
+          <Button onClick={onClose}>
             Back to Products
-          </Button>
-          <Button onClick={() => {
-            onClose();
-            // In a real app, this would navigate to the product detail page
-            console.log('View product:', savedProductId);
-          }}>
-            View Product
           </Button>
         </div>
       </div>
@@ -933,14 +979,14 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
                     <span
                       className={cn(
                         'inline-flex rounded-full px-3 py-1 text-sm font-semibold',
-                        existingProduct.status === 'published'
+                        existingProduct.status === 'active'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
                           : existingProduct.status === 'draft'
                             ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
                       )}
                     >
-                      {existingProduct.status === 'published'
+                      {existingProduct.status === 'active'
                         ? 'Active (Published)'
                         : existingProduct.status === 'draft'
                           ? 'Draft'
@@ -949,7 +995,7 @@ export function AddProductForm({ vendorId, existingProduct, onClose }: AddProduc
                   </div>
                 </div>
                 <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                  {existingProduct.status === 'published'
+                  {existingProduct.status === 'active'
                     ? 'This product is live and visible to customers'
                     : existingProduct.status === 'draft'
                       ? 'This product is not visible to customers yet'

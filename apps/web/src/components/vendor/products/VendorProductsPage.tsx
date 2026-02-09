@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getVendorProducts, deleteVendorProduct, updateProductStatus } from '@/stores/vendor-product-store';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { orpc } from '@/utils/orpc';
+import { toast } from 'sonner';
 import type { VendorProduct, ProductStatus, ProductType } from '@/types/vendor-product';
 import { AddProductForm } from './AddProductForm';
 import { EnhancedProductsTable } from './EnhancedProductsTable';
@@ -25,7 +27,7 @@ const CATEGORIES = [
 const ITEMS_PER_PAGE = 20;
 
 export function VendorProductsPage() {
-  const [products, setProducts] = useState<VendorProduct[]>([]);
+  const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<VendorProduct | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
@@ -46,17 +48,89 @@ export function VendorProductsPage() {
   // Show filters
   const [showFilters, setShowFilters] = useState(false);
 
-  // Mock vendor ID - in real app, get from auth context
-  const vendorId = 'vendor-1';
+  // Fetch products from API
+  const { data: apiProducts = [], isLoading, refetch } = useQuery(
+    orpc.product.listMyProducts.queryOptions({
+      input: { limit: 100, offset: 0 },
+    })
+  );
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  // Map API products to VendorProduct format for UI compatibility
+  const products: VendorProduct[] = useMemo(() => {
+    return apiProducts.map((p: any) => ({
+      id: p.id,
+      vendorId: p.vendorId,
+      name: p.title,
+      brand: p.brand || '',
+      sku: p.sku || '',
+      description: p.description,
+      shortDescription: p.descriptionShort || '',
+      category: '', // TODO: Map categoryId to category name
+      subcategory: '',
+      eventTypes: [],
+      productType: 'purchase' as const,
+      purchaseDetails: {
+        regularPrice: parseFloat(p.price) || 0,
+        salePrice: p.salePrice ? parseFloat(p.salePrice) : undefined,
+        quantity: p.stock || 0,
+      },
+      images: p.images || [],
+      specifications: [],
+      shipping: {
+        weight: 0,
+        dimensions: { length: 0, width: 0, height: 0 },
+        isFragile: p.isFragile || false,
+        requiresSetup: p.setupRequired || false,
+      },
+      status: p.status as ProductStatus,
+      createdAt: p.createdAt?.toString() || new Date().toISOString(),
+      updatedAt: p.updatedAt?.toString() || new Date().toISOString(),
+    }));
+  }, [apiProducts]);
 
-  const loadProducts = () => {
-    const vendorProducts = getVendorProducts(vendorId);
-    setProducts(vendorProducts);
-    setSelectedProducts(new Set());
+  // Delete product mutation
+  const deleteMutation = useMutation(
+    orpc.product.deleteProduct.mutationOptions({
+      onSuccess: () => {
+        toast.success('Product deleted successfully');
+        refetch();
+      },
+      onError: (error: any) => {
+        toast.error('Failed to delete product');
+        console.error('Delete error:', error);
+      },
+    })
+  );
+
+  // Update product status mutation
+  const updateStatusMutation = useMutation(
+    orpc.product.updateProduct.mutationOptions({
+      onSuccess: () => {
+        toast.success('Product updated');
+        refetch();
+      },
+      onError: (error: any) => {
+        toast.error('Failed to update product');
+        console.error('Update error:', error);
+      },
+    })
+  );
+
+  const handleToggleStatus = (product: VendorProduct) => {
+    const newStatus = product.status === 'active' ? 'draft' : 'active';
+    updateStatusMutation.mutate({ id: product.id, status: newStatus });
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    deleteMutation.mutate({ id: productId });
+  };
+
+  const handleUpdatePrice = (productId: string, price: number) => {
+    updateStatusMutation.mutate({ id: productId, price: price.toString() });
+  };
+
+  const handleUpdateStock = (productId: string, stock: number) => {
+    updateStatusMutation.mutate({ id: productId, stock });
   };
 
   // Filter, sort, and paginate products
@@ -164,24 +238,24 @@ export function VendorProductsPage() {
 
   const handleBulkActivate = () => {
     selectedProducts.forEach((productId) => {
-      updateProductStatus(productId, 'published');
+      updateStatusMutation.mutate({ id: productId, status: 'active' });
     });
-    loadProducts();
+    setSelectedProducts(new Set());
   };
 
   const handleBulkDeactivate = () => {
     selectedProducts.forEach((productId) => {
-      updateProductStatus(productId, 'draft');
+      updateStatusMutation.mutate({ id: productId, status: 'draft' });
     });
-    loadProducts();
+    setSelectedProducts(new Set());
   };
 
   const handleBulkDelete = () => {
     if (confirm(`Are you sure you want to delete ${selectedProducts.size} product(s)?`)) {
       selectedProducts.forEach((productId) => {
-        deleteVendorProduct(productId);
+        deleteMutation.mutate(productId);
       });
-      loadProducts();
+      setSelectedProducts(new Set());
     }
   };
 
@@ -198,7 +272,6 @@ export function VendorProductsPage() {
   const handleCloseForm = () => {
     setShowAddForm(false);
     setEditingProduct(null);
-    loadProducts();
   };
 
   const clearFilters = () => {
@@ -219,11 +292,22 @@ export function VendorProductsPage() {
       <div className="min-h-screen bg-[hsl(var(--background))]">
         <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
           <AddProductForm
-            vendorId={vendorId}
-            existingProduct={editingProduct}
             onClose={handleCloseForm}
+            onSuccess={() => {
+              setShowAddForm(false);
+              refetch();
+            }}
           />
         </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent"></div>
+        <span className="ml-3 text-[hsl(var(--muted-foreground))]">Loading products...</span>
       </div>
     );
   }
@@ -393,7 +477,11 @@ export function VendorProductsPage() {
           onSelectAll={handleSelectAll}
           onSelectProduct={handleSelectProduct}
           onEdit={handleEditProduct}
-          onRefresh={loadProducts}
+          onDelete={handleDeleteProduct}
+          onToggleStatus={handleToggleStatus}
+          onUpdatePrice={handleUpdatePrice}
+          onUpdateStock={handleUpdateStock}
+          onRefresh={refetch}
           onSort={handleSort}
           sortField={sortField}
           sortOrder={sortOrder}

@@ -15,7 +15,7 @@ import { count, eq, gte, sql, or, ilike, and, desc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
 
-export const adminRouter = {
+export const adminRouter = os.router({
   listUsers: adminProcedure
     .route({
       method: "POST",
@@ -195,7 +195,7 @@ export const adminRouter = {
           name: vendors.name,
           slug: vendors.slug,
           ownerEmail: user.email,
-          productCount: vendors.productCount,
+          productCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.vendorId} = ${vendors.id})`.mapWith(Number),
           isActive: vendors.isActive,
           isVerified: vendors.isVerified,
           joinedAt: vendors.joinedAt,
@@ -232,7 +232,24 @@ export const adminRouter = {
     }))
     .handler(async ({ input }) => {
       const vendorData = await db
-        .select()
+        .select({
+          id: vendors.id,
+          userId: vendors.userId,
+          name: vendors.name,
+          slug: vendors.slug,
+          description: vendors.description,
+          logoUrl: vendors.logoUrl,
+          bannerUrl: vendors.bannerUrl,
+          location: vendors.location,
+          address: vendors.address,
+          phone: vendors.phone,
+          email: vendors.email,
+          website: vendors.website,
+          isVerified: vendors.isVerified,
+          isActive: vendors.isActive,
+          joinedAt: vendors.joinedAt,
+          productCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.vendorId} = ${vendors.id})`.mapWith(Number),
+        })
         .from(vendors)
         .where(eq(vendors.id, input.id))
         .limit(1);
@@ -270,21 +287,41 @@ export const adminRouter = {
       isVerified: z.boolean().optional(),
     }))
     .handler(async ({ input }) => {
-      const result = await db
-        .update(vendors)
-        .set({
-          isActive: input.isActive,
-          isVerified: input.isVerified,
-          updatedAt: new Date(),
-        })
-        .where(eq(vendors.id, input.id))
-        .returning();
+      return await db.transaction(async (tx) => {
+        // Update vendor record
+        const result = await tx
+          .update(vendors)
+          .set({
+            isActive: input.isActive,
+            isVerified: input.isVerified,
+            updatedAt: new Date(),
+          })
+          .where(eq(vendors.id, input.id))
+          .returning();
 
-      if (result.length === 0) {
-        throw new ORPCError("NOT_FOUND", { message: "Vendor not found" });
-      }
+        if (result.length === 0) {
+          throw new ORPCError("NOT_FOUND", { message: "Vendor not found" });
+        }
 
-      return result[0];
+        const vendor = result[0]!;
+
+        // Sync user vendorStatus when isActive changes
+        if (input.isActive !== undefined) {
+          const newVendorStatus = input.isActive ? "approved" : "suspended";
+
+          await tx
+            .update(user)
+            .set({
+              vendorStatus: newVendorStatus,
+              updatedAt: new Date(),
+            })
+            .where(eq(user.id, vendor.userId));
+
+          console.log(`[Admin Update Vendor] Synced user vendorStatus to "${newVendorStatus}" for vendor ${vendor.name}`);
+        }
+
+        return vendor;
+      });
     }),
 
   updateVendorApplicationStatus: adminProcedure
@@ -367,6 +404,19 @@ export const adminRouter = {
                 businessAddr = app.businessAddress;
               }
 
+              // Extract division from address for location field if possible
+              let location: any = "Dhaka";
+              try {
+                if (app.businessAddress.startsWith("{")) {
+                  const addr = JSON.parse(app.businessAddress);
+                  if (addr.division) {
+                    location = addr.division;
+                  }
+                }
+              } catch (e) {
+                // Keep default Dhaka
+              }
+
               // Insert into vendors table
               const vendorId = nanoid();
               console.log(`[Admin Action] Inserting/Updating vendor record with slug ${vendorSlug}`);
@@ -380,7 +430,7 @@ export const adminRouter = {
                   description: app.storeDescription,
                   logoUrl: app.logoUrl,
                   bannerUrl: app.bannerUrl,
-                  location: "Dhaka", // Default or extract from address
+                  location: location,
                   address: businessAddr,
                   phone: app.businessPhone,
                   email: updatedUsers[0]!.email,
@@ -486,10 +536,22 @@ export const adminRouter = {
     .input(z.object({
       id: z.string(),
     }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context }) => {
+      // Helper function to extract S3 key from URL
+      const extractS3Key = (url: string | null): string | null => {
+        if (!url) return null;
+
+        // Match everything after '/images/' until a '?' or end of string
+        const match = url.match(/\/images\/(.+?)(?:\?|$)/);
+        if (match) {
+          return match[1];
+        }
+        return null;
+      };
+
       const result = await db.transaction(async (tx) => {
         const vendorRecord = await tx
-          .select({ userId: vendors.userId })
+          .select()
           .from(vendors)
           .where(eq(vendors.id, input.id))
           .limit(1);
@@ -498,21 +560,49 @@ export const adminRouter = {
           throw new ORPCError("NOT_FOUND", { message: "Vendor not found" });
         }
 
+        const vendor = vendorRecord[0]!;
+
+        // Collect S3 files to delete
+        const filesToDelete: string[] = [];
+        const logoKey = extractS3Key(vendor.logoUrl);
+        const bannerKey = extractS3Key(vendor.bannerUrl);
+
+        if (logoKey) filesToDelete.push(logoKey);
+        if (bannerKey) filesToDelete.push(bannerKey);
+
+        // Delete files from S3
+        const deletedFiles: string[] = [];
+        for (const fileKey of filesToDelete) {
+          try {
+            await context.storage.deleteFile(fileKey);
+            deletedFiles.push(fileKey);
+            console.log(`[Admin Delete Vendor] Deleted S3 file: ${fileKey}`);
+          } catch (error) {
+            console.error(`[Admin Delete Vendor] Failed to delete file ${fileKey}:`, error);
+            // Continue even if deletion fails
+          }
+        }
+
+        // Update user role
         await tx
           .update(user)
-          .set({ 
+          .set({
             role: "customer",
             vendorStatus: "none"
           } as any)
-          .where(eq(user.id, vendorRecord[0]!.userId));
+          .where(eq(user.id, vendor.userId));
 
-        return await tx
+        // Delete vendor record
+        await tx
           .delete(vendors)
-          .where(eq(vendors.id, input.id))
-          .returning();
+          .where(eq(vendors.id, input.id));
+
+        console.log(`[Admin Delete Vendor] Deleted vendor ${vendor.name} (${input.id}), removed ${deletedFiles.length} files from S3`);
+
+        return { success: true, deletedFiles };
       });
 
-      return { success: true };
+      return result;
     }),
 
   listAllProducts: adminProcedure
@@ -584,23 +674,75 @@ export const adminRouter = {
       description: "Admin action to remove a product listing for violations.",
       tags: ["Admin"],
     })
-    .input(z.object({ 
+    .input(z.object({
       id: z.string(),
       reason: z.string()
     }))
-    .handler(async ({ input }) => {
-      const result = await db
-        .delete(products)
-        .where(eq(products.id, input.id))
-        .returning();
+    .handler(async ({ input, context }) => {
+      // Helper function to extract S3 key from URL
+      const extractS3Key = (url: string | null): string | null => {
+        if (!url) return null;
 
-      if (result.length === 0) {
-        throw new ORPCError("NOT_FOUND", { message: "Product not found" });
-      }
+        // Match everything after '/images/' until a '?' or end of string
+        const match = url.match(/\/images\/(.+?)(?:\?|$)/);
+        if (match) {
+          return match[1];
+        }
+        return null;
+      };
 
-      console.log(`[Admin Notice] Product ${input.id} removed. Reason: ${input.reason}`);
+      return await db.transaction(async (tx) => {
+        // Get product images before deleting
+        const images = await tx
+          .select()
+          .from(productImages)
+          .where(eq(productImages.productId, input.id));
 
-      return { success: true };
+        // Collect S3 files to delete
+        const filesToDelete: string[] = [];
+        for (const img of images) {
+          const key = extractS3Key(img.url);
+          if (key) filesToDelete.push(key);
+        }
+
+        // Delete files from S3
+        const deletedFiles: string[] = [];
+        for (const fileKey of filesToDelete) {
+          try {
+            await context.storage.deleteFile(fileKey);
+            deletedFiles.push(fileKey);
+            console.log(`[Admin Delete Product] Deleted S3 file: ${fileKey}`);
+          } catch (error) {
+            console.error(`[Admin Delete Product] Failed to delete file ${fileKey}:`, error);
+            // Continue even if deletion fails
+          }
+        }
+
+        // Delete product (cascades to productImages due to foreign key)
+        const result = await tx
+          .delete(products)
+          .where(eq(products.id, input.id))
+          .returning();
+
+        if (result.length === 0) {
+          throw new ORPCError("NOT_FOUND", { message: "Product not found" });
+        }
+
+        const deletedProduct = result[0]!;
+
+        // Decrement vendor's product count
+        await tx
+          .update(vendors)
+          .set({
+            productCount: sql`${vendors.productCount} - 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(vendors.id, deletedProduct.vendorId));
+
+        console.log(`[Admin Notice] Product ${input.id} removed. Reason: ${input.reason}. Deleted ${deletedFiles.length} images from S3.`);
+
+        return { success: true, deletedFiles };
+      });
     }),
 
   getPlatformSettings: adminProcedure
@@ -813,4 +955,4 @@ export const adminRouter = {
         recentUsers,
       };
     }),
-};
+});

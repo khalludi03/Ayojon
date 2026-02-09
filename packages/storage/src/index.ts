@@ -56,10 +56,21 @@ export function getDownloadPresignedUrl(key: string, options?: { expiresIn?: num
 
 /**
  * Delete a file from S3.
+ * Returns true if deleted, false if file didn't exist.
  */
-export async function deleteFile(key: string) {
-  const file = s3Client.file(key);
-  return await file.delete();
+export async function deleteFile(key: string): Promise<boolean> {
+  try {
+    const file = s3Client.file(key);
+    await file.delete();
+    return true;
+  } catch (error: any) {
+    // If the file doesn't exist, that's okay - consider it a success
+    if (error.message?.includes("not found") || error.message?.includes("Not Found")) {
+      return false;
+    }
+    // Re-throw other errors
+    throw error;
+  }
 }
 
 /**
@@ -68,4 +79,41 @@ export async function deleteFile(key: string) {
 export async function fileExists(key: string): Promise<boolean> {
   const file = s3Client.file(key);
   return await file.exists();
+}
+
+/**
+ * Extract S3 key from a public URL or presigned URL.
+ * Returns null if the URL doesn't match the expected format.
+ */
+export function extractKeyFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+
+    // Try to extract from public URL format
+    if (env.S3_PUBLIC_URL) {
+      const baseUrl = env.S3_PUBLIC_URL.endsWith("/")
+        ? env.S3_PUBLIC_URL.slice(0, -1)
+        : env.S3_PUBLIC_URL;
+
+      if (url.startsWith(baseUrl)) {
+        return url.substring(baseUrl.length + 1); // +1 for the slash
+      }
+    }
+
+    // Try to extract from endpoint-based URL
+    const endpoint = env.S3_ENDPOINT.endsWith("/")
+      ? env.S3_ENDPOINT.slice(0, -1)
+      : env.S3_ENDPOINT;
+
+    const bucketPrefix = `${endpoint}/${env.S3_BUCKET}/`;
+    if (url.startsWith(bucketPrefix)) {
+      // Remove query params for presigned URLs
+      const key = url.substring(bucketPrefix.length).split("?")[0];
+      return key;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
 }

@@ -14,9 +14,11 @@
     "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "bun run src/seed.ts"
+    "db:seed": "bun run src/seed.ts",
+    "db:seed:faker": "bun run src/seed-faker.ts"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.2.0",
     "@my-better-t-app/env": "workspace:*",
     "dotenv": "catalog:",
     "drizzle-orm": "^0.45.1",
