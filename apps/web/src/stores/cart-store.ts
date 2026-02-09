@@ -6,6 +6,7 @@ import { generateId } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
 
 const STORAGE_KEY_PREFIX = 'ayojon-cart';
+const STORAGE_KEY = 'ayojon-cart'; // For backward compatibility with session/local storage migration
 const LEGACY_STORAGE_KEY = 'zynex-cart';
 const GUEST_USER_ID = 'guest';
 
@@ -213,6 +214,7 @@ function createCartStore(): CartStore {
       
       // Clear session storage if any
       sessionStorage.removeItem(STORAGE_KEY_PREFIX);
+      sessionStorage.removeItem(STORAGE_KEY);
       sessionStorage.removeItem(legacyStorageKey);
       sessionStorage.removeItem(LEGACY_STORAGE_KEY);
 
