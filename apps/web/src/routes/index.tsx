@@ -160,7 +160,7 @@ function HomePage() {
         icon={<Flame className="h-5 w-5" />}
         products={hotDealsProducts || []}
         isLoading={hotDealsLoading}
-        viewAllLink="/deals/hot"
+        viewAllLink="/hot-deals"
         className="bg-[hsl(var(--muted))]"
       />
 

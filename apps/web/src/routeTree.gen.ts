@@ -13,7 +13,9 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProductsRouteImport } from './routes/products'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as HotDealsRouteImport } from './routes/hot-deals'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as FlashDealsRouteImport } from './routes/flash-deals'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
@@ -60,9 +62,19 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HotDealsRoute = HotDealsRouteImport.update({
+  id: '/hot-deals',
+  path: '/hot-deals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlashDealsRoute = FlashDealsRouteImport.update({
+  id: '/flash-deals',
+  path: '/flash-deals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -201,7 +213,9 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/flash-deals': typeof FlashDealsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/hot-deals': typeof HotDealsRoute
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -233,7 +247,9 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/flash-deals': typeof FlashDealsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/hot-deals': typeof HotDealsRoute
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -266,7 +282,9 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/flash-deals': typeof FlashDealsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/hot-deals': typeof HotDealsRoute
   '/login': typeof LoginRoute
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -300,7 +318,9 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/dashboard'
+    | '/flash-deals'
     | '/forgot-password'
+    | '/hot-deals'
     | '/login'
     | '/products'
     | '/reset-password'
@@ -332,7 +352,9 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/dashboard'
+    | '/flash-deals'
     | '/forgot-password'
+    | '/hot-deals'
     | '/login'
     | '/products'
     | '/reset-password'
@@ -364,7 +386,9 @@ export interface FileRouteTypes {
     | '/cart'
     | '/checkout'
     | '/dashboard'
+    | '/flash-deals'
     | '/forgot-password'
+    | '/hot-deals'
     | '/login'
     | '/products'
     | '/reset-password'
@@ -397,7 +421,9 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
+  FlashDealsRoute: typeof FlashDealsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  HotDealsRoute: typeof HotDealsRoute
   LoginRoute: typeof LoginRoute
   ProductsRoute: typeof ProductsRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -450,11 +476,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/hot-deals': {
+      id: '/hot-deals'
+      path: '/hot-deals'
+      fullPath: '/hot-deals'
+      preLoaderRoute: typeof HotDealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forgot-password': {
       id: '/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flash-deals': {
+      id: '/flash-deals'
+      path: '/flash-deals'
+      fullPath: '/flash-deals'
+      preLoaderRoute: typeof FlashDealsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -666,7 +706,9 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
+  FlashDealsRoute: FlashDealsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  HotDealsRoute: HotDealsRoute,
   LoginRoute: LoginRoute,
   ProductsRoute: ProductsRoute,
   ResetPasswordRoute: ResetPasswordRoute,
