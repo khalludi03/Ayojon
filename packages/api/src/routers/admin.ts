@@ -195,7 +195,7 @@ export const adminRouter = os.router({
           name: vendors.name,
           slug: vendors.slug,
           ownerEmail: user.email,
-          productCount: vendors.productCount,
+          productCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.vendorId} = ${vendors.id})`.mapWith(Number),
           isActive: vendors.isActive,
           isVerified: vendors.isVerified,
           joinedAt: vendors.joinedAt,
@@ -232,7 +232,24 @@ export const adminRouter = os.router({
     }))
     .handler(async ({ input }) => {
       const vendorData = await db
-        .select()
+        .select({
+          id: vendors.id,
+          userId: vendors.userId,
+          name: vendors.name,
+          slug: vendors.slug,
+          description: vendors.description,
+          logoUrl: vendors.logoUrl,
+          bannerUrl: vendors.bannerUrl,
+          location: vendors.location,
+          address: vendors.address,
+          phone: vendors.phone,
+          email: vendors.email,
+          website: vendors.website,
+          isVerified: vendors.isVerified,
+          isActive: vendors.isActive,
+          joinedAt: vendors.joinedAt,
+          productCount: sql<number>`(SELECT count(*) FROM ${products} WHERE ${products.vendorId} = ${vendors.id})`.mapWith(Number),
+        })
         .from(vendors)
         .where(eq(vendors.id, input.id))
         .limit(1);
