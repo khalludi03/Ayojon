@@ -1,11 +1,28 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Package, Calendar, Mail, Phone, MapPin, CreditCard, ArrowRight, Home, Building2, Zap, Clock } from "lucide-react";
+import { 
+  CheckCircle2, 
+  Package, 
+  Calendar, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  CreditCard, 
+  ArrowRight, 
+  Home, 
+  Building2, 
+  Zap, 
+  Clock,
+  Smartphone,
+  Info,
+  ExternalLink
+} from "lucide-react";
 
 interface ConfirmationStepProps {
   orderDetails: {
     orderId?: string;
     orderNumber: string;
+    totalAmount: number;
     shipping: {
       fullName: string;
       email: string;
@@ -22,11 +39,15 @@ interface ConfirmationStepProps {
     };
     payment: {
       paymentMethod: string;
+      transactionId?: string;
     };
   };
 }
 
 export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
+  const isBkash = orderDetails.payment.paymentMethod === 'bkash';
+  const hasPaid = !!orderDetails.payment.transactionId;
+
   const getDeliveryMethodDetails = (method: string) => {
     switch (method) {
       case 'standard':
@@ -108,10 +129,14 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(34,197,94,0.1),transparent_50%)]" />
         <div className="relative">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-in zoom-in-50 duration-500">
-            <CheckCircle2 className="h-12 w-12 text-white animate-in zoom-in duration-700" strokeWidth={2.5} />
+            {isBkash && !hasPaid ? (
+              <Clock className="h-12 w-12 text-white animate-in zoom-in duration-700" strokeWidth={2.5} />
+            ) : (
+              <CheckCircle2 className="h-12 w-12 text-white animate-in zoom-in duration-700" strokeWidth={2.5} />
+            )}
           </div>
           <h2 className="text-3xl font-bold text-[hsl(var(--foreground))] animate-in fade-in slide-in-from-bottom-4 duration-700">
-            Order Placed Successfully!
+            {isBkash && !hasPaid ? "Order Placed! Awaiting Payment" : "Order Placed Successfully!"}
           </h2>
           <p className="mt-3 text-base text-[hsl(var(--muted-foreground))] animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
             Thank you for your order! A confirmation email has been sent to{' '}
@@ -125,6 +150,65 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
           </div>
         </div>
       </div>
+
+      {/* bKash Payment Instructions */}
+      {isBkash && !hasPaid && (
+        <div className="rounded-xl border-2 border-indigo-200 bg-indigo-50/50 p-6 dark:border-indigo-900/30 dark:bg-indigo-950/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600 shadow-md">
+              <Smartphone className="h-6 w-6 text-white" />
+            </div>
+            <h3 className="text-xl font-bold text-indigo-900 dark:text-indigo-100">
+              How to complete your bKash payment
+            </h3>
+          </div>
+          
+          <div className="grid gap-6 md:grid-cols-2">
+            <div className="space-y-4">
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-indigo-100 dark:border-indigo-800">
+                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Send Payment To</p>
+                <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400">01700-000000</p>
+                <p className="text-xs text-slate-500 mt-1">(Ayojon Merchant Account)</p>
+              </div>
+              
+              <div className="bg-white dark:bg-slate-900 rounded-lg p-4 shadow-sm border border-indigo-100 dark:border-indigo-800">
+                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">Amount to Pay</p>
+                <p className="text-2xl font-black text-slate-900 dark:text-white">৳{(orderDetails.totalAmount || 0).toLocaleString()}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <p className="font-bold text-indigo-900 dark:text-indigo-100">Steps:</p>
+              <ul className="space-y-2 text-sm text-indigo-800 dark:text-indigo-300">
+                <li className="flex gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">1</span>
+                  <span>Open your bKash app or dial *247#</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">2</span>
+                  <span>Choose <strong>"Send Money"</strong> and enter the number above</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">3</span>
+                  <span>Enter the total amount and your PIN</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white">4</span>
+                  <span>After success, go to <strong>"Order Details"</strong> to submit the Transaction ID</span>
+                </li>
+              </ul>
+              <div className="pt-2">
+                <div className="flex items-start gap-2 bg-white/50 dark:bg-slate-900/50 p-3 rounded-lg border border-indigo-100 dark:border-indigo-800">
+                  <Info className="h-4 w-4 text-indigo-600 mt-0.5" />
+                  <p className="text-xs text-indigo-900 dark:text-indigo-200">
+                    Your order will be processed immediately after our team verifies your payment details.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* What's Next Section */}
       <div className="rounded-xl border-2 border-[hsl(var(--border))] bg-[hsl(var(--muted))]/20 p-6">

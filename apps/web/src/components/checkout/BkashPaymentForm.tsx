@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface BkashPaymentFormProps {
   totalAmount: number;
-  onPaymentSuccess: (transactionId: string, amount: number, paidAt: string) => void;
+  onPaymentSuccess: (transactionId: string, mobileNumber: string, amount: number, paidAt: string) => void;
   onCancel: () => void;
 }
 
@@ -74,7 +74,7 @@ export function BkashPaymentForm({
     const paidAt = new Date().toISOString();
 
     // Call success handler
-    onPaymentSuccess(transactionId, totalAmount, paidAt);
+    onPaymentSuccess(transactionId, mobileNumber, totalAmount, paidAt);
   };
 
   const handleMobileNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {

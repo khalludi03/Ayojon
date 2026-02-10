@@ -1,7 +1,21 @@
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-export type OrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' | 'returned';
+export type OrderStatus =
+  | 'awaiting_payment'
+  | 'payment_submitted'
+  | 'payment_received'
+  | 'placed'
+  | 'pending'
+  | 'processing'
+  | 'shipped'
+  | 'delivered'
+  | 'cash_collected'
+  | 'settlement_ready'
+  | 'vendor_paid'
+  | 'vendor_settled'
+  | 'cancelled'
+  | 'returned';
 
 interface OrderStatusBadgeProps {
   status: OrderStatus | string;
@@ -9,12 +23,28 @@ interface OrderStatusBadgeProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string }> = {
+  awaiting_payment: {
+    label: 'Awaiting Payment',
+    className: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
+  },
+  payment_submitted: {
+    label: 'Payment Submitted',
+    className: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
+  },
+  payment_received: {
+    label: 'Payment Received',
+    className: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800',
+  },
+  placed: {
+    label: 'Placed',
+    className: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-800',
+  },
   pending: {
     label: 'Pending',
     className: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800',
   },
-  confirmed: {
-    label: 'Confirmed',
+  processing: {
+    label: 'Processing',
     className: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
   },
   shipped: {
@@ -23,6 +53,22 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   },
   delivered: {
     label: 'Delivered',
+    className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+  },
+  cash_collected: {
+    label: 'Cash Collected',
+    className: 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
+  },
+  settlement_ready: {
+    label: 'Settlement Ready',
+    className: 'bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400 dark:border-cyan-800',
+  },
+  vendor_paid: {
+    label: 'Vendor Paid',
+    className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+  },
+  vendor_settled: {
+    label: 'Vendor Settled',
     className: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
   },
   cancelled: {

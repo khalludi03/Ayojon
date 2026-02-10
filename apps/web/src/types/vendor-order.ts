@@ -6,7 +6,7 @@ export type VendorOrderStatus =
   | 'cancelled'
   | 'returned';
 
-export type PaymentMethod = 'bkash' | 'card' | 'cod' | 'bank';
+export type PaymentMethod = 'bkash' | 'card' | 'cod' | 'nagad';
 
 export interface VendorOrderItem {
   id: string;
