@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Star, ThumbsUp, ThumbsDown, BadgeCheck } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown, BadgeCheck, Check, X as XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Review } from '@/types/product';
@@ -38,9 +38,9 @@ export function ReviewCard({ review }: ReviewCardProps) {
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="shrink-0">
-          {review.user.avatar ? (
+          {(review.user as any).avatar || (review.user as any).image ? (
             <img
-              src={review.user.avatar}
+              src={(review.user as any).avatar || (review.user as any).image}
               alt={review.user.name}
               className="h-10 w-10 rounded-full object-cover"
             />
@@ -58,10 +58,21 @@ export function ReviewCard({ review }: ReviewCardProps) {
               {review.user.name}
             </span>
             {review.isVerifiedPurchase && (
-              <Badge variant="verified" className="gap-1">
+              <Badge variant="verified" className="gap-1 bg-blue-50 text-blue-700 border-blue-200">
                 <BadgeCheck className="h-3 w-3" />
                 Verified Purchase
               </Badge>
+            )}
+            {review.recommend !== undefined && (
+              <div className={cn(
+                "flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                review.recommend 
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                  : "bg-red-50 text-red-700 border-red-200"
+              )}>
+                {review.recommend ? <Check className="h-2.5 w-2.5" /> : <XIcon className="h-2.5 w-2.5" />}
+                {review.recommend ? "Recommended" : "Not Recommended"}
+              </div>
             )}
           </div>
 

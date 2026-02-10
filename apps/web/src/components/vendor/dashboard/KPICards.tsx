@@ -119,6 +119,13 @@ export function KPICards() {
         isLoading={isLoading}
       />
       <KPICard
+        title="Vendor Score"
+        value={stats ? `${(stats.vendorScore * 100).toFixed(0)}%` : '0%'}
+        icon={TrendingUp}
+        color="bg-indigo-100 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
+        isLoading={isLoading}
+      />
+      <KPICard
         title="Store Views"
         value={stats?.storeViews ?? 0}
         icon={Eye}

@@ -21,6 +21,7 @@ const navigationItems = [
   { id: "orders" as AccountSection, label: "Orders" },
   { id: "wishlist" as AccountSection, label: "Wishlist" },
   { id: "addresses" as AccountSection, label: "Addresses" },
+  { id: "reviews" as AccountSection, label: "My Reviews" },
   { id: "profile" as AccountSection, label: "Profile" },
   { id: "settings" as AccountSection, label: "Settings" },
 ];

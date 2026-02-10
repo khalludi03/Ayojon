@@ -43,6 +43,7 @@ import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AccountWishlistRouteImport } from './routes/account.wishlist'
 import { Route as AccountSettingsRouteImport } from './routes/account.settings'
+import { Route as AccountReviewsRouteImport } from './routes/account.reviews'
 import { Route as AccountProfileRouteImport } from './routes/account.profile'
 import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
@@ -222,6 +223,11 @@ const AccountSettingsRoute = AccountSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountReviewsRoute = AccountReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AccountRoute,
+} as any)
 const AccountProfileRoute = AccountProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -271,6 +277,7 @@ export interface FileRoutesByFullPath {
   '/account/addresses': typeof AccountAddressesRoute
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/account/profile': typeof AccountProfileRoute
+  '/account/reviews': typeof AccountReviewsRoute
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
   '/account/profile': typeof AccountProfileRoute
+  '/account/reviews': typeof AccountReviewsRoute
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -354,6 +362,7 @@ export interface FileRoutesById {
   '/account/addresses': typeof AccountAddressesRoute
   '/account/orders': typeof AccountOrdersRouteWithChildren
   '/account/profile': typeof AccountProfileRoute
+  '/account/reviews': typeof AccountReviewsRoute
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
@@ -398,6 +407,7 @@ export interface FileRouteTypes {
     | '/account/addresses'
     | '/account/orders'
     | '/account/profile'
+    | '/account/reviews'
     | '/account/settings'
     | '/account/wishlist'
     | '/admin/dashboard'
@@ -438,6 +448,7 @@ export interface FileRouteTypes {
     | '/wishlist'
     | '/account/addresses'
     | '/account/profile'
+    | '/account/reviews'
     | '/account/settings'
     | '/account/wishlist'
     | '/admin/dashboard'
@@ -480,6 +491,7 @@ export interface FileRouteTypes {
     | '/account/addresses'
     | '/account/orders'
     | '/account/profile'
+    | '/account/reviews'
     | '/account/settings'
     | '/account/wishlist'
     | '/admin/dashboard'
@@ -779,6 +791,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountSettingsRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/reviews': {
+      id: '/account/reviews'
+      path: '/reviews'
+      fullPath: '/account/reviews'
+      preLoaderRoute: typeof AccountReviewsRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/account/profile': {
       id: '/account/profile'
       path: '/profile'
@@ -842,6 +861,7 @@ interface AccountRouteChildren {
   AccountAddressesRoute: typeof AccountAddressesRoute
   AccountOrdersRoute: typeof AccountOrdersRouteWithChildren
   AccountProfileRoute: typeof AccountProfileRoute
+  AccountReviewsRoute: typeof AccountReviewsRoute
   AccountSettingsRoute: typeof AccountSettingsRoute
   AccountWishlistRoute: typeof AccountWishlistRoute
   AccountIndexRoute: typeof AccountIndexRoute
@@ -851,6 +871,7 @@ const AccountRouteChildren: AccountRouteChildren = {
   AccountAddressesRoute: AccountAddressesRoute,
   AccountOrdersRoute: AccountOrdersRouteWithChildren,
   AccountProfileRoute: AccountProfileRoute,
+  AccountReviewsRoute: AccountReviewsRoute,
   AccountSettingsRoute: AccountSettingsRoute,
   AccountWishlistRoute: AccountWishlistRoute,
   AccountIndexRoute: AccountIndexRoute,

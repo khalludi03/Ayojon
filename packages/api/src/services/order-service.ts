@@ -5,6 +5,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { validateStatusTransition, getInitialOrderStatus } from "./order-state-machine";
 import { notifyOrderPlaced, notifyVendorNewOrder, notifyOrderStatusUpdate } from "./notification-service";
+import { updateVendorScore } from "./vendor-service";
 
 /**
  * Order Service
@@ -168,6 +169,9 @@ export async function createOrder(orderData: {
       if (vendor) {
         vendorNotifications.push({ userId: vendor.userId, itemCount });
       }
+
+      // Update Vendor Score
+      await updateVendorScore(vendorId, tx);
     }
 
     // Return both order and notification data
@@ -238,9 +242,20 @@ export async function transitionOrderStatus(
       .where(eq(orders.id, orderId))
       .returning();
 
+    // 4. Update scores for all involved vendors
+    const involvedVendors = await tx
+      .select({ vendorId: orderItems.vendorId })
+      .from(orderItems)
+      .where(eq(orderItems.orderId, orderId))
+      .groupBy(orderItems.vendorId);
+
+    for (const { vendorId } of involvedVendors) {
+      await updateVendorScore(vendorId, tx);
+    }
+
     return { success: true, order: updatedOrder!, userId: order.userId, orderNumber: order.orderNumber };
   }).then(async (result) => {
-    // 4. Send customer notification for status updates AFTER transaction is committed
+    // 5. Send customer notification for status updates AFTER transaction is committed
     if (result.success && result.order) {
       try {
         await notifyOrderStatusUpdate(result.userId, orderId, result.orderNumber, newStatus);

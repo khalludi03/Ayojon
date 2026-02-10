@@ -82,5 +82,6 @@ export type AccountSection =
   | 'orders'
   | 'wishlist'
   | 'addresses'
+  | 'reviews'
   | 'profile'
   | 'settings';
