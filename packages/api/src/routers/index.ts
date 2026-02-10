@@ -8,6 +8,7 @@ import { orderRouter } from "./order";
 import { addressRouter } from "./address";
 import { wishlistRouter } from "./wishlist";
 import { cartRouter } from "./cart";
+import { notificationRouter } from "./notification";
 
 export const appRouter = os.router({
   storage: storageRouter,
@@ -17,6 +18,7 @@ export const appRouter = os.router({
   address: addressRouter,
   wishlist: wishlistRouter,
   cart: cartRouter,
+  notifications: notificationRouter,
   vendorProduct: productRouter,
   catalog: productRouter, // Alias for backward compatibility
   admin: adminRouter,
