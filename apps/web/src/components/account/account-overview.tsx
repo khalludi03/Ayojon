@@ -14,7 +14,12 @@ interface AccountOverviewProps {
   recentOrders: Order[];
 }
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; color: string }> = {
+  awaiting_payment: { label: "Awaiting Payment", color: "bg-amber-500" },
+  payment_submitted: { label: "Verifying Payment", color: "bg-blue-500" },
+  payment_received: { label: "Payment Received", color: "bg-indigo-500" },
+  payment_rejected: { label: "Payment Rejected", color: "bg-rose-500" },
+  placed: { label: "Order Placed", color: "bg-sky-500" },
   pending: { label: "Pending", color: "bg-yellow-500" },
   processing: { label: "Processing", color: "bg-blue-500" },
   shipped: { label: "Shipped", color: "bg-purple-500" },
@@ -107,8 +112,10 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
         <CardContent>
           <div className="space-y-3 sm:space-y-4">
             {recentOrders.map((order) => (
-              <div
+              <Link
                 key={order.id}
+                to="/account/orders/$orderId"
+                params={{ orderId: order.id }}
                 className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
               >
                 {/* Left side: Image and Order Info */}
@@ -125,7 +132,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                     <p className="text-xs text-muted-foreground sm:text-sm">
                       {/* Mobile: Short date format */}
                       <span className="sm:hidden">
-                        {new Date(order.date).toLocaleDateString("en-US", {
+                        {new Date(order.createdAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
@@ -133,7 +140,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                       </span>
                       {/* Desktop: Long date format */}
                       <span className="hidden sm:inline">
-                        {new Date(order.date).toLocaleDateString("en-US", {
+                        {new Date(order.createdAt).toLocaleDateString("en-US", {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
@@ -141,7 +148,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                       </span>
                     </p>
                     <p className="text-xs text-muted-foreground sm:text-sm">
-                      {order.items} {order.items === 1 ? "item" : "items"}
+                      {Array.isArray(order.items) ? order.items.length : order.items} {((Array.isArray(order.items) ? order.items.length : order.items) === 1) ? "item" : "items"}
                     </p>
                   </div>
                 </div>
@@ -149,19 +156,19 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                 {/* Right side: Price, Status, and Arrow */}
                 <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
                   <div className="flex flex-col items-start sm:items-end">
-                    <p className="text-sm font-semibold sm:text-base">{formatCurrencyPrice(order.total)}</p>
+                    <p className="text-sm font-semibold sm:text-base">{formatCurrencyPrice(parseFloat(order.total as any))}</p>
                     <Badge
                       variant="secondary"
-                      className={`${statusConfig[order.status].color} mt-1 text-[10px] text-white sm:text-xs`}
+                      className={`${statusConfig[order.status]?.color || "bg-slate-500"} mt-1 text-[10px] text-white sm:text-xs`}
                     >
-                      {statusConfig[order.status].label}
+                      {statusConfig[order.status]?.label || order.status}
                     </Badge>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0 sm:h-9 sm:w-9">
+                  <div className="h-8 w-8 flex items-center justify-center shrink-0 sm:h-9 sm:w-9 text-muted-foreground">
                     <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  </Button>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </CardContent>

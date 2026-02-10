@@ -17,7 +17,9 @@ import {
   DollarSign,
   ArrowUpRight,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Smartphone,
+  Hash
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -57,10 +59,29 @@ export const Route = createFileRoute('/admin/orders' as any)({
 const ITEMS_PER_PAGE = 50;
 
 const STATUS_CONFIG = {
+  // bKash/Prepaid flow
+  awaiting_payment: { label: 'Awaiting Payment', icon: Clock, color: 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-800' },
+  payment_submitted: { label: 'Payment Submitted', icon: Clock, color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800' },
+  payment_received: { label: 'Payment Received', icon: CheckCircle, color: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
+  payment_rejected: { label: 'Payment Rejected', icon: XCircle, color: 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-800' },
+  
+  // COD flow
+  placed: { label: 'Order Placed', icon: ShoppingBag, color: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-300 dark:border-sky-800' },
+  
+  // Shared flow
   pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800' },
   processing: { label: 'Processing', icon: Package, color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800' },
   shipped: { label: 'Shipped', icon: Truck, color: 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800' },
   delivered: { label: 'Delivered', icon: CheckCircle, color: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-800' },
+  
+  // COD specific outcomes
+  cash_collected: { label: 'Cash Collected', icon: DollarSign, color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800' },
+  settlement_ready: { label: 'Settlement Ready', icon: RefreshCw, color: 'bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-400 border-cyan-300 dark:border-cyan-800' },
+  
+  // Final payout statuses
+  vendor_paid: { label: 'Vendor Paid', icon: DollarSign, color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800' },
+  vendor_settled: { label: 'Vendor Settled', icon: DollarSign, color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800' },
+  
   cancelled: { label: 'Cancelled', icon: XCircle, color: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800' },
 };
 
@@ -276,6 +297,22 @@ function AdminOrdersPage() {
                               <Mail className="h-3 w-3" />
                               {order.userEmail}
                             </span>
+                            {order.paymentMethod === 'bkash' && (order.status === 'payment_submitted' || order.status === 'payment_received') && (
+                              <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800 space-y-0.5">
+                                {order.senderMobile && (
+                                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1">
+                                    <Smartphone className="h-2.5 w-2.5" />
+                                    {order.senderMobile}
+                                  </span>
+                                )}
+                                {order.paymentTransactionId && (
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono flex items-center gap-1">
+                                    <Hash className="h-2.5 w-2.5" />
+                                    {order.paymentTransactionId}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -321,6 +358,19 @@ function AdminOrdersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl">
+                            {order.status === 'payment_submitted' && (
+                              <>
+                                <DropdownMenuItem onClick={() => updateStatus(order.id, 'payment_received')}>
+                                  <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                  <span className="text-green-600 font-bold">Approve Payment</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => updateStatus(order.id, 'payment_rejected')}>
+                                  <XCircle className="mr-2 h-4 w-4 text-red-600" />
+                                  <span className="text-red-600 font-bold">Reject Payment</span>
+                                </DropdownMenuItem>
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                              </>
+                            )}
                             <DropdownMenuItem onClick={() => updateStatus(order.id, 'pending')}>
                               <Clock className="mr-2 h-4 w-4" /> Mark Pending
                             </DropdownMenuItem>

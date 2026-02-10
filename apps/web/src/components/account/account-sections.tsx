@@ -32,12 +32,15 @@ import { orpc } from "@/utils/orpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function AccountOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const { data: orders = [], isLoading } = useQuery(
+    orpc.order.listMyOrders.queryOptions()
+  );
 
   const pageSize = 10;
   const statusFilters = [
@@ -53,6 +56,10 @@ export function AccountOrders() {
     shipped: { label: "Shipped", className: "bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300" },
     delivered: { label: "Delivered", className: "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300" },
     cancelled: { label: "Cancelled", className: "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300" },
+    payment_rejected: { label: "Payment Rejected", className: "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300" },
+    awaiting_payment: { label: "Awaiting Payment", className: "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300" },
+    payment_submitted: { label: "Verifying Payment", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
+    payment_received: { label: "Payment Received", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300" },
   };
 
   useEffect(() => {
@@ -98,7 +105,7 @@ export function AccountOrders() {
         return order.orderNumber.toLowerCase().includes(normalizedSearch);
       })
       .filter((order) => {
-        const orderDate = new Date(order.date);
+        const orderDate = new Date(order.createdAt);
         if (startDateValue && orderDate < startDateValue) {
           return false;
         }
@@ -107,7 +114,7 @@ export function AccountOrders() {
         }
         return true;
       })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [orders, statusFilter, searchTerm, startDate, endDate]);
 
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
@@ -123,6 +130,14 @@ export function AccountOrders() {
 
   const formatOrderNumber = (orderNumber: string) =>
     orderNumber.startsWith("#") ? orderNumber : `#${orderNumber}`;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -231,12 +246,12 @@ export function AccountOrders() {
             ) : (
               <div className="space-y-4">
                 {pagedOrders.map((order) => {
-                  const thumbnails = (order.lineItems || [])
-                    .map((item) => item.imageUrl)
+                  const thumbnails = (order.items || [])
+                    .map((item: any) => item.imageUrl)
                     .filter(Boolean)
                     .slice(0, 3) as string[];
                   const hasThumbnails = thumbnails.length > 0;
-                  const badge = statusConfig[order.status];
+                  const badge = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
 
                   return (
                     <div
@@ -247,10 +262,10 @@ export function AccountOrders() {
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-3">
                             <p className="text-sm font-semibold">{formatOrderNumber(order.orderNumber)}</p>
-                            <Badge className={`${badge.className} text-[10px] sm:text-xs`}>{badge.label}</Badge>
+                            <Badge className={`${badge.className} text-[10px] sm:text-xs font-bold uppercase tracking-wider`}>{badge.label}</Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(order.date).toLocaleDateString("en-US", {
+                            {new Date(order.createdAt).toLocaleDateString("en-US", {
                               month: "short",
                               day: "numeric",
                               year: "numeric",
@@ -263,8 +278,8 @@ export function AccountOrders() {
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm">
-                          <span className="text-muted-foreground">{order.items} items</span>
-                          <span className="font-semibold">{formatPrice(order.total)}</span>
+                          <span className="text-muted-foreground">{(order.items || []).length} items</span>
+                          <span className="font-semibold">{formatPrice(parseFloat(order.total))}</span>
                           <div className="flex flex-wrap gap-2">
                             <Button type="button" size="sm" variant="outline" asChild>
                               <Link to="/account/orders/$orderId" params={{ orderId: order.id }}>
@@ -282,7 +297,7 @@ export function AccountOrders() {
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-3 border-t border-[hsl(var(--border))] pt-3">
+                        <div className="flex flex-wrap items-center gap-3 border-t border-[hsl(var(--border))] pt-3">
                         {hasThumbnails ? (
                           thumbnails.map((imageUrl, index) => (
                             <img
@@ -292,15 +307,9 @@ export function AccountOrders() {
                               className="h-12 w-12 rounded-md object-cover"
                             />
                           ))
-                        ) : order.imageUrl ? (
-                          <img
-                            src={order.imageUrl}
-                            alt={order.orderNumber}
-                            className="h-12 w-12 rounded-md object-cover"
-                          />
                         ) : (
                           <div className="flex h-12 w-12 items-center justify-center rounded-md bg-[hsl(var(--muted))] text-xs font-semibold">
-                            {order.items} items
+                            {(order.items || []).length || order.items} items
                           </div>
                         )}
                       </div>

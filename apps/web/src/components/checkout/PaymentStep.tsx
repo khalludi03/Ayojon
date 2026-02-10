@@ -9,11 +9,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Banknote, CreditCard, Lock, ShieldCheck, Smartphone, Wallet } from "lucide-react";
+import { Banknote, CreditCard, Lock, ShieldCheck, Smartphone, Wallet, Loader2, Info, Hash } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface PaymentStepProps {
-  onNext: () => void;
+  onPlaceOrder: () => void;
   onBack: () => void;
   formData: {
     paymentMethod: string;
@@ -22,33 +22,36 @@ interface PaymentStepProps {
     expiryDate?: string;
     cvv?: string;
     mobileNumber?: string;
+    bkashTransactionId?: string;
   };
   onFormChange: (field: string, value: string) => void;
+  isSubmitting?: boolean;
+  totalAmount: number;
 }
 
 export function PaymentStep({ 
-  onNext, 
+  onPlaceOrder, 
   onBack, 
   formData, 
-  onFormChange 
+  onFormChange,
+  isSubmitting = false,
+  totalAmount
 }: PaymentStepProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate based on payment method
-    if (formData.paymentMethod === 'card') {
-      // Card payment will be handled in the next step with dedicated form
-      onNext();
-    } else if (formData.paymentMethod === 'bkash') {
-      // bKash payment will be handled in the next step with OTP flow
-      onNext();
-    } else if (formData.paymentMethod === 'nagad') {
-      if (formData.mobileNumber) {
-        onNext();
+    if (formData.paymentMethod === 'bkash') {
+      if (!formData.mobileNumber || !formData.bkashTransactionId) {
+        return;
       }
-    } else if (formData.paymentMethod === 'cod') {
-      onNext();
+    } else if (formData.paymentMethod === 'nagad') {
+      if (!formData.mobileNumber) {
+        return;
+      }
     }
+    
+    onPlaceOrder();
   };
 
   const unavailableMethods = new Set<string>();
@@ -265,46 +268,51 @@ export function PaymentStep({
 
           {/* bKash Payment Info */}
           {formData.paymentMethod === 'bkash' && (
-            <div className="space-y-4 rounded-lg border-2 border-[hsl(var(--primary))]/20 bg-gradient-to-br from-[hsl(var(--muted))]/30 to-transparent p-5">
-              <div className="flex items-center gap-2 pb-2 border-b border-[hsl(var(--border))]">
-                <Smartphone className="h-5 w-5 text-[hsl(var(--primary))]" />
-                <h3 className="font-semibold text-[hsl(var(--foreground))]">
-                  bKash Payment
+            <div className="space-y-6 rounded-lg border-2 border-indigo-200 bg-indigo-50/30 p-5 dark:border-indigo-900/50 dark:bg-indigo-950/20">
+              <div className="flex items-center gap-2 pb-2 border-b border-indigo-100 dark:border-indigo-800">
+                <Smartphone className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+                <h3 className="font-bold text-indigo-900 dark:text-indigo-100">
+                  Manual bKash Payment
                 </h3>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-start gap-2 text-sm">
-                  <span className="text-lg shrink-0">✅</span>
-                  <p className="text-[hsl(var(--foreground))]">
-                    Pay securely using your bKash mobile wallet
-                  </p>
+              <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm space-y-3">
+                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <Info className="h-4 w-4" />
+                  <span className="text-sm font-bold uppercase tracking-wider">Instructions</span>
                 </div>
-                <div className="flex items-start gap-2 text-sm">
-                  <span className="text-lg shrink-0">⚡</span>
-                  <p className="text-[hsl(var(--foreground))]">
-                    Instant payment confirmation via OTP
-                  </p>
-                </div>
-                <div className="flex items-start gap-2 text-sm">
-                  <span className="text-lg shrink-0">🔒</span>
-                  <p className="text-[hsl(var(--foreground))]">
-                    Secure and encrypted payment processing
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 p-3 text-sm border border-blue-200 dark:border-blue-800">
-                <span className="text-xl shrink-0">💡</span>
-                <p className="text-blue-700 dark:text-blue-300">
-                  You will complete the payment in the next step. Please have your bKash mobile number ready.
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Please send <strong>৳{totalAmount.toLocaleString()}</strong> to our merchant bKash number below using "Send Money" or "Payment", then provide the details.
                 </p>
+                <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded text-center">
+                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Merchant bKash Number</p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">01700-000000</p>
+                </div>
               </div>
 
-              {/* Supported providers */}
-              <div className="flex items-center justify-center gap-4 pt-2">
-                <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))] px-3 py-1.5 text-xs font-medium">
-                  📱 bKash
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="mobileNumber" className="text-sm font-bold">Your bKash Number *</Label>
+                  <Input
+                    id="mobileNumber"
+                    value={formData.mobileNumber || ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('mobileNumber', e.target.value)}
+                    placeholder="017XXXXXXXX"
+                    type="tel"
+                    className="bg-white dark:bg-slate-900"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bkashTransactionId" className="text-sm font-bold">Transaction ID (TrxID) *</Label>
+                  <Input
+                    id="bkashTransactionId"
+                    value={formData.bkashTransactionId || ''}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('bkashTransactionId', e.target.value.toUpperCase())}
+                    placeholder="8N7A6D5C4B"
+                    className="font-mono uppercase bg-white dark:bg-slate-900"
+                    required
+                  />
                 </div>
               </div>
             </div>
@@ -387,20 +395,66 @@ export function PaymentStep({
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-col gap-3 border-t border-[hsl(var(--border))] pt-6 sm:flex-row sm:justify-between">
-            <Button type="button" variant="outline" size="lg" onClick={onBack}>
-              ← Back
-            </Button>
-            <Button 
-              type="submit" 
-              size="lg"
-              disabled={!formData.paymentMethod}
-            >
-              Review Order →
-            </Button>
+          {/* Proceed Information */}
+          <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
+            <p className="text-sm text-center text-slate-600 dark:text-slate-400 font-medium">
+              {formData.paymentMethod === 'bkash' 
+                ? "Click below after entering your payment details to complete the order."
+                : formData.paymentMethod === 'cod'
+                ? "You will pay the total amount at your doorstep when you receive the items."
+                : "Select a payment method above to continue."}
+            </p>
           </div>
         </form>
+      </div>
+
+      {/* Action Buttons - Moved outside for better visibility */}
+      <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:justify-between items-center">
+        <Button type="button" variant="outline" size="lg" onClick={onBack} className="w-full sm:w-auto h-12 px-8 order-2 sm:order-1">
+          ← Back to Review
+        </Button>
+        
+        <div className="flex flex-col items-center sm:items-end gap-3 w-full sm:w-auto order-1 sm:order-2">
+          {!formData.paymentMethod && (
+            <p className="text-xs font-bold text-destructive animate-pulse">
+              Please select a payment method above
+            </p>
+          )}
+          {formData.paymentMethod === 'bkash' && (!formData.mobileNumber || !formData.bkashTransactionId) && (
+            <p className="text-xs font-bold text-destructive">
+              Please enter TrxID and Mobile Number
+            </p>
+          )}
+          
+          <Button 
+            type="button" 
+            size="lg"
+            onClick={handleSubmit}
+            className={cn(
+              "w-full sm:w-auto px-16 text-lg font-black h-14 transition-all duration-300",
+              formData.paymentMethod 
+                ? "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-[0_8px_25px_-4px_rgba(249,115,22,0.4)] scale-105"
+                : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            )}
+            disabled={!formData.paymentMethod || isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                Complete Order
+                <ShieldCheck className="ml-3 h-5 w-5" />
+              </>
+            )}
+          </Button>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+            <Lock className="h-3 w-3" />
+            SSL Secure Checkout
+          </div>
+        </div>
       </div>
 
       {/* Security Badge */}

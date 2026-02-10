@@ -4,8 +4,35 @@ import { vendors } from "./catalog";
 import { products } from "./products";
 import { relations } from "drizzle-orm";
 
-export type OrderStatus = "pending" | "confirmed" | "shipped" | "delivered" | "cancelled" | "returned";
-export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+/**
+ * Order Status Flow
+ *
+ * bKash Prepaid Flow:
+ * awaiting_payment → payment_submitted → payment_received → shipped → delivered → vendor_paid
+ *
+ * Cash on Delivery (COD) Flow:
+ * placed → shipped → cash_collected → settlement_ready → vendor_settled
+ *
+ * Both flows can transition to 'cancelled' at any point before delivery
+ */
+export type OrderStatus =
+  // bKash flow statuses
+  | "awaiting_payment"    // Order created, awaiting bKash payment from customer
+  | "payment_submitted"   // Customer submitted bKash transaction ID
+  | "payment_received"    // Admin verified payment, ready for fulfillment
+  | "payment_rejected"    // Admin rejected payment details
+  // COD flow statuses
+  | "placed"             // COD order placed, ready for fulfillment
+  // Common statuses
+  | "shipped"            // Vendor marked as shipped (both flows)
+  | "delivered"          // Order delivered to customer (bKash flow)
+  | "cash_collected"     // Cash collected from customer (COD flow)
+  | "settlement_ready"   // Ready for vendor payout (COD flow)
+  | "vendor_paid"        // Vendor paid (bKash flow)
+  | "vendor_settled"     // Vendor paid (COD flow)
+  | "cancelled";         // Order cancelled
+
+export type PaymentMethod = "bkash" | "cod" | "nagad" | "card";
 
 export const orders = pgTable(
   "orders",
@@ -17,8 +44,7 @@ export const orders = pgTable(
       .references(() => user.id, { onDelete: "cascade" }),
     
     // Status
-    status: text("status").$type<OrderStatus>().default("pending").notNull(),
-    paymentStatus: text("payment_status").$type<PaymentStatus>().default("pending").notNull(),
+    status: text("status").$type<OrderStatus>().notNull(),
     
     // Totals
     subtotal: numeric("subtotal", { precision: 12, scale: 2 }).notNull(),
@@ -41,8 +67,8 @@ export const orders = pgTable(
     trackingNumber: text("tracking_number"),
     
     // Payment
-    paymentMethod: text("payment_method").notNull(),
-    paymentTransactionId: text("payment_transaction_id"),
+    paymentMethod: text("payment_method").$type<PaymentMethod>().notNull(),
+    paymentTransactionId: text("payment_transaction_id"), // bKash transaction ID
     
     // Notes
     customerNote: text("customer_note"),
@@ -92,6 +118,8 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
     references: [user.id],
   }),
   items: many(orderItems),
+  payments: many(payments),
+  payouts: many(vendorPayouts),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
@@ -106,5 +134,127 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   vendor: one(vendors, {
     fields: [orderItems.vendorId],
     references: [vendors.id],
+  }),
+}));
+
+/**
+ * Payment Tracking Table
+ *
+ * Tracks payment submissions and admin verification for both bKash and COD orders.
+ * For bKash: Customer submits transaction ID, admin verifies
+ * For COD: Payment recorded when cash is collected on delivery
+ */
+export type PaymentStatus = "pending" | "submitted" | "verified" | "rejected";
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: text("id").primaryKey(),
+    orderId: text("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+
+    // Payment Details
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
+    method: text("method").$type<PaymentMethod>().notNull(),
+    status: text("status").$type<PaymentStatus>().default("pending").notNull(),
+
+    // bKash/Mobile specific
+    transactionId: text("transaction_id"), // Customer-submitted bKash transaction ID
+    senderMobile: text("sender_mobile"),   // Mobile number used to send payment
+
+    // COD specific
+    collectionProof: text("collection_proof"), // Optional proof of cash collection (image URL)
+
+    // Admin Verification
+    verifiedBy: text("verified_by").references(() => user.id, { onDelete: "set null" }),
+    verifiedAt: timestamp("verified_at"),
+    rejectionReason: text("rejection_reason"),
+
+    // Notes
+    notes: text("notes"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("payments_order_id_idx").on(table.orderId),
+    index("payments_status_idx").on(table.status),
+  ]
+);
+
+export const paymentsRelations = relations(payments, ({ one }) => ({
+  order: one(orders, {
+    fields: [payments.orderId],
+    references: [orders.id],
+  }),
+  verifier: one(user, {
+    fields: [payments.verifiedBy],
+    references: [user.id],
+  }),
+}));
+
+/**
+ * Vendor Payout Table
+ *
+ * Tracks payments to vendors after order completion.
+ * Admin manually processes payouts after:
+ * - bKash: Order is delivered
+ * - COD: Cash is collected and settlement is ready
+ *
+ * Amount is calculated as: order amount - platform commission
+ */
+export type PayoutStatus = "pending" | "processing" | "completed" | "failed";
+
+export const vendorPayouts = pgTable(
+  "vendor_payouts",
+  {
+    id: text("id").primaryKey(),
+    orderId: text("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "restrict" }),
+    vendorId: text("vendor_id")
+      .notNull()
+      .references(() => vendors.id, { onDelete: "restrict" }),
+
+    // Payout Details
+    amount: numeric("amount", { precision: 12, scale: 2 }).notNull(), // Amount after commission
+    platformCommission: numeric("platform_commission", { precision: 12, scale: 2 }).notNull(),
+    status: text("status").$type<PayoutStatus>().default("pending").notNull(),
+
+    // Payment Details
+    paymentMethod: text("payment_method"), // e.g., "bank_transfer", "bkash", "nagad"
+    paymentReference: text("payment_reference"), // Transaction ID or reference number
+
+    // Admin Processing
+    processedBy: text("processed_by").references(() => user.id, { onDelete: "set null" }),
+    processedAt: timestamp("processed_at"),
+    failureReason: text("failure_reason"),
+
+    // Notes
+    notes: text("notes"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("vendor_payouts_order_id_idx").on(table.orderId),
+    index("vendor_payouts_vendor_id_idx").on(table.vendorId),
+    index("vendor_payouts_status_idx").on(table.status),
+  ]
+);
+
+export const vendorPayoutsRelations = relations(vendorPayouts, ({ one }) => ({
+  order: one(orders, {
+    fields: [vendorPayouts.orderId],
+    references: [orders.id],
+  }),
+  vendor: one(vendors, {
+    fields: [vendorPayouts.vendorId],
+    references: [vendors.id],
+  }),
+  processor: one(user, {
+    fields: [vendorPayouts.processedBy],
+    references: [user.id],
   }),
 }));
