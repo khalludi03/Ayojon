@@ -6,6 +6,8 @@ import { productRouter } from "./product";
 import { adminRouter } from "./admin";
 import { orderRouter } from "./order";
 import { addressRouter } from "./address";
+import { wishlistRouter } from "./wishlist";
+import { cartRouter } from "./cart";
 
 export const appRouter = os.router({
   storage: storageRouter,
@@ -13,6 +15,8 @@ export const appRouter = os.router({
   product: productRouter,
   order: orderRouter,
   address: addressRouter,
+  wishlist: wishlistRouter,
+  cart: cartRouter,
   vendorProduct: productRouter,
   catalog: productRouter, // Alias for backward compatibility
   admin: adminRouter,

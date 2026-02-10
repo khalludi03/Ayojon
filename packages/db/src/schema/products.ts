@@ -8,7 +8,9 @@ import {
   numeric,
   index,
   jsonb,
+  primaryKey,
 } from "drizzle-orm/pg-core";
+import { user } from "./auth";
 import { vendors, categories, subcategories, eventTypes } from "./catalog";
 
 // =============================================================================
@@ -369,3 +371,73 @@ export const productShippingOptionsRelations = relations(
     }),
   }),
 );
+
+// =============================================================================
+// WISHLIST
+// =============================================================================
+
+export const wishlist = pgTable(
+  "wishlist",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({ columns: [table.userId, table.productId] }),
+    };
+  }
+);
+
+export const wishlistRelations = relations(wishlist, ({ one }) => ({
+  user: one(user, {
+    fields: [wishlist.userId],
+    references: [user.id],
+  }),
+  product: one(products, {
+    fields: [wishlist.productId],
+    references: [products.id],
+  }),
+}));
+
+// =============================================================================
+// CART
+// =============================================================================
+
+export const cart = pgTable(
+  "cart",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    variantId: text("variant_id").notNull().default(''),
+    quantity: integer("quantity").notNull().default(1),
+    savedForLater: integer("saved_for_later").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({ columns: [table.userId, table.productId, table.variantId] }),
+    };
+  }
+);
+
+export const cartRelations = relations(cart, ({ one }) => ({
+  user: one(user, {
+    fields: [cart.userId],
+    references: [user.id],
+  }),
+  product: one(products, {
+    fields: [cart.productId],
+    references: [products.id],
+  }),
+}));
