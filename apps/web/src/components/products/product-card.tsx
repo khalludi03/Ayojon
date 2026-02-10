@@ -157,7 +157,7 @@ export function ProductCard({
           <div className="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
             <Link 
               to="/vendor/$vendorId" 
-              params={{ vendorId: product.vendor.id }}
+              params={{ vendorId: product.vendor.slug || product.vendor.id }}
               className="hover:underline hover:text-primary transition-colors font-medium"
             >
               {product.vendor.name}

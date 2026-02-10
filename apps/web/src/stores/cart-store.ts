@@ -4,10 +4,9 @@ import { useEffect, useSyncExternalStore } from 'react';
 import type { CurrencyCode, Product, ProductVariant } from '@/types';
 import { generateId } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
+import { orpcClient } from '@/utils/orpc';
 
 const STORAGE_KEY_PREFIX = 'ayojon-cart';
-const STORAGE_KEY = 'ayojon-cart'; // For backward compatibility with session/local storage migration
-const LEGACY_STORAGE_KEY = 'zynex-cart';
 const GUEST_USER_ID = 'guest';
 
 export interface CartItem {
@@ -17,6 +16,7 @@ export interface CartItem {
   quantity: number;
   selectedVariant?: ProductVariant;
   addedAt: string;
+  savedForLater?: boolean;
 }
 
 export type DeliveryMethodType = 'standard' | 'express' | 'same-day';
@@ -38,16 +38,16 @@ interface CartState {
 
 interface CartStore {
   getState: () => CartState;
-  addItem: (product: Product, quantity?: number, variant?: ProductVariant) => void;
-  removeItem: (itemId: string) => void;
+  addItem: (product: Product, quantity?: number, variant?: ProductVariant) => Promise<void>;
+  removeItem: (itemId: string) => Promise<void>;
   restoreItem: (item: CartItem) => void;
   removeByProductId: (productId: string) => void;
   toggleItem: (product: Product) => void;
-  updateQuantity: (itemId: string, quantity: number) => void;
-  clearCart: () => void;
-  saveForLater: (itemId: string) => void;
-  moveToCart: (itemId: string) => void;
-  removeSavedItem: (itemId: string) => void;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  saveForLater: (itemId: string) => Promise<void>;
+  moveToCart: (itemId: string) => Promise<void>;
+  removeSavedItem: (itemId: string) => Promise<void>;
   setDeliveryMethod: (method: DeliveryMethodType | null) => void;
   applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => void;
   removeCoupon: () => void;
@@ -64,6 +64,7 @@ interface CartStore {
   subscribe: (callback: () => void) => () => void;
   initialize: () => void;
   loadUserCart: (userId: string | null) => void;
+  syncWithBackend: () => Promise<void>;
 }
 
 // Helper function to get storage key based on user ID
@@ -96,158 +97,128 @@ function createCartStore(): CartStore {
         currentUserId = resolvedUserId;
       }
 
-      loadCart(resolvedUserId);
+      loadCart(resolvedUserId).then(() => {
+        if (resolvedUserId) {
+          syncWithBackend();
+        }
+      });
       notify();
     });
   };
 
-  // Helper to load cart for a specific user
-  const loadCart = (userId: string | null) => {
+  const syncWithBackend = async () => {
+    if (!currentUserId) return;
+
+    try {
+      const allLocalItems = [
+        ...state.items.map(item => ({ ...item, savedForLater: 0 })),
+        ...state.savedForLater.map(item => ({ ...item, savedForLater: 1 }))
+      ];
+
+      if (allLocalItems.length > 0) {
+        const syncInput = allLocalItems.map(item => ({
+          productId: item.productId,
+          variantId: item.selectedVariant?.id || '',
+          quantity: item.quantity,
+          savedForLater: item.savedForLater || 0,
+        }));
+        
+        const backendItems = await orpcClient.cart.sync(syncInput as any);
+        
+        const transformedItems: CartItem[] = (backendItems as any[]).filter(i => i.savedForLater === 0).map(item => ({
+          id: generateId(),
+          productId: item.productId,
+          product: item.product,
+          quantity: item.quantity,
+          selectedVariant: item.product.variants?.find((v: any) => v.id === item.variantId),
+          addedAt: item.createdAt,
+        }));
+
+        const transformedSaved: CartItem[] = (backendItems as any[]).filter(i => i.savedForLater === 1).map(item => ({
+          id: generateId(),
+          productId: item.productId,
+          product: item.product,
+          quantity: item.quantity,
+          selectedVariant: item.product.variants?.find((v: any) => v.id === item.variantId),
+          addedAt: item.createdAt,
+        }));
+
+        state = {
+          ...state,
+          items: transformedItems,
+          savedForLater: transformedSaved,
+          isInitialized: true
+        };
+        
+        persist();
+        notify();
+      } else {
+        const backendItems = await orpcClient.cart.list({} as any);
+        
+        const transformedItems: CartItem[] = (backendItems as any[]).filter(i => i.savedForLater === 0).map(item => ({
+          id: generateId(),
+          productId: item.productId,
+          product: item.product,
+          quantity: item.quantity,
+          selectedVariant: item.product.variants?.find((v: any) => v.id === item.variantId),
+          addedAt: item.createdAt,
+        }));
+
+        const transformedSaved: CartItem[] = (backendItems as any[]).filter(i => i.savedForLater === 1).map(item => ({
+          id: generateId(),
+          productId: item.productId,
+          product: item.product,
+          quantity: item.quantity,
+          selectedVariant: item.product.variants?.find((v: any) => v.id === item.variantId),
+          addedAt: item.createdAt,
+        }));
+
+        state = {
+          ...state,
+          items: transformedItems,
+          savedForLater: transformedSaved,
+          isInitialized: true
+        };
+        
+        persist();
+        notify();
+      }
+    } catch (e) {
+      console.error('[Cart] Sync with backend failed:', e);
+    }
+  };
+
+  const loadCart = async (userId: string | null) => {
     if (typeof window === 'undefined') return;
 
     try {
       const storageKey = getStorageKey(userId);
       const stored = localStorage.getItem(storageKey);
       
-      let items = [];
-      let savedForLater = [];
-      let deliveryMethod = null;
-      let discount = null;
-      let currency = 'BDT';
-
       if (stored) {
         const parsed = JSON.parse(stored);
-        items = parsed.items || [];
-        savedForLater = parsed.savedForLater || [];
-        deliveryMethod = parsed.deliveryMethod || null;
-        discount = parsed.discount || null;
-        currency = parsed.currency || 'BDT';
-      }
-
-      // If we are logging in, we SHOULD merge the guest cart items
-      if (userId) {
-        const guestKey = getStorageKey(null);
-        const guestStored = localStorage.getItem(guestKey);
-        
-        if (guestStored) {
-          const guestParsed = JSON.parse(guestStored);
-          const guestItems = guestParsed.items || [];
-          const guestSavedForLater = guestParsed.savedForLater || [];
-          
-          if (guestItems.length > 0 || guestSavedForLater.length > 0) {
-            // Merge items: add guest items that aren't already in user's cart
-            // or just append them (might result in duplicates but simpler)
-            // A better way is to merge by product ID + variant ID
-            const mergedItems = [...items];
-            guestItems.forEach((guestItem: CartItem) => {
-              const existingIndex = mergedItems.findIndex(
-                (item) =>
-                  item.productId === guestItem.productId &&
-                  item.selectedVariant?.id === guestItem.selectedVariant?.id
-              );
-              if (existingIndex >= 0) {
-                mergedItems[existingIndex].quantity += guestItem.quantity;
-              } else {
-                mergedItems.push(guestItem);
-              }
-            });
-
-            const mergedSaved = [...savedForLater];
-            guestSavedForLater.forEach((guestItem: CartItem) => {
-              const exists = mergedSaved.some(
-                (item) =>
-                  item.productId === guestItem.productId &&
-                  item.selectedVariant?.id === guestItem.selectedVariant?.id
-              );
-              if (!exists) {
-                mergedSaved.push(guestItem);
-              }
-            });
-
-            items = mergedItems;
-            savedForLater = mergedSaved;
-            
-            // If user had no delivery method/discount, take from guest
-            deliveryMethod = deliveryMethod || guestParsed.deliveryMethod || null;
-            discount = discount || guestParsed.discount || null;
-            
-            // Update state with merged data
-            state = {
-              ...state,
-              items,
-              savedForLater,
-              deliveryMethod,
-              discount,
-              currency: currency as CurrencyCode,
-              isInitialized: true
-            };
-
-            // Persist merged cart to user's key
-            persist();
-            
-            // Clear guest cart after successful merge
-            localStorage.removeItem(guestKey);
-          } else {
-            state = { ...state, items, savedForLater, deliveryMethod, discount, currency: currency as CurrencyCode, isInitialized: true };
-          }
-        } else {
-          state = { ...state, items, savedForLater, deliveryMethod, discount, currency: currency as CurrencyCode, isInitialized: true };
-        }
-      } else {
-        state = { ...state, items, savedForLater, deliveryMethod, discount, currency: currency as CurrencyCode, isInitialized: true };
-      }
-
-      // One-time migration from old keys
-      const legacyStorageKey = 'ayojon-cart'; // Old non-prefixed key
-      const legacyStored = localStorage.getItem(legacyStorageKey);
-      if (legacyStored && !stored) {
-        const parsed = JSON.parse(legacyStored);
         state = {
           ...state,
-          items: parsed.items || state.items,
-          savedForLater: parsed.savedForLater || state.savedForLater,
+          items: parsed.items || [],
+          savedForLater: parsed.savedForLater || [],
+          deliveryMethod: parsed.deliveryMethod || null,
+          discount: parsed.discount || null,
+          currency: parsed.currency || 'BDT',
           isInitialized: true
         };
-        persist();
-        localStorage.removeItem(legacyStorageKey);
+      } else {
+        state = { ...state, items: [], savedForLater: [], isInitialized: true };
       }
-      
-      // Clear session storage if any
-      sessionStorage.removeItem(STORAGE_KEY_PREFIX);
-      sessionStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(legacyStorageKey);
-      sessionStorage.removeItem(LEGACY_STORAGE_KEY);
-
+      notify();
     } catch (e) {
       console.error('Failed to load cart from localStorage:', e);
       state = { ...state, isInitialized: true };
     }
   };
 
-  // Initial load - check if there's a session
-  if (typeof window !== 'undefined') {
-    syncFromSession();
-
-    // Subscribe to auth session changes
-    const sessionSignal = authClient.$store?.atoms?.$sessionSignal;
-    if (sessionSignal) {
-      sessionSignal.subscribe(() => {
-        syncFromSession(true);
-      });
-    }
-
-    // Reload cart when tab becomes visible (handles multi-tab sync)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        syncFromSession(true);
-      }
-    });
-  }
-
   const persist = () => {
     if (typeof window !== 'undefined') {
       const storageKey = getStorageKey(currentUserId);
-      // Don't persist UI state like isDrawerOpen or isInitialized
       const { isDrawerOpen, isInitialized, ...persistedState } = state;
       localStorage.setItem(storageKey, JSON.stringify(persistedState));
     }
@@ -264,29 +235,31 @@ function createCartStore(): CartStore {
     loadUserCart: (userId: string | null) => {
       if (userId === currentUserId && state.isInitialized) return;
       currentUserId = userId;
-      loadCart(userId);
+      loadCart(userId).then(() => {
+        if (userId) syncWithBackend();
+      });
       notify();
     },
 
-    addItem: (product: Product, quantity: number = 1, variant?: ProductVariant) => {
+    addItem: async (product: Product, quantity: number = 1, variant?: ProductVariant) => {
       const existingIndex = state.items.findIndex(
         (item) =>
           item.productId === product.id &&
           item.selectedVariant?.id === variant?.id
       );
 
+      let newQuantity = quantity;
       if (existingIndex >= 0) {
-        // Update quantity of existing item
+        newQuantity = state.items[existingIndex].quantity + quantity;
         state = {
           ...state,
           items: state.items.map((item, index) =>
             index === existingIndex
-              ? { ...item, quantity: item.quantity + quantity }
+              ? { ...item, quantity: newQuantity }
               : item
           ),
         };
       } else {
-        // Add new item
         const newItem: CartItem = {
           id: generateId(),
           productId: product.id,
@@ -303,15 +276,40 @@ function createCartStore(): CartStore {
 
       persist();
       notify();
+
+      if (currentUserId) {
+        try {
+          await orpcClient.cart.update({
+            productId: product.id,
+            variantId: variant?.id || '',
+            quantity: newQuantity,
+            savedForLater: 0
+          } as any);
+        } catch (e) {
+          console.error('[Cart] Backend update failed:', e);
+        }
+      }
     },
 
-    removeItem: (itemId: string) => {
+    removeItem: async (itemId: string) => {
+      const item = state.items.find(i => i.id === itemId);
       state = {
         ...state,
         items: state.items.filter((item) => item.id !== itemId),
       };
       persist();
       notify();
+
+      if (currentUserId && item) {
+        try {
+          await orpcClient.cart.remove({
+            productId: item.productId,
+            variantId: item.selectedVariant?.id || ''
+          } as any);
+        } catch (e) {
+          console.error('[Cart] Backend remove failed:', e);
+        }
+      }
     },
 
     restoreItem: (item: CartItem) => {
@@ -319,73 +317,92 @@ function createCartStore(): CartStore {
         state = { ...state, items: [...state.items, item] };
         persist();
         notify();
+        
+        if (currentUserId) {
+          orpcClient.cart.update({
+            productId: item.productId,
+            variantId: item.selectedVariant?.id || '',
+            quantity: item.quantity,
+            savedForLater: 0
+          } as any).catch(e => console.error(e));
+        }
       }
     },
 
     removeByProductId: (productId: string) => {
+      const itemsToRemove = state.items.filter(i => i.productId === productId);
       state = {
         ...state,
         items: state.items.filter((item) => item.productId !== productId),
       };
       persist();
       notify();
+
+      if (currentUserId) {
+        itemsToRemove.forEach(item => {
+          orpcClient.cart.remove({
+            productId: item.productId,
+            variantId: item.selectedVariant?.id || ''
+          } as any).catch(e => console.error(e));
+        });
+      }
     },
 
     toggleItem: (product: Product) => {
       const existingItem = state.items.find((item) => item.productId === product.id);
-      
       if (existingItem) {
-        // Remove item if already in cart
-        state = {
-          ...state,
-          items: state.items.filter((item) => item.productId !== product.id),
-        };
+        cartStore.removeItem(existingItem.id);
       } else {
-        // Add new item
-        const newItem: CartItem = {
-          id: generateId(),
-          productId: product.id,
-          product,
-          quantity: 1,
-          selectedVariant: undefined,
-          addedAt: new Date().toISOString(),
-        };
-        state = {
-          ...state,
-          items: [...state.items, newItem],
-        };
+        cartStore.addItem(product);
       }
-
-      persist();
-      notify();
     },
 
-    updateQuantity: (itemId: string, quantity: number) => {
+    updateQuantity: async (itemId: string, quantity: number) => {
+      const item = state.items.find(i => i.id === itemId);
+      if (!item) return;
+
       if (quantity <= 0) {
-        // Remove item if quantity is 0 or less
-        state = {
-          ...state,
-          items: state.items.filter((item) => item.id !== itemId),
-        };
+        await cartStore.removeItem(itemId);
       } else {
         state = {
           ...state,
-          items: state.items.map((item) =>
-            item.id === itemId ? { ...item, quantity } : item
+          items: state.items.map((i) =>
+            i.id === itemId ? { ...i, quantity } : i
           ),
         };
+        persist();
+        notify();
+
+        if (currentUserId) {
+          try {
+            await orpcClient.cart.update({
+              productId: item.productId,
+              variantId: item.selectedVariant?.id || '',
+              quantity,
+              savedForLater: 0
+            } as any);
+          } catch (e) {
+            console.error('[Cart] Backend update quantity failed:', e);
+          }
+        }
       }
-      persist();
-      notify();
     },
 
-    clearCart: () => {
+    clearCart: async () => {
       state = { ...state, items: [] };
       persist();
       notify();
+
+      if (currentUserId) {
+        try {
+          await orpcClient.cart.clear({} as any);
+        } catch (e) {
+          console.error('[Cart] Backend clear failed:', e);
+        }
+      }
     },
 
-    saveForLater: (itemId: string) => {
+    saveForLater: async (itemId: string) => {
       const item = state.items.find((item) => item.id === itemId);
       if (item) {
         state = {
@@ -395,10 +412,23 @@ function createCartStore(): CartStore {
         };
         persist();
         notify();
+
+        if (currentUserId) {
+          try {
+            await orpcClient.cart.update({
+              productId: item.productId,
+              variantId: item.selectedVariant?.id || '',
+              quantity: item.quantity,
+              savedForLater: 1
+            } as any);
+          } catch (e) {
+            console.error('[Cart] Backend save for later failed:', e);
+          }
+        }
       }
     },
 
-    moveToCart: (itemId: string) => {
+    moveToCart: async (itemId: string) => {
       const item = state.savedForLater.find((item) => item.id === itemId);
       if (item) {
         state = {
@@ -408,170 +438,98 @@ function createCartStore(): CartStore {
         };
         persist();
         notify();
+
+        if (currentUserId) {
+          try {
+            await orpcClient.cart.update({
+              productId: item.productId,
+              variantId: item.selectedVariant?.id || '',
+              quantity: item.quantity,
+              savedForLater: 0
+            } as any);
+          } catch (e) {
+            console.error('[Cart] Backend move to cart failed:', e);
+          }
+        }
       }
     },
 
-    removeSavedItem: (itemId: string) => {
+    removeSavedItem: async (itemId: string) => {
+      const item = state.savedForLater.find(i => i.id === itemId);
       state = {
         ...state,
         savedForLater: state.savedForLater.filter((item) => item.id !== itemId),
       };
       persist();
       notify();
+
+      if (currentUserId && item) {
+        try {
+          await orpcClient.cart.remove({
+            productId: item.productId,
+            variantId: item.selectedVariant?.id || ''
+          } as any);
+        } catch (e) {
+          console.error('[Cart] Backend remove saved item failed:', e);
+        }
+      }
     },
 
     applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => {
       const subtotal = cartStore.getSubtotal();
       let discountAmount = 0;
-      
-      if (type === 'percentage') {
-        discountAmount = (subtotal * value) / 100;
-      } else if (type === 'fixed') {
-        discountAmount = value;
-      } else if (type === 'free_shipping') {
-        discountAmount = cartStore.getShipping();
-      }
-      
-      // Don't allow discount to exceed subtotal + shipping (simplified)
+      if (type === 'percentage') discountAmount = (subtotal * value) / 100;
+      else if (type === 'fixed') discountAmount = value;
+      else if (type === 'free_shipping') discountAmount = cartStore.getShipping();
       discountAmount = Math.min(discountAmount, subtotal + (type === 'free_shipping' ? discountAmount : cartStore.getShipping()));
-      
-      state = {
-        ...state,
-        discount: {
-          code,
-          type,
-          value,
-          amount: discountAmount,
-        },
-      };
+      state = { ...state, discount: { code, type, value, amount: discountAmount } };
       persist();
       notify();
     },
 
-    removeCoupon: () => {
-      state = {
-        ...state,
-        discount: null,
-      };
-      persist();
-      notify();
-    },
-
-    setDeliveryMethod: (method: DeliveryMethodType | null) => {
-      state = { ...state, deliveryMethod: method };
-      persist();
-      notify();
-    },
-
+    removeCoupon: () => { state = { ...state, discount: null }; persist(); notify(); },
+    setDeliveryMethod: (method: DeliveryMethodType | null) => { state = { ...state, deliveryMethod: method }; persist(); notify(); },
     getDiscount: () => {
       if (!state.discount) return 0;
-      
       const subtotal = cartStore.getSubtotal();
       let discountAmount = 0;
-      
-      if (state.discount.type === 'percentage') {
-        discountAmount = (subtotal * state.discount.value) / 100;
-      } else if (state.discount.type === 'fixed') {
-        discountAmount = state.discount.value;
-      } else if (state.discount.type === 'free_shipping') {
-        // We handle free shipping by returning the shipping cost as discount
-        // but it's better to explicitly check it in getShipping
-        return 0; 
-      }
-      
-      // Update the stored amount for consistency
+      if (state.discount.type === 'percentage') discountAmount = (subtotal * state.discount.value) / 100;
+      else if (state.discount.type === 'fixed') discountAmount = state.discount.value;
+      else if (state.discount.type === 'free_shipping') return 0; 
       discountAmount = Math.min(discountAmount, subtotal);
-      if (state.discount.amount !== discountAmount) {
-        state.discount.amount = discountAmount;
-      }
-      
+      if (state.discount.amount !== discountAmount) state.discount.amount = discountAmount;
       return discountAmount;
     },
 
-    openDrawer: () => {
-      state = { ...state, isDrawerOpen: true };
-      notify();
-    },
-
-    closeDrawer: () => {
-      state = { ...state, isDrawerOpen: false };
-      notify();
-    },
-
-    toggleDrawer: () => {
-      state = { ...state, isDrawerOpen: !state.isDrawerOpen };
-      notify();
-    },
-
-    getItemCount: () => {
-      return state.items.reduce((total, item) => total + item.quantity, 0);
-    },
-
-    getSubtotal: () => {
-      return state.items.reduce((total, item) => {
-        const price = item.product.pricing.currentPrice;
-        const variantModifier = item.selectedVariant?.priceModifier || 0;
-        return total + (price + variantModifier) * item.quantity;
-      }, 0);
-    },
-
-    getTax: () => {
-      const subtotal = cartStore.getSubtotal();
-      // 5% tax rate
-      return subtotal * 0.05;
-    },
-
+    openDrawer: () => { state = { ...state, isDrawerOpen: true }; notify(); },
+    closeDrawer: () => { state = { ...state, isDrawerOpen: false }; notify(); },
+    toggleDrawer: () => { state = { ...state, isDrawerOpen: !state.isDrawerOpen }; notify(); },
+    getItemCount: () => state.items.reduce((total, item) => total + item.quantity, 0),
+    getSubtotal: () => state.items.reduce((total, item) => {
+      if (!item.product?.pricing) return total;
+      const price = item.product.pricing.currentPrice;
+      const variantModifier = item.selectedVariant?.priceModifier || 0;
+      return total + (price + variantModifier) * item.quantity;
+    }, 0),
+    getTax: () => cartStore.getSubtotal() * 0.05,
     getShipping: () => {
-      // Free shipping coupon overrides everything
-      if (state.discount?.type === 'free_shipping') {
-        return 0;
-      }
-
+      if (state.discount?.type === 'free_shipping') return 0;
       const subtotal = cartStore.getSubtotal();
-      const deliveryMethod = state.deliveryMethod;
-
-      // If no items, no shipping
-      if (state.items.length === 0) {
-        return 0;
-      }
-
-      // Calculate based on delivery method
-      if (deliveryMethod === 'standard') {
-        // Free shipping for orders over 1000 BDT
-        return subtotal >= 1000 ? 0 : 50;
-      } else if (deliveryMethod === 'express') {
-        return 100;
-      } else if (deliveryMethod === 'same-day') {
-        return 150;
-      }
-
-      // Default: Standard delivery logic if no method selected
+      if (state.items.length === 0) return 0;
+      if (state.deliveryMethod === 'standard') return subtotal >= 1000 ? 0 : 50;
+      if (state.deliveryMethod === 'express') return 100;
+      if (state.deliveryMethod === 'same-day') return 150;
       return subtotal >= 1000 ? 0 : 50;
     },
-
-    getTotal: () => {
-      const subtotal = cartStore.getSubtotal();
-      const tax = cartStore.getTax();
-      const shipping = cartStore.getShipping();
-      const discount = cartStore.getDiscount();
-      return subtotal + tax + shipping - discount;
-    },
-
-    isInCart: (productId: string) => {
-      return state.items.some((item) => item.productId === productId);
-    },
-
-    subscribe: (callback: () => void) => {
-      listeners.add(callback);
-      return () => listeners.delete(callback);
-    },
+    getTotal: () => cartStore.getSubtotal() + cartStore.getTax() + cartStore.getShipping() - cartStore.getDiscount(),
+    isInCart: (productId: string) => state.items.some((item) => item.productId === productId),
+    subscribe: (callback: () => void) => { listeners.add(callback); return () => listeners.delete(callback); },
+    syncWithBackend,
   };
 }
 
-// Singleton instance
 export const cartStore = createCartStore();
 
-// Stable callbacks for useSyncExternalStore
 const subscribeCart = (callback: () => void) => cartStore.subscribe(callback);
 const getCartSnapshot = () => cartStore.getState();
 const CART_SERVER_SNAPSHOT = { 
@@ -584,12 +542,10 @@ const CART_SERVER_SNAPSHOT = {
 };
 const getCartServerSnapshot = () => CART_SERVER_SNAPSHOT;
 
-// React hook
 export function useCart() {
   const state = useSyncExternalStore(subscribeCart, getCartSnapshot, getCartServerSnapshot);
   const { data: session, isPending } = authClient.useSession();
 
-  // Sync cart when session changes
   useEffect(() => {
     if (!isPending) {
       const userId = session?.user?.id || null;
@@ -597,29 +553,21 @@ export function useCart() {
     }
   }, [session?.user?.id, isPending]);
 
-  // Derive values from subscribed state for reactive updates
   const itemCount = state.items.reduce((total, item) => total + item.quantity, 0);
-  
   const subtotal = state.items.reduce((total, item) => {
+    if (!item.product?.pricing) return total;
     const price = item.product.pricing.currentPrice;
     const variantModifier = item.selectedVariant?.priceModifier || 0;
     return total + (price + variantModifier) * item.quantity;
   }, 0);
-
   const tax = subtotal * 0.05;
-
   const shipping = cartStore.getShipping();
-
   let discountAmount = 0;
   if (state.discount) {
-    if (state.discount.type === 'percentage') {
-      discountAmount = (subtotal * state.discount.value) / 100;
-    } else if (state.discount.type === 'fixed') {
-      discountAmount = state.discount.value;
-    }
+    if (state.discount.type === 'percentage') discountAmount = (subtotal * state.discount.value) / 100;
+    else if (state.discount.type === 'fixed') discountAmount = state.discount.value;
     discountAmount = Math.min(discountAmount, subtotal);
   }
-
   const total = subtotal + tax + shipping - discountAmount;
 
   return {

@@ -5,9 +5,9 @@ import type { Product } from '@/types';
 import { generateId } from '@/lib/utils';
 import { toast } from 'sonner';
 import { authClient } from '@/lib/auth-client';
+import { orpcClient } from '@/utils/orpc';
 
 const STORAGE_KEY_PREFIX = 'ayojon-wishlist';
-const LEGACY_STORAGE_KEY = 'zynex-wishlist';
 const GUEST_USER_ID = 'guest';
 
 export interface WishlistItem {
@@ -24,14 +24,15 @@ interface WishlistState {
 
 interface WishlistStore {
   getState: () => WishlistState;
-  addItem: (product: Product) => void;
-  removeItem: (productId: string) => void;
-  toggleItem: (product: Product) => void;
+  addItem: (product: Product) => Promise<void>;
+  removeItem: (productId: string) => Promise<void>;
+  toggleItem: (product: Product) => Promise<void>;
   isInWishlist: (productId: string) => boolean;
   getItemCount: () => number;
   subscribe: (callback: () => void) => () => void;
   loadUserWishlist: (userId: string | null) => void;
   initialize: () => void;
+  syncWithBackend: () => Promise<void>;
 }
 
 // Helper function to get storage key based on user ID
@@ -56,74 +57,67 @@ function createWishlistStore(): WishlistStore {
         currentUserId = resolvedUserId;
       }
 
-      loadWishlist(resolvedUserId);
+      loadWishlist(resolvedUserId).then(() => {
+        if (resolvedUserId) {
+          syncWithBackend();
+        }
+      });
       notify();
     });
   };
 
-  // Helper to load wishlist for a specific user
-  const loadWishlist = (userId: string | null) => {
+  const syncWithBackend = async () => {
+    if (!currentUserId) return;
+    
+    try {
+      // Get backend items
+      const backendItems = await orpcClient.wishlist.list({} as any);
+      
+      // Transform backend items to local format
+      const transformedItems: WishlistItem[] = (backendItems as any[]).map(item => ({
+        id: generateId(),
+        productId: item.productId,
+        product: item.product,
+        addedAt: item.createdAt,
+      }));
+
+      state = {
+        ...state,
+        items: transformedItems,
+        isInitialized: true
+      };
+      
+      persist();
+      notify();
+    } catch (e) {
+      console.error('[Wishlist] Failed to sync with backend:', e);
+    }
+  };
+
+  // Helper to load wishlist for a specific user from localStorage
+  const loadWishlist = async (userId: string | null) => {
     if (typeof window === 'undefined') return;
 
     try {
       const storageKey = getStorageKey(userId);
       const stored = localStorage.getItem(storageKey);
 
-      console.log('[Wishlist] Loading wishlist:', { userId, storageKey, hasData: !!stored });
-
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Normalize/validate parsed data - ensure items is always an array
         state = {
           items: Array.isArray(parsed.items) ? parsed.items : [],
           isInitialized: true
         };
-        console.log('[Wishlist] Loaded items:', state.items.length);
       } else {
         state = { items: [], isInitialized: true };
-        console.log('[Wishlist] No stored data, initialized empty');
       }
 
-      // One-time migration from old global key to user-specific key
-      if (!stored && userId) {
-        const legacyGlobal = localStorage.getItem(STORAGE_KEY_PREFIX);
-        const legacyOld = localStorage.getItem(LEGACY_STORAGE_KEY);
-
-        if (legacyGlobal) {
-          // Migrate global wishlist to this user
-          const parsed = JSON.parse(legacyGlobal);
-          state = {
-            items: Array.isArray(parsed.items) ? parsed.items : [],
-            isInitialized: true
-          };
-          localStorage.setItem(storageKey, JSON.stringify({ items: state.items }));
-          localStorage.removeItem(STORAGE_KEY_PREFIX);
-        } else if (legacyOld) {
-          // Migrate very old wishlist
-          const parsed = JSON.parse(legacyOld);
-          state = {
-            items: Array.isArray(parsed.items) ? parsed.items : [],
-            isInitialized: true
-          };
-          localStorage.setItem(storageKey, JSON.stringify({ items: state.items }));
-          localStorage.removeItem(LEGACY_STORAGE_KEY);
-        }
-      }
-
-      // Clear any legacy sessionStorage data
-      sessionStorage.removeItem(STORAGE_KEY_PREFIX);
-      sessionStorage.removeItem(LEGACY_STORAGE_KEY);
-
+      notify();
     } catch (e) {
       console.error('Failed to load wishlist from localStorage:', e);
       state = { items: [], isInitialized: true };
     }
   };
-
-  // Initial load - check if there's a session
-  if (typeof window !== 'undefined') {
-    // We'll call initialize manually or via useEffect to avoid hydration mismatch
-  }
 
   const notify = () => {
     listeners.forEach((listener) => listener());
@@ -134,11 +128,6 @@ function createWishlistStore(): WishlistStore {
       const storageKey = getStorageKey(currentUserId);
       const { isInitialized, ...persistedState } = state;
       localStorage.setItem(storageKey, JSON.stringify(persistedState));
-      console.log('[Wishlist] Persisted to localStorage:', {
-        storageKey,
-        itemCount: state.items.length,
-        userId: currentUserId
-      });
     }
   };
 
@@ -150,7 +139,7 @@ function createWishlistStore(): WishlistStore {
       syncFromSession();
     },
 
-    addItem: (product: Product) => {
+    addItem: async (product: Product) => {
       if (state.items.some((item) => item.productId === product.id)) {
         return; // Already in wishlist
       }
@@ -170,13 +159,20 @@ function createWishlistStore(): WishlistStore {
       persist();
       notify();
 
-      // Show toast notification
+      if (currentUserId) {
+        try {
+          await orpcClient.wishlist.add({ productId: product.id } as any);
+        } catch (e) {
+          console.error('[Wishlist] Failed to add to backend:', e);
+        }
+      }
+
       if (typeof window !== 'undefined') {
         toast.success('Added to wishlist');
       }
     },
 
-    removeItem: (productId: string) => {
+    removeItem: async (productId: string) => {
       state = {
         ...state,
         items: state.items.filter((item) => item.productId !== productId),
@@ -184,7 +180,14 @@ function createWishlistStore(): WishlistStore {
       persist();
       notify();
 
-      // Show toast notification with red color and strikethrough
+      if (currentUserId) {
+        try {
+          await orpcClient.wishlist.remove({ productId } as any);
+        } catch (e) {
+          console.error('[Wishlist] Failed to remove from backend:', e);
+        }
+      }
+
       if (typeof window !== 'undefined') {
         toast.error('Removed from wishlist', {
           style: {
@@ -194,39 +197,13 @@ function createWishlistStore(): WishlistStore {
       }
     },
 
-    toggleItem: (product: Product) => {
+    toggleItem: async (product: Product) => {
       const exists = state.items.some((item) => item.productId === product.id);
       if (exists) {
-        state = {
-          ...state,
-          items: state.items.filter((item) => item.productId !== product.id),
-        };
-        // Show remove toast notification with red color and strikethrough
-        if (typeof window !== 'undefined') {
-          toast.error('Removed from wishlist', {
-            style: {
-              textDecoration: 'line-through',
-            },
-          });
-        }
+        await wishlistStore.removeItem(product.id);
       } else {
-        const newItem: WishlistItem = {
-          id: generateId(),
-          productId: product.id,
-          product,
-          addedAt: new Date().toISOString(),
-        };
-        state = {
-          ...state,
-          items: [...state.items, newItem],
-        };
-        // Show add toast notification
-        if (typeof window !== 'undefined') {
-          toast.success('Added to wishlist');
-        }
+        await wishlistStore.addItem(product);
       }
-      persist();
-      notify();
     },
 
     isInWishlist: (productId: string) => {
@@ -244,11 +221,14 @@ function createWishlistStore(): WishlistStore {
 
     loadUserWishlist: (userId: string | null) => {
       if (userId === currentUserId) return;
-      console.log('[Wishlist] Switching user from', currentUserId, 'to', userId);
       currentUserId = userId;
-      loadWishlist(userId);
+      loadWishlist(userId).then(() => {
+        if (userId) syncWithBackend();
+      });
       notify();
     },
+    
+    syncWithBackend,
   };
 }
 
@@ -277,8 +257,6 @@ export function useWishlist() {
 
   // Sync wishlist when session changes
   useEffect(() => {
-    // ONLY sync if we're not pending. If isPending is true, the session data is not yet reliable.
-    // This prevents resetting to guest wishlist (null userId) during session revalidation.
     if (!isPending) {
       const userId = session?.user?.id || null;
       wishlistStore.loadUserWishlist(userId);
