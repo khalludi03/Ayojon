@@ -6,6 +6,7 @@ import {
   boolean,
   integer,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { products } from "./products";
@@ -30,6 +31,7 @@ export const reviews = pgTable(
     rating: integer("rating").notNull(), // 1-5
     title: text("title"),
     comment: text("comment").notNull(),
+    recommend: boolean("recommend").default(true).notNull(),
 
     // Flags
     isVerifiedPurchase: boolean("is_verified_purchase").default(false).notNull(),
@@ -51,6 +53,7 @@ export const reviews = pgTable(
   (table) => [
     index("reviews_product_id_idx").on(table.productId),
     index("reviews_user_id_idx").on(table.userId),
+    uniqueIndex("reviews_product_user_unique_idx").on(table.productId, table.userId),
     index("reviews_rating_idx").on(table.productId, table.rating),
     index("reviews_is_verified_purchase_idx").on(
       table.productId,

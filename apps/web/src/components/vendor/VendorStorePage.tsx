@@ -322,6 +322,17 @@ export function VendorStorePage({ vendor, initialCategoryIds, initialSort }: Ven
               </div>
               <div className="flex items-center gap-4 rounded-2xl border-2 border-[hsl(var(--border))] bg-[hsl(var(--card))] px-5 py-3 shadow-sm transition-colors hover:border-primary/30">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Star className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-lg font-black leading-tight text-indigo-600">
+                    {vendor.score ? `${(vendor.score * 100).toFixed(0)}%` : 'N/A'}
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">Vendor Score</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4 rounded-2xl border-2 border-[hsl(var(--border))] bg-[hsl(var(--card))] px-5 py-3 shadow-sm transition-colors hover:border-primary/30">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Clock className="h-5 w-5" />
                 </div>
                 <div>

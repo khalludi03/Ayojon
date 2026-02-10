@@ -421,6 +421,7 @@ export const productRouter = os.router({
         ...v,
         rating: v.ratingAverage,
         reviewCount: v.ratingCount,
+        score: v.score,
         joinedAt: v.joinedAt.toISOString(),
       }));
     }),
@@ -452,6 +453,7 @@ export const productRouter = os.router({
         ...v,
         rating: v.ratingAverage,
         reviewCount: v.ratingCount,
+        score: v.score,
         joinedAt: v.joinedAt.toISOString(),
       };
     }),

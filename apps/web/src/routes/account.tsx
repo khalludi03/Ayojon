@@ -27,6 +27,7 @@ function AccountLayout() {
     if (pathname.includes("/account/orders")) return "orders";
     if (pathname.includes("/account/wishlist")) return "wishlist";
     if (pathname.includes("/account/addresses")) return "addresses";
+    if (pathname.includes("/account/reviews")) return "reviews";
     if (pathname.includes("/account/profile")) return "profile";
     if (pathname.includes("/account/settings")) return "settings";
     return "overview";

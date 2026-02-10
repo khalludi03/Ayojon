@@ -153,19 +153,19 @@ export function VendorRegistration() {
       let bankDetailsUrl = '';
 
       if (formData.storeLogo instanceof File) {
-        logoUrl = await uploadFile(formData.storeLogo, 'vendor/logos');
+        logoUrl = await uploadFile(formData.storeLogo, 'vendor/logos', formData.storeLogo.type);
       }
       if (formData.storeBanner instanceof File) {
-        bannerUrl = await uploadFile(formData.storeBanner, 'vendor/banners');
+        bannerUrl = await uploadFile(formData.storeBanner, 'vendor/banners', formData.storeBanner.type);
       }
       if (formData.tradeLicense instanceof File) {
-        tradeLicenseUrl = await uploadFile(formData.tradeLicense, 'vendor/documents');
+        tradeLicenseUrl = await uploadFile(formData.tradeLicense, 'vendor/documents', formData.tradeLicense.type);
       }
       if (formData.identification instanceof File) {
-        identificationUrl = await uploadFile(formData.identification, 'vendor/documents');
+        identificationUrl = await uploadFile(formData.identification, 'vendor/documents', formData.identification.type);
       }
       if (formData.bankDetails instanceof File) {
-        bankDetailsUrl = await uploadFile(formData.bankDetails, 'vendor/documents');
+        bankDetailsUrl = await uploadFile(formData.bankDetails, 'vendor/documents', formData.bankDetails.type);
       }
 
       // 3. Submit application to backend

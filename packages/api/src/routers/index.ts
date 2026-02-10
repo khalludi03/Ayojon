@@ -9,6 +9,7 @@ import { addressRouter } from "./address";
 import { wishlistRouter } from "./wishlist";
 import { cartRouter } from "./cart";
 import { notificationRouter } from "./notification";
+import { reviewRouter } from "./review";
 
 export const appRouter = os.router({
   storage: storageRouter,
@@ -19,6 +20,7 @@ export const appRouter = os.router({
   wishlist: wishlistRouter,
   cart: cartRouter,
   notifications: notificationRouter,
+  review: reviewRouter,
   vendorProduct: productRouter,
   catalog: productRouter, // Alias for backward compatibility
   admin: adminRouter,
