@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, os } from "../index";
+import { protectedProcedure, publicProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import { orders, orderItems } from "@my-better-t-app/db/schema/orders";
 import { products } from "@my-better-t-app/db/schema/products";
@@ -49,6 +49,7 @@ export const orderRouter = os.router({
         price: z.number(),
         quantity: z.number(),
         variantInfo: z.string().optional(),
+        imageUrl: z.string().optional(),
       })),
     }))
     .handler(async ({ input, context }) => {
@@ -186,6 +187,39 @@ export const orderRouter = os.router({
 
       // Use order service to get full details including payment and payouts
       const order = await orderService.getOrderDetails(input.id, userId);
+
+      if (!order) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      }
+
+      return order;
+    }),
+
+  cancelOrder: protectedProcedure
+    .route({
+      method: "POST",
+      path: "/{id}/cancel",
+      operationId: "cancelOrder",
+      summary: "Cancel an order",
+      tags: ["Orders"],
+    })
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      return await orderService.transitionOrderStatus(input.id, "cancelled", userId);
+    }),
+
+  trackOrder: publicProcedure
+    .route({
+      method: "GET",
+      path: "/track/{orderNumber}",
+      operationId: "trackOrder",
+      summary: "Track an order by its number",
+      tags: ["Orders"],
+    })
+    .input(z.object({ orderNumber: z.string() }))
+    .handler(async ({ input }) => {
+      const order = await orderService.getOrderByNumber(input.orderNumber);
 
       if (!order) {
         throw new ORPCError("NOT_FOUND", { message: "Order not found" });

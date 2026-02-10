@@ -3,6 +3,7 @@ import { Check, ChevronDown } from "lucide-react";
 import type { AccountSection } from "@/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +25,9 @@ const navigationItems = [
   { id: "settings" as AccountSection, label: "Settings" },
 ];
 
-export function AccountMobileNav({ activeSection, onSectionChange }: AccountMobileNavProps) {
+export function AccountMobileNav({ activeSection }: AccountMobileNavProps) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const activeItem = navigationItems.find((item) => item.id === activeSection);
 
   return (
@@ -45,7 +47,7 @@ export function AccountMobileNav({ activeSection, onSectionChange }: AccountMobi
             <DropdownMenuItem
               key={item.id}
               onClick={() => {
-                onSectionChange(item.id);
+                navigate({ to: item.id === "overview" ? "/account" : `/account/${item.id}` });
                 setOpen(false);
               }}
               className={cn(

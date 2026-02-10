@@ -23,6 +23,7 @@ import { Route as BecomeVendorRouteImport } from './routes/become-vendor'
 import { Route as AddressesRouteImport } from './routes/addresses'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountIndexRouteImport } from './routes/account.index'
 import { Route as VendorSettingsRouteImport } from './routes/vendor/settings'
 import { Route as VendorProductsRouteImport } from './routes/vendor/products'
 import { Route as VendorOrdersRouteImport } from './routes/vendor/orders'
@@ -40,6 +41,12 @@ import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AccountWishlistRouteImport } from './routes/account.wishlist'
+import { Route as AccountSettingsRouteImport } from './routes/account.settings'
+import { Route as AccountProfileRouteImport } from './routes/account.profile'
+import { Route as AccountOrdersRouteImport } from './routes/account.orders'
+import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
+import { Route as AccountOrdersIndexRouteImport } from './routes/account.orders.index'
 import { Route as VendorOrdersOrderIdRouteImport } from './routes/vendor/orders.$orderId'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
 
@@ -112,6 +119,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRoute,
 } as any)
 const VendorSettingsRoute = VendorSettingsRouteImport.update({
   id: '/vendor/settings',
@@ -200,15 +212,45 @@ const AdminDashboardRoute = AdminDashboardRouteImport.update({
   path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AccountWishlistRoute = AccountWishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountSettingsRoute = AccountSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountProfileRoute = AccountProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountOrdersRoute = AccountOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountAddressesRoute = AccountAddressesRouteImport.update({
+  id: '/addresses',
+  path: '/addresses',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountOrdersIndexRoute = AccountOrdersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountOrdersRoute,
+} as any)
 const VendorOrdersOrderIdRoute = VendorOrdersOrderIdRouteImport.update({
   id: '/$orderId',
   path: '/$orderId',
   getParentRoute: () => VendorOrdersRoute,
 } as any)
 const AccountOrdersOrderIdRoute = AccountOrdersOrderIdRouteImport.update({
-  id: '/orders/$orderId',
-  path: '/orders/$orderId',
-  getParentRoute: () => AccountRoute,
+  id: '/$orderId',
+  path: '/$orderId',
+  getParentRoute: () => AccountOrdersRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -226,6 +268,11 @@ export interface FileRoutesByFullPath {
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
+  '/account/addresses': typeof AccountAddressesRoute
+  '/account/orders': typeof AccountOrdersRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/settings': typeof AccountSettingsRoute
+  '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
@@ -243,12 +290,13 @@ export interface FileRoutesByFullPath {
   '/vendor/orders': typeof VendorOrdersRouteWithChildren
   '/vendor/products': typeof VendorProductsRoute
   '/vendor/settings': typeof VendorSettingsRoute
+  '/account/': typeof AccountIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
+  '/account/orders/': typeof AccountOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/account': typeof AccountRouteWithChildren
   '/addresses': typeof AddressesRoute
   '/become-vendor': typeof BecomeVendorRoute
   '/cart': typeof CartRoute
@@ -261,6 +309,10 @@ export interface FileRoutesByTo {
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
+  '/account/addresses': typeof AccountAddressesRoute
+  '/account/profile': typeof AccountProfileRoute
+  '/account/settings': typeof AccountSettingsRoute
+  '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
@@ -278,8 +330,10 @@ export interface FileRoutesByTo {
   '/vendor/orders': typeof VendorOrdersRouteWithChildren
   '/vendor/products': typeof VendorProductsRoute
   '/vendor/settings': typeof VendorSettingsRoute
+  '/account': typeof AccountIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
+  '/account/orders': typeof AccountOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -297,6 +351,11 @@ export interface FileRoutesById {
   '/products': typeof ProductsRoute
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
+  '/account/addresses': typeof AccountAddressesRoute
+  '/account/orders': typeof AccountOrdersRouteWithChildren
+  '/account/profile': typeof AccountProfileRoute
+  '/account/settings': typeof AccountSettingsRoute
+  '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
@@ -314,8 +373,10 @@ export interface FileRoutesById {
   '/vendor/orders': typeof VendorOrdersRouteWithChildren
   '/vendor/products': typeof VendorProductsRoute
   '/vendor/settings': typeof VendorSettingsRoute
+  '/account/': typeof AccountIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
+  '/account/orders/': typeof AccountOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -334,6 +395,11 @@ export interface FileRouteTypes {
     | '/products'
     | '/reset-password'
     | '/wishlist'
+    | '/account/addresses'
+    | '/account/orders'
+    | '/account/profile'
+    | '/account/settings'
+    | '/account/wishlist'
     | '/admin/dashboard'
     | '/admin/orders'
     | '/admin/products'
@@ -351,12 +417,13 @@ export interface FileRouteTypes {
     | '/vendor/orders'
     | '/vendor/products'
     | '/vendor/settings'
+    | '/account/'
     | '/account/orders/$orderId'
     | '/vendor/orders/$orderId'
+    | '/account/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/account'
     | '/addresses'
     | '/become-vendor'
     | '/cart'
@@ -369,6 +436,10 @@ export interface FileRouteTypes {
     | '/products'
     | '/reset-password'
     | '/wishlist'
+    | '/account/addresses'
+    | '/account/profile'
+    | '/account/settings'
+    | '/account/wishlist'
     | '/admin/dashboard'
     | '/admin/orders'
     | '/admin/products'
@@ -386,8 +457,10 @@ export interface FileRouteTypes {
     | '/vendor/orders'
     | '/vendor/products'
     | '/vendor/settings'
+    | '/account'
     | '/account/orders/$orderId'
     | '/vendor/orders/$orderId'
+    | '/account/orders'
   id:
     | '__root__'
     | '/'
@@ -404,6 +477,11 @@ export interface FileRouteTypes {
     | '/products'
     | '/reset-password'
     | '/wishlist'
+    | '/account/addresses'
+    | '/account/orders'
+    | '/account/profile'
+    | '/account/settings'
+    | '/account/wishlist'
     | '/admin/dashboard'
     | '/admin/orders'
     | '/admin/products'
@@ -421,8 +499,10 @@ export interface FileRouteTypes {
     | '/vendor/orders'
     | '/vendor/products'
     | '/vendor/settings'
+    | '/account/'
     | '/account/orders/$orderId'
     | '/vendor/orders/$orderId'
+    | '/account/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -559,6 +639,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/': {
+      id: '/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/vendor/settings': {
       id: '/vendor/settings'
       path: '/vendor/settings'
@@ -678,6 +765,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/account/wishlist': {
+      id: '/account/wishlist'
+      path: '/wishlist'
+      fullPath: '/account/wishlist'
+      preLoaderRoute: typeof AccountWishlistRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/settings': {
+      id: '/account/settings'
+      path: '/settings'
+      fullPath: '/account/settings'
+      preLoaderRoute: typeof AccountSettingsRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/profile': {
+      id: '/account/profile'
+      path: '/profile'
+      fullPath: '/account/profile'
+      preLoaderRoute: typeof AccountProfileRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/orders': {
+      id: '/account/orders'
+      path: '/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AccountOrdersRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/addresses': {
+      id: '/account/addresses'
+      path: '/addresses'
+      fullPath: '/account/addresses'
+      preLoaderRoute: typeof AccountAddressesRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/orders/': {
+      id: '/account/orders/'
+      path: '/'
+      fullPath: '/account/orders/'
+      preLoaderRoute: typeof AccountOrdersIndexRouteImport
+      parentRoute: typeof AccountOrdersRoute
+    }
     '/vendor/orders/$orderId': {
       id: '/vendor/orders/$orderId'
       path: '/$orderId'
@@ -687,20 +816,44 @@ declare module '@tanstack/react-router' {
     }
     '/account/orders/$orderId': {
       id: '/account/orders/$orderId'
-      path: '/orders/$orderId'
+      path: '/$orderId'
       fullPath: '/account/orders/$orderId'
       preLoaderRoute: typeof AccountOrdersOrderIdRouteImport
-      parentRoute: typeof AccountRoute
+      parentRoute: typeof AccountOrdersRoute
     }
   }
 }
 
-interface AccountRouteChildren {
+interface AccountOrdersRouteChildren {
   AccountOrdersOrderIdRoute: typeof AccountOrdersOrderIdRoute
+  AccountOrdersIndexRoute: typeof AccountOrdersIndexRoute
+}
+
+const AccountOrdersRouteChildren: AccountOrdersRouteChildren = {
+  AccountOrdersOrderIdRoute: AccountOrdersOrderIdRoute,
+  AccountOrdersIndexRoute: AccountOrdersIndexRoute,
+}
+
+const AccountOrdersRouteWithChildren = AccountOrdersRoute._addFileChildren(
+  AccountOrdersRouteChildren,
+)
+
+interface AccountRouteChildren {
+  AccountAddressesRoute: typeof AccountAddressesRoute
+  AccountOrdersRoute: typeof AccountOrdersRouteWithChildren
+  AccountProfileRoute: typeof AccountProfileRoute
+  AccountSettingsRoute: typeof AccountSettingsRoute
+  AccountWishlistRoute: typeof AccountWishlistRoute
+  AccountIndexRoute: typeof AccountIndexRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
-  AccountOrdersOrderIdRoute: AccountOrdersOrderIdRoute,
+  AccountAddressesRoute: AccountAddressesRoute,
+  AccountOrdersRoute: AccountOrdersRouteWithChildren,
+  AccountProfileRoute: AccountProfileRoute,
+  AccountSettingsRoute: AccountSettingsRoute,
+  AccountWishlistRoute: AccountWishlistRoute,
+  AccountIndexRoute: AccountIndexRoute,
 }
 
 const AccountRouteWithChildren =
