@@ -66,7 +66,7 @@ export function VendorStorePage({ vendor, initialCategoryIds, initialSort }: Ven
       
     void navigate({
       to: '/vendor/$vendorId',
-      params: { vendorId: vendor.id },
+      params: { vendorId: vendor.slug || vendor.id },
       search: {
         category: categoryParam,
         sort: filters.sort === 'created_desc' ? undefined : filters.sort,

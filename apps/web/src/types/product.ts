@@ -59,6 +59,7 @@ export interface Product {
   vendor: {
     id: string;
     name: string;
+    slug?: string;
     isVerified: boolean;
   };
   pricing: Pricing;
