@@ -10,11 +10,10 @@ import { DeliveryMethodStep } from '@/components/checkout/DeliveryMethodStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
 import { OrderReviewStep } from '@/components/checkout/OrderReviewStep';
 import { ConfirmationStep } from '@/components/checkout/ConfirmationStep';
-import { BkashPaymentForm } from '@/components/checkout/BkashPaymentForm';
-import { CardPaymentForm } from '@/components/checkout/CardPaymentForm';
-import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { orpcClient } from '@/utils/orpc';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/checkout')({
   component: CheckoutPage,
@@ -73,9 +72,7 @@ function CheckoutPage() {
   const [orderNumber, setOrderNumber] = useState('');
   const [orderId, setOrderId] = useState('');
   const [isOrderPlaced, setIsOrderPlaced] = useState(false);
-  const [showBkashPayment, setShowBkashPayment] = useState(false);
-  const [showCardPayment, setShowCardPayment] = useState(false);
-  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -141,154 +138,132 @@ function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePlaceOrder = () => {
-    // If bKash payment and not yet paid, show bKash payment form
-    if (formData.paymentMethod === 'bkash' && !formData.bkashTransactionId) {
-      setShowBkashPayment(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // If card payment and not yet paid, show card payment form
-    if (formData.paymentMethod === 'card' && !formData.cardTransactionId) {
-      setShowCardPayment(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
+  const handlePlaceOrder = async () => {
+    setIsSubmitting(true);
     const orderNum = orderNumber || `AYJ${Date.now().toString().slice(-8)}`;
-    const newOrderId = `${Date.now()}`;
-    const firstItemImage = items[0]?.product?.images?.[0]?.url;
-    const placedAt = formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString();
     const subtotal = getSubtotal();
     const shipping = getShipping();
     const tax = getTax();
     const discount = getDiscount();
     const orderTotal = subtotal + tax + shipping - discount;
 
-    addOrder({
-      id: newOrderId,
-      orderNumber: orderNum,
-      date: placedAt,
-      total: orderTotal,
-      status: formData.paymentMethod === 'bkash' ? 'processing' : 'processing',
-      items: items.reduce((total, item) => total + item.quantity, 0),
-      imageUrl: firstItemImage,
-      deliveryMethod: formData.deliveryMethod,
-      lineItems: items.map((item) => ({
-        id: item.id,
-        title: item.product.title,
-        quantity: item.quantity,
-        price: item.product.pricing.currentPrice,
-        imageUrl: item.product.images?.[0]?.url,
-        productId: item.product.id,
-        product: item.product,
-      })),
-      address: {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        addressLine1: formData.addressLine1,
-        addressLine2: formData.addressLine2,
-        city: formData.city,
-        division: formData.division,
-        postalCode: formData.postalCode,
-        addressType: formData.addressType,
-      },
-      payment: {
-        method: formData.paymentMethod,
-        last4: formData.cardLast4 || formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
-        provider: formData.paymentMethod === 'bkash' ? 'bKash' : formData.paymentMethod === 'card' ? formData.cardType : undefined,
-        transactionId: formData.bkashTransactionId || formData.cardTransactionId,
-        amount: formData.bkashAmount || formData.cardAmount,
-        paidAt: formData.bkashPaidAt || formData.cardPaidAt,
-        status: (formData.bkashTransactionId || formData.cardTransactionId) ? 'PAID' : 'PENDING',
-      },
-      pricing: {
+    try {
+      const response = await orpcClient.order.placeOrder({
+        orderNumber: orderNum,
         subtotal,
-        shipping,
+        shippingCost: shipping,
         tax,
         discount,
         total: orderTotal,
-      },
-      timeline: {
-        placedAt,
-      },
-    });
+        shipping: {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          division: formData.division,
+          postalCode: formData.postalCode,
+        },
+        payment: {
+          method: formData.paymentMethod as any,
+          transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+          senderMobile: formData.mobileNumber,
+        },
+        items: items.map(item => ({
+          productId: item.product.id,
+          vendorId: item.product.vendor.id,
+          title: item.product.title,
+          price: item.product.pricing.currentPrice,
+          quantity: item.quantity,
+          variantInfo: undefined,
+        }))
+      });
 
-    // Save card if requested
-    if (formData.paymentMethod === 'card' && formData.cardSaveCard && formData.cardLast4) {
-      addSavedCard(
-        formData.cardLast4,
-        formData.cardType || 'CARD',
-        formData.cardHolderName || '',
-        formData.cardExpiryDate || ''
-      );
+      const newOrderId = response.id;
+      const firstItemImage = items[0]?.product?.images?.[0]?.url;
+      const placedAt = formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString();
+
+      // For bKash/Card, if not yet paid, we stay on confirmation but with instructions
+      const isPrepaid = formData.paymentMethod === 'bkash' || formData.paymentMethod === 'card' || formData.paymentMethod === 'nagad';
+      const hasPaid = !!(formData.bkashTransactionId || formData.cardTransactionId);
+      
+      const initialStatus = hasPaid ? 'processing' : (isPrepaid ? 'awaiting_payment' : 'processing');
+
+      // Keep updating local store
+      addOrder({
+        id: newOrderId,
+        orderNumber: orderNum,
+        date: placedAt,
+        total: orderTotal,
+        status: initialStatus as any,
+        items: items.reduce((total, item) => total + item.quantity, 0),
+        imageUrl: firstItemImage,
+        deliveryMethod: formData.deliveryMethod,
+        lineItems: items.map((item) => ({
+          id: item.id,
+          title: item.product.title,
+          quantity: item.quantity,
+          price: item.product.pricing.currentPrice,
+          imageUrl: item.product.images?.[0]?.url,
+          productId: item.product.id,
+          product: item.product,
+        })),
+        address: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          division: formData.division,
+          postalCode: formData.postalCode,
+          addressType: formData.addressType,
+        },
+        payment: {
+          method: formData.paymentMethod as any,
+          last4: formData.cardLast4 || formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
+          provider: formData.paymentMethod === 'bkash' ? 'bKash' : formData.paymentMethod === 'card' ? formData.cardType : undefined,
+          transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+          amount: formData.bkashAmount || formData.cardAmount,
+          paidAt: formData.bkashPaidAt || formData.cardPaidAt,
+          status: hasPaid ? 'PAID' : 'PENDING',
+        },
+        pricing: {
+          subtotal,
+          shipping,
+          tax,
+          discount,
+          total: orderTotal,
+        },
+        timeline: {
+          placedAt,
+        },
+      });
+
+      // Save card if requested
+      if (formData.paymentMethod === 'card' && formData.cardSaveCard && formData.cardLast4) {
+        addSavedCard(
+          formData.cardLast4,
+          formData.cardType || 'CARD',
+          formData.cardHolderName || '',
+          formData.cardExpiryDate || ''
+        );
+      }
+
+      setOrderNumber(orderNum);
+      setOrderId(newOrderId);
+      setIsOrderPlaced(true);
+      setCurrentStep(5);
+      clearCart();
+      setDeliveryMethod(null);
+      toast.success("Order placed successfully!");
+    } catch (error) {
+      console.error("Order error:", error);
+      toast.error("Failed to place order. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    setOrderNumber(orderNum);
-    setOrderId(newOrderId);
-    setIsOrderPlaced(true);
-    setCurrentStep(5);
-    clearCart();
-    setDeliveryMethod(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleBkashPaymentSuccess = (transactionId: string, amount: number, paidAt: string) => {
-    // Store payment details in form data
-    setFormData((prev) => ({
-      ...prev,
-      bkashTransactionId: transactionId,
-      bkashAmount: amount,
-      bkashPaidAt: paidAt,
-    }));
-
-    // Show success modal
-    setShowPaymentSuccess(true);
-  };
-
-  const handleBackToOrder = () => {
-    // Close success modal
-    setShowPaymentSuccess(false);
-
-    // Place the order
-    handlePlaceOrder();
-  };
-
-  const handleCancelBkashPayment = () => {
-    setShowBkashPayment(false);
-  };
-
-  const handleCardPaymentSuccess = (
-    transactionId: string,
-    amount: number,
-    paidAt: string,
-    cardType: string,
-    last4: string,
-    cardHolderName: string,
-    expiryDate: string,
-    saveCard: boolean
-  ) => {
-    // Store payment details in form data
-    setFormData((prev) => ({
-      ...prev,
-      cardTransactionId: transactionId,
-      cardAmount: amount,
-      cardPaidAt: paidAt,
-      cardType: cardType,
-      cardLast4: last4,
-      cardHolderName: cardHolderName,
-      cardExpiryDate: expiryDate,
-      cardSaveCard: saveCard,
-    }));
-
-    // Show success modal
-    setShowPaymentSuccess(true);
-  };
-
-  const handleCancelCardPayment = () => {
-    setShowCardPayment(false);
   };
 
   const renderStep = () => {
@@ -312,56 +287,23 @@ function CheckoutPage() {
         );
       case 3:
         return (
-          <PaymentStep
-            onNext={handleNextStep}
+          <OrderReviewStep
             onBack={handleBackStep}
+            onPlaceOrder={handleNextStep}
+            onEditStep={(step) => setCurrentStep(step)}
+            isSubmitting={isSubmitting}
             formData={formData}
-            onFormChange={handleFormChange}
           />
         );
       case 4:
-        // Show bKash payment form if payment method is bKash and user clicked "Place Order"
-        if (showBkashPayment && formData.paymentMethod === 'bkash') {
-          return (
-            <div className="space-y-6">
-              <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
-                <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-6">
-                  Complete Payment
-                </h2>
-                <BkashPaymentForm
-                  totalAmount={getTotal()}
-                  onPaymentSuccess={handleBkashPaymentSuccess}
-                  onCancel={handleCancelBkashPayment}
-                />
-              </div>
-            </div>
-          );
-        }
-
-        // Show card payment form if payment method is card and user clicked "Place Order"
-        if (showCardPayment && formData.paymentMethod === 'card') {
-          return (
-            <div className="space-y-6">
-              <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
-                <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-6">
-                  Complete Payment
-                </h2>
-                <CardPaymentForm
-                  totalAmount={getTotal()}
-                  onPaymentSuccess={handleCardPaymentSuccess}
-                  onCancel={handleCancelCardPayment}
-                />
-              </div>
-            </div>
-          );
-        }
-
         return (
-          <OrderReviewStep
-            onBack={handleBackStep}
+          <PaymentStep
             onPlaceOrder={handlePlaceOrder}
-            onEditStep={(step) => setCurrentStep(step)}
+            onBack={handleBackStep}
             formData={formData}
+            onFormChange={handleFormChange}
+            isSubmitting={isSubmitting}
+            totalAmount={getTotal()}
           />
         );
       case 5:
@@ -370,6 +312,7 @@ function CheckoutPage() {
             orderDetails={{
               orderId: orderId,
               orderNumber: orderNumber,
+              totalAmount: getTotal(),
               shipping: {
                 fullName: formData.fullName,
                 email: formData.email,
@@ -386,6 +329,7 @@ function CheckoutPage() {
               },
               payment: {
                 paymentMethod: formData.paymentMethod,
+                transactionId: formData.bkashTransactionId || formData.cardTransactionId,
               },
             }}
           />
@@ -454,20 +398,6 @@ function CheckoutPage() {
             </div>
           )}
         </div>
-
-        {/* Payment Success Modal */}
-        {showPaymentSuccess && (formData.bkashTransactionId || formData.cardTransactionId) && (
-          <PaymentSuccessModal
-            isOpen={showPaymentSuccess}
-            transactionId={formData.bkashTransactionId || formData.cardTransactionId || ''}
-            amount={formData.bkashAmount || formData.cardAmount || getTotal()}
-            paidAt={formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString()}
-            paymentMethod={formData.paymentMethod}
-            cardType={formData.cardType}
-            last4={formData.cardLast4}
-            onBackToOrder={handleBackToOrder}
-          />
-        )}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import {  useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { Product } from '@/types';
-import { productService } from '@/mock/services/product-service';
+import { orpc } from '@/utils/orpc';
 
 // Query keys factory
 export const searchKeys = {
@@ -41,12 +41,13 @@ export function useSearch(
 ) {
   const debouncedQuery = useDebounce(query, 300);
 
-  return useQuery({
-    queryKey: searchKeys.query(debouncedQuery),
-    queryFn: () => productService.searchProducts(debouncedQuery, limit),
-    enabled: debouncedQuery.length >= 2, // Only search if at least 2 characters
-    ...options,
-  });
+  return useQuery(
+    orpc.product.searchProducts.queryOptions({
+      input: { q: debouncedQuery, limit },
+      enabled: debouncedQuery.length >= 2,
+      ...options as any,
+    })
+  ) as any;
 }
 
 /**

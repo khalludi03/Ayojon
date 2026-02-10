@@ -43,6 +43,20 @@
       "when": 1770569531626,
       "tag": "0005_slippery_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1770720130628,
+      "tag": "0006_oval_misty_knight",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1770724515001,
+      "tag": "0007_true_gamora",
+      "breakpoints": true
     }
   ]
 }

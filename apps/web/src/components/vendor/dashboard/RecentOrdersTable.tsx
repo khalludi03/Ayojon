@@ -1,45 +1,20 @@
 import { Button } from '@/components/ui/button';
-import { Eye, Package, ChevronRight, User } from 'lucide-react';
+import { Package, ChevronRight, User } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { orpc } from '@/utils/orpc';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  items: number;
-  total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  date: string;
-}
-
-const getStatusStyles = (status: Order['status']) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800';
-    case 'processing':
-      return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800';
-    case 'shipped':
-      return 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800';
-    case 'delivered':
-      return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
-    default:
-      return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700';
-  }
-};
+import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 
 export function RecentOrdersTable() {
-  const { data: orders, isLoading } = useQuery(
-    orpc.vendor.getRecentOrders.queryOptions({
+  const { data: ordersResponse, isLoading } = useQuery({
+    ...orpc.vendor.getRecentOrders.queryOptions({
       input: { limit: 5 },
-    })
-  );
+    } as any),
+    ssr: false,
+  } as any);
 
-  const mockOrders = orders || [];
+  const orders = (ordersResponse as any) || [];
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden shadow-sm">
@@ -82,8 +57,8 @@ export function RecentOrdersTable() {
                   </div>
                 </td>
               </tr>
-            ) : mockOrders.length > 0 ? (
-              mockOrders.map((order) => (
+            ) : orders.length > 0 ? (
+              orders.map((order: any) => (
                 <tr key={order.id} className="group hover:bg-[hsl(var(--muted))]/30 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col">
@@ -103,18 +78,10 @@ export function RecentOrdersTable() {
                     {order.items}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-black text-[hsl(var(--foreground))]">
-                    ৳{order.total.toLocaleString()}
+                    ৳{parseFloat(order.total).toLocaleString()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={cn(
-                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider border',
-                        getStatusStyles(order.status)
-                      )}
-                    >
-                      <span className="mr-1 h-1 w-1 rounded-full bg-current" />
-                      {order.status}
-                    </span>
+                    <OrderStatusBadge status={order.status} />
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <Button
@@ -123,7 +90,7 @@ export function RecentOrdersTable() {
                       className="h-8 font-bold text-xs px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       asChild
                     >
-                      <Link to="/vendor/orders/$orderId" params={{ orderId: order.id }}>
+                      <Link to="/vendor/orders" search={{ orderId: order.id }}>
                         Manage
                       </Link>
                     </Button>
@@ -144,23 +111,18 @@ export function RecentOrdersTable() {
         </table>
       </div>
 
-      {/* Mobile View remains similar but simplified */}
+      {/* Mobile View */}
       <div className="md:hidden divide-y divide-[hsl(var(--border))]">
-        {mockOrders.length > 0 ? (
-          mockOrders.map((order) => (
+        {orders.length > 0 ? (
+          orders.map((order: any) => (
             <div key={order.id} className="p-4 flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm font-bold">{order.orderNumber}</p>
                 <p className="text-xs text-[hsl(var(--muted-foreground))] font-medium">{order.customerName}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <span className="text-sm font-black">৳{order.total.toLocaleString()}</span>
-                <span className={cn(
-                  'rounded-full px-2 py-0.5 text-[9px] font-black uppercase border',
-                  getStatusStyles(order.status)
-                )}>
-                  {order.status}
-                </span>
+                <span className="text-sm font-black">৳{parseFloat(order.total).toLocaleString()}</span>
+                <OrderStatusBadge status={order.status} />
               </div>
             </div>
           ))

@@ -8,8 +8,8 @@ interface CheckoutProgressProps {
 const steps = [
   { number: 1, label: "Shipping", description: "Delivery address" },
   { number: 2, label: "Delivery", description: "Method" },
-  { number: 3, label: "Payment", description: "Payment method" },
-  { number: 4, label: "Review", description: "Review order" },
+  { number: 3, label: "Review", description: "Review order" },
+  { number: 4, label: "Payment", description: "Payment method" },
   { number: 5, label: "Confirmation", description: "Order complete" },
 ];
 

@@ -1,20 +1,28 @@
+import { useEffect, useState } from 'react';
 import { Link } from '@tanstack/react-router';
 import { authClient } from '@/lib/auth-client';
 
 export function Logo() {
+  const [mounted, setMounted] = useState(false);
   const { data: session } = authClient.useSession();
   const user = session?.user as any;
   
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   let redirectPath = '/';
 
-  if (user?.role === 'admin') {
-    redirectPath = '/admin/dashboard';
-  } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
-    redirectPath = '/vendor/dashboard';
-  } else if (user?.vendorStatus === 'pending') {
-    redirectPath = '/vendor/application-pending';
-  } else if (user?.vendorStatus === 'rejected') {
-    redirectPath = '/vendor/application-rejected';
+  if (mounted && user) {
+    if (user.role === 'admin') {
+      redirectPath = '/admin/dashboard';
+    } else if (user.role === 'vendor' && user.vendorStatus === 'approved') {
+      redirectPath = '/vendor/dashboard';
+    } else if (user.vendorStatus === 'pending') {
+      redirectPath = '/vendor/application-pending';
+    } else if (user.vendorStatus === 'rejected') {
+      redirectPath = '/vendor/application-rejected';
+    }
   }
 
   return (

@@ -3,8 +3,7 @@
 import {  useQuery } from '@tanstack/react-query';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { Category } from '@/types';
-import { categoryService } from '@/mock/services/product-service';
-import { CATEGORIES } from '@/mock/seeds/categories';
+import { orpc } from '@/utils/orpc';
 
 // Query keys factory
 export const categoryKeys = {
@@ -20,30 +19,26 @@ export const categoryKeys = {
 export function useCategories(
   options?: Omit<UseQueryOptions<Array<Category>>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: categoryKeys.lists(),
-    queryFn: () => categoryService.getCategories(),
-    initialData: CATEGORIES,
-    // Categories rarely change, cache for longer
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    ...options,
-  });
+  return useQuery(
+    orpc.product.listCategories.queryOptions({
+      staleTime: Infinity, // Categories rarely change, cache forever
+      gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+      retry: 1, // Only retry once to avoid excessive retries
+      retryDelay: 1000, // Wait 1 second before retrying
+      ...options as any,
+    })
+  ) as any;
 }
 
 /**
  * Fetch single category by ID
+ * Note: Catalog API uses slug, so we'll use slug hook.
  */
 export function useCategory(
   id: string,
   options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: categoryKeys.detail(id),
-    queryFn: () => categoryService.getCategoryById(id),
-    enabled: !!id,
-    staleTime: 10 * 60 * 1000,
-    ...options,
-  });
+  return useCategoryBySlug(id, options);
 }
 
 /**
@@ -53,11 +48,12 @@ export function useCategoryBySlug(
   slug: string,
   options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: categoryKeys.slug(slug),
-    queryFn: () => categoryService.getCategoryBySlug(slug),
-    enabled: !!slug,
-    staleTime: 10 * 60 * 1000,
-    ...options,
-  });
+  return useQuery(
+    orpc.product.getCategoryBySlug.queryOptions({
+      input: { slug },
+      enabled: !!slug,
+      staleTime: 10 * 60 * 1000,
+      ...options as any,
+    })
+  ) as any;
 }

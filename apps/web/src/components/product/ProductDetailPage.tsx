@@ -168,15 +168,6 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
     <div className="min-h-screen bg-[hsl(var(--background))]">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         
-        {/* Breadcrumb */}
-        <nav className="mb-8 flex items-center text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-foreground">Home</Link>
-            <span className="mx-2">/</span>
-            <span className="capitalize">{product.categoryId}</span>
-            <span className="mx-2">/</span>
-            <span className="font-medium text-foreground line-clamp-1">{product.title}</span>
-        </nav>
-
         <div className="grid grid-cols-1 gap-x-8 gap-y-10 lg:grid-cols-2">
           {/* Product Gallery */}
           <div className="product-gallery-container">
@@ -323,7 +314,7 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
                         <div className="flex items-center gap-1">
                             <Link 
                                 to="/vendor/$vendorId" 
-                                params={{ vendorId: product.vendor.id }}
+                                params={{ vendorId: product.vendor.slug || product.vendor.id }}
                                 className="font-semibold text-sm hover:underline"
                             >
                                 {product.vendor.name}
@@ -336,7 +327,7 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
                     </div>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                    <Link to="/vendor/$vendorId" params={{ vendorId: product.vendor.id }}>Visit Store</Link>
+                    <Link to="/vendor/$vendorId" params={{ vendorId: product.vendor.slug || product.vendor.id }}>Visit Store</Link>
                 </Button>
             </div>
 

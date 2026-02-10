@@ -1,11 +1,14 @@
 import { z } from "zod";
 import { adminProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
+import * as paymentService from "../services/payment-service";
+import * as payoutService from "../services/payout-service";
 import {
   user,
   vendors,
   products,
   orders,
+  payments,
   platformSettings,
   productImages,
   categories,
@@ -821,7 +824,22 @@ export const adminRouter = os.router({
     .input(
       z.object({
         search: z.string().optional(),
-        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]).optional(),
+        status: z.enum([
+          "awaiting_payment",
+          "payment_submitted",
+          "payment_received",
+          "placed",
+          "pending",
+          "processing",
+          "shipped",
+          "delivered",
+          "cash_collected",
+          "settlement_ready",
+          "vendor_paid",
+          "vendor_settled",
+          "cancelled",
+          "returned",
+        ]).optional(),
         limit: z.coerce.number().int().min(1).max(100).default(50),
         offset: z.coerce.number().int().min(0).default(0),
       })
@@ -848,9 +866,13 @@ export const adminRouter = os.router({
           updatedAt: orders.updatedAt,
           userName: user.name,
           userEmail: user.email,
+          paymentMethod: orders.paymentMethod,
+          paymentTransactionId: orders.paymentTransactionId,
+          senderMobile: payments.senderMobile,
         })
         .from(orders)
         .innerJoin(user, eq(orders.userId, user.id))
+        .leftJoin(payments, eq(orders.id, payments.orderId))
         .where(where)
         .limit(input.limit)
         .offset(input.offset)
@@ -879,7 +901,22 @@ export const adminRouter = os.router({
     .input(
       z.object({
         id: z.string(),
-        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]),
+        status: z.enum([
+          "awaiting_payment",
+          "payment_submitted",
+          "payment_received",
+          "placed",
+          "pending",
+          "processing",
+          "shipped",
+          "delivered",
+          "cash_collected",
+          "settlement_ready",
+          "vendor_paid",
+          "vendor_settled",
+          "cancelled",
+          "returned",
+        ]),
       })
     )
     .handler(async ({ input }) => {
@@ -953,6 +990,246 @@ export const adminRouter = os.router({
         },
         recentOrders,
         recentUsers,
+      };
+    }),
+
+  // ====================================================================
+  // Payment Verification Endpoints
+  // ====================================================================
+
+  listPendingPayments: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "listPendingPayments",
+      summary: "List Pending Payments",
+      description: "Lists all bKash payments awaiting admin verification.",
+      tags: ["Admin", "Payments"],
+    })
+    .input(
+      z.object({
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        offset: z.coerce.number().int().min(0).default(0),
+      })
+    )
+    .handler(async ({ input }) => {
+      const payments = await paymentService.getPendingPayments(input.limit, input.offset);
+      return {
+        payments,
+        total: payments.length,
+      };
+    }),
+
+  verifyPayment: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "verifyPayment",
+      summary: "Verify Payment",
+      description: "Admin verifies a bKash payment and moves order to payment_received status.",
+      tags: ["Admin", "Payments"],
+    })
+    .input(
+      z.object({
+        orderId: z.string(),
+        notes: z.string().optional(),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
+      const result = await paymentService.verifyPayment(input.orderId, adminId, input.notes);
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.payment;
+    }),
+
+  rejectPayment: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "rejectPayment",
+      summary: "Reject Payment",
+      description: "Admin rejects a bKash payment with reason and moves order back to awaiting_payment.",
+      tags: ["Admin", "Payments"],
+    })
+    .input(
+      z.object({
+        orderId: z.string(),
+        reason: z.string().min(10, "Rejection reason must be at least 10 characters"),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
+      const result = await paymentService.rejectPayment(input.orderId, adminId, input.reason);
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.payment;
+    }),
+
+  recordCashCollection: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "recordCashCollection",
+      summary: "Record Cash Collection",
+      description: "Record that COD cash has been collected from customer.",
+      tags: ["Admin", "Payments"],
+    })
+    .input(
+      z.object({
+        orderId: z.string(),
+        collectionProof: z.string().optional(),
+        notes: z.string().optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const result = await paymentService.recordCashCollection(
+        input.orderId,
+        input.collectionProof,
+        input.notes
+      );
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.payment;
+    }),
+
+  // ====================================================================
+  // Vendor Payout Endpoints
+  // ====================================================================
+
+  listPendingPayouts: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "listPendingPayouts",
+      summary: "List Pending Payouts",
+      description: "Lists all vendor payouts awaiting admin processing.",
+      tags: ["Admin", "Payouts"],
+    })
+    .input(
+      z.object({
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        offset: z.coerce.number().int().min(0).default(0),
+      })
+    )
+    .handler(async ({ input }) => {
+      const payouts = await payoutService.getPendingPayouts(input.limit, input.offset);
+      return {
+        payouts,
+        total: payouts.length,
+      };
+    }),
+
+  getPayoutDetails: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "getPayoutDetails",
+      summary: "Get Payout Details",
+      description: "Get detailed information about a specific payout.",
+      tags: ["Admin", "Payouts"],
+    })
+    .input(
+      z.object({
+        payoutId: z.string(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const payout = await payoutService.getPayoutDetails(input.payoutId);
+
+      if (!payout) {
+        throw new ORPCError("NOT_FOUND", { message: "Payout not found" });
+      }
+
+      return payout;
+    }),
+
+  processPayout: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "processPayout",
+      summary: "Process Payout",
+      description: "Admin processes payment to vendor and records transaction details.",
+      tags: ["Admin", "Payouts"],
+    })
+    .input(
+      z.object({
+        payoutId: z.string(),
+        paymentMethod: z.string().min(1, "Payment method is required"),
+        paymentReference: z.string().min(1, "Payment reference is required"),
+        notes: z.string().optional(),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
+      const result = await payoutService.processPayout(
+        input.payoutId,
+        adminId,
+        {
+          paymentMethod: input.paymentMethod,
+          paymentReference: input.paymentReference,
+        },
+        input.notes
+      );
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.payout;
+    }),
+
+  markPayoutFailed: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "markPayoutFailed",
+      summary: "Mark Payout Failed",
+      description: "Mark a payout as failed with a reason.",
+      tags: ["Admin", "Payouts"],
+    })
+    .input(
+      z.object({
+        payoutId: z.string(),
+        reason: z.string().min(10, "Failure reason must be at least 10 characters"),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
+      const result = await payoutService.markPayoutFailed(input.payoutId, adminId, input.reason);
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.payout;
+    }),
+
+  createPayoutForOrder: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "createPayoutForOrder",
+      summary: "Create Payout for Order",
+      description: "Manually create payout records for an order that has been completed.",
+      tags: ["Admin", "Payouts"],
+    })
+    .input(
+      z.object({
+        orderId: z.string(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const result = await payoutService.createPayoutForOrder(input.orderId);
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return {
+        success: true,
+        payouts: result.payouts,
       };
     }),
 });
