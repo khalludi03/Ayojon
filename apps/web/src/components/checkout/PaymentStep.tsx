@@ -405,34 +405,56 @@ export function PaymentStep({
                 : "Select a payment method above to continue."}
             </p>
           </div>
-
-          {/* Actions */}
-          <div className="flex flex-col gap-3 border-t border-[hsl(var(--border))] pt-6 sm:flex-row sm:justify-between items-center">
-            <Button type="button" variant="outline" size="lg" onClick={onBack} className="w-full sm:w-auto">
-              ← Back to Review
-            </Button>
-            <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
-              <Button 
-                type="submit" 
-                size="lg"
-                className="w-full sm:w-auto px-12 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/25 h-12"
-                disabled={!formData.paymentMethod || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  "Complete Order ✓"
-                )}
-              </Button>
-              <p className="text-[10px] text-muted-foreground italic">
-                Secure SSL Encrypted Transaction
-              </p>
-            </div>
-          </div>
         </form>
+      </div>
+
+      {/* Action Buttons - Moved outside for better visibility */}
+      <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:justify-between items-center">
+        <Button type="button" variant="outline" size="lg" onClick={onBack} className="w-full sm:w-auto h-12 px-8 order-2 sm:order-1">
+          ← Back to Review
+        </Button>
+        
+        <div className="flex flex-col items-center sm:items-end gap-3 w-full sm:w-auto order-1 sm:order-2">
+          {!formData.paymentMethod && (
+            <p className="text-xs font-bold text-destructive animate-pulse">
+              Please select a payment method above
+            </p>
+          )}
+          {formData.paymentMethod === 'bkash' && (!formData.mobileNumber || !formData.bkashTransactionId) && (
+            <p className="text-xs font-bold text-destructive">
+              Please enter TrxID and Mobile Number
+            </p>
+          )}
+          
+          <Button 
+            type="button" 
+            size="lg"
+            onClick={handleSubmit}
+            className={cn(
+              "w-full sm:w-auto px-16 text-lg font-black h-14 transition-all duration-300",
+              formData.paymentMethod 
+                ? "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-[0_8px_25px_-4px_rgba(249,115,22,0.4)] scale-105"
+                : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            )}
+            disabled={!formData.paymentMethod || isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                Complete Order
+                <ShieldCheck className="ml-3 h-5 w-5" />
+              </>
+            )}
+          </Button>
+          <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+            <Lock className="h-3 w-3" />
+            SSL Secure Checkout
+          </div>
+        </div>
       </div>
 
       {/* Security Badge */}
