@@ -46,6 +46,7 @@ import { Route as AccountSettingsRouteImport } from './routes/account.settings'
 import { Route as AccountProfileRouteImport } from './routes/account.profile'
 import { Route as AccountOrdersRouteImport } from './routes/account.orders'
 import { Route as AccountAddressesRouteImport } from './routes/account.addresses'
+import { Route as AccountOrdersIndexRouteImport } from './routes/account.orders.index'
 import { Route as VendorOrdersOrderIdRouteImport } from './routes/vendor/orders.$orderId'
 import { Route as AccountOrdersOrderIdRouteImport } from './routes/account.orders.$orderId'
 
@@ -236,6 +237,11 @@ const AccountAddressesRoute = AccountAddressesRouteImport.update({
   path: '/addresses',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountOrdersIndexRoute = AccountOrdersIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountOrdersRoute,
+} as any)
 const VendorOrdersOrderIdRoute = VendorOrdersOrderIdRouteImport.update({
   id: '/$orderId',
   path: '/$orderId',
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/account/': typeof AccountIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
+  '/account/orders/': typeof AccountOrdersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -303,7 +310,6 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/wishlist': typeof WishlistRoute
   '/account/addresses': typeof AccountAddressesRoute
-  '/account/orders': typeof AccountOrdersRouteWithChildren
   '/account/profile': typeof AccountProfileRoute
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
@@ -327,6 +333,7 @@ export interface FileRoutesByTo {
   '/account': typeof AccountIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
+  '/account/orders': typeof AccountOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -369,6 +376,7 @@ export interface FileRoutesById {
   '/account/': typeof AccountIndexRoute
   '/account/orders/$orderId': typeof AccountOrdersOrderIdRoute
   '/vendor/orders/$orderId': typeof VendorOrdersOrderIdRoute
+  '/account/orders/': typeof AccountOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -412,6 +420,7 @@ export interface FileRouteTypes {
     | '/account/'
     | '/account/orders/$orderId'
     | '/vendor/orders/$orderId'
+    | '/account/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -428,7 +437,6 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/wishlist'
     | '/account/addresses'
-    | '/account/orders'
     | '/account/profile'
     | '/account/settings'
     | '/account/wishlist'
@@ -452,6 +460,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/account/orders/$orderId'
     | '/vendor/orders/$orderId'
+    | '/account/orders'
   id:
     | '__root__'
     | '/'
@@ -493,6 +502,7 @@ export interface FileRouteTypes {
     | '/account/'
     | '/account/orders/$orderId'
     | '/vendor/orders/$orderId'
+    | '/account/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -790,6 +800,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountAddressesRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/orders/': {
+      id: '/account/orders/'
+      path: '/'
+      fullPath: '/account/orders/'
+      preLoaderRoute: typeof AccountOrdersIndexRouteImport
+      parentRoute: typeof AccountOrdersRoute
+    }
     '/vendor/orders/$orderId': {
       id: '/vendor/orders/$orderId'
       path: '/$orderId'
@@ -809,10 +826,12 @@ declare module '@tanstack/react-router' {
 
 interface AccountOrdersRouteChildren {
   AccountOrdersOrderIdRoute: typeof AccountOrdersOrderIdRoute
+  AccountOrdersIndexRoute: typeof AccountOrdersIndexRoute
 }
 
 const AccountOrdersRouteChildren: AccountOrdersRouteChildren = {
   AccountOrdersOrderIdRoute: AccountOrdersOrderIdRoute,
+  AccountOrdersIndexRoute: AccountOrdersIndexRoute,
 }
 
 const AccountOrdersRouteWithChildren = AccountOrdersRoute._addFileChildren(

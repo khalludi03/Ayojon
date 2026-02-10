@@ -851,7 +851,8 @@ export const adminRouter = os.router({
         conditions.push(or(
           ilike(user.name, `%${input.search}%`),
           ilike(user.email, `%${input.search}%`),
-          ilike(orders.id, `%${input.search}%`)
+          ilike(orders.id, `%${input.search}%`),
+          ilike(orders.orderNumber, `%${input.search}%`)
         ));
       }
 
@@ -860,6 +861,7 @@ export const adminRouter = os.router({
       const ordersList = await db
         .select({
           id: orders.id,
+          orderNumber: orders.orderNumber,
           status: orders.status,
           total: orders.total,
           createdAt: orders.createdAt,

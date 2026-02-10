@@ -226,6 +226,21 @@ export async function getOrderDetails(orderId: string, userId?: string) {
 }
 
 /**
+ * Get order by order number (public tracking)
+ * 
+ * @param orderNumber - The visible order number (e.g. AYJ-2026-123456)
+ * @returns Order with essential tracking data
+ */
+export async function getOrderByNumber(orderNumber: string) {
+  return await db.query.orders.findFirst({
+    where: eq(orders.orderNumber, orderNumber),
+    with: {
+      items: true,
+    },
+  });
+}
+
+/**
  * Get orders for a specific vendor
  *
  * @param vendorId - Vendor ID

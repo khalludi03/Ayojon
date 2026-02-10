@@ -280,7 +280,7 @@ function AdminOrdersPage() {
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-indigo-500 group-hover:animate-pulse" />
                           <span className="text-sm font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
-                            #{order.id.slice(0, 8)}
+                            #{order.orderNumber}
                           </span>
                         </div>
                       </td>
