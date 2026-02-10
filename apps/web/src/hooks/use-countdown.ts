@@ -44,22 +44,35 @@ export function useCountdown(endDate: string | Date): CountdownState {
     // Mark as mounted to prevent hydration mismatch
     setMounted(true);
 
+    const updateTimer = () => {
+      const newTimeLeft = calculateTimeLeft();
+      
+      // Only update state if the total seconds changed to prevent unnecessary re-renders
+      // or infinite loops if endDate is unstable.
+      setTimeLeft((prev) => {
+        if (prev.totalSeconds === newTimeLeft.totalSeconds && prev.isExpired === newTimeLeft.isExpired) {
+          return prev;
+        }
+        return newTimeLeft;
+      });
+      
+      return newTimeLeft.isExpired;
+    };
+
     // Update immediately after mount
-    setTimeLeft(calculateTimeLeft());
+    const isExpired = updateTimer();
+    if (isExpired) return;
 
     // Then update every second
     const timer = setInterval(() => {
-      const newTimeLeft = calculateTimeLeft();
-      setTimeLeft(newTimeLeft);
-
-      // Stop the timer if expired
-      if (newTimeLeft.isExpired) {
+      const expired = updateTimer();
+      if (expired) {
         clearInterval(timer);
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [calculateTimeLeft]);
+  }, [endDate]); // Use endDate as dependency instead of calculateTimeLeft
 
   return timeLeft;
 }

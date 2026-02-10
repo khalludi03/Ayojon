@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CreditCard, Heart, LogIn, LogOut, MapPin, Package, Settings, User, UserPlus } from 'lucide-react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { authClient } from '@/lib/auth-client';
@@ -6,7 +6,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -16,8 +15,13 @@ import { toast } from 'sonner';
 
 export function UserMenu() {
   const [isHovered, setIsHovered] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isLoggedIn = !!session?.user;
   const user = session?.user ? {
@@ -37,8 +41,8 @@ export function UserMenu() {
     });
   };
 
-  // Show nothing while loading to prevent flash of signin button
-  if (isPending) {
+  // Show loading state while pending or until mounted to prevent hydration mismatch
+  if (!mounted || isPending) {
     return (
       <div className="flex items-center">
         <div className="hidden sm:flex items-center gap-2">

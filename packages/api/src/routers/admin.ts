@@ -821,7 +821,7 @@ export const adminRouter = os.router({
     .input(
       z.object({
         search: z.string().optional(),
-        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]).optional(),
+        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled", "returned"]).optional(),
         limit: z.coerce.number().int().min(1).max(100).default(50),
         offset: z.coerce.number().int().min(0).default(0),
       })
@@ -879,7 +879,7 @@ export const adminRouter = os.router({
     .input(
       z.object({
         id: z.string(),
-        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled"]),
+        status: z.enum(["pending", "processing", "shipped", "delivered", "cancelled", "returned"]),
       })
     )
     .handler(async ({ input }) => {

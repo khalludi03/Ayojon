@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/dialog";
 import { useCart, type CartItem } from "@/stores/cart-store";
 import { formatPrice } from "@/lib/utils";
-import { CreditCard, Mail, MapPin, Package, Phone, Truck, User } from "lucide-react";
+import { CreditCard, Mail, MapPin, Package, Phone, Truck, User, Loader2 } from "lucide-react";
 
 interface OrderReviewStepProps {
   onBack: () => void;
   onPlaceOrder: () => void;
   onEditStep: (step: number) => void;
+  isSubmitting?: boolean;
   formData: {
     fullName: string;
     email: string;
@@ -36,6 +37,7 @@ export function OrderReviewStep({
   onBack,
   onPlaceOrder,
   onEditStep,
+  isSubmitting = false,
   formData,
 }: OrderReviewStepProps) {
   const { items, getSubtotal, getShipping, getTax, getTotal } = useCart();
@@ -289,9 +291,16 @@ export function OrderReviewStep({
                 type="button"
                 size="lg"
                 className="w-full sm:w-auto px-8 font-semibold"
-                disabled={!agreedToTerms}
+                disabled={!agreedToTerms || isSubmitting}
               >
-                Place Order
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Placing Order...
+                  </>
+                ) : (
+                  "Place Order"
+                )}
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -303,10 +312,12 @@ export function OrderReviewStep({
               </DialogHeader>
               <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                 <DialogClose asChild>
-                  <Button variant="outline">Cancel</Button>
+                  <Button variant="outline" disabled={isSubmitting}>Cancel</Button>
                 </DialogClose>
                 <DialogClose asChild>
-                  <Button onClick={onPlaceOrder}>Yes, Place Order</Button>
+                  <Button onClick={onPlaceOrder} disabled={isSubmitting}>
+                    {isSubmitting ? "Placing Order..." : "Yes, Place Order"}
+                  </Button>
                 </DialogClose>
               </div>
             </DialogContent>

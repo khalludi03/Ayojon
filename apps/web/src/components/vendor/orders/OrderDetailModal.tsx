@@ -1,42 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { X, Package, MapPin, CreditCard, Truck, Check, AlertCircle } from 'lucide-react';
+import { X, Package, MapPin, CreditCard, Truck, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { VendorOrder, VendorOrderStatus } from '@/types/vendor-order';
-import { updateVendorOrderStatus } from '@/stores/vendor-order-store';
+import { orpc } from '@/utils/orpc';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 
 interface OrderDetailModalProps {
-  order: VendorOrder;
+  order: any;
   onClose: () => void;
 }
-
-const getStatusColor = (status: VendorOrderStatus) => {
-  switch (status) {
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
-    case 'confirmed':
-      return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
-    case 'shipped':
-      return 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400';
-    case 'delivered':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-    case 'returned':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400';
-    default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
-  }
-};
 
 const getPaymentMethodLabel = (method: string) => {
   const labels: Record<string, string> = {
     bkash: 'bKash',
     card: 'Card',
     cod: 'Cash on Delivery',
-    bank: 'Bank Transfer',
   };
   return labels[method] || method;
 };
@@ -55,42 +37,35 @@ const formatDate = (dateString: string | undefined) => {
 
 export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailModalProps) {
   const [order, setOrder] = useState(initialOrder);
-  const [trackingNumber, setTrackingNumber] = useState(order.shipping.trackingNumber || '');
+  const [trackingNumber, setTrackingNumber] = useState(initialOrder.trackingNumber || '');
   const [showTrackingInput, setShowTrackingInput] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
+  const queryClient = useQueryClient();
 
-  const handleStatusUpdate = (newStatus: VendorOrderStatus, additionalData?: any) => {
-    setIsUpdating(true);
+  useEffect(() => {
+    setOrder(initialOrder);
+    setTrackingNumber(initialOrder.trackingNumber || '');
+  }, [initialOrder]);
 
-    // Simulate API call
-    setTimeout(() => {
-      updateVendorOrderStatus(order.id, newStatus, additionalData);
-
-      // Update local state
-      const updatedOrder = {
-        ...order,
-        status: newStatus,
-        ...(newStatus === 'shipped' && additionalData?.trackingNumber
-          ? {
-              shipping: {
-                ...order.shipping,
-                trackingNumber: additionalData.trackingNumber,
-              },
-            }
-          : {}),
-      };
+  const updateStatus = orpc.vendor.updateOrderStatus.useMutation({
+    onSuccess: (updatedOrder: any) => {
       setOrder(updatedOrder);
+      toast.success('Order status updated');
+      queryClient.invalidateQueries({ queryKey: ['vendor', 'getOrders'] });
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error('Failed to update status');
+    }
+  });
 
-      setIsUpdating(false);
-      setShowNotification(true);
-      setShowTrackingInput(false);
+  const vendorSubtotal = (order.items || []).reduce((sum: number, item: any) => sum + (parseFloat(item.price) * item.quantity), 0);
 
-      // Hide notification after 3 seconds
-      setTimeout(() => {
-        setShowNotification(false);
-      }, 3000);
-    }, 500);
+  const handleStatusUpdate = (newStatus: any, additionalData?: any) => {
+    updateStatus.mutate({
+      orderId: order.id,
+      status: newStatus,
+      ...additionalData,
+    });
   };
 
   const handleConfirmOrder = () => {
@@ -99,7 +74,7 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
 
   const handleMarkAsShipped = () => {
     if (!trackingNumber.trim()) {
-      alert('Please enter a tracking number');
+      toast.error('Please enter a tracking number');
       return;
     }
     handleStatusUpdate('shipped', { trackingNumber: trackingNumber.trim() });
@@ -109,13 +84,15 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
     handleStatusUpdate('delivered');
   };
 
+  const isUpdating = updateStatus.isPending;
+
   const renderActionButtons = () => {
     switch (order.status) {
       case 'pending':
         return (
           <Button onClick={handleConfirmOrder} disabled={isUpdating} className="w-full sm:w-auto">
-            <Check className="h-4 w-4 mr-2" />
-            {isUpdating ? 'Updating...' : 'Confirm Order'}
+            {isUpdating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+            Confirm Order
           </Button>
         );
 
@@ -135,8 +112,8 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
               </div>
               <div className="flex gap-2">
                 <Button onClick={handleMarkAsShipped} disabled={isUpdating} className="flex-1">
-                  <Truck className="h-4 w-4 mr-2" />
-                  {isUpdating ? 'Updating...' : 'Confirm Shipment'}
+                  {isUpdating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Truck className="h-4 w-4 mr-2" />}
+                  Confirm Shipment
                 </Button>
                 <Button
                   variant="outline"
@@ -163,8 +140,8 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
       case 'shipped':
         return (
           <Button onClick={handleMarkAsDelivered} disabled={isUpdating} className="w-full sm:w-auto">
-            <Check className="h-4 w-4 mr-2" />
-            {isUpdating ? 'Updating...' : 'Mark as Delivered'}
+            {isUpdating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
+            Mark as Delivered
           </Button>
         );
 
@@ -199,35 +176,15 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
           </button>
         </div>
 
-        {/* Notification */}
-        {showNotification && (
-          <div className="mx-6 mt-4 p-4 bg-green-100 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-start gap-3">
-            <Check className="h-5 w-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium text-green-800 dark:text-green-400">
-                Order status updated successfully!
-              </p>
-              <p className="text-xs text-green-700 dark:text-green-500 mt-1">
-                Customer has been notified via email and SMS
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Status */}
           <div className="flex items-center justify-between p-4 bg-[hsl(var(--muted))] rounded-lg">
             <div>
               <p className="text-sm text-[hsl(var(--muted-foreground))]">Current Status</p>
-              <span
-                className={cn(
-                  'inline-flex rounded-full px-3 py-1 text-sm font-semibold mt-1',
-                  getStatusColor(order.status)
-                )}
-              >
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-              </span>
+              <div className="mt-1">
+                <OrderStatusBadge status={order.status} />
+              </div>
             </div>
             <div className="text-right">
               <p className="text-sm text-[hsl(var(--muted-foreground))]">Order Date</p>
@@ -249,36 +206,36 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
               <div>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Name</p>
                 <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  {order.customer.name}
+                  {order.shippingName || order.user?.name}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Phone</p>
                 <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  {order.customer.phone}
+                  {order.shippingPhone}
                 </p>
               </div>
               <div className="sm:col-span-2">
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Email</p>
                 <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  {order.customer.email}
+                  {order.user?.email}
                 </p>
               </div>
               <div className="sm:col-span-2">
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Delivery Address</p>
                 <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  {order.customer.address.addressLine1}
-                  {order.customer.address.addressLine2 && `, ${order.customer.address.addressLine2}`}
+                  {order.shippingAddressLine1}
+                  {order.shippingAddressLine2 && `, ${order.shippingAddressLine2}`}
                   <br />
-                  {order.customer.address.city}, {order.customer.address.division}{' '}
-                  {order.customer.address.postalCode}
+                  {order.shippingCity}, {order.shippingDivision}{' '}
+                  {order.shippingPostalCode}
                 </p>
               </div>
-              {order.deliveryInstructions && (
+              {order.customerNote && (
                 <div className="sm:col-span-2">
-                  <p className="text-sm text-[hsl(var(--muted-foreground))]">Delivery Instructions</p>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))]">Customer Note</p>
                   <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    {order.deliveryInstructions}
+                    {order.customerNote}
                   </p>
                 </div>
               )}
@@ -292,31 +249,23 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
               <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">Items Ordered</h3>
             </div>
             <div className="space-y-3">
-              {order.items.map((item) => (
+              {(order.items || []).map((item: any) => (
                 <div key={item.id} className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3 flex-1">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.productName}
-                        className="h-12 w-12 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded bg-[hsl(var(--muted))] flex items-center justify-center">
-                        <Package className="h-6 w-6 text-[hsl(var(--muted-foreground))]" />
-                      </div>
-                    )}
+                    <div className="h-12 w-12 rounded bg-[hsl(var(--muted))] flex items-center justify-center">
+                      <Package className="h-6 w-6 text-[hsl(var(--muted-foreground))]" />
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-[hsl(var(--foreground))] truncate">
-                        {item.productName}
+                        {item.title}
                       </p>
                       <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                        Qty: {item.quantity} × ৳{item.price.toLocaleString()}
+                        Qty: {item.quantity} × ৳{parseFloat(item.price).toLocaleString()}
                       </p>
                     </div>
                   </div>
                   <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    ৳{(item.quantity * item.price).toLocaleString()}
+                    ৳{(item.quantity * parseFloat(item.price)).toLocaleString()}
                   </p>
                 </div>
               ))}
@@ -325,27 +274,20 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
             {/* Order Summary */}
             <div className="mt-4 pt-4 border-t border-[hsl(var(--border))] space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-[hsl(var(--muted-foreground))]">Subtotal</span>
+                <span className="text-[hsl(var(--muted-foreground))]">Vendor Subtotal</span>
                 <span className="text-[hsl(var(--foreground))]">
-                  ৳{order.subtotal.toLocaleString()}
+                  ৳{vendorSubtotal.toLocaleString()}
                 </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[hsl(var(--muted-foreground))]">Shipping</span>
-                <span className="text-[hsl(var(--foreground))]">
-                  ৳{order.shippingCost.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-[hsl(var(--muted-foreground))]">Tax</span>
-                <span className="text-[hsl(var(--foreground))]">৳{order.tax.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-base font-bold pt-2 border-t border-[hsl(var(--border))]">
-                <span className="text-[hsl(var(--foreground))]">Total</span>
+                <span className="text-[hsl(var(--foreground))]">Total Vendor Revenue</span>
                 <span className="text-[hsl(var(--foreground))]">
-                  ৳{order.total.toLocaleString()}
+                  ৳{vendorSubtotal.toLocaleString()}
                 </span>
               </div>
+              <p className="text-[10px] text-[hsl(var(--muted-foreground))] italic mt-2">
+                * Note: This only shows revenue for your items in this order.
+              </p>
             </div>
           </div>
 
@@ -361,7 +303,7 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
               <div>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">Payment Method</p>
                 <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  {getPaymentMethodLabel(order.payment.method)}
+                  {getPaymentMethodLabel(order.paymentMethod)}
                 </p>
               </div>
               <div>
@@ -369,25 +311,21 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
                 <span
                   className={cn(
                     'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                    order.payment.status === 'paid'
+                    order.paymentStatus === 'paid'
                       ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-                      : order.payment.status === 'pending'
+                      : order.paymentStatus === 'pending'
                         ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
                         : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                   )}
                 >
-                  {order.payment.status === 'paid'
-                    ? 'Paid'
-                    : order.payment.status === 'pending'
-                      ? 'Pending'
-                      : 'Failed'}
+                  {order.paymentStatus?.toUpperCase()}
                 </span>
               </div>
-              {order.payment.transactionId && (
+              {order.paymentTransactionId && (
                 <div className="sm:col-span-2">
                   <p className="text-sm text-[hsl(var(--muted-foreground))]">Transaction ID</p>
                   <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    {order.payment.transactionId}
+                    {order.paymentTransactionId}
                   </p>
                 </div>
               )}
@@ -395,7 +333,7 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
           </div>
 
           {/* Shipping Information */}
-          {(order.status === 'shipped' || order.status === 'delivered') && order.shipping.trackingNumber && (
+          {(order.status === 'shipped' || order.status === 'delivered') && (
             <div className="rounded-lg border border-[hsl(var(--border))] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Truck className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -405,17 +343,25 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-sm text-[hsl(var(--muted-foreground))]">Tracking Number</p>
-                  <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    {order.shipping.trackingNumber}
+                  <p className="text-sm text-[hsl(var(--muted-foreground))]">Method</p>
+                  <p className="text-sm font-medium text-[hsl(var(--foreground))] uppercase">
+                    {order.deliveryMethod || 'Standard'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-[hsl(var(--muted-foreground))]">Shipped At</p>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))]">Status</p>
                   <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                    {formatDate(order.shippedAt)}
+                    {order.status.toUpperCase()}
                   </p>
                 </div>
+                {order.trackingNumber && (
+                  <div className="sm:col-span-2 mt-2 pt-2 border-t border-[hsl(var(--border))]">
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">Tracking Number</p>
+                    <p className="text-sm font-bold text-[hsl(var(--primary))]">
+                      {order.trackingNumber}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -28,7 +28,8 @@ export const protectedProcedure = baseProcedure.use(async ({ context, next }) =>
 
   return next({
     context: {
-      session: context.session,
+      ...context,
+      session: context.session!, // We know it's not null due to check above
     },
   });
 });
