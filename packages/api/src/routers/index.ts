@@ -4,11 +4,15 @@ import { storageRouter } from "./storage";
 import { vendorRouter } from "./vendor";
 import { productRouter } from "./product";
 import { adminRouter } from "./admin";
+import { orderRouter } from "./order";
+import { addressRouter } from "./address";
 
 export const appRouter = os.router({
   storage: storageRouter,
   vendor: vendorRouter,
   product: productRouter,
+  order: orderRouter,
+  address: addressRouter,
   vendorProduct: productRouter,
   catalog: productRouter, // Alias for backward compatibility
   admin: adminRouter,

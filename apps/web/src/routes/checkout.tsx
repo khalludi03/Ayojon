@@ -14,7 +14,9 @@ import { BkashPaymentForm } from '@/components/checkout/BkashPaymentForm';
 import { CardPaymentForm } from '@/components/checkout/CardPaymentForm';
 import { PaymentSuccessModal } from '@/components/checkout/PaymentSuccessModal';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { orpcClient } from '@/utils/orpc';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/checkout')({
   component: CheckoutPage,
@@ -76,6 +78,7 @@ function CheckoutPage() {
   const [showBkashPayment, setShowBkashPayment] = useState(false);
   const [showCardPayment, setShowCardPayment] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -141,7 +144,7 @@ function CheckoutPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     // If bKash payment and not yet paid, show bKash payment form
     if (formData.paymentMethod === 'bkash' && !formData.bkashTransactionId) {
       setShowBkashPayment(true);
@@ -156,83 +159,124 @@ function CheckoutPage() {
       return;
     }
 
+    setIsSubmitting(true);
     const orderNum = orderNumber || `AYJ${Date.now().toString().slice(-8)}`;
-    const newOrderId = `${Date.now()}`;
-    const firstItemImage = items[0]?.product?.images?.[0]?.url;
-    const placedAt = formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString();
     const subtotal = getSubtotal();
     const shipping = getShipping();
     const tax = getTax();
     const discount = getDiscount();
     const orderTotal = subtotal + tax + shipping - discount;
 
-    addOrder({
-      id: newOrderId,
-      orderNumber: orderNum,
-      date: placedAt,
-      total: orderTotal,
-      status: formData.paymentMethod === 'bkash' ? 'processing' : 'processing',
-      items: items.reduce((total, item) => total + item.quantity, 0),
-      imageUrl: firstItemImage,
-      deliveryMethod: formData.deliveryMethod,
-      lineItems: items.map((item) => ({
-        id: item.id,
-        title: item.product.title,
-        quantity: item.quantity,
-        price: item.product.pricing.currentPrice,
-        imageUrl: item.product.images?.[0]?.url,
-        productId: item.product.id,
-        product: item.product,
-      })),
-      address: {
-        fullName: formData.fullName,
-        email: formData.email,
-        phone: formData.phone,
-        addressLine1: formData.addressLine1,
-        addressLine2: formData.addressLine2,
-        city: formData.city,
-        division: formData.division,
-        postalCode: formData.postalCode,
-        addressType: formData.addressType,
-      },
-      payment: {
-        method: formData.paymentMethod,
-        last4: formData.cardLast4 || formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
-        provider: formData.paymentMethod === 'bkash' ? 'bKash' : formData.paymentMethod === 'card' ? formData.cardType : undefined,
-        transactionId: formData.bkashTransactionId || formData.cardTransactionId,
-        amount: formData.bkashAmount || formData.cardAmount,
-        paidAt: formData.bkashPaidAt || formData.cardPaidAt,
-        status: (formData.bkashTransactionId || formData.cardTransactionId) ? 'PAID' : 'PENDING',
-      },
-      pricing: {
+    try {
+      const response = await orpcClient.order.placeOrder({
+        orderNumber: orderNum,
         subtotal,
-        shipping,
+        shippingCost: shipping,
         tax,
         discount,
         total: orderTotal,
-      },
-      timeline: {
-        placedAt,
-      },
-    });
+        shipping: {
+          fullName: formData.fullName,
+          phone: formData.phone,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          division: formData.division,
+          postalCode: formData.postalCode,
+        },
+        payment: {
+          method: formData.paymentMethod,
+          transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+        },
+        items: items.map(item => ({
+          productId: item.product.id,
+          vendorId: item.product.vendor.id,
+          title: item.product.title,
+          price: item.product.pricing.currentPrice,
+          quantity: item.quantity,
+          variantInfo: undefined, // Add if you have variant support
+        }))
+      });
 
-    // Save card if requested
-    if (formData.paymentMethod === 'card' && formData.cardSaveCard && formData.cardLast4) {
-      addSavedCard(
-        formData.cardLast4,
-        formData.cardType || 'CARD',
-        formData.cardHolderName || '',
-        formData.cardExpiryDate || ''
-      );
+      const newOrderId = response.id;
+      const firstItemImage = items[0]?.product?.images?.[0]?.url;
+      const placedAt = formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString();
+
+      // Keep updating local store for quick access if needed, but primary is DB now
+      addOrder({
+        id: newOrderId,
+        orderNumber: orderNum,
+        date: placedAt,
+        total: orderTotal,
+        status: 'processing',
+        items: items.reduce((total, item) => total + item.quantity, 0),
+        imageUrl: firstItemImage,
+        deliveryMethod: formData.deliveryMethod,
+        lineItems: items.map((item) => ({
+          id: item.id,
+          title: item.product.title,
+          quantity: item.quantity,
+          price: item.product.pricing.currentPrice,
+          imageUrl: item.product.images?.[0]?.url,
+          productId: item.product.id,
+          product: item.product,
+        })),
+        address: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          addressLine1: formData.addressLine1,
+          addressLine2: formData.addressLine2,
+          city: formData.city,
+          division: formData.division,
+          postalCode: formData.postalCode,
+          addressType: formData.addressType,
+        },
+        payment: {
+          method: formData.paymentMethod,
+          last4: formData.cardLast4 || formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
+          provider: formData.paymentMethod === 'bkash' ? 'bKash' : formData.paymentMethod === 'card' ? formData.cardType : undefined,
+          transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+          amount: formData.bkashAmount || formData.cardAmount,
+          paidAt: formData.bkashPaidAt || formData.cardPaidAt,
+          status: (formData.bkashTransactionId || formData.cardTransactionId) ? 'PAID' : 'PENDING',
+        },
+        pricing: {
+          subtotal,
+          shipping,
+          tax,
+          discount,
+          total: orderTotal,
+        },
+        timeline: {
+          placedAt,
+        },
+      });
+
+      // Save card if requested
+      if (formData.paymentMethod === 'card' && formData.cardSaveCard && formData.cardLast4) {
+        addSavedCard(
+          formData.cardLast4,
+          formData.cardType || 'CARD',
+          formData.cardHolderName || '',
+          formData.cardExpiryDate || ''
+        );
+      }
+
+      setOrderNumber(orderNum);
+      setOrderId(newOrderId);
+      setIsOrderPlaced(true);
+      setCurrentStep(5);
+      clearCart();
+      setDeliveryMethod(null);
+      toast.success("Order placed successfully!");
+    } catch (error) {
+      console.error("Order error:", error);
+      toast.error("Failed to place order. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-
-    setOrderNumber(orderNum);
-    setOrderId(newOrderId);
-    setIsOrderPlaced(true);
-    setCurrentStep(5);
-    clearCart();
-    setDeliveryMethod(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBkashPaymentSuccess = (transactionId: string, amount: number, paidAt: string) => {
@@ -361,6 +405,7 @@ function CheckoutPage() {
             onBack={handleBackStep}
             onPlaceOrder={handlePlaceOrder}
             onEditStep={(step) => setCurrentStep(step)}
+            isSubmitting={isSubmitting}
             formData={formData}
           />
         );

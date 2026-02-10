@@ -74,9 +74,10 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
 }
 
 export function KPICards() {
-  const { data: stats, isLoading } = useQuery(
-    orpc.vendor.getDashboardStats.queryOptions()
-  );
+  const { data: stats, isLoading } = useQuery({
+    ...orpc.vendor.getDashboardStats.queryOptions(),
+    ssr: false,
+  } as any);
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

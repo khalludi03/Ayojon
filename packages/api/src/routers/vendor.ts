@@ -1,12 +1,159 @@
 import { z } from "zod";
 import { protectedProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
-import { vendorApplications, user, vendors, orders, products } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, sql, gte } from "drizzle-orm";
+import { 
+  vendorApplications, 
+  user, 
+  vendors, 
+  orders, 
+  products, 
+  orderItems 
+} from "@my-better-t-app/db/schema/index";
+import { eq, and, desc, sql, gte, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
 
 export const vendorRouter = os.router({
+  getOrders: protectedProcedure
+    .route({
+      operationId: "getVendorOrders",
+      summary: "Get Vendor Orders",
+      description: "Get all orders containing products from this vendor.",
+      tags: ["Vendor"],
+    })
+    .input(z.object({
+      status: z.string().optional(),
+      limit: z.coerce.number().int().min(1).max(100).default(20),
+      offset: z.coerce.number().int().min(0).default(0),
+    }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // 1. Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      const vendorId = vendor.id;
+
+      // 2. Get order IDs that have items from this vendor
+      const items = await db
+        .select({ orderId: orderItems.orderId })
+        .from(orderItems)
+        .where(eq(orderItems.vendorId, vendorId));
+      
+      const orderIds = [...new Set(items.map(i => i.orderId))];
+
+      if (orderIds.length === 0) {
+        return { data: [], total: 0 };
+      }
+
+      // 3. Get the full orders
+      const whereClauses = [inArray(orders.id, orderIds)];
+      if (input.status) {
+        whereClauses.push(eq(orders.status, input.status as any));
+      }
+
+      const data = await db.query.orders.findMany({
+        where: and(...whereClauses),
+        orderBy: [desc(orders.createdAt)],
+        limit: input.limit,
+        offset: input.offset,
+        with: {
+          items: {
+            where: eq(orderItems.vendorId, vendorId),
+          },
+          user: true,
+        }
+      });
+
+      return {
+        data,
+        total: orderIds.length,
+      };
+    }),
+
+  updateOrderStatus: protectedProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updateVendorOrderStatus",
+      summary: "Update Vendor Order Status",
+      description: "Allows a vendor to update the status of an order containing their products.",
+      tags: ["Vendor"],
+    })
+    .input(z.object({
+      orderId: z.string(),
+      status: z.enum(["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"]),
+      trackingNumber: z.string().optional(),
+    }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      console.log(`[updateOrderStatus] Request from user ${userId} for order ${input.orderId} to status ${input.status}`);
+
+      // 1. Verify vendor ownership
+      const [vendor] = await db
+        .select({ id: vendors.id, name: vendors.name })
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        console.warn(`[updateOrderStatus] User ${userId} is not a vendor`);
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      console.log(`[updateOrderStatus] Vendor verified: ${vendor.id} (${vendor.name})`);
+
+      const item = await db.query.orderItems.findFirst({
+        where: and(
+          eq(orderItems.orderId, input.orderId),
+          eq(orderItems.vendorId, vendor.id)
+        )
+      });
+
+      if (!item) {
+        console.warn(`[updateOrderStatus] Order ${input.orderId} does not contain items for vendor ${vendor.id}`);
+        throw new ORPCError("FORBIDDEN", { message: "Order does not belong to this vendor" });
+      }
+
+      // 2. Update the order status
+      const updateData: any = {
+        status: input.status,
+        updatedAt: new Date(),
+      };
+
+      if (input.trackingNumber) {
+        console.log(`[updateOrderStatus] Adding tracking number: ${input.trackingNumber}`);
+        updateData.trackingNumber = input.trackingNumber;
+      }
+
+      console.log(`[updateOrderStatus] Executing DB update for order ${input.orderId}`);
+      try {
+        const updated = await db
+          .update(orders)
+          .set(updateData)
+          .where(eq(orders.id, input.orderId))
+          .returning();
+
+        if (updated.length === 0) {
+          console.warn(`[updateOrderStatus] No order found with ID ${input.orderId}`);
+          throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+        }
+
+        console.log(`[updateOrderStatus] Order ${input.orderId} updated successfully to ${input.status}`);
+        return updated[0];
+      } catch (err) {
+        console.error(`[updateOrderStatus] DB UPDATE FAILED:`, err);
+        throw err;
+      }
+    }),
+
   getVendorProfile: protectedProcedure
     .route({
       operationId: "getVendorProfile",
@@ -309,70 +456,63 @@ export const vendorRouter = os.router({
 
       const vendorId = vendor.id;
 
-      // Get vendor products
-      const vendorProducts = await db
-        .select({ id: products.id })
-        .from(products)
-        .where(eq(products.vendorId, vendorId));
+      // Get total revenue from vendor's items in delivered orders
+      const vendorItems = await db
+        .select({
+          price: orderItems.price,
+          quantity: orderItems.quantity,
+          status: orders.status,
+          createdAt: orders.createdAt,
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(eq(orderItems.vendorId, vendorId));
 
-      const productIds = vendorProducts.map((p) => p.id);
+      const totalRevenue = vendorItems
+        .filter(item => item.status === "delivered")
+        .reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
 
-      if (productIds.length === 0) {
-        return {
-          totalRevenue: "0",
-          ordersThisMonth: 0,
-          activeRentals: 0,
-          pendingOrders: 0,
-          storeRating: 0,
-          storeViews: 0, // TODO: Implement view tracking
-        };
-      }
-
-      // Get all orders (simplified - in real app you'd join with order_items)
-      // For now, return placeholder data since we need proper order-product relationship
-      const allOrders = await db
-        .select()
-        .from(orders)
-        .where(eq(orders.status, "delivered"));
-
-      const totalRevenue = allOrders.reduce(
-        (sum, order) => sum + parseFloat(order.total),
-        0
-      );
-
-      // Get orders this month
+      // Orders this month
       const startOfMonth = new Date();
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const thisMonthOrders = await db
-        .select()
-        .from(orders)
-        .where(gte(orders.createdAt, startOfMonth));
+      const uniqueOrdersThisMonth = new Set(
+        vendorItems
+          .filter(item => item.createdAt >= startOfMonth)
+          .map(item => item.createdAt.toISOString()) // Using createdAt as proxy for order identification if needed, but better use orderId
+      );
+      
+      // Let's get proper unique counts
+      const stats = await db
+        .select({
+          orderId: orderItems.orderId,
+          status: orders.status,
+          createdAt: orders.createdAt,
+        })
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .where(eq(orderItems.vendorId, vendorId));
 
-      // Get pending orders
-      const pendingOrdersResult = await db
-        .select()
-        .from(orders)
-        .where(eq(orders.status, "pending"));
+      const ordersThisMonth = new Set(
+        stats.filter(s => s.createdAt >= startOfMonth).map(s => s.orderId)
+      ).size;
 
-      // Get active/shipped orders (active rentals)
-      const activeOrders = await db
-        .select()
-        .from(orders)
-        .where(
-          and(
-            sql`${orders.status} IN ('processing', 'shipped')`
-          )
-        );
+      const pendingOrders = new Set(
+        stats.filter(s => s.status === "pending").map(s => s.orderId)
+      ).size;
+
+      const activeRentals = new Set(
+        stats.filter(s => ["confirmed", "shipped"].includes(s.status)).map(s => s.orderId)
+      ).size;
 
       return {
         totalRevenue: totalRevenue.toFixed(2),
-        ordersThisMonth: thisMonthOrders.length,
-        activeRentals: activeOrders.length,
-        pendingOrders: pendingOrdersResult.length,
-        storeRating: 0, // TODO: Calculate from reviews table when implemented
-        storeViews: 0, // TODO: Implement view tracking
+        ordersThisMonth,
+        activeRentals,
+        pendingOrders,
+        storeRating: vendor.ratingAverage || 0,
+        storeViews: 0, 
       };
     }),
 
@@ -419,19 +559,22 @@ export const vendorRouter = os.router({
         return data;
       }
 
-      // Get orders from last 30 days
+      // Get orders from last 30 days containing vendor items
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const recentOrders = await db
+      const vendorId = vendor.id;
+      const recentItems = await db
         .select({
           createdAt: orders.createdAt,
-          total: orders.total,
-          status: orders.status,
+          price: orderItems.price,
+          quantity: orderItems.quantity,
         })
-        .from(orders)
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
         .where(
           and(
+            eq(orderItems.vendorId, vendorId),
             gte(orders.createdAt, thirtyDaysAgo),
             eq(orders.status, "delivered")
           )
@@ -453,14 +596,14 @@ export const vendorRouter = os.router({
       }
 
       // Add actual revenue
-      recentOrders.forEach((order) => {
-        const date = new Date(order.createdAt);
+      recentItems.forEach((item) => {
+        const date = new Date(item.createdAt);
         const key = date.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
         });
         const current = revenueByDate.get(key) || 0;
-        revenueByDate.set(key, current + parseFloat(order.total));
+        revenueByDate.set(key, current + (parseFloat(item.price) * item.quantity));
       });
 
       // Convert to array
@@ -509,43 +652,53 @@ export const vendorRouter = os.router({
         return [];
       }
 
-      // Get recent orders
-      const recentOrders = await db
+      const vendorId = vendor.id;
+
+      // Get recent orders containing items from this vendor
+      const results = await db
         .select({
           id: orders.id,
-          userId: orders.userId,
+          orderNumber: orders.orderNumber,
+          customerName: user.name,
           status: orders.status,
-          total: orders.total,
           createdAt: orders.createdAt,
+          itemPrice: orderItems.price,
+          itemQuantity: orderItems.quantity,
         })
-        .from(orders)
+        .from(orderItems)
+        .innerJoin(orders, eq(orderItems.orderId, orders.id))
+        .innerJoin(user, eq(orders.userId, user.id))
+        .where(eq(orderItems.vendorId, vendorId))
         .orderBy(desc(orders.createdAt))
-        .limit(input.limit);
+        .limit(input.limit * 5); // Fetch more because one order might have multiple items
 
-      // Get user details for each order
-      const ordersWithUserDetails = await Promise.all(
-        recentOrders.map(async (order) => {
-          const [orderUser] = await db
-            .select({
-              name: user.name,
-            })
-            .from(user)
-            .where(eq(user.id, order.userId))
-            .limit(1);
+      // Group by order ID to count items and sum vendor-specific total
+      const orderMap = new Map<string, any>();
+      
+      results.forEach(row => {
+        if (!orderMap.has(row.id)) {
+          orderMap.set(row.id, {
+            id: row.id,
+            orderNumber: row.orderNumber,
+            customerName: row.customerName || "Unknown",
+            items: 0,
+            vendorTotal: 0,
+            status: row.status,
+            date: row.createdAt.toISOString(),
+          });
+        }
+        
+        const entry = orderMap.get(row.id);
+        entry.items += row.itemQuantity;
+        entry.vendorTotal += parseFloat(row.itemPrice) * row.itemQuantity;
+      });
 
-          return {
-            id: order.id,
-            orderNumber: `ORD-${order.id.slice(0, 8).toUpperCase()}`,
-            customerName: orderUser?.name || "Unknown",
-            items: 1, // TODO: Count from order_items when implemented
-            total: order.total,
-            status: order.status,
-            date: order.createdAt.toISOString(),
-          };
-        })
-      );
-
-      return ordersWithUserDetails;
+      return Array.from(orderMap.values())
+        .slice(0, input.limit)
+        .map(order => ({
+          ...order,
+          total: order.vendorTotal.toFixed(2),
+        }));
     }),
 
   getNotifications: protectedProcedure
