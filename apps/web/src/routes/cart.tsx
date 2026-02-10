@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
-import { productService } from '@/mock/services/product-service'
+import { orpcClient } from '@/utils/orpc'
 import { CouponSection } from '@/components/cart/CouponSection'
 import type { Product } from '@/types'
 
@@ -292,7 +292,7 @@ function CartPage() {
 
   useEffect(() => {
     if (items.length === 0) {
-      productService.getFeaturedProducts(8).then(setSuggested)
+      orpcClient.product.getProducts({ featured: true, limit: 8 }).then((res: any) => setSuggested(res.data))
     }
   }, [items.length])
 

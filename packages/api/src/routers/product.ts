@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, os } from "../index";
+import { protectedProcedure, publicProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import { 
   products, 
@@ -7,11 +7,18 @@ import {
   productVariants, 
   productSpecifications,
   productEventTypes,
-  vendors
+  vendors,
+  categories,
+  subcategories,
+  eventTypes
 } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, asc, gte, lte } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
+
+// =============================================================================
+// HELPERS
+// =============================================================================
 
 // Helper to get vendor ID from user ID
 async function getVendorId(userId: string) {
@@ -30,7 +37,397 @@ async function getVendorId(userId: string) {
   return vendor[0].id;
 }
 
-export const vendorProductRouter = os.router({
+/**
+ * Helper to transform DB product to Frontend Product type
+ */
+function transformProduct(p: any) {
+  if (!p) return null;
+
+  const vendor = p.vendor || { 
+    id: p.vendorId || "unknown", 
+    name: "Unknown Vendor", 
+    isVerified: false 
+  };
+
+  const images = (p.images || []).map((img: any) => ({
+    url: img.url || "",
+    alt: img.alt || "",
+    isPrimary: !!img.isPrimary,
+  }));
+
+  // Ensure at least one image exists for UI consistency
+  if (images.length === 0) {
+    images.push({
+      url: "/placeholder-product.png",
+      alt: "No image available",
+      isPrimary: true,
+    });
+  }
+
+  return {
+    id: p.id,
+    title: p.title || "Untitled Product",
+    brand: p.brand || undefined,
+    slug: p.slug,
+    description: p.description || "",
+    descriptionShort: p.descriptionShort || "",
+    images,
+    vendor: {
+      id: vendor.id,
+      name: vendor.name,
+      isVerified: !!vendor.isVerified,
+    },
+    pricing: {
+      currentPrice: parseFloat(p.salePrice || p.price || "0"),
+      originalPrice: parseFloat(p.price || "0"),
+      currency: p.currency || "BDT",
+      currencySymbol: p.currency === "USD" ? "$" : "৳",
+      discountPercentage: p.discountPercentage || 0,
+    },
+    rating: {
+      average: Number(p.ratingAverage || 0),
+      count: Number(p.ratingCount || 0),
+    },
+    shipping: {
+      freeShipping: !!p.freeShipping,
+      estimatedDays: p.shippingEstimatedDays || 3,
+      cost: parseFloat(p.shippingCost || "0"),
+    },
+    shippingOptions: (p.shippingOptions || []).map((so: any) => ({
+      method: so.method,
+      cost: parseFloat(so.cost || "0"),
+      estimatedDays: so.estimatedDays || 3,
+    })),
+    stockStatus: p.stockStatus || "out_of_stock",
+    stock: p.stock || 0,
+    badges: p.content?.badges || [],
+    categoryId: p.categoryId,
+    subcategoryId: p.subcategoryId || undefined,
+    keyFeatures: p.content?.keyFeatures || [],
+    whatsIncluded: p.content?.whatsIncluded || [],
+    specifications: (p.specifications || []).map((s: any) => ({
+      key: s.key,
+      value: s.value,
+    })),
+    setupInstructions: p.content?.setupInstructions || undefined,
+    variants: (p.variants || []).map((v: any) => ({
+      id: v.id,
+      type: v.type,
+      value: v.value,
+      priceModifier: parseFloat(v.priceModifier || "0"),
+      stock: v.stock || 0,
+      imageUrl: v.imageUrl || undefined,
+    })),
+    returnPolicy: p.content?.returnPolicy || "7 days return policy",
+    warranty: p.content?.warranty || "No warranty",
+    createdAt: p.createdAt instanceof Date ? p.createdAt.toISOString() : new Date().toISOString(),
+  };
+}
+
+// =============================================================================
+// ROUTER
+// =============================================================================
+
+export const productRouter = os.router({
+  // --- Public Catalog Procedures ---
+
+  listCategories: publicProcedure
+    .route({
+      operationId: "listCategories",
+      summary: "List Categories",
+      description: "Returns all active categories with their subcategories.",
+      tags: ["Catalog"],
+    })
+    .handler(async () => {
+      const allCategories = await db.query.categories.findMany({
+        where: eq(categories.isActive, true),
+        orderBy: [asc(categories.sortOrder)],
+        with: {
+          subcategories: {
+            where: eq(subcategories.isActive, true),
+            orderBy: [asc(subcategories.sortOrder)],
+          }
+        }
+      });
+
+      return allCategories;
+    }),
+
+  getCategoryBySlug: publicProcedure
+    .route({
+      operationId: "getCategoryBySlug",
+      summary: "Get Category by Slug",
+      description: "Returns a single category and its subcategories by its slug.",
+      tags: ["Catalog"],
+    })
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ input }) => {
+      const category = await db.query.categories.findFirst({
+        where: eq(categories.slug, input.slug),
+        with: {
+          subcategories: {
+            where: eq(subcategories.isActive, true),
+            orderBy: [asc(subcategories.sortOrder)],
+          }
+        }
+      });
+
+      return category;
+    }),
+
+  getProducts: publicProcedure
+    .route({
+      operationId: "getProducts",
+      summary: "Get Products",
+      description: "Returns a paginated list of products with filters.",
+      tags: ["Catalog"],
+    })
+    .input(z.object({
+      page: z.number().int().min(1).default(1),
+      limit: z.number().int().min(1).max(100).default(20),
+      category: z.string().optional(),
+      subcategory: z.string().optional(),
+      vendor: z.string().optional(),
+      minPrice: z.number().optional(),
+      maxPrice: z.number().optional(),
+      sort: z.string().optional(),
+      q: z.string().optional(),
+      featured: z.boolean().optional(),
+      dealType: z.string().optional(),
+    }))
+    .handler(async ({ input }) => {
+      const { page, limit, category, subcategory, vendor, minPrice, maxPrice, sort, q, featured, dealType } = input;
+      const offset = (page - 1) * limit;
+
+      const whereClauses = [eq(products.status, "active")];
+
+      if (category) {
+        const cat = await db.query.categories.findFirst({
+          where: eq(categories.slug, category),
+        });
+        if (cat) {
+          whereClauses.push(eq(products.categoryId, cat.id));
+        } else {
+          whereClauses.push(eq(products.categoryId, category));
+        }
+      }
+
+      if (subcategory) {
+        const sub = await db.query.subcategories.findFirst({
+          where: eq(subcategories.slug, subcategory),
+        });
+        if (sub) {
+          whereClauses.push(eq(products.subcategoryId, sub.id));
+        } else {
+          whereClauses.push(eq(products.subcategoryId, subcategory));
+        }
+      }
+
+      if (vendor) {
+        const v = await db.query.vendors.findFirst({
+          where: eq(vendors.slug, vendor),
+        });
+        if (v) {
+          whereClauses.push(eq(products.vendorId, v.id));
+        } else {
+          whereClauses.push(eq(products.vendorId, vendor));
+        }
+      }
+
+      if (minPrice !== undefined) {
+        whereClauses.push(gte(sql`COALESCE(${products.salePrice}, ${products.price})`, minPrice.toString()));
+      }
+
+      if (maxPrice !== undefined) {
+        whereClauses.push(lte(sql`COALESCE(${products.salePrice}, ${products.price})`, maxPrice.toString()));
+      }
+
+      if (featured !== undefined) {
+        whereClauses.push(eq(products.isFeatured, featured));
+      }
+
+      if (dealType) {
+        whereClauses.push(eq(products.dealType, dealType as any));
+      }
+
+      if (q) {
+        whereClauses.push(sql`${products.title} ILIKE ${`%${q}%`}`);
+      }
+
+      const orderBy = [];
+      if (sort === "price_asc") {
+        orderBy.push(asc(sql`COALESCE(${products.salePrice}, ${products.price})`));
+      } else if (sort === "price_desc") {
+        orderBy.push(desc(sql`COALESCE(${products.salePrice}, ${products.price})`));
+      } else if (sort === "rating_desc") {
+        orderBy.push(desc(products.ratingAverage));
+      } else if (sort === "newest") {
+        orderBy.push(desc(products.createdAt));
+      } else {
+        orderBy.push(desc(products.createdAt));
+      }
+
+      const data = await db.query.products.findMany({
+        where: and(...whereClauses),
+        limit,
+        offset,
+        orderBy,
+        with: {
+          images: true,
+          vendor: true,
+          variants: true,
+          shippingOptions: true,
+        },
+      });
+
+      const countResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(products)
+        .where(and(...whereClauses));
+      
+      const total = countResult[0]?.count ?? 0;
+
+      return {
+        data: data.map(transformProduct),
+        total: Number(total),
+        page,
+        limit,
+        totalPages: Math.ceil(Number(total) / limit),
+        hasMore: offset + data.length < Number(total),
+      };
+    }),
+
+  getProductBySlug: publicProcedure
+    .route({
+      operationId: "getProductBySlug",
+      summary: "Get Product by Slug",
+      description: "Returns a single product by its slug.",
+      tags: ["Catalog"],
+    })
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ input }) => {
+      console.log(`[getProductBySlug] Searching for slug: "${input.slug}"`);
+      
+      // Use direct select with joins for maximum reliability
+      const results = await db
+        .select()
+        .from(products)
+        .where(eq(products.slug, input.slug))
+        .limit(1);
+
+      if (!results[0]) {
+        console.warn(`[getProductBySlug] Product NOT FOUND in DB for slug: "${input.slug}"`);
+        return null;
+      }
+
+      const p = results[0];
+
+      // Fetch related data manually if needed, or use findFirst if we trust it
+      // Let's try findFirst again now that we confirmed basic select works
+      const fullProduct = await db.query.products.findFirst({
+        where: eq(products.id, p.id),
+        with: {
+          images: true,
+          vendor: true,
+          variants: true,
+          shippingOptions: true,
+          specifications: true,
+        },
+      });
+
+      if (!fullProduct) {
+        console.warn(`[getProductBySlug] Full product data NOT FOUND for ID: ${p.id}`);
+        return null;
+      }
+
+      console.log(`[getProductBySlug] Transforming product: "${fullProduct.title}"`);
+      try {
+        const transformed = transformProduct(fullProduct);
+        console.log(`[getProductBySlug] Successfully transformed product: ${transformed?.id}`);
+        return transformed;
+      } catch (err) {
+        console.error(`[getProductBySlug] TRANSFORMATION FAILED for product ${fullProduct.id}:`, err);
+        throw err;
+      }
+    }),
+
+  searchProducts: publicProcedure
+    .route({
+      operationId: "searchProducts",
+      summary: "Search Products",
+      description: "Search products by title or description.",
+      tags: ["Catalog"],
+    })
+    .input(z.object({
+      q: z.string(),
+      limit: z.number().int().min(1).max(50).default(10),
+    }))
+    .handler(async ({ input }) => {
+      const { q, limit } = input;
+
+      const results = await db.query.products.findMany({
+        where: and(
+          eq(products.status, "active"),
+          sql`${products.title} ILIKE ${`%${q}%`}`
+        ),
+        limit,
+        with: {
+          images: true,
+          vendor: true,
+          variants: true,
+          shippingOptions: true,
+        },
+      });
+
+      return results.map(transformProduct);
+    }),
+
+  listVendors: publicProcedure
+    .route({
+      operationId: "listVendors",
+      summary: "List Vendors",
+      description: "Returns a list of all active vendors.",
+      tags: ["Catalog"],
+    })
+    .handler(async () => {
+      const allVendors = await db.query.vendors.findMany({
+        where: eq(vendors.isActive, true),
+        orderBy: [desc(vendors.ratingAverage), desc(vendors.productCount)],
+      });
+
+      return allVendors.map(v => ({
+        ...v,
+        rating: v.ratingAverage,
+        reviewCount: v.ratingCount,
+        joinedAt: v.joinedAt.toISOString(),
+      }));
+    }),
+
+  getVendorBySlug: publicProcedure
+    .route({
+      operationId: "getVendorBySlug",
+      summary: "Get Vendor by Slug",
+      description: "Returns a single vendor by its slug.",
+      tags: ["Catalog"],
+    })
+    .input(z.object({ slug: z.string() }))
+    .handler(async ({ input }) => {
+      const v = await db.query.vendors.findFirst({
+        where: eq(vendors.slug, input.slug),
+      });
+
+      if (!v) return null;
+
+      return {
+        ...v,
+        rating: v.ratingAverage,
+        reviewCount: v.ratingCount,
+        joinedAt: v.joinedAt.toISOString(),
+      };
+    }),
+
+  // --- Vendor Specific Procedures (Protected) ---
+
   listMyProducts: protectedProcedure
     .route({
       operationId: "listMyProducts",

@@ -2,13 +2,15 @@ import { z } from "zod";
 import { protectedProcedure, publicProcedure, os } from "../index";
 import { storageRouter } from "./storage";
 import { vendorRouter } from "./vendor";
-import { vendorProductRouter } from "./product";
+import { productRouter } from "./product";
 import { adminRouter } from "./admin";
 
 export const appRouter = os.router({
   storage: storageRouter,
   vendor: vendorRouter,
-  product: vendorProductRouter,
+  product: productRouter,
+  vendorProduct: productRouter,
+  catalog: productRouter, // Alias for backward compatibility
   admin: adminRouter,
   healthCheck: publicProcedure
     .route({
@@ -53,6 +55,6 @@ export const appRouter = os.router({
         user: context.session.user,
       };
     }),
-});
+}) as any;
 
 export type AppRouter = typeof appRouter;

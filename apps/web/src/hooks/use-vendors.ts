@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import type { UseQueryOptions } from '@tanstack/react-query';
 import type { Vendor } from '@/types';
-import { vendorService } from '@/mock/services/product-service';
+import { orpc } from '@/utils/orpc';
 
 export const vendorKeys = {
   all: ['vendors'] as const,
@@ -13,21 +13,22 @@ export const vendorKeys = {
 export function useVendors(
   options?: Omit<UseQueryOptions<Array<Vendor>>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: vendorKeys.lists(),
-    queryFn: () => vendorService.getVendors(),
-    ...options,
-  });
+  return useQuery(
+    orpc.product.listVendors.queryOptions({
+      ...options as any,
+    })
+  ) as any;
 }
 
 export function useVendor(
-  id: string,
+  slug: string,
   options?: Omit<UseQueryOptions<Vendor | undefined>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: vendorKeys.detail(id),
-    queryFn: () => vendorService.getVendorById(id),
-    enabled: !!id,
-    ...options,
-  });
+  return useQuery(
+    orpc.product.getVendorBySlug.queryOptions({
+      input: { slug },
+      enabled: !!slug,
+      ...options as any,
+    })
+  ) as any;
 }

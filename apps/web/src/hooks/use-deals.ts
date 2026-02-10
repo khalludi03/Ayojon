@@ -3,7 +3,7 @@
 import {  useQuery } from '@tanstack/react-query';
 import type {UseQueryOptions} from '@tanstack/react-query';
 import type { DealProduct } from '@/types';
-import { productService } from '@/mock/services/product-service';
+import { orpc } from '@/utils/orpc';
 
 // Query keys factory
 export const dealKeys = {
@@ -19,13 +19,14 @@ export function useTodayDeals(
   limit: number = 12,
   options?: Omit<UseQueryOptions<Array<DealProduct>>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: dealKeys.today(),
-    queryFn: () => productService.getTodayDeals(limit),
-    // Refetch every 5 minutes to keep deals fresh
-    refetchInterval: 5 * 60 * 1000,
-    ...options,
-  });
+  return useQuery(
+    orpc.product.getProducts.queryOptions({
+      input: { limit, featured: true },
+      refetchInterval: 5 * 60 * 1000,
+      select: (result: any) => result.data,
+      ...options as any,
+    })
+  ) as any;
 }
 
 /**
@@ -35,11 +36,12 @@ export function useFlashDeals(
   limit: number = 8,
   options?: Omit<UseQueryOptions<Array<DealProduct>>, 'queryKey' | 'queryFn'>
 ) {
-  return useQuery({
-    queryKey: dealKeys.flash(),
-    queryFn: () => productService.getFlashDeals(limit),
-    // Refetch every minute for time-sensitive flash deals
-    refetchInterval: 60 * 1000,
-    ...options,
-  });
+  return useQuery(
+    orpc.product.getProducts.queryOptions({
+      input: { limit, dealType: 'flash' },
+      refetchInterval: 60 * 1000,
+      select: (result: any) => result.data,
+      ...options as any,
+    })
+  ) as any;
 }
