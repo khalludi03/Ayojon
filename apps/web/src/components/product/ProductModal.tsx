@@ -183,7 +183,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
               Sold by:{' '}
               <Link 
                 to="/vendor/$vendorId" 
-                params={{ vendorId: product.vendor.id }}
+                params={{ vendorId: product.vendor.slug || product.vendor.id }}
                 className="font-medium text-[hsl(var(--foreground))] hover:underline hover:text-primary transition-colors"
                 onClick={onClose}
               >

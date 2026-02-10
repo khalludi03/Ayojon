@@ -37,6 +37,8 @@ export interface ProductFilters {
   productCondition?: ProductCondition;
   vendorLocation?: string;
   deliveryOption?: DeliveryOption;
+  featured?: boolean;
+  dealType?: string;
 }
 
 export interface FilterState extends ProductFilters {

@@ -323,7 +323,7 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
                         <div className="flex items-center gap-1">
                             <Link 
                                 to="/vendor/$vendorId" 
-                                params={{ vendorId: product.vendor.id }}
+                                params={{ vendorId: product.vendor.slug || product.vendor.id }}
                                 className="font-semibold text-sm hover:underline"
                             >
                                 {product.vendor.name}
@@ -336,7 +336,7 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
                     </div>
                 </div>
                 <Button variant="outline" size="sm" asChild>
-                    <Link to="/vendor/$vendorId" params={{ vendorId: product.vendor.id }}>Visit Store</Link>
+                    <Link to="/vendor/$vendorId" params={{ vendorId: product.vendor.slug || product.vendor.id }}>Visit Store</Link>
                 </Button>
             </div>
 

@@ -368,6 +368,7 @@ export function AccountWishlist() {
     if (!item) return;
     addItem(item.product, 1, item.product.variants?.[0]);
     removeItem(productId);
+    toast.success('Moved to cart');
   };
 
   const handleMoveAllToCart = () => {
@@ -463,6 +464,16 @@ export function AccountWishlist() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1"
+                      disabled={item.product.stockStatus === "out_of_stock"}
+                      onClick={() => handleMoveToCart(item.productId)}
+                    >
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      {item.product.stockStatus === "out_of_stock" ? "Out of Stock" : "Move to Cart"}
+                    </Button>
                     <Button
                       type="button"
                       size="sm"
