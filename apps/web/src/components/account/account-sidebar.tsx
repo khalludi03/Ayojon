@@ -5,7 +5,8 @@ import {
   Heart,
   MapPin,
   Settings,
-  LayoutDashboard
+  LayoutDashboard,
+  Star
 } from "lucide-react";
 import type { AccountSection } from "@/types";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ const navigationItems = [
   { id: "orders" as AccountSection, label: "Orders", icon: Package },
   { id: "wishlist" as AccountSection, label: "Wishlist", icon: Heart },
   { id: "addresses" as AccountSection, label: "Addresses", icon: MapPin },
+  { id: "reviews" as AccountSection, label: "My Reviews", icon: Star },
   { id: "profile" as AccountSection, label: "Profile", icon: User },
   { id: "settings" as AccountSection, label: "Settings", icon: Settings },
 ];

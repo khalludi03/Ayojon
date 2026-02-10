@@ -8,21 +8,17 @@ import {
   MapPin, 
   CreditCard, 
   Truck, 
-  Calendar,
   Smartphone,
-  Hash,
   DollarSign,
   AlertCircle,
   CheckCircle2,
   Clock,
-  Info,
   Phone,
   Mail,
   Download,
   RotateCcw,
   ShoppingBag,
-  CheckCircle,
-  X
+  CheckCircle
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -32,7 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/stores/cart-store';
 import { cn } from '@/lib/utils';
 import {
@@ -51,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ReviewFormModal } from '@/components/product/ReviewFormModal';
 
 export const Route = createFileRoute('/account/orders/$orderId')({
   component: OrderDetailsPage,
@@ -80,35 +77,39 @@ function OrderDetailsPage() {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelComment, setCancelComment] = useState('');
 
-  const { data: order, isLoading, error } = useQuery(
-    orpc.order.getOrderDetails.queryOptions({
+  // Review Modal State
+  const [reviewProduct, setReviewProduct] = useState<{ id: string, title: string, imageUrl?: string } | null>(null);
+
+  const { data: orderData, isLoading, error } = useQuery(
+    (orpc.order.getOrderDetails as any).queryOptions({
       input: { id: orderId },
     })
   );
+  const order = orderData as any;
 
   const submitPaymentMutation = useMutation(
-    orpc.order.submitPayment.mutationOptions({
+    (orpc.order.submitPayment as any).mutationOptions({
       onSuccess: () => {
         toast.success('Payment details submitted successfully! Our team will verify it shortly.');
-        queryClient.invalidateQueries({ queryKey: orpc.order.getOrderDetails.key({ input: { id: orderId } }) });
+        queryClient.invalidateQueries({ queryKey: (orpc.order.getOrderDetails as any).key({ input: { id: orderId } }) });
         setTransactionId('');
         setSenderMobile('');
         setPaidAmount('');
       },
-      onError: (err) => {
+      onError: (err: any) => {
         toast.error(err.message || 'Failed to submit payment details');
       },
     })
   );
 
   const cancelOrderMutation = useMutation(
-    orpc.order.cancelOrder.mutationOptions({
+    (orpc.order.cancelOrder as any).mutationOptions({
       onSuccess: () => {
         toast.success('Order cancelled successfully');
-        queryClient.invalidateQueries({ queryKey: orpc.order.getOrderDetails.key({ input: { id: orderId } }) });
+        queryClient.invalidateQueries({ queryKey: (orpc.order.getOrderDetails as any).key({ input: { id: orderId } }) });
         setIsCancelModalOpen(false);
       },
-      onError: (err) => {
+      onError: (err: any) => {
         toast.error(err.message || 'Failed to cancel order');
       },
     })
@@ -121,7 +122,7 @@ function OrderDetailsPage() {
       return;
     }
 
-    submitPaymentMutation.mutate({
+    (submitPaymentMutation.mutate as any)({
       orderId,
       transactionId,
       senderMobile,
@@ -134,7 +135,7 @@ function OrderDetailsPage() {
       toast.error('Please select a reason for cancellation');
       return;
     }
-    cancelOrderMutation.mutate({ id: orderId });
+    (cancelOrderMutation.mutate as any)({ id: orderId });
   };
 
   const handleBuyAgain = () => {
@@ -208,7 +209,8 @@ function OrderDetailsPage() {
   // Can only cancel if payment is NOT received/confirmed and NOT shipped
   const canCancel = order.status === 'awaiting_payment' || order.status === 'payment_submitted' || order.status === 'placed' || order.status === 'payment_rejected';
   
-  const isDelivered = order.status === 'delivered';
+  // Order is considered delivered if it's in any of these statuses
+  const isDelivered = ['delivered', 'vendor_paid', 'cash_collected', 'settlement_ready', 'vendor_settled'].includes(order.status);
   const isShipped = order.status === 'shipped';
 
   return (
@@ -338,7 +340,7 @@ function OrderDetailsPage() {
             <CardContent className="p-0">
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
                 {(order as any).items?.map((item: any) => (
-                  <div key={item.id} className="p-6 flex items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                  <div key={item.id} className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                     <div className="flex items-center gap-4 flex-1">
                       <div className="h-20 w-20 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden border border-slate-200 dark:border-slate-700">
                         {item.imageUrl ? (
@@ -347,7 +349,7 @@ function OrderDetailsPage() {
                           <Package className="h-10 w-10 text-slate-400" />
                         )}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate text-lg">{item.title}</h4>
                         <div className="flex items-center gap-3 mt-1.5">
                            <span className="text-sm font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
@@ -364,9 +366,21 @@ function OrderDetailsPage() {
                         )}
                       </div>
                     </div>
-                    <p className="font-black text-slate-900 dark:text-white text-lg">
-                      {formatPrice(item.quantity * parseFloat(item.price))}
-                    </p>
+                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3">
+                      <p className="font-black text-slate-900 dark:text-white text-lg">
+                        {formatPrice(item.quantity * parseFloat(item.price))}
+                      </p>
+                      {isDelivered && (
+                        <ReviewButton 
+                          productId={item.productId} 
+                          onWriteReview={() => setReviewProduct({ 
+                            id: item.productId, 
+                            title: item.title, 
+                            imageUrl: item.imageUrl 
+                          })} 
+                        />
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -599,11 +613,56 @@ function OrderDetailsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Review Modal */}
+      {reviewProduct && (
+        <ReviewFormModal 
+          isOpen={!!reviewProduct}
+          onClose={() => setReviewProduct(null)}
+          productId={reviewProduct.id}
+          productName={reviewProduct.title}
+          productImage={reviewProduct.imageUrl}
+        />
+      )}
     </div>
   );
 }
 
-function OrderProgress({ currentStatus }: { currentStatus: string }) {
+function ReviewButton({ productId, onWriteReview }: { productId: string, onWriteReview: () => void }) {
+  const { data: canReviewData, isLoading } = useQuery(
+    (orpc.review.canReview as any).queryOptions({
+      input: { productId }
+    })
+  );
+
+  if (isLoading) return <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />;
+  
+  const canReview = (canReviewData as any)?.canReview;
+  const reason = (canReviewData as any)?.reason;
+
+  if (!canReview) {
+    if (reason === 'ALREADY_REVIEWED') {
+      return (
+        <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 font-bold py-1">
+          <CheckCircle className="h-3 w-3 mr-1" /> Reviewed
+        </Badge>
+      );
+    }
+    return null;
+  }
+
+  return (
+    <Button 
+      size="sm" 
+      onClick={onWriteReview} 
+      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-9 px-4 rounded-lg shadow-sm"
+    >
+      Write a Review
+    </Button>
+  );
+}
+
+function OrderProgress({ currentStatus }: { currentStatus: any }) {
   const steps = [
     { id: 'awaiting_payment', label: 'Payment', icon: Clock },
     { id: 'payment_submitted', label: 'Submitted', icon: Smartphone },

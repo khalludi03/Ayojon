@@ -189,15 +189,39 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
     const files = e.target.files;
     if (!files) return;
 
-    const newImages: ProductImage[] = Array.from(files).map((file, index) => ({
-      id: `${Date.now()}-${index}`,
-      url: URL.createObjectURL(file),
-      file,
-      isPrimary: formData.images.length === 0 && index === 0,
-      order: formData.images.length + index,
-    }));
+    const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const newImages: ProductImage[] = [];
 
-    setFormData(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+    Array.from(files).forEach((file, index) => {
+      // Permissive validation
+      const isImageMime = file.type.startsWith('image/');
+      const hasImageExt = ALLOWED_EXTENSIONS.some(ext => file.name.toLowerCase().endsWith(ext));
+
+      if (!isImageMime && !hasImageExt) {
+        toast.error(`Format of "${file.name}" is not recognized as an image.`);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`Image "${file.name}" is too large (max 5MB)`);
+        return;
+      }
+
+      newImages.push({
+        id: `${Date.now()}-${index}`,
+        url: URL.createObjectURL(file),
+        file,
+        isPrimary: formData.images.length === 0 && index === 0,
+        order: formData.images.length + index,
+      });
+    });
+
+    if (newImages.length > 0) {
+      setFormData(prev => ({ ...prev, images: [...prev.images, ...newImages] }));
+    }
+    
+    // Clear input
+    e.target.value = '';
   };
 
   const handleImageRemove = (imageId: string) => {
@@ -392,7 +416,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
         formData.images.map(async (image) => {
           if (image.file) {
             try {
-              const publicUrl = await uploadFile(image.file, `products/${formData.sku || 'unnamed'}`);
+              const publicUrl = await uploadFile(image.file, `products/${formData.sku || 'unnamed'}`, image.file.type);
               return {
                 url: publicUrl,
                 alt: image.id,

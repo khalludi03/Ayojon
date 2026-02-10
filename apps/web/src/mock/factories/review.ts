@@ -103,6 +103,7 @@ export function createReview(productId: string, index: number): Review {
     rating,
     title,
     comment,
+    recommend: rating >= 4,
     isVerifiedPurchase: faker.datatype.boolean({ probability: 0.7 }),
     images: hasImages
       ? Array.from({ length: faker.number.int({ min: 1, max: 4 }) }, (_, i) => ({

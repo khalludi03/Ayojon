@@ -109,6 +109,7 @@ export interface Review {
   rating: number; // 1-5
   title?: string;
   comment: string;
+  recommend: boolean;
   isVerifiedPurchase: boolean;
   images: Array<ReviewImage>;
   helpfulVotes: number;

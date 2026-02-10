@@ -4,16 +4,17 @@ import { orpcClient } from "@/utils/orpc";
  * Uploads a file to S3 using a presigned URL.
  * Returns the public URL of the uploaded file.
  */
-export async function uploadFile(file: File, path: string): Promise<string> {
+export async function uploadFile(file: File, path: string, type?: string): Promise<string> {
   const fileName = `${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
   const key = `${path}/${fileName}`;
+  const contentType = type || file.type;
 
   try {
     // 1. Get presigned URL from server
-    console.log(`[Upload] Getting presigned URL for: ${key}`);
+    console.log(`[Upload] Getting presigned URL for: ${key} (${contentType})`);
     const result = await orpcClient.storage.getUploadUrl({
       key,
-      type: file.type,
+      type: contentType,
     });
 
     const { url, publicUrl } = result;
@@ -24,7 +25,7 @@ export async function uploadFile(file: File, path: string): Promise<string> {
       method: "PUT",
       body: file,
       headers: {
-        "Content-Type": file.type,
+        "Content-Type": contentType,
       },
     });
 
