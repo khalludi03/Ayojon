@@ -57,6 +57,13 @@
       "when": 1770724515001,
       "tag": "0007_true_gamora",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1770741751166,
+      "tag": "0008_friendly_titanium_man",
+      "breakpoints": true
     }
   ]
 }

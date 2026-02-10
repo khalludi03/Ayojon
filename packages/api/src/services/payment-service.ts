@@ -4,6 +4,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { transitionOrderStatus } from "./order-service";
 import { OrderActions } from "./order-state-machine";
+import { notifyOrderStatusUpdate } from "./notification-service";
 
 /**
  * Payment Service
@@ -165,7 +166,18 @@ export async function verifyPayment(
       })
       .where(eq(orders.id, orderId));
 
-    return { success: true, payment: updatedPayment! };
+    return { success: true, payment: updatedPayment!, userId: order.userId, orderNumber: order.orderNumber };
+  }).then(async (result) => {
+    // 6. Notify customer of payment verification AFTER transaction is committed
+    if (result.success) {
+      try {
+        await notifyOrderStatusUpdate(result.userId, orderId, result.orderNumber, "payment_received");
+      } catch (error) {
+        console.error("Failed to send payment verification notification:", error);
+      }
+    }
+
+    return { success: result.success, payment: result.payment };
   });
 }
 
@@ -238,7 +250,18 @@ export async function rejectPayment(
       })
       .where(eq(orders.id, orderId));
 
-    return { success: true, payment: updatedPayment! };
+    return { success: true, payment: updatedPayment!, userId: order.userId, orderNumber: order.orderNumber };
+  }).then(async (result) => {
+    // 6. Notify customer of payment rejection AFTER transaction is committed
+    if (result.success) {
+      try {
+        await notifyOrderStatusUpdate(result.userId, orderId, result.orderNumber, "payment_rejected");
+      } catch (error) {
+        console.error("Failed to send payment rejection notification:", error);
+      }
+    }
+
+    return { success: result.success, payment: result.payment };
   });
 }
 

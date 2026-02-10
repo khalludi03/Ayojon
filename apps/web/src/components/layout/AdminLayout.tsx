@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 const navigationItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
@@ -40,11 +41,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          // Clear all cached queries on logout
+          queryClient.clear();
           toast.success('Signed out successfully');
           navigate({ to: '/login' });
         }
