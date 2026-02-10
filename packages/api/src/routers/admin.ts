@@ -3,6 +3,7 @@ import { adminProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import * as paymentService from "../services/payment-service";
 import * as payoutService from "../services/payout-service";
+import { notifyVendorApproved, notifyVendorRejected } from "../services/notification-service";
 import {
   user,
   vendors,
@@ -452,12 +453,22 @@ export const adminRouter = os.router({
                     updatedAt: new Date(),
                   }
                 });
+
+              // Notify vendor of approval
+              return { 
+                user: updatedUsers[0]!, 
+                notificationType: 'approved' as const,
+                userId: input.userId,
+                appId: app.id,
+                storeName: app.storeName
+              };
             } else {
               console.warn(`[Admin Action] No application found for user ${input.userId}, but status was set to approved.`);
+              return { user: updatedUsers[0]!, notificationType: null };
             }
           } else if (input.vendorStatus === "rejected") {
              // Update latest application to rejected
-             await tx
+             const rejectedApps = await tx
               .update(vendorApplications)
               .set({
                 status: "rejected",
@@ -468,17 +479,47 @@ export const adminRouter = os.router({
               .where(and(
                 eq(vendorApplications.userId, input.userId),
                 eq(vendorApplications.status, "pending")
-              ));
+              ))
+              .returning();
+
+             // Return data for notification
+             if (rejectedApps.length > 0) {
+               const app = rejectedApps[0]!;
+               return { 
+                 user: updatedUsers[0]!, 
+                 notificationType: 'rejected' as const,
+                 userId: input.userId,
+                 appId: app.id,
+                 storeName: app.storeName,
+                 reason: input.reason
+               };
+             }
+             return { user: updatedUsers[0]!, notificationType: null };
           }
 
-          return updatedUsers[0]!;
+          return { user: updatedUsers[0]!, notificationType: null };
         });
+
+        // Send notifications AFTER transaction is committed
+        if (result.notificationType === 'approved') {
+          try {
+            await notifyVendorApproved(result.userId!, result.appId!, result.storeName!);
+          } catch (error) {
+            console.error("Failed to send vendor approval notification:", error);
+          }
+        } else if (result.notificationType === 'rejected') {
+          try {
+            await notifyVendorRejected(result.userId!, result.appId!, result.storeName!, result.reason);
+          } catch (error) {
+            console.error("Failed to send vendor rejection notification:", error);
+          }
+        }
 
         console.log(
           `[Admin Action] Successfully updated vendor status to ${input.vendorStatus} for user ${input.userId}`
         );
 
-        return result;
+        return result.user;
       } catch (error) {
         console.error(`[Admin Action] Error updating vendor status:`, error);
         if (error instanceof ORPCError) throw error;
@@ -525,6 +566,92 @@ export const adminRouter = os.router({
       return {
         applications: pendingUsers,
         totalCount: totalCount?.value ?? 0,
+      };
+    }),
+
+  getVendorApplicationDetails: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "getVendorApplicationDetails",
+      summary: "Get Vendor Application Details",
+      description: "Get full details of a vendor application including documents.",
+      tags: ["Admin"],
+    })
+    .input(
+      z.object({
+        userId: z.string(),
+      })
+    )
+    .handler(async ({ input }) => {
+      // Get user information
+      const userData = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, input.userId))
+        .limit(1);
+
+      if (!userData[0]) {
+        throw new ORPCError("NOT_FOUND", { message: "User not found" });
+      }
+
+      // Get the latest vendor application for this user
+      const applications = await db
+        .select()
+        .from(vendorApplications)
+        .where(eq(vendorApplications.userId, input.userId))
+        .orderBy(desc(vendorApplications.submittedAt))
+        .limit(1);
+
+      if (!applications[0]) {
+        throw new ORPCError("NOT_FOUND", { message: "No vendor application found for this user" });
+      }
+
+      const application = applications[0];
+
+      // Parse JSON fields
+      let businessAddress = {};
+      let productCategories: string[] = [];
+
+      try {
+        businessAddress = JSON.parse(application.businessAddress);
+      } catch (e) {
+        businessAddress = { raw: application.businessAddress };
+      }
+
+      try {
+        productCategories = JSON.parse(application.productCategories);
+      } catch (e) {
+        productCategories = [];
+      }
+
+      return {
+        user: {
+          id: userData[0].id,
+          name: userData[0].name,
+          email: userData[0].email,
+          vendorStatus: userData[0].vendorStatus,
+        },
+        application: {
+          id: application.id,
+          businessName: application.businessName,
+          businessType: application.businessType,
+          taxId: application.taxId,
+          businessPhone: application.businessPhone,
+          businessAddress,
+          yearsInBusiness: application.yearsInBusiness,
+          storeName: application.storeName,
+          storeDescription: application.storeDescription,
+          productCategories,
+          logoUrl: application.logoUrl,
+          bannerUrl: application.bannerUrl,
+          tradeLicenseUrl: application.tradeLicenseUrl,
+          identificationUrl: application.identificationUrl,
+          bankDetailsUrl: application.bankDetailsUrl,
+          status: application.status,
+          submittedAt: application.submittedAt,
+          reviewedAt: application.reviewedAt,
+          rejectionReason: application.rejectionReason,
+        },
       };
     }),
 

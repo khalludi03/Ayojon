@@ -1,31 +1,35 @@
 import { useState } from 'react';
 import { useNavigate, Link } from '@tanstack/react-router';
-import { 
-  LayoutDashboard, 
-  Package, 
-  ShoppingBag, 
-  Settings, 
-  Menu, 
-  Bell,
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  Settings,
+  Menu,
   Store,
   LogOut
 } from 'lucide-react';
 import { Logo } from './Logo';
 import { UserMenu } from './UserMenu';
+import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function VendorHeader() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          // Clear all cached queries on logout
+          queryClient.clear();
           toast.success('Signed out successfully');
           navigate({ to: '/login' });
         }
@@ -75,11 +79,10 @@ export function VendorHeader() {
 
           {/* Right: Actions and Logout */}
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" className="relative hidden sm:flex">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-[hsl(var(--background))]" />
-            </Button>
-            
+            <div className="hidden sm:block">
+              <NotificationBell />
+            </div>
+
             <ThemeToggle />
             
             <div className="ml-2 border-l border-[hsl(var(--border))] pl-4 flex items-center gap-2">

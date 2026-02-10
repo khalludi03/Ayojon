@@ -17,7 +17,12 @@ import {
   Shield,
   TrendingUp,
   Filter,
-  RefreshCw
+  RefreshCw,
+  Eye,
+  FileText,
+  Building,
+  Package,
+  ExternalLink
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -75,6 +80,8 @@ function VendorApplicationsPage() {
   const [selectedApplication, setSelectedApplication] = useState<any>(null);
   const [actionDialog, setActionDialog] = useState<'approve' | 'reject' | 'suspend' | null>(null);
   const [actionReason, setActionReason] = useState('');
+  const [detailsDialog, setDetailsDialog] = useState(false);
+  const [applicationDetails, setApplicationDetails] = useState<any>(null);
 
   // Queries - fetch users with server-side vendor status filtering
   const { data: usersData, isLoading } = useQuery(orpc.admin.listUsers.queryOptions({
@@ -145,6 +152,16 @@ function VendorApplicationsPage() {
       vendorStatus: actionDialog === 'approve' ? 'approved' : actionDialog === 'reject' ? 'rejected' : 'suspended',
       reason: actionReason || undefined,
     });
+  };
+
+  const handleViewDetails = async (application: any) => {
+    try {
+      const details = await orpc.admin.getVendorApplicationDetails.call({ userId: application.id }) as any;
+      setApplicationDetails(details);
+      setDetailsDialog(true);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to load application details');
+    }
   };
 
   // Get applications from users data - filter out users without vendor status (e.g., admins)
@@ -321,6 +338,15 @@ function VendorApplicationsPage() {
                       </td>
                       <td className="px-6 py-5 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewDetails(application)}
+                            className="rounded-lg h-8 px-3"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1.5" />
+                            View
+                          </Button>
                           {application.vendorStatus === 'pending' && (
                             <>
                               <Button
@@ -450,6 +476,221 @@ function VendorApplicationsPage() {
               )}
             >
               {updateStatusMutation.isPending ? 'Processing...' : `Confirm ${actionDialog}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Application Details Dialog */}
+      <Dialog open={detailsDialog} onOpenChange={setDetailsDialog}>
+        <DialogContent className="rounded-2xl max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center gap-2">
+              <FileText className="h-6 w-6 text-purple-600" />
+              Vendor Application Details
+            </DialogTitle>
+            <DialogDescription>
+              Review complete application information and submitted documents
+            </DialogDescription>
+          </DialogHeader>
+
+          {applicationDetails && (
+            <div className="space-y-6 py-4">
+              {/* Applicant Information */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Applicant Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-slate-500">Name</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.user.name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Email</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.user.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Status</Label>
+                    <p className="text-sm font-semibold capitalize">{applicationDetails.user.vendorStatus}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Submitted</Label>
+                    <p className="text-sm font-semibold">
+                      {new Date(applicationDetails.application.submittedAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Information */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Business Information
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-slate-500">Business Name</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.application.businessName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Business Type</Label>
+                    <p className="text-sm font-semibold capitalize">{applicationDetails.application.businessType}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Tax ID</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.application.taxId}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Phone</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.application.businessPhone}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Years in Business</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.application.yearsInBusiness} years</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label className="text-xs text-slate-500">Business Address</Label>
+                    <p className="text-sm font-semibold">
+                      {applicationDetails.application.businessAddress.street}, {applicationDetails.application.businessAddress.city}, {applicationDetails.application.businessAddress.division} {applicationDetails.application.businessAddress.postalCode}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Store Information */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Store Information
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <Label className="text-xs text-slate-500">Store Name</Label>
+                    <p className="text-sm font-semibold">{applicationDetails.application.storeName}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Store Description</Label>
+                    <p className="text-sm">{applicationDetails.application.storeDescription || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-slate-500">Product Categories</Label>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {applicationDetails.application.productCategories.map((cat: string, i: number) => (
+                        <span key={i} className="text-xs px-2 py-1 rounded-lg bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 font-semibold">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Verification Documents */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Verification Documents
+                </h3>
+                <div className="space-y-3">
+                  {/* Trade License */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Trade License</p>
+                        <p className="text-xs text-slate-500">Business registration document</p>
+                      </div>
+                    </div>
+                    {applicationDetails.application.tradeLicenseUrl ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(applicationDetails.application.tradeLicenseUrl, '_blank')}
+                        className="rounded-lg"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-400">Not provided</span>
+                    )}
+                  </div>
+
+                  {/* NID/Passport */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <User className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">NID / Passport</p>
+                        <p className="text-xs text-slate-500">Identity verification document</p>
+                      </div>
+                    </div>
+                    {applicationDetails.application.identificationUrl ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(applicationDetails.application.identificationUrl, '_blank')}
+                        className="rounded-lg"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-400">Not provided</span>
+                    )}
+                  </div>
+
+                  {/* Bank Details */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                        <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Bank Account Details</p>
+                        <p className="text-xs text-slate-500">Bank statement or cheque</p>
+                      </div>
+                    </div>
+                    {applicationDetails.application.bankDetailsUrl ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(applicationDetails.application.bankDetailsUrl, '_blank')}
+                        className="rounded-lg"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-slate-400">Not provided</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Rejection Reason (if rejected) */}
+              {applicationDetails.application.rejectionReason && (
+                <div className="rounded-xl border border-red-200 dark:border-red-800 p-4 bg-red-50/50 dark:bg-red-950/20">
+                  <h3 className="text-sm font-black text-red-900 dark:text-red-100 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <XCircle className="h-4 w-4" />
+                    Rejection Reason
+                  </h3>
+                  <p className="text-sm text-red-700 dark:text-red-300">{applicationDetails.application.rejectionReason}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsDialog(false)} className="rounded-lg">
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>
