@@ -39,8 +39,7 @@ export function AccountSidebar({ activeSection, className }: AccountSidebarProps
             return (
               <Link
                 key={item.id}
-                to="/account"
-                search={{ section: item.id }}
+                to={item.id === "overview" ? "/account" : `/account/${item.id}`}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-4 py-3 transition-colors",
                   isActive

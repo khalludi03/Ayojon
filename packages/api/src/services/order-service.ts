@@ -53,6 +53,7 @@ export async function createOrder(orderData: {
     price: number;
     quantity: number;
     variantInfo?: string;
+    imageUrl?: string;
   }>;
   totals: {
     subtotal: number;
@@ -131,6 +132,7 @@ export async function createOrder(orderData: {
         price: item.price.toString(),
         quantity: item.quantity,
         variantInfo: item.variantInfo,
+        imageUrl: (item as any).imageUrl,
       });
     }
 

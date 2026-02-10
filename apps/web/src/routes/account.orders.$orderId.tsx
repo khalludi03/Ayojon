@@ -241,8 +241,12 @@ function OrderDetailsPage() {
                 {(order as any).items?.map((item: any) => (
                   <div key={item.id} className="p-6 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-4 flex-1">
-                      <div className="h-16 w-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-                        <Package className="h-8 w-8 text-slate-400" />
+                      <div className="h-16 w-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                        {item.imageUrl ? (
+                          <img src={item.imageUrl} alt={item.title} className="h-full w-full object-cover" />
+                        ) : (
+                          <Package className="h-8 w-8 text-slate-400" />
+                        )}
                       </div>
                       <div className="min-w-0">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate">{item.title}</h4>

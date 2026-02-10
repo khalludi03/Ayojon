@@ -1,33 +1,11 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, Outlet, useLocation } from "@tanstack/react-router";
 import { getUser } from "@/functions/get-user";
 import type { AccountSection } from "@/types";
 import { AccountSidebar } from "@/components/account/account-sidebar";
 import { AccountMobileNav } from "@/components/account/account-mobile-nav";
-import { AccountOverview } from "@/components/account/account-overview";
-import {
-  AccountOrders,
-  AccountWishlist,
-  AccountAddresses,
-  AccountProfile,
-  AccountSettings,
-} from "@/components/account/account-sections";
-import { useWishlist } from "@/stores/wishlist-store";
-import {
-  getAccountStats,
-  getRecentOrders,
-} from "@/mock/services/account";
-
-type AccountSearch = {
-  section?: AccountSection;
-};
 
 export const Route = createFileRoute("/account")({
-  component: RouteComponent,
-  validateSearch: (search: Record<string, unknown>): AccountSearch => {
-    return {
-      section: (search.section as AccountSection) || "overview",
-    };
-  },
+  component: AccountLayout,
   beforeLoad: async () => {
     const session = await getUser();
     return { session };
@@ -41,48 +19,20 @@ export const Route = createFileRoute("/account")({
   },
 });
 
-function RouteComponent() {
-  const { session } = Route.useRouteContext();
-  const { section = "overview" } = Route.useSearch();
-  const navigate = useNavigate();
-  const { itemCount } = useWishlist();
-
-  const userName = session?.user.name || "User";
-  const userImage = session?.user.image ?? undefined;
-  const stats = { ...getAccountStats(), wishlistItems: itemCount };
-  const recentOrders = getRecentOrders();
-
-  const handleSectionChange = (newSection: AccountSection) => {
-    navigate({
-      to: "/account",
-      search: { section: newSection },
-    });
+function AccountLayout() {
+  const { pathname } = useLocation();
+  
+  // Determine active section from pathname
+  const getActiveSection = (): AccountSection => {
+    if (pathname.includes("/account/orders")) return "orders";
+    if (pathname.includes("/account/wishlist")) return "wishlist";
+    if (pathname.includes("/account/addresses")) return "addresses";
+    if (pathname.includes("/account/profile")) return "profile";
+    if (pathname.includes("/account/settings")) return "settings";
+    return "overview";
   };
 
-  const renderSection = () => {
-    switch (section) {
-      case "orders":
-        return <AccountOrders />;
-      case "wishlist":
-        return <AccountWishlist />;
-      case "addresses":
-        return <AccountAddresses />;
-      case "profile":
-        return <AccountProfile session={session} />;
-      case "settings":
-        return <AccountSettings session={session} />;
-      case "overview":
-      default:
-        return (
-          <AccountOverview
-            userName={userName}
-            userImage={userImage}
-            stats={stats}
-            recentOrders={recentOrders}
-          />
-        );
-    }
-  };
+  const section = getActiveSection();
 
   return (
     <div className="account-shell relative overflow-hidden">
@@ -105,7 +55,7 @@ function RouteComponent() {
 
         <AccountMobileNav
           activeSection={section}
-          onSectionChange={handleSectionChange}
+          onSectionChange={() => {}} // Mobile nav will use Links now
         />
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -116,7 +66,7 @@ function RouteComponent() {
 
           {/* Main Content */}
           <div className="flex-1 min-w-0">
-            {renderSection()}
+            <Outlet />
           </div>
         </div>
       </div>

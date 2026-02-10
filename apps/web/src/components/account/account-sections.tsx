@@ -45,12 +45,11 @@ export function AccountOrders() {
   const pageSize = 10;
   const statusFilters = [
     { value: "all", label: "All" },
-    { value: "pending", label: "Pending" },
+    { value: "pending_all", label: "Pending" },
     { value: "delivered", label: "Delivered" },
-    { value: "cancelled", label: "Cancelled" },
   ];
 
-  const statusConfig: Record<Order["status"], { label: string; className: string }> = {
+  const statusConfig: Record<string, { label: string; className: string }> = {
     pending: { label: "Pending", className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300" },
     processing: { label: "Confirmed", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
     shipped: { label: "Shipped", className: "bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300" },
@@ -58,13 +57,10 @@ export function AccountOrders() {
     cancelled: { label: "Cancelled", className: "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300" },
     payment_rejected: { label: "Payment Rejected", className: "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300" },
     awaiting_payment: { label: "Awaiting Payment", className: "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300" },
-    payment_submitted: { label: "Verifying Payment", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
-    payment_received: { label: "Payment Received", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300" },
+    payment_submitted: { label: "Payment Submitted", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
+    payment_received: { label: "Payment Confirmed", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300" },
+    placed: { label: "Order Placed", className: "bg-sky-100 text-sky-700 dark:bg-sky-950/30 dark:text-sky-300" },
   };
-
-  useEffect(() => {
-    setOrders(getRecentOrders());
-  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -95,6 +91,9 @@ export function AccountOrders() {
       .filter((order) => {
         if (statusFilter === "all") {
           return true;
+        }
+        if (statusFilter === "pending_all") {
+          return !["delivered", "cancelled"].includes(order.status);
         }
         return order.status === statusFilter;
       })
@@ -128,8 +127,10 @@ export function AccountOrders() {
   const resultsStart = filteredOrders.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const resultsEnd = Math.min(currentPage * pageSize, filteredOrders.length);
 
-  const formatOrderNumber = (orderNumber: string) =>
-    orderNumber.startsWith("#") ? orderNumber : `#${orderNumber}`;
+  const formatOrderNumber = (orderNumber: string) => {
+    if (!orderNumber) return "";
+    return orderNumber.startsWith("#") ? orderNumber : `#${orderNumber}`;
+  };
 
   if (isLoading) {
     return (

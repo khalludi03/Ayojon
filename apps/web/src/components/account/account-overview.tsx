@@ -65,7 +65,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
 
             {/* Edit Profile Button */}
             <Button variant="outline" size="sm" className="sm:size-default w-full sm:w-auto" asChild>
-              <Link to="/account" search={{ section: "profile" }}>
+              <Link to="/account/profile">
                 <User className="mr-2 h-4 w-4" />
                 <span className="sm:inline">Edit Profile</span>
               </Link>
@@ -191,14 +191,14 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
               </Button>
             ) : (
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/account" search={{ section: "orders" }}>
+                <Link to="/account/orders">
                   <Package className="h-4 w-4 mr-2" />
                   Track Order
                 </Link>
               </Button>
             )}
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link to="/account" search={{ section: "wishlist" }}>
+              <Link to="/account/wishlist">
                 <Heart className="h-4 w-4 mr-2" />
                 View Wishlist
               </Link>

@@ -371,12 +371,6 @@ function AdminOrdersPage() {
                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
                               </>
                             )}
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'pending')}>
-                              <Clock className="mr-2 h-4 w-4" /> Mark Pending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'processing')}>
-                              <Package className="mr-2 h-4 w-4" /> Mark Processing
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(order.id, 'shipped')}>
                               <Truck className="mr-2 h-4 w-4" /> Mark Shipped
                             </DropdownMenuItem>

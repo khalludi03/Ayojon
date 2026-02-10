@@ -49,6 +49,7 @@ export const orderRouter = os.router({
         price: z.number(),
         quantity: z.number(),
         variantInfo: z.string().optional(),
+        imageUrl: z.string().optional(),
       })),
     }))
     .handler(async ({ input, context }) => {
