@@ -280,7 +280,7 @@ function AdminOrdersPage() {
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-indigo-500 group-hover:animate-pulse" />
                           <span className="text-sm font-mono font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg">
-                            #{order.id.slice(0, 8)}
+                            #{order.orderNumber}
                           </span>
                         </div>
                       </td>
@@ -371,12 +371,6 @@ function AdminOrdersPage() {
                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
                               </>
                             )}
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'pending')}>
-                              <Clock className="mr-2 h-4 w-4" /> Mark Pending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'processing')}>
-                              <Package className="mr-2 h-4 w-4" /> Mark Processing
-                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => updateStatus(order.id, 'shipped')}>
                               <Truck className="mr-2 h-4 w-4" /> Mark Shipped
                             </DropdownMenuItem>

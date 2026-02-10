@@ -102,6 +102,7 @@ export const orderItems = pgTable(
     price: numeric("price", { precision: 12, scale: 2 }).notNull(),
     quantity: integer("quantity").notNull(),
     variantInfo: text("variant_info"), // JSON string of selected variants
+    imageUrl: text("image_url"),
     
     createdAt: timestamp("created_at").defaultNow().notNull(),
   },

@@ -114,7 +114,9 @@ function CheckoutPage() {
   // Generate order number when reaching confirmation
   useEffect(() => {
     if (currentStep === 5 && !orderNumber) {
-      const orderNum = `AYJ${Date.now().toString().slice(-8)}`;
+      const year = new Date().getFullYear();
+      const random = Math.floor(100000 + Math.random() * 900000);
+      const orderNum = `AYJ-${year}-${random}`;
       setOrderNumber(orderNum);
     }
   }, [currentStep, orderNumber]);
@@ -140,7 +142,9 @@ function CheckoutPage() {
 
   const handlePlaceOrder = async () => {
     setIsSubmitting(true);
-    const orderNum = orderNumber || `AYJ${Date.now().toString().slice(-8)}`;
+    const year = new Date().getFullYear();
+    const random = Math.floor(100000 + Math.random() * 900000);
+    const orderNum = orderNumber || `AYJ-${year}-${random}`;
     const subtotal = getSubtotal();
     const shipping = getShipping();
     const tax = getTax();
@@ -176,6 +180,7 @@ function CheckoutPage() {
           price: item.product.pricing.currentPrice,
           quantity: item.quantity,
           variantInfo: undefined,
+          imageUrl: item.product.images?.[0]?.url,
         }))
       });
 

@@ -55,6 +55,7 @@ export async function createOrder(orderData: {
     price: number;
     quantity: number;
     variantInfo?: string;
+    imageUrl?: string;
   }>;
   totals: {
     subtotal: number;
@@ -133,6 +134,7 @@ export async function createOrder(orderData: {
         price: item.price.toString(),
         quantity: item.quantity,
         variantInfo: item.variantInfo,
+        imageUrl: (item as any).imageUrl,
       });
     }
 
@@ -274,6 +276,21 @@ export async function getOrderDetails(orderId: string, userId?: string) {
   });
 
   return order;
+}
+
+/**
+ * Get order by order number (public tracking)
+ * 
+ * @param orderNumber - The visible order number (e.g. AYJ-2026-123456)
+ * @returns Order with essential tracking data
+ */
+export async function getOrderByNumber(orderNumber: string) {
+  return await db.query.orders.findFirst({
+    where: eq(orders.orderNumber, orderNumber),
+    with: {
+      items: true,
+    },
+  });
 }
 
 /**

@@ -65,7 +65,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
 
             {/* Edit Profile Button */}
             <Button variant="outline" size="sm" className="sm:size-default w-full sm:w-auto" asChild>
-              <Link to="/account" search={{ section: "profile" }}>
+              <Link to="/account/profile">
                 <User className="mr-2 h-4 w-4" />
                 <span className="sm:inline">Edit Profile</span>
               </Link>
@@ -153,7 +153,7 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                   </div>
                 </div>
 
-                {/* Right side: Price, Status, and Arrow */}
+                {/* Right side: Price, Status, and Button */}
                 <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
                   <div className="flex flex-col items-start sm:items-end">
                     <p className="text-sm font-semibold sm:text-base">{formatCurrencyPrice(parseFloat(order.total as any))}</p>
@@ -164,8 +164,12 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
                       {statusConfig[order.status]?.label || order.status}
                     </Badge>
                   </div>
-                  <div className="h-8 w-8 flex items-center justify-center shrink-0 sm:h-9 sm:w-9 text-muted-foreground">
-                    <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <Button variant="ghost" size="sm" className="h-8 px-2 font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 gap-1 hidden sm:flex">
+                    View Details
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                  <div className="h-8 w-8 flex items-center justify-center shrink-0 sm:hidden text-muted-foreground">
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </div>
                 </div>
               </Link>
@@ -191,14 +195,14 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
               </Button>
             ) : (
               <Button variant="outline" className="w-full justify-start" asChild>
-                <Link to="/account" search={{ section: "orders" }}>
+                <Link to="/account/orders">
                   <Package className="h-4 w-4 mr-2" />
                   Track Order
                 </Link>
               </Button>
             )}
             <Button variant="outline" className="w-full justify-start" asChild>
-              <Link to="/account" search={{ section: "wishlist" }}>
+              <Link to="/account/wishlist">
                 <Heart className="h-4 w-4 mr-2" />
                 View Wishlist
               </Link>
