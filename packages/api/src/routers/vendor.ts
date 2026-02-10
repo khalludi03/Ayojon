@@ -431,6 +431,7 @@ export const vendorRouter = os.router({
         activeRentals: z.number(),
         pendingOrders: z.number(),
         storeRating: z.number(),
+        vendorScore: z.number(),
         storeViews: z.number(),
         revenueGrowth: z.number().optional(),
         ordersGrowth: z.number().optional(),
@@ -453,6 +454,7 @@ export const vendorRouter = os.router({
           activeRentals: 0,
           pendingOrders: 0,
           storeRating: 0,
+          vendorScore: 0,
           storeViews: 0,
         };
       }
@@ -472,7 +474,7 @@ export const vendorRouter = os.router({
         .where(eq(orderItems.vendorId, vendorId));
 
       const totalRevenue = vendorItems
-        .filter(item => item.status === "delivered")
+        .filter(item => ["delivered", "vendor_paid", "cash_collected", "settlement_ready", "vendor_settled"].includes(item.status))
         .reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
 
       // Orders this month
@@ -480,13 +482,6 @@ export const vendorRouter = os.router({
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const uniqueOrdersThisMonth = new Set(
-        vendorItems
-          .filter(item => item.createdAt >= startOfMonth)
-          .map(item => item.createdAt.toISOString()) // Using createdAt as proxy for order identification if needed, but better use orderId
-      );
-      
-      // Let's get proper unique counts
       const stats = await db
         .select({
           orderId: orderItems.orderId,
@@ -502,7 +497,7 @@ export const vendorRouter = os.router({
       ).size;
 
       const pendingOrders = new Set(
-        stats.filter(s => s.status === "pending").map(s => s.orderId)
+        stats.filter(s => ["pending", "placed", "payment_received"].includes(s.status)).map(s => s.orderId)
       ).size;
 
       const activeRentals = new Set(
@@ -515,6 +510,7 @@ export const vendorRouter = os.router({
         activeRentals,
         pendingOrders,
         storeRating: vendor.ratingAverage || 0,
+        vendorScore: vendor.score || 0,
         storeViews: 0, 
       };
     }),

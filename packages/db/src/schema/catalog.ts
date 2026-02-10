@@ -110,6 +110,7 @@ export const vendors = pgTable(
     isActive: boolean("is_active").default(true).notNull(),
     ratingAverage: numeric("rating_average", { precision: 2, scale: 1, mode: "number" }).default(0),
     ratingCount: integer("rating_count").default(0).notNull(),
+    score: numeric("score", { precision: 3, scale: 2, mode: "number" }).default(0),
     productCount: integer("product_count").default(0).notNull(),
     totalSales: integer("total_sales").default(0).notNull(),
     joinedAt: timestamp("joined_at").defaultNow().notNull(),

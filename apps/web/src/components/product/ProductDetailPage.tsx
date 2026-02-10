@@ -418,7 +418,11 @@ export function ProductDetailPage({ product, relatedProducts }: ProductDetailPag
         </div>
 
         {/* Customer Reviews Section */}
-        <ReviewsSection productId={product.id} hasPurchased={false} />
+        <ReviewsSection 
+          productId={product.id} 
+          productName={product.title}
+          productImage={product.images[0]?.url}
+        />
 
         {/* You May Also Like Section */}
         {relatedProducts.length > 0 && (

@@ -148,11 +148,11 @@ export function VendorSettingsPage() {
       // 1. Upload new files if selected
       if (logoFile) {
         console.log('[VendorSettings] Uploading new logo...');
-        currentLogoUrl = await uploadFile(logoFile, 'vendor/logos');
+        currentLogoUrl = await uploadFile(logoFile, 'vendor/logos', logoFile.type);
       }
       if (bannerFile) {
         console.log('[VendorSettings] Uploading new banner...');
-        currentBannerUrl = await uploadFile(bannerFile, 'vendor/banners');
+        currentBannerUrl = await uploadFile(bannerFile, 'vendor/banners', bannerFile.type);
       }
 
       // 2. Save to backend (old images will be automatically deleted)

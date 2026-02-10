@@ -64,6 +64,13 @@
       "when": 1770741751166,
       "tag": "0008_friendly_titanium_man",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770754371842,
+      "tag": "0009_clean_princess_powerful",
+      "breakpoints": true
     }
   ]
 }

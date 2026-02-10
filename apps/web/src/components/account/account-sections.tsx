@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Camera, Heart, ShoppingCart, Trash2, MapPin, Plus, Check, Loader2 } from "lucide-react";
+import { Camera, Heart, ShoppingCart, Trash2, MapPin, Plus, Check, Loader2, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
@@ -1764,5 +1764,419 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+// =============================================================================
+// MY REVIEWS SECTION
+// =============================================================================
+
+export function AccountReviews() {
+  const [editingReview, setEditingReview] = useState<any | null>(null);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: reviews = [], isLoading } = useQuery(
+    orpc.review.listMyReviews.queryOptions()
+  );
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => orpc.review.updateReview(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["review", "listMyReviews"] });
+      toast.success("Review updated successfully!");
+      setEditingReview(null);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to update review");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (data: any) => orpc.review.deleteReview(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["review", "listMyReviews"] });
+      toast.success("Review deleted successfully!");
+      setDeletingReviewId(null);
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to delete review");
+    },
+  });
+
+  const handleEdit = (review: any) => {
+    setEditingReview(review);
+  };
+
+  const handleDelete = (reviewId: string) => {
+    setDeletingReviewId(reviewId);
+  };
+
+  const confirmDelete = () => {
+    if (deletingReviewId) {
+      deleteMutation.mutate({ reviewId: deletingReviewId });
+    }
+  };
+
+  const canEditReview = (createdAt: string) => {
+    const reviewDate = new Date(createdAt);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return reviewDate >= thirtyDaysAgo;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const reviewsList = reviews as any[];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">My Reviews</h1>
+        <p className="text-muted-foreground mt-2">
+          Manage your submitted product reviews
+        </p>
+      </div>
+
+      {reviewsList.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Star className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No Reviews Yet</h3>
+            <p className="text-muted-foreground text-center mb-6">
+              You haven't submitted any product reviews yet.
+            </p>
+            <Button asChild>
+              <Link to="/products">Browse Products</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {reviewsList.map((review: any) => {
+            const product = review.product;
+            const primaryImage = product?.images?.[0];
+            const canEdit = canEditReview(review.createdAt);
+
+            return (
+              <Card key={review.id}>
+                <CardContent className="p-6">
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    {/* Product Image */}
+                    <div className="shrink-0">
+                      {product?.slug ? (
+                        <a href={`/product/${product.slug}`}>
+                          <img
+                            src={primaryImage?.url || "/placeholder.png"}
+                            alt={product?.name || "Product"}
+                            className="w-24 h-24 object-cover rounded-lg border"
+                          />
+                        </a>
+                      ) : (
+                        <img
+                          src={primaryImage?.url || "/placeholder.png"}
+                          alt={product?.name || "Product"}
+                          className="w-24 h-24 object-cover rounded-lg border"
+                        />
+                      )}
+                    </div>
+
+                    {/* Review Content */}
+                    <div className="flex-1 space-y-3">
+                      {/* Product Name */}
+                      <div>
+                        {product?.slug ? (
+                          <a
+                            href={`/product/${product.slug}`}
+                            className="font-semibold text-lg hover:text-primary transition-colors"
+                          >
+                            {product?.name}
+                          </a>
+                        ) : (
+                          <span className="font-semibold text-lg">
+                            {product?.name}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Star Rating */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-5 w-5 ${
+                                star <= review.rating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {review.rating} out of 5
+                        </span>
+                      </div>
+
+                      {/* Review Title */}
+                      {review.title && (
+                        <h4 className="font-semibold">{review.title}</h4>
+                      )}
+
+                      {/* Review Text Preview */}
+                      <p className="text-muted-foreground line-clamp-3">
+                        {review.comment}
+                      </p>
+
+                      {/* Review Images */}
+                      {review.images && review.images.length > 0 && (
+                        <div className="flex gap-2">
+                          {review.images.map((img: any) => (
+                            <img
+                              key={img.id}
+                              src={img.url}
+                              alt={img.alt || "Review"}
+                              className="w-16 h-16 object-cover rounded border"
+                            />
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Meta Information */}
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                        <span>
+                          Submitted: {new Date(review.createdAt).toLocaleDateString()}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Heart className="h-4 w-4" />
+                          {review.helpfulVotes} helpful votes
+                        </span>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-2 flex-wrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(review)}
+                          disabled={!canEdit || updateMutation.isPending}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(review.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                        {!canEdit && (
+                          <span className="text-xs text-muted-foreground flex items-center">
+                            (Cannot edit after 30 days)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Edit Review Dialog */}
+      {editingReview && (
+        <EditReviewDialog
+          review={editingReview}
+          onClose={() => setEditingReview(null)}
+          onSubmit={(data) => {
+            updateMutation.mutate({
+              reviewId: editingReview.id,
+              ...data,
+            });
+          }}
+          isSubmitting={updateMutation.isPending}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deletingReviewId} onOpenChange={() => setDeletingReviewId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Review</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this review? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeletingReviewId(null)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Review"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// =============================================================================
+// EDIT REVIEW DIALOG COMPONENT
+// =============================================================================
+
+interface EditReviewDialogProps {
+  review: any;
+  onClose: () => void;
+  onSubmit: (data: any) => void;
+  isSubmitting: boolean;
+}
+
+function EditReviewDialog({ review, onClose, onSubmit, isSubmitting }: EditReviewDialogProps) {
+  const [rating, setRating] = useState(review.rating);
+  const [title, setTitle] = useState(review.title || "");
+  const [comment, setComment] = useState(review.comment);
+  const [recommend, setRecommend] = useState(review.recommend);
+  const [hoveredRating, setHoveredRating] = useState(0);
+
+  const handleSubmit = () => {
+    if (comment.length < 20 || comment.length > 2000) {
+      toast.error("Review must be between 20 and 2000 characters");
+      return;
+    }
+
+    onSubmit({
+      rating,
+      title: title || undefined,
+      comment,
+      recommend,
+      images: review.images?.map((img: any) => img.url) || [],
+    });
+  };
+
+  const isValid = rating > 0 && comment.length >= 20 && comment.length <= 2000;
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Your Review</DialogTitle>
+          <DialogDescription>
+            Update your rating, review text, and photos for this product.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 py-4">
+          {/* Star Rating */}
+          <div className="space-y-2">
+            <Label>Rating *</Label>
+            <div className="flex items-center gap-2">
+              <div className="flex">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoveredRating(star)}
+                    onMouseLeave={() => setHoveredRating(0)}
+                    className="focus:outline-none"
+                  >
+                    <Star
+                      className={`h-8 w-8 transition-colors ${
+                        star <= (hoveredRating || rating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "text-gray-300"
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {rating > 0 ? `${rating} out of 5` : "Select a rating"}
+              </span>
+            </div>
+          </div>
+
+          {/* Review Title */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-title">Review Title (Optional)</Label>
+            <Input
+              id="edit-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Summarize your review in one sentence"
+              maxLength={100}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {title.length}/100
+            </p>
+          </div>
+
+          {/* Review Text */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-comment">Review *</Label>
+            <textarea
+              id="edit-comment"
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              placeholder="Share your experience with this product..."
+              className="w-full min-h-[150px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              maxLength={2000}
+            />
+            <p className="text-xs text-muted-foreground text-right">
+              {comment.length}/2000 (minimum 20 characters)
+            </p>
+          </div>
+
+          {/* Recommend Toggle */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="edit-recommend"
+              checked={recommend}
+              onChange={(e) => setRecommend(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            <Label htmlFor="edit-recommend" className="cursor-pointer">
+              I would recommend this product
+            </Label>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!isValid || isSubmitting}
+          >
+            {isSubmitting ? "Updating..." : "Update Review"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

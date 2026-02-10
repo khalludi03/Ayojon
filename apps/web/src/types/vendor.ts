@@ -13,6 +13,7 @@ export interface Vendor {
   isVerified: boolean;
   rating: number;
   reviewCount: number;
+  score: number;
   productCount: number;
   location: VendorLocation;
   joinedAt: string;
