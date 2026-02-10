@@ -272,6 +272,7 @@ export async function getOrderDetails(orderId: string, userId?: string) {
       items: true,
       payments: true,
       payouts: true,
+      user: true,
     },
   });
 

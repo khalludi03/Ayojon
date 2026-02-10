@@ -8,21 +8,17 @@ import {
   MapPin, 
   CreditCard, 
   Truck, 
-  Calendar,
   Smartphone,
-  Hash,
   DollarSign,
   AlertCircle,
   CheckCircle2,
   Clock,
-  Info,
   Phone,
   Mail,
   Download,
   RotateCcw,
   ShoppingBag,
   CheckCircle,
-  X
 } from 'lucide-react';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -32,9 +28,10 @@ import { Badge } from '@/components/ui/badge';
 import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 import { useState, useMemo } from 'react';
 import { toast } from 'sonner';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCart } from '@/stores/cart-store';
 import { cn } from '@/lib/utils';
+import { generateInvoicePDF } from '@/utils/invoice-generator';
 import {
   Dialog,
   DialogContent,
@@ -156,7 +153,40 @@ function OrderDetailsPage() {
   };
 
   const handleDownloadInvoice = () => {
-    toast.info('Invoice generation coming soon');
+    if (!order) return;
+    const orderData = order as any;
+    
+    try {
+      generateInvoicePDF({
+        orderNumber: orderData.orderNumber,
+        createdAt: orderData.createdAt,
+        shippingName: orderData.shippingName,
+        shippingAddressLine1: orderData.shippingAddressLine1,
+        shippingAddressLine2: orderData.shippingAddressLine2,
+        shippingCity: orderData.shippingCity,
+        shippingDivision: orderData.shippingDivision,
+        shippingPostalCode: orderData.shippingPostalCode,
+        shippingPhone: orderData.shippingPhone,
+        paymentMethod: orderData.paymentMethod,
+        subtotal: orderData.subtotal,
+        shippingCost: orderData.shippingCost,
+        tax: orderData.tax,
+        discount: orderData.discount,
+        total: orderData.total,
+        items: orderData.items?.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          quantity: item.quantity,
+          price: parseFloat(item.price),
+          variantInfo: item.variantInfo
+        })) || [],
+        userEmail: orderData.user?.email
+      });
+      toast.success('Invoice generated successfully');
+    } catch (error) {
+      console.error('Failed to generate invoice:', error);
+      toast.error('Failed to generate invoice');
+    }
   };
 
   const handleReturnItems = () => {
@@ -165,7 +195,7 @@ function OrderDetailsPage() {
 
   const estimatedDelivery = useMemo(() => {
     if (!order) return null;
-    const date = new Date(order.createdAt);
+    const date = new Date((order as any).createdAt);
     const minDate = new Date(date);
     minDate.setDate(date.getDate() + 3);
     const maxDate = new Date(date);
@@ -208,8 +238,12 @@ function OrderDetailsPage() {
   // Can only cancel if payment is NOT received/confirmed and NOT shipped
   const canCancel = order.status === 'awaiting_payment' || order.status === 'payment_submitted' || order.status === 'placed' || order.status === 'payment_rejected';
   
-  const isDelivered = order.status === 'delivered';
-  const isShipped = order.status === 'shipped';
+  const isDelivered = (order as any).status === 'delivered';
+  const isShipped = (order as any).status === 'shipped';
+
+  const isPaymentReceived = isPrepaid 
+    ? ['payment_received', 'shipped', 'delivered', 'vendor_paid'].includes((order as any).status)
+    : ['cash_collected', 'settlement_ready', 'vendor_settled'].includes((order as any).status);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -225,17 +259,17 @@ function OrderDetailsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-black tracking-tight flex items-center gap-3">
-            Order #{order.orderNumber}
+            Order #{(order as any).orderNumber}
           </h1>
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2">
             <p className="text-muted-foreground font-medium">
-              Placed on {new Date(order.createdAt).toLocaleDateString('en-US', {
+              Placed on {new Date((order as any).createdAt).toLocaleDateString('en-US', {
                 month: 'long',
                 day: 'numeric',
                 year: 'numeric'
               })}
             </p>
-            {estimatedDelivery && !['delivered', 'cancelled'].includes(order.status) && (
+            {estimatedDelivery && !['delivered', 'cancelled'].includes((order as any).status) && (
               <div className="flex items-center gap-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400">
                 <Truck className="h-4 w-4" />
                 <span>Estimated Delivery: {estimatedDelivery.min} - {estimatedDelivery.max}</span>
@@ -244,19 +278,21 @@ function OrderDetailsPage() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
-          <OrderStatusBadge status={order.status} className="text-sm px-4 py-1" />
-          <Button variant="outline" size="sm" onClick={handleDownloadInvoice} className="gap-2">
-            <Download className="h-4 w-4" />
-            Invoice
-          </Button>
+          <OrderStatusBadge status={(order as any).status} className="text-sm px-4 py-1" />
+          {isPaymentReceived && (
+            <Button variant="outline" size="sm" onClick={handleDownloadInvoice} className="gap-2">
+              <Download className="h-4 w-4" />
+              Invoice
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Progress Tracker */}
-      {!['cancelled', 'returned'].includes(order.status) && (
+      {!['cancelled', 'returned'].includes((order as any).status) && (
         <Card className="mb-8 border-2 border-slate-100 dark:border-slate-800">
           <CardContent className="pt-6">
-            <OrderProgress currentStatus={order.status} />
+            <OrderProgress currentStatus={(order as any).status} />
           </CardContent>
         </Card>
       )}
@@ -275,7 +311,7 @@ function OrderDetailsPage() {
               <CardContent className="p-6">
                 <div className="mb-6 p-4 bg-indigo-50 dark:bg-indigo-950/30 rounded-lg border border-indigo-100 dark:border-indigo-800">
                   <p className="text-sm text-indigo-800 dark:text-indigo-300 font-medium">
-                    Please send <strong>৳{parseFloat(order.total).toLocaleString()}</strong> to our bKash number: <strong>01700-000000</strong> using "Send Money", then submit the details below for verification.
+                    Please send <strong>৳{parseFloat((order as any).total).toLocaleString()}</strong> to our bKash number: <strong>01700-000000</strong> using "Send Money", then submit the details below for verification.
                   </p>
                 </div>
 
@@ -296,7 +332,7 @@ function OrderDetailsPage() {
                       <Input 
                         id="paidAmount"
                         type="number"
-                        placeholder={parseFloat(order.total).toString()}
+                        placeholder={parseFloat((order as any).total).toString()}
                         value={paidAmount}
                         onChange={(e) => setPaidAmount(e.target.value)}
                         required
@@ -382,7 +418,7 @@ function OrderDetailsPage() {
             
             {isShipped && (
               <Button asChild variant="outline" className="gap-2 font-bold border-indigo-200 text-indigo-600">
-                <Link to="/track/$orderNumber" params={{ orderNumber: order.orderNumber }}>
+                <Link to="/track/$orderNumber" params={{ orderNumber: (order as any).orderNumber }}>
                   <Truck className="h-4 w-4" />
                   Track Order
                 </Link>
@@ -417,25 +453,25 @@ function OrderDetailsPage() {
             <CardContent className="p-6 space-y-4">
               <div className="flex justify-between text-sm text-muted-foreground font-medium">
                 <span>Subtotal</span>
-                <span className="text-slate-900 dark:text-white font-bold">{formatPrice(parseFloat(order.subtotal))}</span>
+                <span className="text-slate-900 dark:text-white font-bold">{formatPrice(parseFloat((order as any).subtotal))}</span>
               </div>
               <div className="flex justify-between text-sm text-muted-foreground font-medium">
                 <span>Shipping Fee</span>
-                <span className="text-slate-900 dark:text-white font-bold">{formatPrice(parseFloat(order.shippingCost))}</span>
+                <span className="text-slate-900 dark:text-white font-bold">{formatPrice(parseFloat((order as any).shippingCost))}</span>
               </div>
               <div className="flex justify-between text-sm text-muted-foreground font-medium">
                 <span>Tax & VAT</span>
-                <span className="text-slate-900 dark:text-white font-bold">{formatPrice(parseFloat(order.tax))}</span>
+                <span className="text-slate-900 dark:text-white font-bold">{formatPrice(parseFloat((order as any).tax))}</span>
               </div>
-              {parseFloat(order.discount) > 0 && (
+              {parseFloat((order as any).discount) > 0 && (
                 <div className="flex justify-between text-sm text-emerald-600 font-bold">
                   <span>Discount</span>
-                  <span>-{formatPrice(parseFloat(order.discount))}</span>
+                  <span>-{formatPrice(parseFloat((order as any).discount))}</span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
                 <span className="text-lg font-black text-slate-900 dark:text-white">Total</span>
-                <span className="text-2xl font-black text-indigo-600">{formatPrice(parseFloat(order.total))}</span>
+                <span className="text-2xl font-black text-indigo-600">{formatPrice(parseFloat((order as any).total))}</span>
               </div>
             </CardContent>
           </Card>
@@ -450,11 +486,11 @@ function OrderDetailsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                <p className="font-black text-slate-900 dark:text-white text-base">{order.shippingName}</p>
+                <p className="font-black text-slate-900 dark:text-white text-base">{(order as any).shippingName}</p>
                 <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed font-medium">
-                  {order.shippingAddressLine1}<br />
-                  {order.shippingAddressLine2 && <>{order.shippingAddressLine2}<br /></>}
-                  {order.shippingCity}, {order.shippingDivision} {order.shippingPostalCode}
+                  {(order as any).shippingAddressLine1}<br />
+                  {(order as any).shippingAddressLine2 && <>{(order as any).shippingAddressLine2}<br /></>}
+                  {(order as any).shippingCity}, {(order as any).shippingDivision} {(order as any).shippingPostalCode}
                 </p>
               </div>
               <div className="space-y-3 px-1">
@@ -462,7 +498,7 @@ function OrderDetailsPage() {
                   <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                     <Phone className="h-4 w-4 text-indigo-600" />
                   </div>
-                  <span>{order.shippingPhone}</span>
+                  <span>{(order as any).shippingPhone}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400 font-bold">
                   <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
@@ -488,13 +524,13 @@ function OrderDetailsPage() {
                   <div className="h-10 w-10 rounded-lg bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm">
                     <DollarSign className="h-5 w-5 text-indigo-600" />
                   </div>
-                  <span className="font-black uppercase text-sm tracking-wider">{order.paymentMethod}</span>
+                  <span className="font-black uppercase text-sm tracking-wider">{(order as any).paymentMethod}</span>
                 </div>
                 <Badge className={cn(
                   "font-bold uppercase tracking-widest text-[10px]",
-                  order.status === 'payment_received' || order.status === 'vendor_paid' ? "bg-emerald-500" : "bg-amber-500"
+                  (order as any).status === 'payment_received' || (order as any).status === 'vendor_paid' ? "bg-emerald-500" : "bg-amber-500"
                 )}>
-                  {order.status === 'payment_received' || order.status === 'vendor_paid' ? 'Paid' : 'Pending'}
+                  {(order as any).status === 'payment_received' || (order as any).status === 'vendor_paid' ? 'Paid' : 'Pending'}
                 </Badge>
               </div>
             </CardContent>
