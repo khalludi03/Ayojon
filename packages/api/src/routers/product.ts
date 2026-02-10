@@ -40,7 +40,7 @@ async function getVendorId(userId: string) {
 /**
  * Helper to transform DB product to Frontend Product type
  */
-function transformProduct(p: any) {
+export function transformProduct(p: any) {
   if (!p) return null;
 
   const vendor = p.vendor || { 
