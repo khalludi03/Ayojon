@@ -1,8 +1,10 @@
 import { db } from "@my-better-t-app/db";
 import { orders, orderItems, payments, vendorPayouts, type OrderStatus, type PaymentMethod } from "@my-better-t-app/db/schema/orders";
+import { vendors } from "@my-better-t-app/db/schema/index";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { validateStatusTransition, getInitialOrderStatus } from "./order-state-machine";
+import { notifyOrderPlaced, notifyVendorNewOrder, notifyOrderStatusUpdate } from "./notification-service";
 
 /**
  * Order Service
@@ -145,7 +147,46 @@ export async function createOrder(orderData: {
       senderMobile: orderData.paymentDetails?.senderMobile,
     });
 
-    return order!;
+    // 4. Collect vendor user IDs for notifications (do this inside transaction)
+    const vendorItemsMap = new Map<string, number>();
+    for (const item of orderData.items) {
+      const currentCount = vendorItemsMap.get(item.vendorId) || 0;
+      vendorItemsMap.set(item.vendorId, currentCount + item.quantity);
+    }
+
+    const vendorNotifications: Array<{ userId: string; itemCount: number }> = [];
+    for (const [vendorId, itemCount] of vendorItemsMap.entries()) {
+      // Get vendor's userId
+      const [vendor] = await tx
+        .select({ userId: vendors.userId })
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (vendor) {
+        vendorNotifications.push({ userId: vendor.userId, itemCount });
+      }
+    }
+
+    // Return both order and notification data
+    return { order: order!, vendorNotifications };
+  }).then(async (result) => {
+    // 5. Send notifications AFTER transaction is committed
+    // This prevents foreign key constraint errors
+    try {
+      // Notify customer that order was placed
+      await notifyOrderPlaced(orderData.userId, orderId, orderData.orderNumber);
+
+      // Notify each vendor about their new order
+      for (const { userId, itemCount } of result.vendorNotifications) {
+        await notifyVendorNewOrder(userId, orderId, orderData.orderNumber, itemCount);
+      }
+    } catch (error) {
+      // Log notification errors but don't fail the order
+      console.error("Failed to send order notifications:", error);
+    }
+
+    return result.order;
   });
 }
 
@@ -195,7 +236,19 @@ export async function transitionOrderStatus(
       .where(eq(orders.id, orderId))
       .returning();
 
-    return { success: true, order: updatedOrder! };
+    return { success: true, order: updatedOrder!, userId: order.userId, orderNumber: order.orderNumber };
+  }).then(async (result) => {
+    // 4. Send customer notification for status updates AFTER transaction is committed
+    if (result.success && result.order) {
+      try {
+        await notifyOrderStatusUpdate(result.userId, orderId, result.orderNumber, newStatus);
+      } catch (error) {
+        // Log notification errors but don't fail the status update
+        console.error("Failed to send order status notification:", error);
+      }
+    }
+
+    return { success: result.success, order: result.order };
   });
 }
 

@@ -8,17 +8,18 @@ import {
   ShoppingBag,
   Settings,
   Menu,
-  Bell,
   LogOut,
   ShieldCheck,
   UserCog
 } from 'lucide-react';
 import { Logo } from './Logo';
+import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { authClient } from '@/lib/auth-client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Top-level navigation sections
 const sections = [
@@ -67,11 +68,14 @@ export function AdminHeader() {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          // Clear all cached queries on logout
+          queryClient.clear();
           toast.success('Signed out successfully');
           navigate({ to: '/login' });
         }
@@ -112,10 +116,7 @@ export function AdminHeader() {
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="relative text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-white dark:border-slate-950" />
-              </Button>
+              <NotificationBell />
 
               <ThemeToggle />
 

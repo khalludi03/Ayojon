@@ -7,6 +7,7 @@ import { MobileSearchModal } from './MobileSearchModal';
 import { UserMenu } from './UserMenu';
 import { CartIcon } from './CartIcon';
 import { WishlistIcon } from './WishlistIcon';
+import { NotificationBell } from './NotificationBell';
 import { ThemeToggle } from './ThemeToggle';
 import { MainNav } from './MainNav';
 import { MegaMenu } from './MegaMenu';
@@ -100,6 +101,7 @@ export function Header() {
               <WishlistIcon
                 onClick={() => navigate({ to: '/account', search: { section: 'wishlist' } })}
               />
+              <NotificationBell />
               <CartIcon onClick={openDrawer} />
               <div className="ml-0 border-l border-[hsl(var(--border))] pl-0.5 sm:ml-1 sm:pl-1 md:ml-2 md:pl-2">
                 <UserMenu />

@@ -12,12 +12,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function UserMenu() {
   const [isHovered, setIsHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
   const hasLoadedOnce = useRef(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
@@ -42,6 +44,8 @@ export function UserMenu() {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
+          // Clear all cached queries on logout
+          queryClient.clear();
           toast.success('Signed out successfully');
           navigate({ to: '/' });
         }
