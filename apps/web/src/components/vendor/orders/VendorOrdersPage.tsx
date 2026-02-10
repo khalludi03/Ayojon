@@ -1,68 +1,50 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, Filter, Calendar } from 'lucide-react';
-import { useSearch } from '@tanstack/react-router';
-import { getVendorOrders } from '@/stores/vendor-order-store';
-import type { VendorOrder, VendorOrderStatus, PaymentMethod } from '@/types/vendor-order';
+import { Search, Filter, Calendar, Loader2, ShoppingBag } from 'lucide-react';
+import { orpc } from '@/utils/orpc';
+import { useQuery } from '@tanstack/react-query';
 import { OrdersTable } from './OrdersTable';
 import { OrderDetailModal } from './OrderDetailModal';
-import { cn } from '@/lib/utils';
 
 export function VendorOrdersPage() {
-  const search = useSearch({ from: '/vendor/orders' }) as any;
-  const [orders, setOrders] = useState<VendorOrder[]>([]);
-  const [selectedOrder, setSelectedOrder] = useState<VendorOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<VendorOrderStatus | ''>('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<PaymentMethod | ''>('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
   const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Mock vendor ID - in real app, get from auth context
-  const vendorId = 'vendor-1';
-
-  useEffect(() => {
-    loadOrders();
-  }, []);
-
-  useEffect(() => {
-    if (search.orderId && orders.length > 0) {
-      const order = orders.find(o => o.id === search.orderId);
-      if (order) {
-        setSelectedOrder(order);
+  // Fetch orders from backend
+  const { data: ordersResponse, isLoading } = useQuery({
+    ...orpc.vendor.getOrders.queryOptions({
+      input: {
+        status: statusFilter || undefined,
       }
-    }
-  }, [search.orderId, orders]);
+    } as any),
+    ssr: false, // Disable SSR for this query
+  } as any);
 
-  const loadOrders = () => {
-    const vendorOrders = getVendorOrders(vendorId);
-    setOrders(vendorOrders);
-  };
+  const orders = (ordersResponse as any)?.data || [];
 
   const filteredOrders = useMemo(() => {
     let filtered = [...orders];
 
-    // Search
+    // Search (frontend side)
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
-        (o) =>
+        (o: any) =>
           o.orderNumber.toLowerCase().includes(query) ||
-          o.customer.name.toLowerCase().includes(query) ||
-          o.customer.email.toLowerCase().includes(query) ||
-          o.customer.phone.includes(query)
+          o.shippingName?.toLowerCase().includes(query) ||
+          o.shippingPhone?.includes(query) ||
+          o.user?.name?.toLowerCase().includes(query)
       );
-    }
-
-    // Status filter
-    if (statusFilter) {
-      filtered = filtered.filter((o) => o.status === statusFilter);
     }
 
     // Payment method filter
     if (paymentMethodFilter) {
-      filtered = filtered.filter((o) => o.payment.method === paymentMethodFilter);
+      filtered = filtered.filter((o: any) => o.paymentMethod === paymentMethodFilter);
     }
 
     // Date range filter
@@ -73,7 +55,7 @@ export function VendorOrdersPage() {
       startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-      filtered = filtered.filter((o) => {
+      filtered = filtered.filter((o: any) => {
         const orderDate = new Date(o.createdAt);
         switch (dateRangeFilter) {
           case 'today':
@@ -89,7 +71,7 @@ export function VendorOrdersPage() {
     }
 
     return filtered;
-  }, [orders, searchQuery, statusFilter, paymentMethodFilter, dateRangeFilter]);
+  }, [orders, searchQuery, paymentMethodFilter, dateRangeFilter]);
 
   const clearFilters = () => {
     setSearchQuery('');
@@ -104,21 +86,20 @@ export function VendorOrdersPage() {
     (paymentMethodFilter ? 1 : 0) +
     (dateRangeFilter !== 'all' ? 1 : 0);
 
-  const handleOrderClick = (order: VendorOrder) => {
+  const handleOrderClick = (order: any) => {
     setSelectedOrder(order);
   };
 
   const handleCloseDetail = () => {
     setSelectedOrder(null);
-    loadOrders(); // Refresh orders after potential status update
   };
 
   // Stats
   const stats = {
     total: orders.length,
-    pending: orders.filter((o) => o.status === 'pending').length,
-    confirmed: orders.filter((o) => o.status === 'confirmed').length,
-    shipped: orders.filter((o) => o.status === 'shipped').length,
+    pending: orders.filter((o: any) => o.status === 'pending').length,
+    confirmed: orders.filter((o: any) => o.status === 'confirmed').length,
+    delivered: orders.filter((o: any) => o.status === 'delivered').length,
   };
 
   return (
@@ -137,25 +118,24 @@ export function VendorOrdersPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
             <p className="text-sm text-[hsl(var(--muted-foreground))]">Total Orders</p>
-            <p className="text-2xl font-bold text-[hsl(var(--foreground))]">{stats.total}</p>
+            <p className="text-2xl font-bold text-[hsl(var(--foreground))]">{isLoading ? '...' : stats.total}</p>
           </div>
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
             <p className="text-sm text-[hsl(var(--muted-foreground))]">Pending</p>
-            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pending}</p>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{isLoading ? '...' : stats.pending}</p>
           </div>
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
             <p className="text-sm text-[hsl(var(--muted-foreground))]">Confirmed</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.confirmed}</p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{isLoading ? '...' : stats.confirmed}</p>
           </div>
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Shipped</p>
-            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">{stats.shipped}</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">Delivered</p>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{isLoading ? '...' : stats.delivered}</p>
           </div>
         </div>
 
         {/* Search and Filters */}
         <div className="mb-6 space-y-4">
-          {/* Search Bar */}
           <div className="flex gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
@@ -181,7 +161,6 @@ export function VendorOrdersPage() {
             </Button>
           </div>
 
-          {/* Filters Panel */}
           {showFilters && (
             <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -191,7 +170,7 @@ export function VendorOrdersPage() {
                   </label>
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as VendorOrderStatus | '')}
+                    onChange={(e) => setStatusFilter(e.target.value)}
                     className="w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]"
                   >
                     <option value="">All Statuses</option>
@@ -210,14 +189,13 @@ export function VendorOrdersPage() {
                   </label>
                   <select
                     value={paymentMethodFilter}
-                    onChange={(e) => setPaymentMethodFilter(e.target.value as PaymentMethod | '')}
+                    onChange={(e) => setPaymentMethodFilter(e.target.value)}
                     className="w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]"
                   >
                     <option value="">All Methods</option>
                     <option value="bkash">bKash</option>
                     <option value="card">Card</option>
                     <option value="cod">Cash on Delivery</option>
-                    <option value="bank">Bank Transfer</option>
                   </select>
                 </div>
 
@@ -228,7 +206,7 @@ export function VendorOrdersPage() {
                   </label>
                   <select
                     value={dateRangeFilter}
-                    onChange={(e) => setDateRangeFilter(e.target.value as 'all' | 'today' | 'week' | 'month')}
+                    onChange={(e) => setDateRangeFilter(e.target.value as any)}
                     className="w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]"
                   >
                     <option value="all">All Time</option>
@@ -251,7 +229,22 @@ export function VendorOrdersPage() {
         </div>
 
         {/* Orders Table */}
-        <OrdersTable orders={filteredOrders} onOrderClick={handleOrderClick} />
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--primary))] mb-4" />
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">Loading your orders...</p>
+          </div>
+        ) : filteredOrders.length > 0 ? (
+          <OrdersTable orders={filteredOrders} onOrderClick={handleOrderClick} />
+        ) : (
+          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-12 text-center">
+            <ShoppingBag className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
+            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">No orders found</h3>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              {activeFilterCount > 0 ? 'Try adjusting your filters' : 'You haven\'t received any orders yet'}
+            </p>
+          </div>
+        )}
 
         {/* Order Detail Modal */}
         {selectedOrder && (

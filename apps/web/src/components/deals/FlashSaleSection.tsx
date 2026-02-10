@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
-import { useRef } from 'react';
+import { useRef, useMemo } from 'react';
 import { Link } from '@tanstack/react-router';
 import { DealCard } from './DealCard';
 import { useFlashDeals } from '@/hooks/use-deals';
@@ -16,7 +16,10 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Use the first deal's end time for the global countdown, or a default
-  const globalEndTime = deals?.[0]?.dealEndsAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const globalEndTime = useMemo(() => {
+    return deals?.[0]?.dealEndsAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  }, [deals]);
+
   const countdown = useCountdown(globalEndTime);
 
   const scroll = (direction: 'left' | 'right') => {

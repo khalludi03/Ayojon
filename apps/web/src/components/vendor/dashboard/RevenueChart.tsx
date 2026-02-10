@@ -27,11 +27,12 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function RevenueChart() {
-  const { data: revenueData, isLoading } = useQuery(
-    orpc.vendor.getRevenueData.queryOptions()
-  );
+  const { data: revenueResponse, isLoading } = useQuery({
+    ...orpc.vendor.getRevenueData.queryOptions(),
+    ssr: false,
+  } as any);
 
-  const data = revenueData || [];
+  const data = (revenueResponse as any) || [];
   const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
 
   return (

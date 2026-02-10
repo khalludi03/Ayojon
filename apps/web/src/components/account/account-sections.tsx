@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
-import { Camera, Heart, ShoppingCart, Trash2, MapPin, Plus, Check } from "lucide-react";
+import { Camera, Heart, ShoppingCart, Trash2, MapPin, Plus, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
@@ -28,6 +28,8 @@ import type { Order } from "@/types";
 import { useWishlist } from "@/stores/wishlist-store";
 import { useCart } from "@/stores/cart-store";
 import { formatPrice } from "@/lib/utils";
+import { orpc } from "@/utils/orpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function AccountOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -483,94 +485,131 @@ export function AccountWishlist() {
 }
 
 export function AccountAddresses() {
-  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<SavedAddress | null>(null);
-  const [addressToDelete, setAddressToDelete] = useState<SavedAddress | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
+  const [addressToDelete, setAddressToDelete] = useState<any | null>(null);
 
-  // Load saved addresses from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('saved-addresses');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setAddresses(parsed);
-      } catch (e) {
-        console.error('Failed to parse saved addresses:', e);
-      }
+  // Fetch addresses from backend
+  const { data: addresses = [], isLoading, error } = useQuery({
+    ...orpc.address.listAddresses.queryOptions(),
+    ssr: false,
+  } as any);
+
+  // Mutations
+  const createMutation = useMutation({
+    ...orpc.address.addAddress.mutationOptions(),
+    onSuccess: () => {
+      toast.success('Address added successfully');
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
+      setIsAddDialogOpen(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to add address');
+      console.error(error);
     }
-  }, []);
+  } as any);
 
-  // Save addresses to localStorage whenever they change
-  const saveAddresses = (newAddresses: SavedAddress[]) => {
-    setAddresses(newAddresses);
-    localStorage.setItem('saved-addresses', JSON.stringify(newAddresses));
-  };
+  const updateMutation = useMutation({
+    ...orpc.address.updateAddress.mutationOptions(),
+    onSuccess: () => {
+      toast.success('Address updated successfully');
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
+      setIsEditDialogOpen(false);
+      setSelectedAddress(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to update address');
+      console.error(error);
+    }
+  } as any);
 
-  const handleAddAddress = (address: Omit<SavedAddress, 'id' | 'isDefault'>) => {
+  const deleteMutation = useMutation({
+    ...orpc.address.deleteAddress.mutationOptions(),
+    onSuccess: () => {
+      toast.success('Address deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
+      setIsDeleteDialogOpen(false);
+      setAddressToDelete(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to delete address');
+      console.error(error);
+    }
+  } as any);
+
+  const setDefaultMutation = useMutation({
+    ...orpc.address.setDefault.mutationOptions(),
+    onSuccess: () => {
+      toast.success('Default address updated');
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
+    },
+    onError: (error) => {
+      toast.error('Failed to update default address');
+      console.error(error);
+    }
+  } as any);
+
+  const handleAddAddress = (data: any) => {
     if (addresses.length >= 5) {
       toast.error('Maximum 5 addresses allowed');
       return;
     }
-
-    const newAddress: SavedAddress = {
-      ...address,
-      id: `addr_${Date.now()}`,
-      isDefault: addresses.length === 0, // First address is default
-    };
-
-    saveAddresses([...addresses, newAddress]);
-    setIsAddDialogOpen(false);
-    toast.success('Address added successfully');
+    createMutation.mutate({ ...data, state: data.division });
   };
 
-  const handleEditAddress = (address: SavedAddress) => {
-    const updatedAddresses = addresses.map((addr) =>
-      addr.id === address.id ? address : addr
-    );
-    saveAddresses(updatedAddresses);
-    setIsEditDialogOpen(false);
-    setSelectedAddress(null);
-    toast.success('Address updated successfully');
+  const handleEditAddress = (data: any) => {
+    if (!selectedAddress) return;
+    updateMutation.mutate({ 
+      ...data, 
+      id: selectedAddress.id,
+      state: data.division 
+    });
   };
 
   const handleDeleteAddress = () => {
     if (!addressToDelete) return;
-
-    const wasDefault = addressToDelete.isDefault;
-    const updatedAddresses = addresses.filter((addr) => addr.id !== addressToDelete.id);
-
-    // If deleted address was default and there are remaining addresses, make the first one default
-    if (wasDefault && updatedAddresses.length > 0) {
-      updatedAddresses[0].isDefault = true;
-    }
-
-    saveAddresses(updatedAddresses);
-    setIsDeleteDialogOpen(false);
-    setAddressToDelete(null);
-    toast.success('Address deleted successfully');
+    deleteMutation.mutate({ id: addressToDelete.id });
   };
 
   const handleSetAsDefault = (addressId: string) => {
-    const updatedAddresses = addresses.map((addr) => ({
-      ...addr,
-      isDefault: addr.id === addressId,
-    }));
-    saveAddresses(updatedAddresses);
-    toast.success('Default address updated');
+    setDefaultMutation.mutate({ id: addressId });
   };
 
-  const openEditDialog = (address: SavedAddress) => {
+  const openEditDialog = (address: any) => {
     setSelectedAddress(address);
     setIsEditDialogOpen(true);
   };
 
-  const openDeleteDialog = (address: SavedAddress) => {
+  const openDeleteDialog = (address: any) => {
     setAddressToDelete(address);
     setIsDeleteDialogOpen(true);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Loading your addresses...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="border-destructive/50">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-destructive font-semibold mb-2">Failed to load addresses</p>
+          <p className="text-muted-foreground mb-4">There was an error connecting to the server.</p>
+          <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })}>
+            Try Again
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -583,10 +622,10 @@ export function AccountAddresses() {
         </div>
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          disabled={addresses.length >= 5}
+          disabled={addresses.length >= 5 || createMutation.isPending}
           size="lg"
         >
-          <Plus className="mr-2 h-4 w-4" />
+          {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
           Add New Address
         </Button>
       </div>
@@ -599,21 +638,22 @@ export function AccountAddresses() {
             <p className="text-muted-foreground text-center mb-6">
               Add your first delivery address to make checkout faster
             </p>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
+            <Button onClick={() => setIsAddDialogOpen(true)} disabled={createMutation.isPending}>
+              {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
               Add Your First Address
             </Button>
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {addresses.map((address) => (
+          {addresses.map((address: any) => (
             <AddressCard
               key={address.id}
               address={address}
               onEdit={() => openEditDialog(address)}
               onDelete={() => openDeleteDialog(address)}
               onSetDefault={() => handleSetAsDefault(address.id)}
+              isUpdating={updateMutation.isPending || setDefaultMutation.isPending || (deleteMutation.isPending && addressToDelete?.id === address.id)}
             />
           ))}
         </div>
@@ -652,22 +692,22 @@ export function AccountAddresses() {
           </DialogHeader>
           {addressToDelete && (
             <div className="rounded-lg border border-border bg-muted/50 p-4">
-              <p className="font-semibold">{addressToDelete.fullName}</p>
+              <p className="font-semibold">{addressToDelete.name}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {addressToDelete.addressLine1}
                 {addressToDelete.addressLine2 && `, ${addressToDelete.addressLine2}`}
               </p>
               <p className="text-sm text-muted-foreground">
-                {addressToDelete.city}, {addressToDelete.division}
+                {addressToDelete.city}, {addressToDelete.state}
               </p>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={deleteMutation.isPending}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteAddress}>
-              <Trash2 className="mr-2 h-4 w-4" />
+            <Button variant="destructive" onClick={handleDeleteAddress} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
               Delete Address
             </Button>
           </DialogFooter>
@@ -677,33 +717,21 @@ export function AccountAddresses() {
   );
 }
 
-interface SavedAddress {
-  id: string;
-  fullName: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  division: string;
-  postalCode: string;
-  addressType: 'home' | 'office';
-  isDefault: boolean;
-}
-
 interface AddressCardProps {
-  address: SavedAddress;
+  address: any;
   onEdit: () => void;
   onDelete: () => void;
   onSetDefault: () => void;
+  isUpdating?: boolean;
 }
 
-function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardProps) {
+function AddressCard({ address, onEdit, onDelete, onSetDefault, isUpdating }: AddressCardProps) {
   return (
     <Card className={address.isDefault ? 'border-primary border-2' : ''}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-lg">{address.fullName}</CardTitle>
+            <CardTitle className="text-lg">{address.name}</CardTitle>
             {address.isDefault && (
               <Badge variant="default" className="text-xs">
                 Default
@@ -711,7 +739,7 @@ function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardPro
             )}
           </div>
           <Badge variant="secondary" className="text-xs">
-            {address.addressType === 'home' ? '🏠 Home' : '🏢 Office'}
+            {address.type === 'home' ? '🏠 Home' : '🏢 Office'}
           </Badge>
         </div>
       </CardHeader>
@@ -723,7 +751,7 @@ function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardPro
             {address.addressLine2 && `, ${address.addressLine2}`}
           </p>
           <p className="text-muted-foreground">
-            {address.city}, {address.division}
+            {address.city}, {address.state}
             {address.postalCode && ` - ${address.postalCode}`}
           </p>
         </div>
@@ -735,12 +763,13 @@ function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardPro
               size="sm"
               onClick={onSetDefault}
               className="text-xs h-8"
+              disabled={isUpdating}
             >
               <Check className="mr-1 h-3 w-3" />
               Set as Default
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={onEdit} className="text-xs h-8">
+          <Button variant="ghost" size="sm" onClick={onEdit} className="text-xs h-8" disabled={isUpdating}>
             Edit
           </Button>
           <Button
@@ -748,6 +777,7 @@ function AddressCard({ address, onEdit, onDelete, onSetDefault }: AddressCardPro
             size="sm"
             onClick={onDelete}
             className="text-xs h-8 text-destructive hover:text-destructive"
+            disabled={isUpdating}
           >
             <Trash2 className="mr-1 h-3 w-3" />
             Delete
@@ -762,7 +792,7 @@ interface AddressDialogProps {
   open: boolean;
   onClose: () => void;
   onSave: (address: any) => void;
-  initialAddress?: SavedAddress | null;
+  initialAddress?: any | null;
   title: string;
   description: string;
 }
@@ -776,14 +806,14 @@ function AddressDialog({
   description,
 }: AddressDialogProps) {
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     phone: '',
     addressLine1: '',
     addressLine2: '',
     division: '',
     city: '',
     postalCode: '',
-    addressType: 'home' as 'home' | 'office',
+    type: 'home' as 'home' | 'office',
   });
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -792,26 +822,26 @@ function AddressDialog({
   useEffect(() => {
     if (initialAddress) {
       setFormData({
-        fullName: initialAddress.fullName,
+        name: initialAddress.name,
         phone: initialAddress.phone,
         addressLine1: initialAddress.addressLine1,
-        addressLine2: initialAddress.addressLine2,
-        division: initialAddress.division,
+        addressLine2: initialAddress.addressLine2 || '',
+        division: initialAddress.state,
         city: initialAddress.city,
         postalCode: initialAddress.postalCode,
-        addressType: initialAddress.addressType,
+        type: initialAddress.type,
       });
     } else {
       // Reset form when adding new address
       setFormData({
-        fullName: '',
+        name: '',
         phone: '',
         addressLine1: '',
         addressLine2: '',
         division: '',
         city: '',
         postalCode: '',
-        addressType: 'home',
+        type: 'home',
       });
     }
     setErrors({});
@@ -843,7 +873,7 @@ function AddressDialog({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!formData.name.trim()) newErrors.name = 'Full name is required';
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
     if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
     if (!formData.division) newErrors.division = 'Division is required';
@@ -857,11 +887,7 @@ function AddressDialog({
     e.preventDefault();
     if (!validateForm()) return;
 
-    if (initialAddress) {
-      onSave({ ...initialAddress, ...formData });
-    } else {
-      onSave(formData);
-    }
+    onSave(formData);
   };
 
   const handleChange = (field: string, value: string) => {
@@ -884,18 +910,18 @@ function AddressDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="fullName">
+              <Label htmlFor="name">
                 Full Name <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="fullName"
-                value={formData.fullName}
-                onChange={(e) => handleChange('fullName', e.target.value)}
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Enter your full name"
-                className={errors.fullName ? 'border-red-500' : ''}
+                className={errors.name ? 'border-red-500' : ''}
               />
-              {errors.fullName && (
-                <p className="text-xs text-red-500">{errors.fullName}</p>
+              {errors.name && (
+                <p className="text-xs text-red-500">{errors.name}</p>
               )}
             </div>
 
@@ -1006,10 +1032,10 @@ function AddressDialog({
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
-                  name="addressType"
+                  name="type"
                   value="home"
-                  checked={formData.addressType === 'home'}
-                  onChange={(e) => handleChange('addressType', e.target.value)}
+                  checked={formData.type === 'home'}
+                  onChange={(e) => handleChange('type', e.target.value)}
                   className="w-4 h-4"
                 />
                 <span>🏠 Home</span>
@@ -1017,10 +1043,10 @@ function AddressDialog({
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
-                  name="addressType"
+                  name="type"
                   value="office"
-                  checked={formData.addressType === 'office'}
-                  onChange={(e) => handleChange('addressType', e.target.value)}
+                  checked={formData.type === 'office'}
+                  onChange={(e) => handleChange('type', e.target.value)}
                   className="w-4 h-4"
                 />
                 <span>🏢 Office</span>
