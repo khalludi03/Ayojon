@@ -21,7 +21,10 @@ export function useCategories(
 ) {
   return useQuery(
     orpc.product.listCategories.queryOptions({
-      staleTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: Infinity, // Categories rarely change, cache forever
+      gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+      retry: 1, // Only retry once to avoid excessive retries
+      retryDelay: 1000, // Wait 1 second before retrying
       ...options as any,
     })
   ) as any;

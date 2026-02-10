@@ -12,7 +12,7 @@ import {
   subcategories,
   eventTypes
 } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, sql, asc, gte, lte } from "drizzle-orm";
+import { eq, and, desc, sql, asc, gte, lte, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
 
@@ -75,6 +75,7 @@ export function transformProduct(p: any) {
     vendor: {
       id: vendor.id,
       name: vendor.name,
+      slug: vendor.slug,
       isVerified: !!vendor.isVerified,
     },
     pricing: {
@@ -184,10 +185,10 @@ export const productRouter = os.router({
     })
     .input(z.object({
       page: z.number().int().min(1).default(1),
-      limit: z.number().int().min(1).max(100).default(20),
-      category: z.string().optional(),
-      subcategory: z.string().optional(),
-      vendor: z.string().optional(),
+      limit: z.number().int().min(1).max(1000).default(20),
+      category: z.union([z.string(), z.array(z.string())]).optional(),
+      subcategory: z.union([z.string(), z.array(z.string())]).optional(),
+      vendor: z.union([z.string(), z.array(z.string())]).optional(),
       minPrice: z.number().optional(),
       maxPrice: z.number().optional(),
       sort: z.string().optional(),
@@ -202,35 +203,56 @@ export const productRouter = os.router({
       const whereClauses = [eq(products.status, "active")];
 
       if (category) {
-        const cat = await db.query.categories.findFirst({
-          where: eq(categories.slug, category),
-        });
-        if (cat) {
-          whereClauses.push(eq(products.categoryId, cat.id));
-        } else {
-          whereClauses.push(eq(products.categoryId, category));
+        const categoryIds = Array.isArray(category) ? category : [category];
+        const actualIds: string[] = [];
+        
+        for (const catId of categoryIds) {
+          const cat = await db.query.categories.findFirst({
+            where: eq(categories.slug, catId),
+          });
+          actualIds.push(cat?.id ?? catId);
+        }
+        
+        if (actualIds.length === 1) {
+          whereClauses.push(eq(products.categoryId, actualIds[0]));
+        } else if (actualIds.length > 1) {
+          whereClauses.push(inArray(products.categoryId, actualIds));
         }
       }
 
       if (subcategory) {
-        const sub = await db.query.subcategories.findFirst({
-          where: eq(subcategories.slug, subcategory),
-        });
-        if (sub) {
-          whereClauses.push(eq(products.subcategoryId, sub.id));
-        } else {
-          whereClauses.push(eq(products.subcategoryId, subcategory));
+        const subcategoryIds = Array.isArray(subcategory) ? subcategory : [subcategory];
+        const actualIds: string[] = [];
+        
+        for (const subId of subcategoryIds) {
+          const sub = await db.query.subcategories.findFirst({
+            where: eq(subcategories.slug, subId),
+          });
+          actualIds.push(sub?.id ?? subId);
+        }
+        
+        if (actualIds.length === 1) {
+          whereClauses.push(eq(products.subcategoryId, actualIds[0]));
+        } else if (actualIds.length > 1) {
+          whereClauses.push(inArray(products.subcategoryId, actualIds));
         }
       }
 
       if (vendor) {
-        const v = await db.query.vendors.findFirst({
-          where: eq(vendors.slug, vendor),
-        });
-        if (v) {
-          whereClauses.push(eq(products.vendorId, v.id));
-        } else {
-          whereClauses.push(eq(products.vendorId, vendor));
+        const vendorIds = Array.isArray(vendor) ? vendor : [vendor];
+        const actualIds: string[] = [];
+        
+        for (const vId of vendorIds) {
+          const v = await db.query.vendors.findFirst({
+            where: eq(vendors.slug, vId),
+          });
+          actualIds.push(v?.id ?? vId);
+        }
+        
+        if (actualIds.length === 1) {
+          whereClauses.push(eq(products.vendorId, actualIds[0]));
+        } else if (actualIds.length > 1) {
+          whereClauses.push(inArray(products.vendorId, actualIds));
         }
       }
 
@@ -407,14 +429,22 @@ export const productRouter = os.router({
     .route({
       operationId: "getVendorBySlug",
       summary: "Get Vendor by Slug",
-      description: "Returns a single vendor by its slug.",
+      description: "Returns a single vendor by its slug or ID.",
       tags: ["Catalog"],
     })
     .input(z.object({ slug: z.string() }))
     .handler(async ({ input }) => {
-      const v = await db.query.vendors.findFirst({
+      // First try to find by slug
+      let v = await db.query.vendors.findFirst({
         where: eq(vendors.slug, input.slug),
       });
+
+      // If not found by slug, try to find by ID
+      if (!v) {
+        v = await db.query.vendors.findFirst({
+          where: eq(vendors.id, input.slug),
+        });
+      }
 
       if (!v) return null;
 
@@ -437,7 +467,7 @@ export const productRouter = os.router({
     })
     .input(
       z.object({
-        limit: z.number().int().min(1).max(100).default(20),
+        limit: z.number().int().min(1).max(1000).default(20),
         offset: z.number().int().min(0).default(0),
       }).optional()
     )

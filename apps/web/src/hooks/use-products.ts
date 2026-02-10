@@ -41,12 +41,15 @@ export function useProducts(
       input: {
         page: filters.page,
         limit: filters.limit,
-        category: filters.category,
+        category: filters.categoryIds || filters.category,
         subcategory: filters.subcategory,
+        vendor: filters.vendorIds,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         sort: filters.sort,
         q: filters.search,
+        featured: filters.featured,
+        dealType: filters.dealType,
       },
       ...options as any,
     })
@@ -63,12 +66,15 @@ export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) 
       orpcClient.product.getProducts({
         page: pageParam as number,
         limit: filters.limit,
-        category: filters.category,
+        category: filters.categoryIds || filters.category,
         subcategory: filters.subcategory,
+        vendor: filters.vendorIds,
         minPrice: filters.minPrice,
         maxPrice: filters.maxPrice,
         sort: filters.sort,
         q: filters.search,
+        featured: filters.featured,
+        dealType: filters.dealType,
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage: any) => {
