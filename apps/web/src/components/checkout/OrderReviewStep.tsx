@@ -213,27 +213,6 @@ export function OrderReviewStep({
               </div>
             </div>
           </div>
-
-          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-[hsl(var(--primary))]" />
-                <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">
-                  Payment Method
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => onEditStep(3)}
-                className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--primary))] hover:underline"
-              >
-                Edit
-              </button>
-            </div>
-            <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))]">
-              {getPaymentMethodLabel(formData.paymentMethod)}
-            </p>
-          </div>
         </div>
 
         <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
@@ -285,43 +264,15 @@ export function OrderReviewStep({
           <Button type="button" variant="outline" size="lg" onClick={onBack}>
             ← Back
           </Button>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                size="lg"
-                className="w-full sm:w-auto px-8 font-semibold"
-                disabled={!agreedToTerms || isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  "Place Order"
-                )}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Order</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to place this order?
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                <DialogClose asChild>
-                  <Button variant="outline" disabled={isSubmitting}>Cancel</Button>
-                </DialogClose>
-                <DialogClose asChild>
-                  <Button onClick={onPlaceOrder} disabled={isSubmitting}>
-                    {isSubmitting ? "Placing Order..." : "Yes, Place Order"}
-                  </Button>
-                </DialogClose>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button
+            type="button"
+            size="lg"
+            className="w-full sm:w-auto px-8 font-semibold"
+            disabled={!agreedToTerms}
+            onClick={onPlaceOrder}
+          >
+            Continue to Payment →
+          </Button>
         </div>
       </div>
     </div>

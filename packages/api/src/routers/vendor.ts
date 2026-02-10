@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
+import * as orderService from "../services/order-service";
+import * as payoutService from "../services/payout-service";
+import { OrderActions } from "../services/order-state-machine";
 import { 
   vendorApplications, 
   user, 
@@ -724,5 +727,150 @@ export const vendorRouter = os.router({
       // TODO: Implement notifications table and logic
       // For now, return empty array
       return [];
+    }),
+
+  // ====================================================================
+  // New Payment Flow Endpoints
+  // ====================================================================
+
+  markOrderShipped: protectedProcedure
+    .route({
+      method: "POST",
+      operationId: "markOrderShipped",
+      summary: "Mark Order as Shipped",
+      description: "Vendor marks an order as shipped with optional tracking number. Works for both bKash and COD orders.",
+      tags: ["Vendor", "Orders"],
+    })
+    .input(
+      z.object({
+        orderId: z.string(),
+        trackingNumber: z.string().optional(),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // 1. Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      // 2. Verify vendor owns items in this order
+      const hasItems = await orderService.vendorOwnsOrderItems(input.orderId, vendor.id);
+      if (!hasItems) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "You do not have items in this order",
+        });
+      }
+
+      // 3. Get order to check status
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, input.orderId))
+        .limit(1);
+
+      if (!order) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      }
+
+      // 4. Verify order can be marked as shipped
+      if (!OrderActions.canMarkShipped(order.status, order.paymentMethod)) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: `Cannot mark order as shipped from status: ${order.status}`,
+        });
+      }
+
+      // 5. Update tracking number if provided
+      if (input.trackingNumber) {
+        await orderService.updateOrderTracking(
+          input.orderId,
+          input.trackingNumber,
+          vendor.id
+        );
+      }
+
+      // 6. Transition order to shipped status
+      const result = await orderService.transitionOrderStatus(input.orderId, "shipped");
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.order;
+    }),
+
+  getVendorPayoutHistory: protectedProcedure
+    .route({
+      method: "GET",
+      operationId: "getVendorPayoutHistory",
+      summary: "Get Vendor Payout History",
+      description: "View payout history for the logged-in vendor.",
+      tags: ["Vendor", "Payouts"],
+    })
+    .input(
+      z.object({
+        status: z.enum(["pending", "processing", "completed", "failed"]).optional(),
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        offset: z.coerce.number().int().min(0).default(0),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      const payouts = await payoutService.getVendorPayouts(
+        vendor.id,
+        input.status,
+        input.limit,
+        input.offset
+      );
+
+      return {
+        payouts,
+        total: payouts.length,
+      };
+    }),
+
+  getVendorPayoutStats: protectedProcedure
+    .route({
+      method: "GET",
+      operationId: "getVendorPayoutStats",
+      summary: "Get Vendor Payout Statistics",
+      description: "Get statistics about vendor's payouts (pending and completed amounts).",
+      tags: ["Vendor", "Payouts"],
+    })
+    .handler(async ({ context }) => {
+      const userId = context.session.user.id;
+
+      // Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      const stats = await payoutService.getVendorPayoutStats(vendor.id);
+      return stats;
     }),
 });

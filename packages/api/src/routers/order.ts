@@ -3,9 +3,12 @@ import { protectedProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import { orders, orderItems } from "@my-better-t-app/db/schema/orders";
 import { products } from "@my-better-t-app/db/schema/products";
-import { eq, and, desc } from "drizzle-orm";
+import { vendors } from "@my-better-t-app/db/schema/catalog";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
+import * as orderService from "../services/order-service";
+import * as paymentService from "../services/payment-service";
 
 export const orderRouter = os.router({
   placeOrder: protectedProcedure
@@ -33,9 +36,11 @@ export const orderRouter = os.router({
         postalCode: z.string(),
       }),
       deliveryMethod: z.string().optional(),
+      customerNote: z.string().optional(),
       payment: z.object({
-        method: z.string(),
+        method: z.enum(["bkash", "cod", "nagad", "card"]),
         transactionId: z.string().optional(),
+        senderMobile: z.string().optional(),
       }),
       items: z.array(z.object({
         productId: z.string(),
@@ -48,64 +53,101 @@ export const orderRouter = os.router({
     }))
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
-      const orderId = nanoid();
 
       try {
-        return await db.transaction(async (tx) => {
-          // 1. Create the order
-          await tx.insert(orders).values({
-            id: orderId,
-            orderNumber: input.orderNumber,
-            userId,
-            status: "pending",
-            paymentStatus: input.payment.transactionId ? "paid" : "pending",
-            subtotal: input.subtotal.toString(),
-            shippingCost: input.shippingCost.toString(),
-            tax: input.tax.toString(),
-            discount: input.discount.toString(),
-            total: input.total.toString(),
-            shippingName: input.shipping.fullName,
-            shippingPhone: input.shipping.phone,
-            shippingAddressLine1: input.shipping.addressLine1,
-            shippingAddressLine2: input.shipping.addressLine2,
-            shippingCity: input.shipping.city,
-            shippingDivision: input.shipping.division,
-            shippingPostalCode: input.shipping.postalCode,
-            deliveryMethod: input.deliveryMethod,
-            paymentMethod: input.payment.method,
-            paymentTransactionId: input.payment.transactionId,
-          });
+        // Use the order service to create the order with proper initial status
+        const order = await orderService.createOrder({
+          userId,
+          orderNumber: input.orderNumber,
+          paymentMethod: input.payment.method,
+          items: input.items,
+          totals: {
+            subtotal: input.subtotal,
+            shippingCost: input.shippingCost,
+            tax: input.tax,
+            discount: input.discount,
+            total: input.total,
+          },
+          shipping: input.shipping,
+          deliveryMethod: input.deliveryMethod,
+          customerNote: input.customerNote,
+          paymentDetails: {
+            transactionId: input.payment.transactionId,
+            senderMobile: input.payment.senderMobile,
+          },
+        });
 
-          // 2. Create order items
+        // Update product stock and vendor sales
+        await db.transaction(async (tx) => {
           for (const item of input.items) {
-            await tx.insert(orderItems).values({
-              id: nanoid(),
-              orderId,
-              productId: item.productId,
-              vendorId: item.vendorId,
-              title: item.title,
-              price: item.price.toString(),
-              quantity: item.quantity,
-              variantInfo: item.variantInfo,
-            });
-
-            // 3. Update stock (optional but recommended)
+            // Update stock
             await tx
               .update(products)
               .set({
-                stock: sql`stock - ${item.quantity}`,
+                stock: sql`${products.stock} - ${item.quantity}`,
               })
               .where(eq(products.id, item.productId));
-          }
 
-          return { id: orderId, orderNumber: input.orderNumber };
+            // Update vendor sales count
+            await tx
+              .update(vendors)
+              .set({
+                totalSales: sql`${vendors.totalSales} + 1`,
+              })
+              .where(eq(vendors.id, item.vendorId));
+          }
         });
+
+        return {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          status: order.status,
+          paymentMethod: order.paymentMethod,
+        };
       } catch (error) {
         console.error("Order placement failed:", error);
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: "Failed to place order. Please try again.",
         });
       }
+    }),
+
+  submitPayment: protectedProcedure
+    .route({
+      method: "POST",
+      path: "/submit-payment",
+      operationId: "submitPayment",
+      summary: "Submit bKash Payment Proof",
+      description: "Customer submits bKash transaction ID after making payment.",
+      tags: ["Orders", "Payments"],
+    })
+    .input(
+      z.object({
+        orderId: z.string(),
+        transactionId: z.string().min(1, "Transaction ID is required"),
+        senderMobile: z.string().min(11, "Mobile number is required"),
+        amount: z.number().min(1, "Amount is required"),
+      })
+    )
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const result = await paymentService.submitPaymentProof({
+        orderId: input.orderId,
+        transactionId: input.transactionId,
+        senderMobile: input.senderMobile,
+        amount: input.amount,
+        userId
+      });
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return {
+        success: true,
+        payment: result.payment,
+      };
     }),
 
   listMyOrders: protectedProcedure
@@ -141,13 +183,9 @@ export const orderRouter = os.router({
     .input(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
-      
-      const order = await db.query.orders.findFirst({
-        where: and(eq(orders.id, input.id), eq(orders.userId, userId)),
-        with: {
-          items: true,
-        }
-      });
+
+      // Use order service to get full details including payment and payouts
+      const order = await orderService.getOrderDetails(input.id, userId);
 
       if (!order) {
         throw new ORPCError("NOT_FOUND", { message: "Order not found" });
@@ -156,6 +194,3 @@ export const orderRouter = os.router({
       return order;
     }),
 });
-
-// For stock decrement SQL
-import { sql } from "drizzle-orm";
