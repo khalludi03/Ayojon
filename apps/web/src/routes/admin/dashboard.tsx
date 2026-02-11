@@ -1,15 +1,17 @@
 import { createFileRoute, redirect, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { 
-  Users, 
-  Store, 
-  Package, 
-  ShoppingBag, 
-  DollarSign, 
+import {
+  Users,
+  Store,
+  Package,
+  ShoppingBag,
+  DollarSign,
   UserPlus,
   ArrowRight,
   ShieldCheck,
-  Activity
+  Activity,
+  Image,
+  Sparkles
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -164,6 +166,62 @@ function AdminDashboardPage() {
               ))}
             </div>
           </ActivityWidget>
+        </div>
+
+        {/* Homepage Management Section */}
+        <div className="bg-gradient-to-br from-orange-500 to-pink-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl shadow-orange-200 dark:shadow-none">
+          <div className="relative z-10">
+            <h3 className="text-lg font-black uppercase tracking-[0.2em] mb-2 text-orange-100">Homepage Management</h3>
+            <p className="text-sm text-white/80 mb-6">Update banners and promotional content</p>
+            <div className="grid gap-6 md:grid-cols-2">
+              <Link
+                to="/admin/homepage-banners" as any
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all group"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Image className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black">Main Banners</h4>
+                    <p className="text-xs text-white/70">Carousel slides</p>
+                  </div>
+                </div>
+                <p className="text-sm text-white/80">
+                  Manage homepage carousel with unlimited slides, images, and call-to-action buttons
+                </p>
+                <div className="mt-4 flex items-center gap-2 text-sm font-bold">
+                  <span>Manage Banners</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </Link>
+
+              <Link
+                to="/admin/homepage-promo-cards" as any
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 hover:bg-white/20 hover:scale-105 transition-all group"
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-black">Promo Cards</h4>
+                    <p className="text-xs text-white/70">4 featured spots</p>
+                  </div>
+                </div>
+                <p className="text-sm text-white/80">
+                  Update the 4 promotional cards displayed beside the main carousel
+                </p>
+                <div className="mt-4 flex items-center gap-2 text-sm font-bold">
+                  <span>Manage Cards</span>
+                  <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </Link>
+            </div>
+          </div>
+          {/* Decorative accents */}
+          <div className="absolute -right-10 -bottom-10 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -left-10 -top-10 h-64 w-64 rounded-full bg-black/10 blur-3xl" />
         </div>
 
         {/* Quick Access Control Bar */}

@@ -67,6 +67,7 @@ const STATUS_CONFIG = {
   
   // COD flow
   placed: { label: 'Order Placed', icon: ShoppingBag, color: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-300 dark:border-sky-800' },
+  confirmed: { label: 'Confirmed', icon: CheckCircle, color: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
   
   // Shared flow
   pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800' },
@@ -358,6 +359,12 @@ function AdminOrdersPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-56 rounded-xl shadow-xl">
+                            {order.status === 'placed' && (
+                              <DropdownMenuItem onClick={() => updateStatus(order.id, 'confirmed')}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                <span className="text-green-600 font-bold">Confirm Order</span>
+                              </DropdownMenuItem>
+                            )}
                             {order.status === 'payment_submitted' && (
                               <>
                                 <DropdownMenuItem onClick={() => updateStatus(order.id, 'payment_received')}>
@@ -371,17 +378,23 @@ function AdminOrdersPage() {
                                 <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
                               </>
                             )}
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'shipped')}>
-                              <Truck className="mr-2 h-4 w-4" /> Mark Shipped
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'delivered')}>
-                              <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
-                              <span className="text-green-600">Mark Delivered</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(order.id, 'cancelled')}>
-                              <XCircle className="mr-2 h-4 w-4 text-red-600" />
-                              <span className="text-red-600">Cancel Order</span>
-                            </DropdownMenuItem>
+                            {(order.status === 'confirmed' || order.status === 'payment_received') && (
+                              <DropdownMenuItem onClick={() => updateStatus(order.id, 'shipped')}>
+                                <Truck className="mr-2 h-4 w-4" /> Mark Shipped
+                              </DropdownMenuItem>
+                            )}
+                            {order.status === 'shipped' && (
+                              <DropdownMenuItem onClick={() => updateStatus(order.id, 'delivered')}>
+                                <CheckCircle className="mr-2 h-4 w-4 text-green-600" />
+                                <span className="text-green-600">Mark Delivered</span>
+                              </DropdownMenuItem>
+                            )}
+                            {['vendor_paid', 'vendor_settled', 'cancelled', 'delivered'].indexOf(order.status) === -1 && (
+                              <DropdownMenuItem onClick={() => updateStatus(order.id, 'cancelled')}>
+                                <XCircle className="mr-2 h-4 w-4 text-red-600" />
+                                <span className="text-red-600">Cancel Order</span>
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </td>

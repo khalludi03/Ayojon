@@ -64,6 +64,17 @@ export function transformProduct(p: any) {
     });
   }
 
+  const dealStartsAt = p.dealStartsAt
+    ? (p.dealStartsAt instanceof Date ? p.dealStartsAt.toISOString() : p.dealStartsAt)
+    : p.dealType
+      ? new Date().toISOString()
+      : undefined;
+  const dealEndsAt = p.dealEndsAt
+    ? (p.dealEndsAt instanceof Date ? p.dealEndsAt.toISOString() : p.dealEndsAt)
+    : p.dealType
+      ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      : undefined;
+
   return {
     id: p.id,
     title: p.title || "Untitled Product",
@@ -71,6 +82,9 @@ export function transformProduct(p: any) {
     slug: p.slug,
     description: p.description || "",
     descriptionShort: p.descriptionShort || "",
+    dealType: p.dealType || undefined,
+    dealStartsAt,
+    dealEndsAt,
     images,
     vendor: {
       id: vendor.id,

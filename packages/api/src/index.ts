@@ -43,5 +43,5 @@ export const adminProcedure = protectedProcedure.use(async ({ context, next }) =
     });
   }
 
-  return next(context);
+  return next();
 });

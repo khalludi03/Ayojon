@@ -3,6 +3,7 @@ import { adminProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import * as paymentService from "../services/payment-service";
 import * as payoutService from "../services/payout-service";
+import * as orderService from "../services/order-service";
 import { notifyVendorApproved, notifyVendorRejected } from "../services/notification-service";
 import {
   user,
@@ -13,9 +14,11 @@ import {
   platformSettings,
   productImages,
   categories,
-  vendorApplications
+  vendorApplications,
+  homeBanners,
+  homePromoCards
 } from "@my-better-t-app/db/schema/index";
-import { count, eq, gte, sql, or, ilike, and, desc } from "drizzle-orm";
+import { count, eq, gte, sql, or, ilike, and, desc, asc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
 
@@ -771,6 +774,10 @@ export const adminRouter = os.router({
           slug: products.slug,
           price: products.price,
           status: products.status,
+          isFeatured: products.isFeatured,
+          dealType: products.dealType,
+          dealStartsAt: products.dealStartsAt,
+          dealEndsAt: products.dealEndsAt,
           createdAt: products.createdAt,
           vendorName: vendors.name,
           categoryName: categories.name,
@@ -794,6 +801,71 @@ export const adminRouter = os.router({
         products: productList,
         totalCount: totalCount?.value ?? 0,
       };
+    }),
+
+  updateProductPromotions: adminProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updateProductPromotions",
+      summary: "Update Product Promotions",
+      description: "Sets featured, hot deal, or flash deal flags for a product.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        id: z.string(),
+        isFeatured: z.boolean().optional(),
+        dealType: z.enum(["flash", "hot", "daily", "clearance", "bundle"]).nullable().optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const { id, isFeatured, dealType } = input;
+
+      const [existing] = await db
+        .select({
+          id: products.id,
+          dealStartsAt: products.dealStartsAt,
+          dealEndsAt: products.dealEndsAt,
+        })
+        .from(products)
+        .where(eq(products.id, id))
+        .limit(1);
+
+      if (!existing) {
+        throw new ORPCError("NOT_FOUND", { message: "Product not found" });
+      }
+
+      const updates: Record<string, any> = {
+        updatedAt: new Date(),
+      };
+
+      if (typeof isFeatured === "boolean") {
+        updates.isFeatured = isFeatured;
+      }
+
+      if (dealType !== undefined) {
+        if (dealType === null) {
+          updates.dealType = null;
+          updates.dealStartsAt = null;
+          updates.dealEndsAt = null;
+        } else {
+          updates.dealType = dealType;
+          if (!existing.dealStartsAt) {
+            updates.dealStartsAt = new Date();
+          }
+          if (!existing.dealEndsAt) {
+            updates.dealEndsAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          }
+        }
+      }
+
+      const result = await db
+        .update(products)
+        .set(updates)
+        .where(eq(products.id, id))
+        .returning();
+
+      return result[0];
     }),
 
   adminDeleteProduct: adminProcedure
@@ -956,6 +1028,7 @@ export const adminRouter = os.router({
           "payment_submitted",
           "payment_received",
           "placed",
+          "confirmed",
           "pending",
           "processing",
           "shipped",
@@ -1021,7 +1094,7 @@ export const adminRouter = os.router({
 
   updateOrderStatus: adminProcedure
     .route({
-      method: "PATCH",
+      method: "POST",
       operationId: "updateOrderStatus",
       summary: "Update Order Status",
       description: "Updates the status of an order.",
@@ -1035,6 +1108,7 @@ export const adminRouter = os.router({
           "payment_submitted",
           "payment_received",
           "placed",
+          "confirmed",
           "pending",
           "processing",
           "shipped",
@@ -1046,23 +1120,23 @@ export const adminRouter = os.router({
           "cancelled",
           "returned",
         ]),
+        reason: z.string().optional(),
       })
     )
-    .handler(async ({ input }) => {
-      const result = await db
-        .update(orders)
-        .set({
-          status: input.status,
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, input.id))
-        .returning();
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
+      const result = await orderService.transitionOrderStatus(
+        input.id, 
+        input.status as any, 
+        adminId,
+        input.reason
+      );
 
-      if (result.length === 0) {
-        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
       }
 
-      return result[0];
+      return result.order;
     }),
 
   getPlatformMetrics: adminProcedure
@@ -1213,11 +1287,13 @@ export const adminRouter = os.router({
         notes: z.string().optional(),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
       const result = await paymentService.recordCashCollection(
         input.orderId,
         input.collectionProof,
-        input.notes
+        input.notes,
+        adminId
       );
 
       if (!result.success) {
@@ -1360,5 +1436,248 @@ export const adminRouter = os.router({
         success: true,
         payouts: result.payouts,
       };
+    }),
+
+  // ====================================================================
+  // Homepage Banner Management
+  // ====================================================================
+
+  listAllBanners: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "listAllBanners",
+      summary: "List All Homepage Banners",
+      description: "Lists all homepage banners (active and inactive) for admin management.",
+      tags: ["Admin", "Homepage"],
+    })
+    .handler(async () => {
+      const banners = await db
+        .select()
+        .from(homeBanners)
+        .orderBy(asc(homeBanners.sortOrder));
+
+      return { banners };
+    }),
+
+  createBanner: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "createBanner",
+      summary: "Create Homepage Banner",
+      description: "Creates a new homepage banner slide.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        imageUrl: z.string().url(),
+        title: z.string().min(1).max(200),
+        subtitle: z.string().min(1).max(500),
+        buttonText: z.string().min(1).max(50),
+        buttonLink: z.string().min(1),
+        isActive: z.boolean().optional().default(true),
+        sortOrder: z.number().int().min(0).optional().default(0),
+      })
+    )
+    .handler(async ({ input }) => {
+      const id = nanoid();
+      const banner = await db
+        .insert(homeBanners)
+        .values({
+          id,
+          ...input,
+        })
+        .returning();
+
+      return banner[0];
+    }),
+
+  updateBanner: adminProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updateBanner",
+      summary: "Update Homepage Banner",
+      description: "Updates an existing homepage banner.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        id: z.string(),
+        imageUrl: z.string().url().optional(),
+        title: z.string().min(1).max(200).optional(),
+        subtitle: z.string().min(1).max(500).optional(),
+        buttonText: z.string().min(1).max(50).optional(),
+        buttonLink: z.string().min(1).optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().int().min(0).optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const { id, ...updates } = input;
+      const result = await db
+        .update(homeBanners)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(homeBanners.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        throw new ORPCError("NOT_FOUND", { message: "Banner not found" });
+      }
+
+      return result[0];
+    }),
+
+  deleteBanner: adminProcedure
+    .route({
+      method: "DELETE",
+      operationId: "deleteBanner",
+      summary: "Delete Homepage Banner",
+      description: "Deletes a homepage banner permanently.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ input, context }) => {
+      // Get banner to extract image URL
+      const [banner] = await db
+        .select()
+        .from(homeBanners)
+        .where(eq(homeBanners.id, input.id))
+        .limit(1);
+
+      if (!banner) {
+        throw new ORPCError("NOT_FOUND", { message: "Banner not found" });
+      }
+
+      // Delete banner
+      await db.delete(homeBanners).where(eq(homeBanners.id, input.id));
+
+      // Try to delete image from storage
+      try {
+        const imageKey = banner.imageUrl.split('/').pop();
+        if (imageKey) {
+          await context.storage.deleteFile(imageKey);
+        }
+      } catch (error) {
+        console.error("Failed to delete banner image from storage:", error);
+        // Continue even if deletion fails
+      }
+
+      return { success: true };
+    }),
+
+  reorderBanners: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "reorderBanners",
+      summary: "Reorder Homepage Banners",
+      description: "Updates the sort order for multiple homepage banners.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        banners: z.array(
+          z.object({
+            id: z.string(),
+            sortOrder: z.number().int().min(0),
+          })
+        ),
+      })
+    )
+    .handler(async ({ input }) => {
+      // Update each banner's sort order in a transaction
+      await db.transaction(async (tx) => {
+        for (const banner of input.banners) {
+          await tx
+            .update(homeBanners)
+            .set({ sortOrder: banner.sortOrder, updatedAt: new Date() })
+            .where(eq(homeBanners.id, banner.id));
+        }
+      });
+
+      return { success: true };
+    }),
+
+  // ====================================================================
+  // Homepage Promo Card Management
+  // ====================================================================
+
+  listAllPromoCards: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "listAllPromoCards",
+      summary: "List All Homepage Promo Cards",
+      description: "Lists all 4 homepage promotional cards for admin management.",
+      tags: ["Admin", "Homepage"],
+    })
+    .handler(async () => {
+      const promoCards = await db
+        .select()
+        .from(homePromoCards)
+        .orderBy(asc(homePromoCards.slotNumber));
+
+      return { promoCards };
+    }),
+
+  updatePromoCard: adminProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updatePromoCard",
+      summary: "Update Homepage Promo Card",
+      description: "Updates a homepage promotional card by slot number.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        id: z.string().optional(),
+        slotNumber: z.number().int().min(1).max(4),
+        imageUrl: z.string().url().optional(),
+        label: z.string().min(1).max(100).optional(),
+        title: z.string().min(1).max(200).optional(),
+        link: z.string().min(1).optional(),
+        isActive: z.boolean().optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const { id, slotNumber, ...updates } = input;
+
+      // Check if promo card exists for this slot
+      const [existing] = await db
+        .select()
+        .from(homePromoCards)
+        .where(eq(homePromoCards.slotNumber, slotNumber))
+        .limit(1);
+
+      if (existing) {
+        // Update existing card
+        const result = await db
+          .update(homePromoCards)
+          .set({
+            ...updates,
+            updatedAt: new Date(),
+          })
+          .where(eq(homePromoCards.slotNumber, slotNumber))
+          .returning();
+
+        return result[0];
+      } else {
+        // Create new card for this slot
+        const newId = nanoid();
+        const result = await db
+          .insert(homePromoCards)
+          .values({
+            id: newId,
+            slotNumber,
+            imageUrl: updates.imageUrl || "",
+            label: updates.label || "",
+            title: updates.title || "",
+            link: updates.link || "",
+            isActive: updates.isActive ?? true,
+          })
+          .returning();
+
+        return result[0];
+      }
     }),
 });

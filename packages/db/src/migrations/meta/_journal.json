@@ -71,6 +71,20 @@
       "when": 1770754371842,
       "tag": "0009_clean_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1770805416707,
+      "tag": "0010_petite_puppet_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1770823460986,
+      "tag": "0011_short_harrier",
+      "breakpoints": true
     }
   ]
 }

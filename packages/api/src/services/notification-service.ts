@@ -82,6 +82,11 @@ export async function notifyOrderStatusUpdate(
       type: "payment_rejected",
     },
     placed: {
+      title: "Order Placed",
+      message: `Your order #${orderNumber} has been placed successfully.`,
+      type: "order_placed",
+    },
+    confirmed: {
       title: "Order Confirmed",
       message: `Your order #${orderNumber} has been confirmed and is being prepared.`,
       type: "order_confirmed",

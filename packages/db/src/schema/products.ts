@@ -20,7 +20,7 @@ import { vendors, categories, subcategories, eventTypes } from "./catalog";
 export type ProductStatus = "draft" | "active" | "out_of_stock" | "archived";
 export type StockStatus = "in_stock" | "low_stock" | "out_of_stock";
 export type CurrencyCode = "BDT" | "INR" | "PKR" | "USD";
-export type DealType = "flash" | "daily" | "clearance" | "bundle";
+export type DealType = "flash" | "hot" | "daily" | "clearance" | "bundle";
 export type ProductCondition = "new" | "like-new" | "good";
 export type ProductBadge = "choice" | "top_seller" | "new" | "verified";
 export type VariantType = "color" | "size" | "material";
