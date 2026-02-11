@@ -1,4 +1,4 @@
-import { DollarSign, ShoppingCart, Calendar, Clock, Star, Eye, TrendingUp, TrendingDown } from 'lucide-react';
+import { DollarSign, ShoppingCart, Star, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { orpc } from '@/utils/orpc';
@@ -98,13 +98,6 @@ export function KPICards() {
         trend={stats?.ordersGrowth ? { value: stats.ordersGrowth, isPositive: stats.ordersGrowth > 0 } : undefined}
       />
       <KPICard
-        title="Active Rentals"
-        value={stats?.activeRentals ?? 0}
-        icon={Calendar}
-        color="bg-purple-100 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400"
-        isLoading={isLoading}
-      />
-      <KPICard
         title="Pending Orders"
         value={stats?.pendingOrders ?? 0}
         icon={Clock}
@@ -123,13 +116,6 @@ export function KPICards() {
         value={stats ? `${(stats.vendorScore * 100).toFixed(0)}%` : '0%'}
         icon={TrendingUp}
         color="bg-indigo-100 text-indigo-600 dark:bg-indigo-950/30 dark:text-indigo-400"
-        isLoading={isLoading}
-      />
-      <KPICard
-        title="Store Views"
-        value={stats?.storeViews ?? 0}
-        icon={Eye}
-        color="bg-pink-100 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400"
         isLoading={isLoading}
       />
     </div>

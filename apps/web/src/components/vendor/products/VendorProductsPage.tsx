@@ -9,6 +9,7 @@ import type { VendorProduct, ProductStatus, ProductType } from '@/types/vendor-p
 import { AddProductForm } from './AddProductForm';
 import { EnhancedProductsTable } from './EnhancedProductsTable';
 import { cn } from '@/lib/utils';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 type SortField = 'name' | 'price' | 'stock' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
@@ -47,6 +48,9 @@ export function VendorProductsPage() {
 
   // Show filters
   const [showFilters, setShowFilters] = useState(false);
+
+  // Bulk delete confirmation
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   // Fetch products from API
   const { data: apiProducts = [], isLoading, refetch } = useQuery(
@@ -96,7 +100,7 @@ export function VendorProductsPage() {
         refetch();
       },
       onError: (error: any) => {
-        toast.error('Failed to delete product');
+        toast.error(error?.message || 'Failed to delete product');
         console.error('Delete error:', error);
       },
     })
@@ -251,12 +255,15 @@ export function VendorProductsPage() {
   };
 
   const handleBulkDelete = () => {
-    if (confirm(`Are you sure you want to delete ${selectedProducts.size} product(s)?`)) {
-      selectedProducts.forEach((productId) => {
-        deleteMutation.mutate(productId);
-      });
-      setSelectedProducts(new Set());
-    }
+    setShowBulkDeleteConfirm(true);
+  };
+
+  const confirmBulkDelete = () => {
+    selectedProducts.forEach((productId) => {
+      deleteMutation.mutate({ id: productId });
+    });
+    setSelectedProducts(new Set());
+    setShowBulkDeleteConfirm(false);
   };
 
   const handleAddProduct = () => {
@@ -547,6 +554,16 @@ export function VendorProductsPage() {
           </div>
         )}
       </div>
+
+      <ConfirmationDialog
+        open={showBulkDeleteConfirm}
+        onOpenChange={setShowBulkDeleteConfirm}
+        onConfirm={confirmBulkDelete}
+        title="Delete Multiple Products"
+        description={`Are you sure you want to delete ${selectedProducts.size} product(s)? This action cannot be undone and these products will be permanently removed from your catalog.`}
+        confirmText="Delete Products"
+        variant="destructive"
+      />
     </div>
   );
 }

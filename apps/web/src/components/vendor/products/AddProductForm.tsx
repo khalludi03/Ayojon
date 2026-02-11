@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { VendorProduct, ProductFormData, ProductImage, ProductSpecification } from '@/types/vendor-product';
 import { uploadFile } from '@/lib/storage-utils';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 // Helper to generate SKU
 function generateSKU(): string {
@@ -108,6 +109,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
   const [savedProductId, setSavedProductId] = useState<string>('');
   const [hasChanges, setHasChanges] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
 
   useEffect(() => {
     if (existingProduct) {
@@ -356,11 +358,14 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
 
   const handleCancel = () => {
     if (hasChanges) {
-      const confirmDiscard = confirm(
-        'You have unsaved changes. Are you sure you want to discard them?'
-      );
-      if (!confirmDiscard) return;
+      setShowDiscardConfirm(true);
+    } else {
+      onClose();
     }
+  };
+
+  const confirmDiscard = () => {
+    setShowDiscardConfirm(false);
     onClose();
   };
 
@@ -1044,6 +1049,16 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           </div>
         </div>
       </div>
+
+      <ConfirmationDialog
+        open={showDiscardConfirm}
+        onOpenChange={setShowDiscardConfirm}
+        onConfirm={confirmDiscard}
+        title="Discard Changes"
+        description="You have unsaved changes. Are you sure you want to discard them and close the form?"
+        confirmText="Discard Changes"
+        variant="destructive"
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Edit, Trash2, Eye, Package, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct } from '@/types/vendor-product';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface EnhancedProductsTableProps {
   products: VendorProduct[];
@@ -65,10 +66,16 @@ export function EnhancedProductsTable({
 }: EnhancedProductsTableProps) {
   const [editingPrice, setEditingPrice] = useState<{ productId: string; value: string } | null>(null);
   const [editingStock, setEditingStock] = useState<{ productId: string; value: string } | null>(null);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   const handleDelete = (productId: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      onDelete(productId);
+    setProductToDelete(productId);
+  };
+
+  const confirmDelete = () => {
+    if (productToDelete) {
+      onDelete(productToDelete);
+      setProductToDelete(null);
     }
   };
 
@@ -81,7 +88,7 @@ export function EnhancedProductsTable({
 
     const newPrice = parseFloat(editingPrice.value);
     if (isNaN(newPrice) || newPrice <= 0) {
-      alert('Please enter a valid price');
+      toast.error('Please enter a valid price');
       return;
     }
 
@@ -94,7 +101,7 @@ export function EnhancedProductsTable({
 
     const newStock = parseInt(editingStock.value);
     if (isNaN(newStock) || newStock < 0) {
-      alert('Please enter a valid stock quantity');
+      toast.error('Please enter a valid stock quantity');
       return;
     }
 
@@ -411,6 +418,16 @@ export function EnhancedProductsTable({
           );
         })}
       </div>
+
+      <ConfirmationDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => !open && setProductToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone and the product will be removed from your catalog."
+        confirmText="Delete Product"
+        variant="destructive"
+      />
     </div>
   );
 }

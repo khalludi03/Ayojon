@@ -15,6 +15,7 @@
     "@my-better-t-app/db": "workspace:*",
     "@my-better-t-app/env": "workspace:*",
     "@my-better-t-app/storage": "workspace:*",
+    "@orpc/server": "^1.13.4",
     "dotenv": "catalog:",
     "nanoid": "^5.0.9",
     "zod": "catalog:"

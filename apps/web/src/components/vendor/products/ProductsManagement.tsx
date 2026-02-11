@@ -40,7 +40,7 @@ export function ProductsManagement() {
         refetch();
       },
       onError: (error: any) => {
-        toast.error('Failed to delete product');
+        toast.error(error?.message || 'Failed to delete product');
         console.error('Delete error:', error);
       },
     })

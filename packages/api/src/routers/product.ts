@@ -4,21 +4,30 @@ import { db } from "@my-better-t-app/db";
 import { 
   products, 
   productImages, 
-  productVariants, 
-  productSpecifications,
-  productEventTypes,
   vendors,
   categories,
   subcategories,
-  eventTypes
 } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, sql, asc, gte, lte, inArray } from "drizzle-orm";
+import { orderItems } from "@my-better-t-app/db/schema/orders";
+import { eq, and, desc, sql, asc, gte, lte, inArray, count } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
 
 // =============================================================================
 // HELPERS
 // =============================================================================
+
+// Helper function to extract S3 key from URL
+const extractS3Key = (url: string | null): string | null => {
+  if (!url) return null;
+
+  // Match everything after '/images/' until a '?' or end of string
+  const match = url.match(/\/images\/(.+?)(?:\?|$)/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return null;
+};
 
 // Helper to get vendor ID from user ID
 async function getVendorId(userId: string) {
@@ -633,76 +642,91 @@ export const productRouter = os.router({
     })
     .input(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
-      const vendorId = await getVendorId(context.session.user.id);
+      try {
+        const vendorId = await getVendorId(context.session.user.id);
+        const productId = input.id;
 
-      // Helper function to extract S3 key from URL
-      const extractS3Key = (url: string | null): string | null => {
-        if (!url) return null;
-
-        // Match everything after '/images/' until a '?' or end of string
-        const match = url.match(/\/images\/(.+?)(?:\?|$)/);
-        if (match) {
-          return match[1];
-        }
-        return null;
-      };
-
-      await db.transaction(async (tx) => {
-        // Get product images before deleting
-        const images = await tx
+        // 1. Verify product exists and belongs to vendor
+        const productResults = await db
           .select()
-          .from(productImages)
-          .where(eq(productImages.productId, input.id));
+          .from(products)
+          .where(and(eq(products.id, productId), eq(products.vendorId, vendorId)))
+          .limit(1);
 
-        // Collect S3 files to delete
-        const filesToDelete: string[] = [];
-        for (const img of images) {
-          const key = extractS3Key(img.url);
-          if (key) filesToDelete.push(key);
-        }
+        const existingProduct = productResults[0];
 
-        // Delete product (cascades to productImages due to foreign key)
-        const result = await tx
-          .delete(products)
-          .where(
-            and(
-              eq(products.id, input.id),
-              eq(products.vendorId, vendorId)
-            )
-          )
-          .returning();
-
-        if (result.length === 0) {
+        if (!existingProduct) {
           throw new ORPCError("NOT_FOUND", {
             message: "Product not found or unauthorized",
           });
         }
 
-        // Delete files from S3
-        const deletedFiles: string[] = [];
+        // 2. Check if product has been ordered (to prevent foreign key violation)
+        const orderCountResult = await db
+          .select({ value: count() })
+          .from(orderItems)
+          .where(eq(orderItems.productId, productId));
+        
+        const orderCount = Number(orderCountResult[0]?.value || 0);
+        
+        if (orderCount > 0) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Cannot delete product with order history. Try archiving it instead.",
+          });
+        }
+
+        // 3. Get images to delete from S3
+        const images = await db
+          .select()
+          .from(productImages)
+          .where(eq(productImages.productId, productId));
+
+        const filesToDelete = images
+          .map(img => extractS3Key(img.url))
+          .filter((key): key is string => !!key);
+
+        await db.transaction(async (tx) => {
+          // 4. Delete product (cascades to productImages, specifications, etc. due to foreign key)
+          await tx
+            .delete(products)
+            .where(
+              and(
+                eq(products.id, productId),
+                eq(products.vendorId, vendorId)
+              )
+            );
+
+          // 5. Decrement vendor's product count safely
+          await tx
+            .update(vendors)
+            .set({
+              productCount: sql`${vendors.productCount} - 1`,
+              updatedAt: new Date(),
+            })
+            .where(eq(vendors.id, vendorId));
+        });
+
+        // 6. Delete files from S3 after successful DB transaction
         for (const fileKey of filesToDelete) {
           try {
             await context.storage.deleteFile(fileKey);
-            deletedFiles.push(fileKey);
-            console.log(`[Vendor Delete Product] Deleted S3 file: ${fileKey}`);
           } catch (error) {
-            console.error(`[Vendor Delete Product] Failed to delete file ${fileKey}:`, error);
-            // Continue even if deletion fails
+            console.error(`[Delete Product] Failed to delete file ${fileKey}:`, error);
           }
         }
 
-        // Decrement vendor's product count
-        await tx
-          .update(vendors)
-          .set({
-            productCount: sql`${vendors.productCount} - 1`,
-            updatedAt: new Date(),
-          })
-          .where(eq(vendors.id, vendorId));
+        return { success: true };
+      } catch (error) {
+        // If it's already an ORPCError (or looks like one), just re-throw it
+        if (error instanceof ORPCError) throw error;
+        if (typeof error === 'object' && error !== null && 'code' in error && 'status' in error) {
+          throw error;
+        }
 
-        console.log(`[Vendor Delete Product] Deleted product ${input.id}, removed ${deletedFiles.length} images from S3`);
-      });
-
-      return { success: true };
+        console.error(`[deleteProduct] Error:`, error);
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: error instanceof Error ? error.message : "Unknown error in deleteProduct",
+        });
+      }
     }),
 });

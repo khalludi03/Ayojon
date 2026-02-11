@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Edit, Trash2, Eye, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct } from '@/types/vendor-product';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 
 interface ProductsListProps {
   products: VendorProduct[];
@@ -30,9 +32,16 @@ const getProductTypeLabel = (product: VendorProduct) => {
 };
 
 export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRefresh }: ProductsListProps) {
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+
   const handleDelete = (productId: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      onDelete(productId);
+    setProductToDelete(productId);
+  };
+
+  const confirmDelete = () => {
+    if (productToDelete) {
+      onDelete(productToDelete);
+      setProductToDelete(null);
     }
   };
 
@@ -238,6 +247,16 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
           );
         })}
       </div>
+
+      <ConfirmationDialog
+        open={!!productToDelete}
+        onOpenChange={(open) => !open && setProductToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        description="Are you sure you want to delete this product? This action cannot be undone and the product will be removed from your catalog."
+        confirmText="Delete Product"
+        variant="destructive"
+      />
     </div>
   );
 }
