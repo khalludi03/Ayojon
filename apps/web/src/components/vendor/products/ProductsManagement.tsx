@@ -65,7 +65,7 @@ export function ProductsManagement() {
       sku: p.sku || '',
       description: p.description,
       shortDescription: p.descriptionShort || '',
-      category: p.categoryId,
+      category: p.category?.name ?? p.categoryName ?? p.categoryId ?? '',
       subcategory: '',
       eventTypes: [],
       productType: 'purchase' as const,

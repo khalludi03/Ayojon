@@ -4,11 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { X, Upload, GripVertical, Check, Loader2, Package, Tag, FileText, DollarSign, Image as ImageIcon, Settings, Info, Sparkles } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { orpc } from '@/utils/orpc';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { VendorProduct, ProductFormData, ProductImage, ProductSpecification } from '@/types/vendor-product';
+import type { Category } from '@/types/category';
 import { uploadFile } from '@/lib/storage-utils';
 
 // Helper to generate SKU
@@ -24,17 +25,6 @@ interface AddProductFormProps {
   onSuccess?: () => void;
 }
 
-const CATEGORIES = [
-  'Apparel & Accessories',
-  'Jewelry & Watches',
-  'Home & Living',
-  'Electronics',
-  'Beauty & Personal Care',
-  'Art & Collectibles',
-  'Toys & Games',
-  'Sports & Outdoors',
-];
-
 const EVENT_TYPES = [
   'Wedding',
   'Birthday',
@@ -49,6 +39,8 @@ const EVENT_TYPES = [
 ];
 
 export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProductFormProps) {
+  const { data: categories = [] } = useQuery(orpc.product.listCategories.queryOptions()) as { data: Category[] };
+
   // Create product mutation
   const createProductMutation = useMutation(
     orpc.product.createProduct.mutationOptions({
@@ -397,6 +389,8 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
         slug: `${slug}-${Date.now()}`,
         description: formData.description,
         descriptionShort: formData.shortDescription || undefined,
+        brand: formData.brand || undefined,
+        sku: formData.sku || undefined,
         categoryId: categoryMap[formData.category] || 'decorations',
         price: formData.regularPrice.toString(), // Must be string
         salePrice: formData.salePrice ? formData.salePrice.toString() : null, // Send null if empty
@@ -410,6 +404,10 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           id: existingProduct.id,
           title: apiData.title,
           description: apiData.description,
+          descriptionShort: apiData.descriptionShort,
+          brand: apiData.brand,
+          sku: apiData.sku || generateSKU(),
+          categoryId: apiData.categoryId,
           price: apiData.price,
           stock: apiData.stock,
           status: apiData.status,
@@ -650,8 +648,8 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   }}
                 >
                   <option value="">Select category</option>
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
                 {errors.category && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.category}</p>}
@@ -1052,9 +1050,9 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   {formData.images.length} image{formData.images.length !== 1 ? 's' : ''} uploaded
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  {formData.images.map((image) => (
+                  {formData.images.map((image, imageIndex) => (
                     <div
-                      key={image.id}
+                      key={`${image.id}-${imageIndex}`}
                       className={cn(
                         'relative group rounded-lg overflow-hidden border-2',
                         image.isPrimary

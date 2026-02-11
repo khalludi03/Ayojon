@@ -8,11 +8,11 @@ import {
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
-import { authClient } from "@/lib/auth-client";
+import { useSession } from "@/lib/session-context";
 
 export function NotificationBell() {
-  const { data: session } = authClient.useSession();
-  const isAuthenticated = !!session?.user;
+  const sessionContext = useSession();
+  const isAuthenticated = !!sessionContext?.session?.user;
 
   // Query for unread count - only when authenticated
   const { data: unreadData } = useQuery({

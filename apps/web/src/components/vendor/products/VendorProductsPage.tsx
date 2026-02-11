@@ -65,7 +65,7 @@ export function VendorProductsPage() {
       sku: p.sku || '',
       description: p.description,
       shortDescription: p.descriptionShort || '',
-      category: '', // TODO: Map categoryId to category name
+      category: p.category?.name ?? p.categoryName ?? p.categoryId ?? '',
       subcategory: '',
       eventTypes: [],
       productType: 'purchase' as const,

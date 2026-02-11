@@ -3,12 +3,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getActiveSlides, getSideBanners } from '@/mock/seeds/carousel-slides';
 import { cn } from '@/lib/utils';
 import { CarouselSkeleton } from '@/components/ui/skeleton';
+import { useSession } from '@/lib/session-context';
 
 export function HeroCarousel() {
   const [slides] = useState(() => getActiveSlides());
   const [sideBanners] = useState(() => getSideBanners());
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const sessionContext = useSession();
+  const session = sessionContext?.session;
 
   const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
@@ -24,11 +27,11 @@ export function HeroCarousel() {
 
   // Auto-rotation
   useEffect(() => {
-    if (!isAutoPlaying) return;
+    if (!isAutoPlaying || !session) return;
 
     const interval = setInterval(goToNext, 5000);
     return () => clearInterval(interval);
-  }, [isAutoPlaying, goToNext]);
+  }, [isAutoPlaying, goToNext, session]);
 
   // Pause on hover
   const handleMouseEnter = () => setIsAutoPlaying(false);
