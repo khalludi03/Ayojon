@@ -151,7 +151,27 @@ export const productRouter = os.router({
         }
       });
 
-      return allCategories;
+      // Get product counts for each category
+      const categoriesWithCounts = await Promise.all(
+        allCategories.map(async (category) => {
+          const countResult = await db
+            .select({ count: sql<number>`cast(count(*) as integer)` })
+            .from(products)
+            .where(
+              and(
+                eq(products.categoryId, category.id),
+                eq(products.status, 'active')
+              )
+            );
+          
+          return {
+            ...category,
+            productCount: countResult[0]?.count || 0
+          };
+        })
+      );
+
+      return categoriesWithCounts;
     }),
 
   getCategoryBySlug: publicProcedure
@@ -483,6 +503,8 @@ export const productRouter = os.router({
         orderBy: [desc(products.createdAt)],
         with: {
           images: true,
+          category: true,
+          subcategory: true,
         },
       });
 
@@ -510,6 +532,8 @@ export const productRouter = os.router({
           descriptionShort: z.string().min(5).optional(),
           categoryId: z.string(),
           subcategoryId: z.string().optional(),
+          brand: z.string().optional(),
+          sku: z.string().optional(),
           price: z.string(),
           salePrice: z.string().optional().nullable(),
           stock: z.coerce.number().int().min(0),
@@ -540,6 +564,8 @@ export const productRouter = os.router({
             slug: parsedInput.slug,
             description: parsedInput.description,
             descriptionShort: parsedInput.descriptionShort,
+            brand: parsedInput.brand,
+            sku: parsedInput.sku,
             categoryId: parsedInput.categoryId,
             subcategoryId: parsedInput.subcategoryId,
             price: parsedInput.price,
@@ -593,6 +619,10 @@ export const productRouter = os.router({
         id: z.string(),
         title: z.string().optional(),
         description: z.string().optional(),
+        descriptionShort: z.string().optional(),
+        brand: z.string().optional(),
+        sku: z.string().optional(),
+        categoryId: z.string().optional(),
         price: z.string().optional(),
         stock: z.coerce.number().int().optional(),
         status: z.enum(["draft", "active", "out_of_stock", "archived"]).optional(),

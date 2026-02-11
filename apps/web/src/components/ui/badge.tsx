@@ -2,6 +2,7 @@ import * as React from 'react';
 import {  cva } from 'class-variance-authority';
 import type {VariantProps} from 'class-variance-authority';
 import { cn } from '@/lib/utils';
+import { CheckCircle, AlertTriangle } from 'lucide-react';
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors',
@@ -18,7 +19,7 @@ const badgeVariants = cva(
           'border border-[hsl(var(--border))] text-[hsl(var(--foreground))]',
         // E-commerce specific variants
         discount:
-          'bg-[hsl(var(--accent))] text-[hsl(var(--accent-foreground))]',
+          'bg-red-600 text-white font-bold shadow-md',
         deal:
           'bg-red-500 text-white',
         choice:
@@ -58,8 +59,8 @@ interface DiscountBadgeProps extends Omit<BadgeProps, 'variant' | 'children'> {
 
 function DiscountBadge({ percentage, className, ...props }: DiscountBadgeProps) {
   return (
-    <Badge variant="discount" className={className} {...props}>
-      -{Math.round(percentage)}%
+    <Badge variant="discount" className={cn('text-sm px-3 py-1', className)} {...props}>
+      {Math.round(percentage)}% OFF
     </Badge>
   );
 }
@@ -92,15 +93,16 @@ interface StockBadgeProps extends Omit<BadgeProps, 'variant'> {
 }
 
 function StockBadge({ status, quantity, className, ...props }: StockBadgeProps) {
-  const config: Record<StockBadgeProps['status'], { variant: BadgeProps['variant']; label: string }> = {
-    in_stock: { variant: 'freeShipping', label: 'In Stock' },
-    low_stock: { variant: 'lowStock', label: quantity ? `Only ${quantity} left` : 'Low Stock' },
-    out_of_stock: { variant: 'outOfStock', label: 'Out of Stock' },
+  const config: Record<StockBadgeProps['status'], { variant: BadgeProps['variant']; label: string; icon: React.ReactNode }> = {
+    in_stock: { variant: 'freeShipping', label: 'In Stock', icon: <CheckCircle className="h-3 w-3 mr-1" /> },
+    low_stock: { variant: 'lowStock', label: quantity ? `Only ${quantity} left` : 'Low Stock', icon: <AlertTriangle className="h-3 w-3 mr-1" /> },
+    out_of_stock: { variant: 'outOfStock', label: 'Out of Stock', icon: <AlertTriangle className="h-3 w-3 mr-1" /> },
   };
 
-  const { variant, label } = config[status];
+  const { variant, label, icon } = config[status];
   return (
-    <Badge variant={variant} className={className} {...props}>
+    <Badge variant={variant} className={cn('flex items-center', className)} {...props}>
+      {icon}
       {label}
     </Badge>
   );

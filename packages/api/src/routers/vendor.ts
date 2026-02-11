@@ -428,11 +428,9 @@ export const vendorRouter = os.router({
       z.object({
         totalRevenue: z.string(),
         ordersThisMonth: z.number(),
-        activeRentals: z.number(),
         pendingOrders: z.number(),
         storeRating: z.number(),
         vendorScore: z.number(),
-        storeViews: z.number(),
         revenueGrowth: z.number().optional(),
         ordersGrowth: z.number().optional(),
       })
@@ -451,11 +449,9 @@ export const vendorRouter = os.router({
         return {
           totalRevenue: "0",
           ordersThisMonth: 0,
-          activeRentals: 0,
           pendingOrders: 0,
           storeRating: 0,
           vendorScore: 0,
-          storeViews: 0,
         };
       }
 
@@ -500,18 +496,12 @@ export const vendorRouter = os.router({
         stats.filter(s => ["pending", "placed", "payment_received"].includes(s.status)).map(s => s.orderId)
       ).size;
 
-      const activeRentals = new Set(
-        stats.filter(s => ["confirmed", "shipped"].includes(s.status)).map(s => s.orderId)
-      ).size;
-
       return {
         totalRevenue: totalRevenue.toFixed(2),
         ordersThisMonth,
-        activeRentals,
         pendingOrders,
         storeRating: vendor.ratingAverage || 0,
         vendorScore: vendor.score || 0,
-        storeViews: 0, 
       };
     }),
 

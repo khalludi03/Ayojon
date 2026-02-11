@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck, ExternalLink } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck, ExternalLink } from 'lucide-react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import type { Product, ProductVariant } from '@/types';
 import { useCart } from '@/stores/cart-store';
@@ -48,6 +48,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
   if (!product) return null;
 
   const inWishlist = isInWishlist(product.id);
+  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.stock === 0;
 
   // Group variants by type
   const variantsByType = product.variants.reduce(
@@ -203,7 +204,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                   <Star
                     key={i}
                     className={cn(
-                      'h-4 w-4',
+                      'h-5 w-5',
                       i < fullStars
                         ? 'fill-yellow-400 text-yellow-400'
                         : i === fullStars && hasHalfStar
@@ -213,12 +214,8 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                   />
                 ))}
               </div>
-              <span className="text-sm text-[hsl(var(--muted-foreground))]">
-                {product.rating.average} ({product.rating.count} reviews)
-              </span>
-              <Badge variant="secondary" className="ml-1 text-[10px]">
-                {product.stockStatus}
-              </Badge>
+              <span className="text-sm font-semibold text-foreground">{product.rating.average}</span>
+              <span className="text-sm text-muted-foreground">({product.rating.count} reviews)</span>
             </div>
             
             {/* Short Description */}
@@ -229,19 +226,26 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
             )}
 
             {/* Price */}
-            <div className="mt-4 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-3">
-              <span className="text-2xl font-bold text-[hsl(var(--brand-orange))]">
-                {formatPrice(product.pricing.currentPrice)}
-              </span>
+            <div className="mt-4 rounded-lg border bg-card p-4 shadow-sm">
+              <div className="flex items-end gap-3 flex-wrap">
+                <span className="text-3xl font-bold text-foreground">
+                  {formatPrice(product.pricing.currentPrice)}
+                </span>
+                {product.pricing.originalPrice > product.pricing.currentPrice && (
+                  <>
+                    <span className="text-lg text-muted-foreground line-through">
+                      {formatPrice(product.pricing.originalPrice)}
+                    </span>
+                    <Badge variant="destructive" className="mb-1">
+                      -{product.pricing.discountPercentage || Math.round(((product.pricing.originalPrice - product.pricing.currentPrice) / product.pricing.originalPrice) * 100)}% OFF
+                    </Badge>
+                  </>
+                )}
+              </div>
               {product.pricing.originalPrice > product.pricing.currentPrice && (
-                <>
-                  <span className="ml-2 text-lg text-[hsl(var(--muted-foreground))] line-through">
-                    {formatPrice(product.pricing.originalPrice)}
-                  </span>
-                  <span className="ml-2 text-sm font-medium text-[hsl(var(--accent))]">
-                    Save {product.pricing.discountPercentage}%
-                  </span>
-                </>
+                <div className="mt-2 text-sm font-medium text-green-600">
+                  You save {formatPrice(product.pricing.originalPrice - product.pricing.currentPrice)}
+                </div>
               )}
             </div>
 
@@ -301,28 +305,56 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                 >
                   <Plus className="h-4 w-4" />
                 </button>
-                <StockBadge status={product.stockStatus} quantity={product.stock} />
+                {!isOutOfStock && (
+                  <StockBadge status={product.stockStatus} quantity={product.stock} />
+                )}
               </div>
             </div>
 
             {/* Actions */}
-            <div className="mt-6 flex gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleItem(product)}
-                className={cn(inWishlist && 'text-red-500')}
-              >
-                <Heart className={cn('h-5 w-5', inWishlist && 'fill-current')} />
-              </Button>
-              <Button variant="outline" className="flex-1" onClick={handleBuyNow}>
-                Buy Now
-              </Button>
-              <Button className="flex-1 gap-2" onClick={handleAddToCart}>
-                <ShoppingCart className="h-4 w-4" />
-                Add to Cart
-              </Button>
-            </div>
+            {isOutOfStock ? (
+              <div className="mt-6 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => toggleItem(product)}
+                    className={cn(inWishlist && 'text-red-500')}
+                  >
+                    <Heart className={cn('h-5 w-5', inWishlist && 'fill-current')} />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1 h-12"
+                    disabled
+                  >
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    Out of Stock
+                  </Button>
+                </div>
+                <p className="text-xs text-center text-muted-foreground">
+                  This product is currently unavailable
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 flex gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleItem(product)}
+                  className={cn(inWishlist && 'text-red-500')}
+                >
+                  <Heart className={cn('h-5 w-5', inWishlist && 'fill-current')} />
+                </Button>
+                <Button variant="outline" className="flex-1" onClick={handleBuyNow}>
+                  Buy Now
+                </Button>
+                <Button className="flex-1 gap-2" onClick={handleAddToCart}>
+                  <ShoppingCart className="h-4 w-4" />
+                  Add to Cart
+                </Button>
+              </div>
+            )}
 
             {/* Shipping Info */}
             <div className="mt-6 space-y-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))] p-3">

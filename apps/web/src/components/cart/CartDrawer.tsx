@@ -11,12 +11,22 @@ import {
   SheetTitle,
   SheetClose,
 } from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useCart, type CartItem } from '@/stores/cart-store';
 import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal';
 import { formatPrice } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { CurrencyCode } from '@/types';
 import { CouponSection } from './CouponSection';
+import { authClient } from '@/lib/auth-client';
+import SignInForm from '@/components/sign-in-form';
+import SignUpForm from '@/components/sign-up-form';
 
 interface CartItemRowProps {
   item: CartItem;
@@ -190,8 +200,29 @@ export function CartDrawer() {
     closeDrawer,
     openDrawer,
   } = useCart();
+  const { data: session } = authClient.useSession();
   const navigate = useNavigate();
   const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval();
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
+  const [authView, setAuthView] = useState<'signin' | 'signup'>('signin');
+
+  const handleCheckout = () => {
+    if (session?.user) {
+      closeDrawer();
+      navigate({ to: '/checkout' });
+    } else {
+      setShowLoginDialog(true);
+    }
+  };
+
+  const handleAuthSuccess = () => {
+    setShowLoginDialog(false);
+    closeDrawer();
+    toast.success('Welcome back! Proceeding to checkout...');
+    setTimeout(() => {
+      navigate({ to: '/checkout' });
+    }, 500);
+  };
 
   const handleOpenChange = (open: boolean) => {
     if (open) {
@@ -301,11 +332,9 @@ export function CartDrawer() {
                     View Cart
                   </Button>
                 </SheetClose>
-                <SheetClose asChild>
-                  <Button className="w-full" onClick={() => navigate({ to: '/checkout' })}>
-                    Checkout
-                  </Button>
-                </SheetClose>
+                <Button className="w-full" onClick={handleCheckout}>
+                  Checkout
+                </Button>
               </div>
             </div>
           </>
@@ -319,6 +348,33 @@ export function CartDrawer() {
       onClose={() => setPendingRemoveItem(null)}
       onConfirm={handleConfirmRemove}
     />
+
+    {/* Quick Login Dialog */}
+    <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold text-center">
+            {authView === 'signin' ? 'Sign In to Continue' : 'Create an Account'}
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            Please sign in to proceed with checkout
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          {authView === 'signin' ? (
+            <SignInForm 
+              onSwitchToSignUp={() => setAuthView('signup')}
+              onSuccess={handleAuthSuccess}
+            />
+          ) : (
+            <SignUpForm 
+              onSwitchToSignIn={() => setAuthView('signin')}
+              onSuccess={handleAuthSuccess}
+            />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
     </>
   );
 }
