@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { CreditCard, Heart, LogIn, LogOut, MapPin, Package, Settings, User, UserPlus } from 'lucide-react';
+import { Heart, LogIn, LogOut, MapPin, Package, Settings, User, UserPlus } from 'lucide-react';
 import { useNavigate, Link } from '@tanstack/react-router';
 import { authClient } from '@/lib/auth-client';
 import {
@@ -228,10 +228,6 @@ export function UserMenu() {
               <MapPin className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Addresses</span>
             </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <CreditCard className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-            <span>Payment Methods</span>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
             <Link to="/account/settings" className="flex items-center">

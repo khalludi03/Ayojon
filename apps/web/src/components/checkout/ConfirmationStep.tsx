@@ -7,7 +7,6 @@ import {
   Mail, 
   Phone, 
   MapPin, 
-  CreditCard, 
   ArrowRight, 
   Home, 
   Building2, 
@@ -15,7 +14,8 @@ import {
   Clock,
   Smartphone,
   Info,
-  ExternalLink
+  ExternalLink,
+  Banknote
 } from "lucide-react";
 
 interface ConfirmationStepProps {
@@ -109,12 +109,8 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
-      case 'card':
-        return 'Credit/Debit Card';
       case 'bkash':
         return 'bKash';
-      case 'nagad':
-        return 'Nagad';
       case 'cod':
         return 'Cash on Delivery';
       default:
@@ -331,7 +327,7 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
           <div className="group rounded-xl border-2 border-[hsl(var(--border))] bg-gradient-to-br from-[hsl(var(--card))] to-[hsl(var(--card))]/80 p-6 shadow-sm transition-all hover:border-[hsl(var(--primary))]/50 hover:shadow-md">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">
-                <CreditCard className="h-5 w-5 text-white" strokeWidth={2.5} />
+                <Banknote className="h-5 w-5 text-white" strokeWidth={2.5} />
               </div>
               <h3 className="text-lg font-bold text-[hsl(var(--foreground))]">
                 Payment Method

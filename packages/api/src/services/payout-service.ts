@@ -114,9 +114,7 @@ export async function createPayoutForOrder(
 
     // 6. Update order status
     const newStatus =
-      order.paymentMethod === "bkash" ||
-      order.paymentMethod === "nagad" ||
-      order.paymentMethod === "card"
+      order.paymentMethod === "bkash"
         ? "delivered"
         : "settlement_ready";
     await tx
@@ -216,10 +214,7 @@ export async function processPayout(
 
     // 7. If all payouts completed, update order to final status
     if (allCompleted) {
-      const isPrepaid =
-        order.paymentMethod === "bkash" ||
-        order.paymentMethod === "nagad" ||
-        order.paymentMethod === "card";
+      const isPrepaid = order.paymentMethod === "bkash";
       const finalStatus = isPrepaid ? "vendor_paid" : "vendor_settled";
       await tx
         .update(orders)

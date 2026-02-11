@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/stores/cart-store';
 import { addOrder } from '@/stores/order-store';
-import { addSavedCard } from '@/stores/saved-cards-store';
 import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
@@ -35,24 +34,11 @@ interface FormData {
   deliveryMethod: string;
   // Payment
   paymentMethod: string;
-  cardNumber?: string;
-  cardName?: string;
-  expiryDate?: string;
-  cvv?: string;
   mobileNumber?: string;
   // bKash Payment
   bkashTransactionId?: string;
   bkashAmount?: number;
   bkashPaidAt?: string;
-  // Card Payment
-  cardTransactionId?: string;
-  cardAmount?: number;
-  cardPaidAt?: string;
-  cardType?: string;
-  cardLast4?: string;
-  cardHolderName?: string;
-  cardExpiryDate?: string;
-  cardSaveCard?: boolean;
 }
 
 function CheckoutPage() {
@@ -86,22 +72,10 @@ function CheckoutPage() {
     saveAddress: false,
     deliveryMethod: '',
     paymentMethod: '',
-    cardNumber: undefined,
-    cardName: undefined,
-    expiryDate: undefined,
-    cvv: undefined,
     mobileNumber: undefined,
     bkashTransactionId: undefined,
     bkashAmount: undefined,
     bkashPaidAt: undefined,
-    cardTransactionId: undefined,
-    cardAmount: undefined,
-    cardPaidAt: undefined,
-    cardType: undefined,
-    cardLast4: undefined,
-    cardHolderName: undefined,
-    cardExpiryDate: undefined,
-    cardSaveCard: false,
   });
 
   // Redirect to cart if no items
@@ -186,11 +160,11 @@ function CheckoutPage() {
 
       const newOrderId = response.id;
       const firstItemImage = items[0]?.product?.images?.[0]?.url;
-      const placedAt = formData.bkashPaidAt || formData.cardPaidAt || new Date().toISOString();
+      const placedAt = formData.bkashPaidAt || new Date().toISOString();
 
-      // For bKash/Card, if not yet paid, we stay on confirmation but with instructions
-      const isPrepaid = formData.paymentMethod === 'bkash' || formData.paymentMethod === 'card' || formData.paymentMethod === 'nagad';
-      const hasPaid = !!(formData.bkashTransactionId || formData.cardTransactionId);
+      // For bKash, if not yet paid, we stay on confirmation but with instructions
+      const isPrepaid = formData.paymentMethod === 'bkash';
+      const hasPaid = !!(formData.bkashTransactionId);
       
       const initialStatus = hasPaid ? 'processing' : (isPrepaid ? 'awaiting_payment' : 'processing');
 
@@ -226,11 +200,11 @@ function CheckoutPage() {
         },
         payment: {
           method: formData.paymentMethod as any,
-          last4: formData.cardLast4 || formData.cardNumber?.slice(-4) || formData.mobileNumber?.slice(-4),
-          provider: formData.paymentMethod === 'bkash' ? 'bKash' : formData.paymentMethod === 'card' ? formData.cardType : undefined,
-          transactionId: formData.bkashTransactionId || formData.cardTransactionId,
-          amount: formData.bkashAmount || formData.cardAmount,
-          paidAt: formData.bkashPaidAt || formData.cardPaidAt,
+          last4: formData.mobileNumber?.slice(-4),
+          provider: formData.paymentMethod === 'bkash' ? 'bKash' : undefined,
+          transactionId: formData.bkashTransactionId,
+          amount: formData.bkashAmount,
+          paidAt: formData.bkashPaidAt,
           status: hasPaid ? 'PAID' : 'PENDING',
         },
         pricing: {
@@ -244,16 +218,6 @@ function CheckoutPage() {
           placedAt,
         },
       });
-
-      // Save card if requested
-      if (formData.paymentMethod === 'card' && formData.cardSaveCard && formData.cardLast4) {
-        addSavedCard(
-          formData.cardLast4,
-          formData.cardType || 'CARD',
-          formData.cardHolderName || '',
-          formData.cardExpiryDate || ''
-        );
-      }
 
       setOrderNumber(orderNum);
       setOrderId(newOrderId);
@@ -334,7 +298,7 @@ function CheckoutPage() {
               },
               payment: {
                 paymentMethod: formData.paymentMethod,
-                transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+                transactionId: formData.bkashTransactionId,
               },
             }}
           />

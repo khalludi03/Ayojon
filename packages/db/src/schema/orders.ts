@@ -32,7 +32,7 @@ export type OrderStatus =
   | "vendor_settled"     // Vendor paid (COD flow)
   | "cancelled";         // Order cancelled
 
-export type PaymentMethod = "bkash" | "cod" | "nagad" | "card";
+export type PaymentMethod = "bkash" | "cod";
 
 export const orders = pgTable(
   "orders",
