@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Plus, Search, Filter, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { orpc } from '@/utils/orpc';
 import { toast } from 'sonner';
@@ -9,6 +9,14 @@ import type { VendorProduct, ProductStatus, ProductType } from '@/types/vendor-p
 import { AddProductForm } from './AddProductForm';
 import { EnhancedProductsTable } from './EnhancedProductsTable';
 import { cn } from '@/lib/utils';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 type SortField = 'name' | 'price' | 'stock' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
@@ -31,6 +39,9 @@ export function VendorProductsPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<VendorProduct | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteType, setDeleteType] = useState<'single' | 'bulk'>('single');
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,7 +133,22 @@ export function VendorProductsPage() {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    deleteMutation.mutate({ id: productId });
+    setProductToDelete(productId);
+    setDeleteType('single');
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = () => {
+    if (deleteType === 'single' && productToDelete) {
+      deleteMutation.mutate({ id: productToDelete });
+    } else if (deleteType === 'bulk') {
+      selectedProducts.forEach((productId) => {
+        deleteMutation.mutate({ id: productId });
+      });
+      setSelectedProducts(new Set());
+    }
+    setShowDeleteDialog(false);
+    setProductToDelete(null);
   };
 
   const handleUpdatePrice = (productId: string, price: number) => {
@@ -251,12 +277,8 @@ export function VendorProductsPage() {
   };
 
   const handleBulkDelete = () => {
-    if (confirm(`Are you sure you want to delete ${selectedProducts.size} product(s)?`)) {
-      selectedProducts.forEach((productId) => {
-        deleteMutation.mutate(productId);
-      });
-      setSelectedProducts(new Set());
-    }
+    setDeleteType('bulk');
+    setShowDeleteDialog(true);
   };
 
   const handleAddProduct = () => {
@@ -547,6 +569,47 @@ export function VendorProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-500" />
+              </div>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+            </div>
+            <DialogDescription className="pt-3">
+              {deleteType === 'bulk' ? (
+                <>
+                  Are you sure you want to delete <strong>{selectedProducts.size} product{selectedProducts.size !== 1 ? 's' : ''}</strong>? This action cannot be undone.
+                </>
+              ) : (
+                "Are you sure you want to delete this product? This action cannot be undone."
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setProductToDelete(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

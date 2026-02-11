@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Edit, Trash2, Eye, Package, Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { VendorProduct } from '@/types/vendor-product';
+import { toast } from 'sonner';
 
 interface EnhancedProductsTableProps {
   products: VendorProduct[];
@@ -67,9 +68,7 @@ export function EnhancedProductsTable({
   const [editingStock, setEditingStock] = useState<{ productId: string; value: string } | null>(null);
 
   const handleDelete = (productId: string) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      onDelete(productId);
-    }
+    onDelete(productId);
   };
 
   const handleToggleStatus = (product: VendorProduct) => {
@@ -81,7 +80,7 @@ export function EnhancedProductsTable({
 
     const newPrice = parseFloat(editingPrice.value);
     if (isNaN(newPrice) || newPrice <= 0) {
-      alert('Please enter a valid price');
+      toast.error('Please enter a valid price');
       return;
     }
 
@@ -94,7 +93,7 @@ export function EnhancedProductsTable({
 
     const newStock = parseInt(editingStock.value);
     if (isNaN(newStock) || newStock < 0) {
-      alert('Please enter a valid stock quantity');
+      toast.error('Please enter a valid stock quantity');
       return;
     }
 
