@@ -14,9 +14,11 @@ import {
   platformSettings,
   productImages,
   categories,
-  vendorApplications
+  vendorApplications,
+  homeBanners,
+  homePromoCards
 } from "@my-better-t-app/db/schema/index";
-import { count, eq, gte, sql, or, ilike, and, desc } from "drizzle-orm";
+import { count, eq, gte, sql, or, ilike, and, desc, asc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
 
@@ -1365,5 +1367,248 @@ export const adminRouter = os.router({
         success: true,
         payouts: result.payouts,
       };
+    }),
+
+  // ====================================================================
+  // Homepage Banner Management
+  // ====================================================================
+
+  listAllBanners: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "listAllBanners",
+      summary: "List All Homepage Banners",
+      description: "Lists all homepage banners (active and inactive) for admin management.",
+      tags: ["Admin", "Homepage"],
+    })
+    .handler(async () => {
+      const banners = await db
+        .select()
+        .from(homeBanners)
+        .orderBy(asc(homeBanners.sortOrder));
+
+      return { banners };
+    }),
+
+  createBanner: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "createBanner",
+      summary: "Create Homepage Banner",
+      description: "Creates a new homepage banner slide.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        imageUrl: z.string().url(),
+        title: z.string().min(1).max(200),
+        subtitle: z.string().min(1).max(500),
+        buttonText: z.string().min(1).max(50),
+        buttonLink: z.string().min(1),
+        isActive: z.boolean().optional().default(true),
+        sortOrder: z.number().int().min(0).optional().default(0),
+      })
+    )
+    .handler(async ({ input }) => {
+      const id = nanoid();
+      const banner = await db
+        .insert(homeBanners)
+        .values({
+          id,
+          ...input,
+        })
+        .returning();
+
+      return banner[0];
+    }),
+
+  updateBanner: adminProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updateBanner",
+      summary: "Update Homepage Banner",
+      description: "Updates an existing homepage banner.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        id: z.string(),
+        imageUrl: z.string().url().optional(),
+        title: z.string().min(1).max(200).optional(),
+        subtitle: z.string().min(1).max(500).optional(),
+        buttonText: z.string().min(1).max(50).optional(),
+        buttonLink: z.string().min(1).optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().int().min(0).optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const { id, ...updates } = input;
+      const result = await db
+        .update(homeBanners)
+        .set({
+          ...updates,
+          updatedAt: new Date(),
+        })
+        .where(eq(homeBanners.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        throw new ORPCError("NOT_FOUND", { message: "Banner not found" });
+      }
+
+      return result[0];
+    }),
+
+  deleteBanner: adminProcedure
+    .route({
+      method: "DELETE",
+      operationId: "deleteBanner",
+      summary: "Delete Homepage Banner",
+      description: "Deletes a homepage banner permanently.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(z.object({ id: z.string() }))
+    .handler(async ({ input, context }) => {
+      // Get banner to extract image URL
+      const [banner] = await db
+        .select()
+        .from(homeBanners)
+        .where(eq(homeBanners.id, input.id))
+        .limit(1);
+
+      if (!banner) {
+        throw new ORPCError("NOT_FOUND", { message: "Banner not found" });
+      }
+
+      // Delete banner
+      await db.delete(homeBanners).where(eq(homeBanners.id, input.id));
+
+      // Try to delete image from storage
+      try {
+        const imageKey = banner.imageUrl.split('/').pop();
+        if (imageKey) {
+          await context.storage.deleteFile(imageKey);
+        }
+      } catch (error) {
+        console.error("Failed to delete banner image from storage:", error);
+        // Continue even if deletion fails
+      }
+
+      return { success: true };
+    }),
+
+  reorderBanners: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "reorderBanners",
+      summary: "Reorder Homepage Banners",
+      description: "Updates the sort order for multiple homepage banners.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        banners: z.array(
+          z.object({
+            id: z.string(),
+            sortOrder: z.number().int().min(0),
+          })
+        ),
+      })
+    )
+    .handler(async ({ input }) => {
+      // Update each banner's sort order in a transaction
+      await db.transaction(async (tx) => {
+        for (const banner of input.banners) {
+          await tx
+            .update(homeBanners)
+            .set({ sortOrder: banner.sortOrder, updatedAt: new Date() })
+            .where(eq(homeBanners.id, banner.id));
+        }
+      });
+
+      return { success: true };
+    }),
+
+  // ====================================================================
+  // Homepage Promo Card Management
+  // ====================================================================
+
+  listAllPromoCards: adminProcedure
+    .route({
+      method: "POST",
+      operationId: "listAllPromoCards",
+      summary: "List All Homepage Promo Cards",
+      description: "Lists all 4 homepage promotional cards for admin management.",
+      tags: ["Admin", "Homepage"],
+    })
+    .handler(async () => {
+      const promoCards = await db
+        .select()
+        .from(homePromoCards)
+        .orderBy(asc(homePromoCards.slotNumber));
+
+      return { promoCards };
+    }),
+
+  updatePromoCard: adminProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updatePromoCard",
+      summary: "Update Homepage Promo Card",
+      description: "Updates a homepage promotional card by slot number.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        id: z.string().optional(),
+        slotNumber: z.number().int().min(1).max(4),
+        imageUrl: z.string().url().optional(),
+        label: z.string().min(1).max(100).optional(),
+        title: z.string().min(1).max(200).optional(),
+        link: z.string().min(1).optional(),
+        isActive: z.boolean().optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const { id, slotNumber, ...updates } = input;
+
+      // Check if promo card exists for this slot
+      const [existing] = await db
+        .select()
+        .from(homePromoCards)
+        .where(eq(homePromoCards.slotNumber, slotNumber))
+        .limit(1);
+
+      if (existing) {
+        // Update existing card
+        const result = await db
+          .update(homePromoCards)
+          .set({
+            ...updates,
+            updatedAt: new Date(),
+          })
+          .where(eq(homePromoCards.slotNumber, slotNumber))
+          .returning();
+
+        return result[0];
+      } else {
+        // Create new card for this slot
+        const newId = nanoid();
+        const result = await db
+          .insert(homePromoCards)
+          .values({
+            id: newId,
+            slotNumber,
+            imageUrl: updates.imageUrl || "",
+            label: updates.label || "",
+            title: updates.title || "",
+            link: updates.link || "",
+            isActive: updates.isActive ?? true,
+          })
+          .returning();
+
+        return result[0];
+      }
     }),
 });

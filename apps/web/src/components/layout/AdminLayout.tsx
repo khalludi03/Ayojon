@@ -12,7 +12,9 @@ import {
   Bell,
   Search,
   Menu,
-  X
+  X,
+  Image,
+  Sparkles
 } from 'lucide-react';
 import { Logo } from './header/Logo';
 import { ThemeToggle } from './header/ThemeToggle';
@@ -30,6 +32,8 @@ const navigationItems = [
   { label: 'Applications', icon: ShieldCheck, path: '/admin/vendor-applications' },
   { label: 'Products', icon: Package, path: '/admin/products' },
   { label: 'Orders', icon: ShoppingBag, path: '/admin/orders' },
+  { label: 'Banners', icon: Image, path: '/admin/homepage-banners' },
+  { label: 'Promo Cards', icon: Sparkles, path: '/admin/homepage-promo-cards' },
   { label: 'Settings', icon: Settings, path: '/admin/settings' }
 ];
 

@@ -40,6 +40,8 @@ import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
+import { Route as AdminHomepagePromoCardsRouteImport } from './routes/admin/homepage-promo-cards'
+import { Route as AdminHomepageBannersRouteImport } from './routes/admin/homepage-banners'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AccountWishlistRouteImport } from './routes/account.wishlist'
 import { Route as AccountSettingsRouteImport } from './routes/account.settings'
@@ -208,6 +210,16 @@ const AdminOrdersRoute = AdminOrdersRouteImport.update({
   path: '/admin/orders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminHomepagePromoCardsRoute = AdminHomepagePromoCardsRouteImport.update({
+  id: '/admin/homepage-promo-cards',
+  path: '/admin/homepage-promo-cards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminHomepageBannersRoute = AdminHomepageBannersRouteImport.update({
+  id: '/admin/homepage-banners',
+  path: '/admin/homepage-banners',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
@@ -281,6 +293,8 @@ export interface FileRoutesByFullPath {
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/homepage-banners': typeof AdminHomepageBannersRoute
+  '/admin/homepage-promo-cards': typeof AdminHomepagePromoCardsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -322,6 +336,8 @@ export interface FileRoutesByTo {
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/homepage-banners': typeof AdminHomepageBannersRoute
+  '/admin/homepage-promo-cards': typeof AdminHomepagePromoCardsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -366,6 +382,8 @@ export interface FileRoutesById {
   '/account/settings': typeof AccountSettingsRoute
   '/account/wishlist': typeof AccountWishlistRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/homepage-banners': typeof AdminHomepageBannersRoute
+  '/admin/homepage-promo-cards': typeof AdminHomepagePromoCardsRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -411,6 +429,8 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/account/wishlist'
     | '/admin/dashboard'
+    | '/admin/homepage-banners'
+    | '/admin/homepage-promo-cards'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/settings'
@@ -452,6 +472,8 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/account/wishlist'
     | '/admin/dashboard'
+    | '/admin/homepage-banners'
+    | '/admin/homepage-promo-cards'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/settings'
@@ -495,6 +517,8 @@ export interface FileRouteTypes {
     | '/account/settings'
     | '/account/wishlist'
     | '/admin/dashboard'
+    | '/admin/homepage-banners'
+    | '/admin/homepage-promo-cards'
     | '/admin/orders'
     | '/admin/products'
     | '/admin/settings'
@@ -533,6 +557,8 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   WishlistRoute: typeof WishlistRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminHomepageBannersRoute: typeof AdminHomepageBannersRoute
+  AdminHomepagePromoCardsRoute: typeof AdminHomepagePromoCardsRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -770,6 +796,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/homepage-promo-cards': {
+      id: '/admin/homepage-promo-cards'
+      path: '/admin/homepage-promo-cards'
+      fullPath: '/admin/homepage-promo-cards'
+      preLoaderRoute: typeof AdminHomepagePromoCardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/homepage-banners': {
+      id: '/admin/homepage-banners'
+      path: '/admin/homepage-banners'
+      fullPath: '/admin/homepage-banners'
+      preLoaderRoute: typeof AdminHomepageBannersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -908,6 +948,8 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   WishlistRoute: WishlistRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminHomepageBannersRoute: AdminHomepageBannersRoute,
+  AdminHomepagePromoCardsRoute: AdminHomepagePromoCardsRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
