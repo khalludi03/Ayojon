@@ -41,7 +41,7 @@ export function BusinessInfoStep({
 
   const validatePhone = (phone: string): boolean => {
     const phoneRegex = /^01[3-9]\d{8}$/;
-    return phoneRegex.test(phone);
+    return phoneRegex.test(phone) && phone.length === 11;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -185,16 +185,25 @@ export function BusinessInfoStep({
               type="tel"
               value={formData.businessPhone}
               onChange={(e) => {
-                onFormChange('businessPhone', e.target.value);
-                if (errors.businessPhone) setErrors((prev) => ({ ...prev, businessPhone: '' }));
+                const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                if (value.length <= 11) {
+                  onFormChange('businessPhone', value);
+                  if (errors.businessPhone) setErrors((prev) => ({ ...prev, businessPhone: '' }));
+                }
               }}
               placeholder="01712345678"
+              pattern="[0-9]{11}"
+              minLength={11}
+              maxLength={11}
               className={cn(
                 'pl-10',
                 errors.businessPhone && 'border-red-500 focus-visible:ring-red-500'
               )}
             />
           </div>
+          <p className="text-xs text-muted-foreground">
+            Enter 11-digit mobile number {formData.businessPhone && `(${formData.businessPhone.length}/11)`}
+          </p>
           {errors.businessPhone && (
             <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
               <AlertCircle className="h-3 w-3" />

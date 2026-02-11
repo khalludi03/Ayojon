@@ -480,11 +480,22 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                     id="phone"
                     type="tel"
                     value={formData.phone}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('phone', e.target.value)}
-                    placeholder="Enter your phone number (e.g., 01712345678)"
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                      if (value.length <= 11) {
+                        onFormChange('phone', value);
+                      }
+                    }}
+                    placeholder="01712345678"
+                    pattern="[0-9]{11}"
+                    minLength={11}
+                    maxLength={11}
                     className={errors.phone ? "border-red-500 focus:ring-red-500" : ""}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Enter 11-digit mobile number {formData.phone && `(${formData.phone.length}/11)`}
+                  </p>
                   {errors.phone && (
                     <p className="flex items-center gap-1 text-xs text-red-500">
                       <span className="text-base">⚠</span>
