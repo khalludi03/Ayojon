@@ -23,7 +23,7 @@ import type { OrderStatus, PaymentMethod } from "@my-better-t-app/db/schema/orde
  */
 
 /**
- * Valid state transitions for prepaid orders (bKash, Nagad, Card)
+ * Valid state transitions for prepaid orders (bKash)
  */
 const PREPAID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   // Initial state for prepaid orders
@@ -91,7 +91,7 @@ function getValidTransitions(
   currentStatus: OrderStatus,
   paymentMethod: PaymentMethod
 ): OrderStatus[] {
-  const transitions = (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") 
+  const transitions = (paymentMethod === "bkash") 
     ? PREPAID_TRANSITIONS 
     : COD_TRANSITIONS;
   return transitions[currentStatus] || [];
@@ -102,7 +102,7 @@ function getValidTransitions(
  *
  * @param currentStatus - Current order status
  * @param newStatus - Desired new status
- * @param paymentMethod - Payment method (bkash, nagad, card or cod)
+ * @param paymentMethod - Payment method (bkash or cod)
  * @returns Object with valid flag and error message if invalid
  */
 export function validateStatusTransition(
@@ -130,11 +130,11 @@ export function validateStatusTransition(
 /**
  * Get the initial status for a new order based on payment method
  *
- * @param paymentMethod - Payment method (bkash, nagad, card or cod)
+ * @param paymentMethod - Payment method (bkash or cod)
  * @returns Initial order status
  */
 export function getInitialOrderStatus(paymentMethod: PaymentMethod): OrderStatus {
-  return (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") 
+  return (paymentMethod === "bkash") 
     ? "awaiting_payment" 
     : "placed";
 }
@@ -143,7 +143,7 @@ export function getInitialOrderStatus(paymentMethod: PaymentMethod): OrderStatus
  * Check if an order status is terminal (no more transitions allowed)
  *
  * @param status - Order status to check
- * @param paymentMethod - Payment method (bkash, nagad, card or cod)
+ * @param paymentMethod - Payment method (bkash or cod)
  * @returns True if status is terminal
  */
 export function isTerminalStatus(
@@ -158,7 +158,7 @@ export function isTerminalStatus(
  * Get all possible next statuses for an order
  *
  * @param currentStatus - Current order status
- * @param paymentMethod - Payment method (bkash, nagad, card or cod)
+ * @param paymentMethod - Payment method (bkash or cod)
  * @returns Array of possible next statuses
  */
 export function getNextStatuses(
@@ -173,35 +173,35 @@ export function getNextStatuses(
  */
 export const OrderActions = {
   /**
-   * Can customer submit payment proof? (Prepaid only)
+   * Can customer submit payment proof? (bKash only)
    */
   canSubmitPayment: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") && 
+    return (paymentMethod === "bkash") && 
       (status === "awaiting_payment" || status === "payment_rejected");
   },
 
   /**
-   * Can admin verify payment? (Prepaid only)
+   * Can admin verify payment? (bKash only)
    */
   canVerifyPayment: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") && status === "payment_submitted";
+    return (paymentMethod === "bkash") && status === "payment_submitted";
   },
 
   /**
    * Can vendor mark as shipped?
    */
   canMarkShipped: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    if (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") {
+    if (paymentMethod === "bkash") {
       return status === "payment_received";
     }
     return status === "placed";
   },
 
   /**
-   * Can mark as delivered? (Prepaid only)
+   * Can mark as delivered? (bKash only)
    */
   canMarkDelivered: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") && status === "shipped";
+    return (paymentMethod === "bkash") && status === "shipped";
   },
 
   /**
@@ -215,7 +215,7 @@ export const OrderActions = {
    * Can admin process vendor payout?
    */
   canProcessPayout: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    if (paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") {
+    if (paymentMethod === "bkash") {
       return status === "delivered";
     }
     return status === "settlement_ready";
@@ -230,8 +230,8 @@ export const OrderActions = {
     if (finalStates.includes(status)) {
       return false;
     }
-    // For Prepaid, can't cancel after delivery
-    if ((paymentMethod === "bkash" || paymentMethod === "nagad" || paymentMethod === "card") && status === "delivered") {
+    // For bKash, can't cancel after delivery
+    if ((paymentMethod === "bkash") && status === "delivered") {
       return false;
     }
     // For COD, can't cancel after cash collection

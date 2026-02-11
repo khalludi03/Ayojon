@@ -4,14 +4,32 @@ import { db } from "@my-better-t-app/db";
 import { 
   reviews, 
   reviewImages,
+  reviewVotes,
   orders,
   orderItems,
-  products
+  products,
+  type VoteType
 } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, desc, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
 import { updateVendorScore } from "../services/vendor-service";
+
+// =============================================================================
+// HELPERS
+// =============================================================================
+
+// Helper function to extract S3 key from URL
+const extractS3Key = (url: string | null): string | null => {
+  if (!url) return null;
+
+  // Match everything after '/images/' until a '?' or end of string
+  const match = url.match(/\/images\/(.+?)(?:\?|$)/);
+  if (match && match[1]) {
+    return match[1];
+  }
+  return null;
+};
 
 export const reviewRouter = os.router({
   createReview: protectedProcedure
@@ -148,7 +166,8 @@ export const reviewRouter = os.router({
       limit: z.number().int().min(1).max(50).default(10),
       offset: z.number().int().min(0).default(0),
     }))
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context }) => {
+      const userId = context.session?.user?.id;
       try {
         const results = await db.query.reviews.findMany({
           where: and(
@@ -161,10 +180,19 @@ export const reviewRouter = os.router({
           with: {
             user: true,
             images: true,
+            ...(userId ? {
+              votes: {
+                where: eq(reviewVotes.userId, userId),
+                limit: 1,
+              }
+            } : {}),
           },
         });
 
-        return results;
+        return results.map(r => ({
+          ...r,
+          myVote: (r as any).votes?.[0]?.voteType || null,
+        }));
       } catch (error) {
         console.error(`[getProductReviews] Error for product ${input.productId}:`, error);
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
@@ -258,10 +286,17 @@ export const reviewRouter = os.router({
               },
             },
             images: true,
+            votes: {
+              where: eq(reviewVotes.userId, userId),
+              limit: 1,
+            }
           },
         });
 
-        return userReviews;
+        return userReviews.map(r => ({
+          ...r,
+          myVote: (r as any).votes?.[0]?.voteType || null,
+        }));
       } catch (error) {
         console.error(`[listMyReviews] Error for user ${userId}:`, error);
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
@@ -317,6 +352,16 @@ export const reviewRouter = os.router({
           });
         }
 
+        // Get existing images to delete from S3
+        const oldImages = await db
+          .select()
+          .from(reviewImages)
+          .where(eq(reviewImages.reviewId, reviewId));
+
+        const filesToDelete = oldImages
+          .map(img => extractS3Key(img.url))
+          .filter((key): key is string => !!key);
+
         await db.transaction(async (tx) => {
           // 3. Update the review
           await tx
@@ -330,7 +375,7 @@ export const reviewRouter = os.router({
             })
             .where(eq(reviews.id, reviewId));
 
-          // 4. Delete existing images
+          // 4. Delete existing images from DB
           await tx.delete(reviewImages).where(eq(reviewImages.reviewId, reviewId));
 
           // 5. Add new images if any
@@ -364,6 +409,15 @@ export const reviewRouter = os.router({
             })
             .where(eq(products.id, existingReview.productId));
         });
+
+        // Delete old files from S3 after successful DB transaction
+        for (const fileKey of filesToDelete) {
+          try {
+            await context.storage.deleteFile(fileKey);
+          } catch (error) {
+            console.error(`[updateReview] Failed to delete file ${fileKey}:`, error);
+          }
+        }
 
         return { success: true };
       } catch (error) {
@@ -406,8 +460,18 @@ export const reviewRouter = os.router({
           });
         }
 
+        // Get existing images to delete from S3
+        const oldImages = await db
+          .select()
+          .from(reviewImages)
+          .where(eq(reviewImages.reviewId, reviewId));
+
+        const filesToDelete = oldImages
+          .map(img => extractS3Key(img.url))
+          .filter((key): key is string => !!key);
+
         await db.transaction(async (tx) => {
-          // 2. Delete the review (images will cascade delete)
+          // 2. Delete the review (images will cascade delete in DB)
           await tx.delete(reviews).where(eq(reviews.id, reviewId));
 
           // 3. Update product rating metrics
@@ -442,12 +506,117 @@ export const reviewRouter = os.router({
           }
         });
 
+        // Delete files from S3 after successful DB transaction
+        for (const fileKey of filesToDelete) {
+          try {
+            await context.storage.deleteFile(fileKey);
+          } catch (error) {
+            console.error(`[deleteReview] Failed to delete file ${fileKey}:`, error);
+          }
+        }
+
         return { success: true };
       } catch (error) {
         console.error(`[deleteReview] Error for review ${reviewId}:`, error);
         if (error instanceof ORPCError) throw error;
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }),
+
+  voteReview: protectedProcedure
+    .route({
+      operationId: "voteReview",
+      summary: "Vote on a review (helpful/not helpful)",
+      tags: ["Reviews"],
+    })
+    .input(z.object({
+      reviewId: z.string(),
+      voteType: z.enum(["helpful", "not_helpful"]),
+    }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+      const { reviewId, voteType } = input;
+
+      try {
+        // 1. Check if user already voted on this review
+        const existingVote = await db.query.reviewVotes.findFirst({
+          where: and(
+            eq(reviewVotes.reviewId, reviewId),
+            eq(reviewVotes.userId, userId)
+          ),
+        });
+
+        await db.transaction(async (tx) => {
+          if (existingVote) {
+            if (existingVote.voteType === voteType) {
+              // Same vote, so remove it (toggle off)
+              await tx
+                .delete(reviewVotes)
+                .where(
+                  and(
+                    eq(reviewVotes.reviewId, reviewId),
+                    eq(reviewVotes.userId, userId)
+                  )
+                );
+            } else {
+              // Different vote, so update it
+              await tx
+                .update(reviewVotes)
+                .set({ voteType })
+                .where(
+                  and(
+                    eq(reviewVotes.reviewId, reviewId),
+                    eq(reviewVotes.userId, userId)
+                  )
+                );
+            }
+          } else {
+            // New vote
+            await tx.insert(reviewVotes).values({
+              id: nanoid(),
+              reviewId,
+              userId,
+              voteType,
+            });
+          }
+
+          // 2. Update denormalized counts in reviews table
+          const helpfulCountResult = await tx
+            .select({ count: sql<number>`count(*)` })
+            .from(reviewVotes)
+            .where(
+              and(
+                eq(reviewVotes.reviewId, reviewId),
+                eq(reviewVotes.voteType, "helpful")
+              )
+            );
+          
+          const notHelpfulCountResult = await tx
+            .select({ count: sql<number>`count(*)` })
+            .from(reviewVotes)
+            .where(
+              and(
+                eq(reviewVotes.reviewId, reviewId),
+                eq(reviewVotes.voteType, "not_helpful")
+              )
+            );
+
+          await tx
+            .update(reviews)
+            .set({
+              helpfulVotes: Number(helpfulCountResult[0]?.count || 0),
+              notHelpfulVotes: Number(notHelpfulCountResult[0]?.count || 0),
+            })
+            .where(eq(reviews.id, reviewId));
+        });
+
+        return { success: true };
+      } catch (error) {
+        console.error(`[voteReview] Error for user ${userId} and review ${reviewId}:`, error);
+        throw new ORPCError("INTERNAL_SERVER_ERROR", {
+          message: "Failed to process vote",
         });
       }
     }),

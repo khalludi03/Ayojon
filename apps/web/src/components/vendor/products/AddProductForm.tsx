@@ -101,12 +101,6 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
     quantityAvailable: '',
     images: [],
     specifications: [],
-    weight: '',
-    length: '',
-    width: '',
-    height: '',
-    isFragile: false,
-    requiresSetup: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -146,12 +140,6 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
       quantityAvailable: product.rentalDetails?.quantityAvailable.toString() || '',
       images: product.images,
       specifications: product.specifications,
-      weight: product.shipping.weight.toString(),
-      length: product.shipping.dimensions.length.toString(),
-      width: product.shipping.dimensions.width.toString(),
-      height: product.shipping.dimensions.height.toString(),
-      isFragile: product.shipping.isFragile,
-      requiresSetup: product.shipping.requiresSetup,
     });
   };
 
@@ -360,24 +348,6 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
     // Images
     if (formData.images.length === 0) {
       newErrors.images = 'At least one image is required';
-    }
-
-    // Shipping
-    const weight = parseFloat(formData.weight);
-    if (!formData.weight || isNaN(weight) || weight <= 0) {
-      newErrors.weight = 'Weight must be greater than 0';
-    }
-    const length = parseFloat(formData.length);
-    if (!formData.length || isNaN(length) || length <= 0) {
-      newErrors.length = 'Length must be greater than 0';
-    }
-    const width = parseFloat(formData.width);
-    if (!formData.width || isNaN(width) || width <= 0) {
-      newErrors.width = 'Width must be greater than 0';
-    }
-    const height = parseFloat(formData.height);
-    if (!formData.height || isNaN(height) || height <= 0) {
-      newErrors.height = 'Height must be greater than 0';
     }
 
     setErrors(newErrors);
@@ -898,90 +868,6 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   No specifications added yet
                 </p>
               )}
-            </div>
-          </div>
-
-          {/* Shipping Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
-              Shipping Details
-            </h3>
-            <div className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-4">
-                <div>
-                  <Label htmlFor="weight">Weight (kg) *</Label>
-                  <Input
-                    id="weight"
-                    type="number"
-                    step="0.01"
-                    value={formData.weight}
-                    onChange={(e) => handleChange('weight', e.target.value)}
-                    placeholder="0.00"
-                    className={errors.weight ? 'border-red-500' : ''}
-                  />
-                  {errors.weight && <p className="text-sm text-red-500 mt-1">{errors.weight}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="length">Length (cm) *</Label>
-                  <Input
-                    id="length"
-                    type="number"
-                    step="0.01"
-                    value={formData.length}
-                    onChange={(e) => handleChange('length', e.target.value)}
-                    placeholder="0.00"
-                    className={errors.length ? 'border-red-500' : ''}
-                  />
-                  {errors.length && <p className="text-sm text-red-500 mt-1">{errors.length}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="width">Width (cm) *</Label>
-                  <Input
-                    id="width"
-                    type="number"
-                    step="0.01"
-                    value={formData.width}
-                    onChange={(e) => handleChange('width', e.target.value)}
-                    placeholder="0.00"
-                    className={errors.width ? 'border-red-500' : ''}
-                  />
-                  {errors.width && <p className="text-sm text-red-500 mt-1">{errors.width}</p>}
-                </div>
-                <div>
-                  <Label htmlFor="height">Height (cm) *</Label>
-                  <Input
-                    id="height"
-                    type="number"
-                    step="0.01"
-                    value={formData.height}
-                    onChange={(e) => handleChange('height', e.target.value)}
-                    placeholder="0.00"
-                    className={errors.height ? 'border-red-500' : ''}
-                  />
-                  {errors.height && <p className="text-sm text-red-500 mt-1">{errors.height}</p>}
-                </div>
-              </div>
-
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.isFragile}
-                    onChange={(e) => handleChange('isFragile', e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-[hsl(var(--foreground))]">Fragile Item</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.requiresSetup}
-                    onChange={(e) => handleChange('requiresSetup', e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-[hsl(var(--foreground))]">Requires Setup</span>
-                </label>
-              </div>
             </div>
           </div>
         </div>
