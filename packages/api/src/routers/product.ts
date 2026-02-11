@@ -151,7 +151,27 @@ export const productRouter = os.router({
         }
       });
 
-      return allCategories;
+      // Get product counts for each category
+      const categoriesWithCounts = await Promise.all(
+        allCategories.map(async (category) => {
+          const countResult = await db
+            .select({ count: sql<number>`cast(count(*) as integer)` })
+            .from(products)
+            .where(
+              and(
+                eq(products.categoryId, category.id),
+                eq(products.status, 'active')
+              )
+            );
+          
+          return {
+            ...category,
+            productCount: countResult[0]?.count || 0
+          };
+        })
+      );
+
+      return categoriesWithCounts;
     }),
 
   getCategoryBySlug: publicProcedure
