@@ -12,7 +12,7 @@ import {
   products, 
   orderItems 
 } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, sql, gte, inArray } from "drizzle-orm";
+import { eq, and, desc, sql, gte, inArray, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
 
@@ -574,7 +574,12 @@ export const vendorRouter = os.router({
           and(
             eq(orderItems.vendorId, vendorId),
             gte(orders.createdAt, thirtyDaysAgo),
-            eq(orders.status, "delivered")
+            or(
+              // bKash orders
+              sql`${orders.status} IN ('delivered', 'vendor_paid')`,
+              // COD orders
+              sql`${orders.status} IN ('cash_collected', 'settlement_ready', 'vendor_settled')`
+            )
           )
         );
 

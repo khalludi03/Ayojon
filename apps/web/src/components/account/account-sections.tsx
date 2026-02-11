@@ -895,7 +895,13 @@ function AddressDialog({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) newErrors.name = 'Full name is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (formData.phone.length !== 11) {
+      newErrors.phone = 'Phone number must be exactly 11 digits';
+    } else if (!/^01[3-9]\d{8}$/.test(formData.phone)) {
+      newErrors.phone = 'Invalid phone number format (e.g., 01712345678)';
+    }
     if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
     if (!formData.division) newErrors.division = 'Division is required';
     if (!formData.city) newErrors.city = 'City is required';
@@ -954,10 +960,21 @@ function AddressDialog({
                 id="phone"
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                  if (value.length <= 11) {
+                    handleChange('phone', value);
+                  }
+                }}
                 placeholder="01712345678"
+                pattern="[0-9]{11}"
+                minLength={11}
+                maxLength={11}
                 className={errors.phone ? 'border-red-500' : ''}
               />
+              <p className="text-xs text-muted-foreground">
+                Enter 11-digit mobile number {formData.phone && `(${formData.phone.length}/11)`}
+              </p>
               {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
             </div>
           </div>

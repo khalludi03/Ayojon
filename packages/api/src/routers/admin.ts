@@ -3,8 +3,8 @@ import { adminProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import * as paymentService from "../services/payment-service";
 import * as payoutService from "../services/payout-service";
+import { notifyVendorApproved, notifyVendorRejected, notifyOrderStatusUpdate } from "../services/notification-service";
 import * as orderService from "../services/order-service";
-import { notifyVendorApproved, notifyVendorRejected } from "../services/notification-service";
 import {
   user,
   vendors,
@@ -18,7 +18,7 @@ import {
   homeBanners,
   homePromoCards
 } from "@my-better-t-app/db/schema/index";
-import { count, eq, gte, sql, or, ilike, and, desc, asc } from "drizzle-orm";
+import { count, eq, gte, sql, or, ilike, and, desc, notInArray , asc} from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
 
@@ -1027,6 +1027,7 @@ export const adminRouter = os.router({
           "awaiting_payment",
           "payment_submitted",
           "payment_received",
+          "payment_rejected",
           "placed",
           "confirmed",
           "pending",
@@ -1107,6 +1108,7 @@ export const adminRouter = os.router({
           "awaiting_payment",
           "payment_submitted",
           "payment_received",
+          "payment_rejected",
           "placed",
           "confirmed",
           "pending",
@@ -1136,7 +1138,22 @@ export const adminRouter = os.router({
         throw new ORPCError("BAD_REQUEST", { message: result.error });
       }
 
-      return result.order;
+      const updatedOrder = result[0];
+
+      // Send notification to customer about status change
+      try {
+        await notifyOrderStatusUpdate(
+          updatedOrder.userId,
+          updatedOrder.id,
+          updatedOrder.orderNumber,
+          updatedOrder.status
+        );
+      } catch (error) {
+        // Log error but don't fail the status update
+        console.error("Failed to send order status notification:", error);
+      }
+
+      return updatedOrder;
     }),
 
   getPlatformMetrics: adminProcedure
@@ -1158,12 +1175,48 @@ export const adminRouter = os.router({
       const [monthlyOrderCount] = await db
         .select({ value: count() })
         .from(orders)
-        .where(gte(orders.createdAt, firstDayOfMonth));
+        .where(
+          and(
+            gte(orders.createdAt, firstDayOfMonth),
+            notInArray(orders.status, ["cancelled", "returned"]),
+            or(
+              // bKash orders: count when payment received or later
+              and(
+                eq(orders.paymentMethod, "bkash"),
+                sql`${orders.status} IN ('payment_received', 'shipped', 'delivered', 'vendor_paid')`
+              ),
+              // COD orders: count only after cash collected
+              and(
+                eq(orders.paymentMethod, "cod"),
+                sql`${orders.status} IN ('cash_collected', 'settlement_ready', 'vendor_settled')`
+              )
+            )
+          )
+        );
 
       const [monthlyRevenue] = await db
-        .select({ value: sql<string>`sum(${orders.total})` })
+        .select({ 
+          value: sql<string>`sum(${orders.total})` 
+        })
         .from(orders)
-        .where(gte(orders.createdAt, firstDayOfMonth));
+        .where(
+          and(
+            gte(orders.createdAt, firstDayOfMonth),
+            notInArray(orders.status, ["cancelled", "returned"]),
+            or(
+              // bKash orders: count when payment received or later
+              and(
+                eq(orders.paymentMethod, "bkash"),
+                sql`${orders.status} IN ('payment_received', 'shipped', 'delivered', 'vendor_paid')`
+              ),
+              // COD orders: count only after cash collected
+              and(
+                eq(orders.paymentMethod, "cod"),
+                sql`${orders.status} IN ('cash_collected', 'settlement_ready', 'vendor_settled')`
+              )
+            )
+          )
+        );
 
       const recentOrders = await db
         .select()
