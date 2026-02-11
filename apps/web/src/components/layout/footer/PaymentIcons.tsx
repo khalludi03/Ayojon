@@ -35,40 +35,17 @@ function MastercardIcon({ className }: PaymentIconProps) {
   );
 }
 
-// bKash Logo SVG - Authentic style with "b" icon
+// bKash Logo SVG - Using official bKash logo
 function BkashIcon({ className }: PaymentIconProps) {
   return (
-    <svg viewBox="0 0 80 32" className={className} aria-label="bKash">
-      <defs>
-        <linearGradient id="bkash-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#E2136E" />
-          <stop offset="100%" stopColor="#C4105D" />
-        </linearGradient>
-      </defs>
-      <rect width="80" height="32" rx="4" fill="url(#bkash-gradient)" />
-      {/* Stylized "b" logo mark */}
-      <circle cx="16" cy="16" r="10" fill="white" />
-      <path
-        d="M13 10v12M13 16c0-2.5 2-4 4-4s4 1.5 4 4-2 4-4 4"
-        stroke="#E2136E"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        fill="none"
+    <div className="rounded bg-white dark:bg-white p-1 flex items-center justify-center">
+      <img 
+        src="/bkash.svg" 
+        alt="bKash" 
+        className={className}
+        style={{ objectFit: 'contain' }}
       />
-      {/* "Kash" text */}
-      <text
-        x="52"
-        y="20"
-        textAnchor="middle"
-        fill="white"
-        fontSize="11"
-        fontWeight="700"
-        fontFamily="system-ui, -apple-system, sans-serif"
-        letterSpacing="0.5"
-      >
-        Kash
-      </text>
-    </svg>
+    </div>
   );
 }
 
