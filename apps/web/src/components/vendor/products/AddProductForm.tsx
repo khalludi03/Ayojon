@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X, Upload, GripVertical, Check, Loader2 } from 'lucide-react';
+import { X, Upload, GripVertical, Check, Loader2, Package, Tag, FileText, DollarSign, Image as ImageIcon, Settings, Info, Sparkles } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { orpc } from '@/utils/orpc';
 import { toast } from 'sonner';
@@ -294,7 +294,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
     if (!formData.category) newErrors.category = 'Category is required';
 
     // Pricing - Purchase
-    if (formData.productType === 'purchase' || formData.productType === 'both') {
+    if (formData.productType === 'purchase') {
       const regularPrice = parseFloat(formData.regularPrice);
       if (!formData.regularPrice || isNaN(regularPrice) || regularPrice <= 0) {
         newErrors.regularPrice = 'Regular price must be greater than 0';
@@ -310,38 +310,6 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
       const quantity = parseInt(formData.quantity);
       if (!formData.quantity || isNaN(quantity) || quantity < 0) {
         newErrors.quantity = 'Quantity must be 0 or greater';
-      }
-    }
-
-    // Pricing - Rental
-    if (formData.productType === 'rental' || formData.productType === 'both') {
-      const dailyRate = parseFloat(formData.dailyRate);
-      if (!formData.dailyRate || isNaN(dailyRate) || dailyRate <= 0) {
-        newErrors.dailyRate = 'Daily rate must be greater than 0';
-      }
-      if (formData.weeklyRate) {
-        const weeklyRate = parseFloat(formData.weeklyRate);
-        if (isNaN(weeklyRate) || weeklyRate <= 0) {
-          newErrors.weeklyRate = 'Weekly rate must be greater than 0';
-        }
-      }
-      if (formData.monthlyRate) {
-        const monthlyRate = parseFloat(formData.monthlyRate);
-        if (isNaN(monthlyRate) || monthlyRate <= 0) {
-          newErrors.monthlyRate = 'Monthly rate must be greater than 0';
-        }
-      }
-      const securityDeposit = parseFloat(formData.securityDeposit);
-      if (!formData.securityDeposit || isNaN(securityDeposit) || securityDeposit < 0) {
-        newErrors.securityDeposit = 'Security deposit must be 0 or greater';
-      }
-      const minDuration = parseInt(formData.minimumRentalDuration);
-      if (!formData.minimumRentalDuration || isNaN(minDuration) || minDuration < 1) {
-        newErrors.minimumRentalDuration = 'Minimum rental duration must be at least 1 day';
-      }
-      const quantityAvailable = parseInt(formData.quantityAvailable);
-      if (!formData.quantityAvailable || isNaN(quantityAvailable) || quantityAvailable < 0) {
-        newErrors.quantityAvailable = 'Quantity available must be 0 or greater';
       }
     }
 
@@ -459,43 +427,54 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
 
   if (showSuccess) {
     return (
-      <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 text-center">
-        <div className="mx-auto w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center mb-4">
-          <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
+      <div className="rounded-2xl border-2 border-green-200 dark:border-green-900/50 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 p-12 text-center shadow-xl">
+        <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg animate-in zoom-in duration-300">
+          <Check className="h-10 w-10 text-white" strokeWidth={3} />
         </div>
-        <h2 className="text-2xl font-bold text-[hsl(var(--foreground))] mb-2">
-          {existingProduct ? 'Product updated successfully!' : 'Product created successfully!'}
-        </h2>
-        <p className="text-[hsl(var(--muted-foreground))] mb-6">
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Sparkles className="h-5 w-5 text-green-600 dark:text-green-400" />
+          <h2 className="text-3xl font-black text-green-900 dark:text-green-100">
+            {existingProduct ? 'Product Updated!' : 'Product Created!'}
+          </h2>
+          <Sparkles className="h-5 w-5 text-green-600 dark:text-green-400" />
+        </div>
+        <p className="text-green-700 dark:text-green-300 mb-8 text-lg font-medium">
           {existingProduct
-            ? 'Your changes have been saved to the database'
-            : 'Your product has been saved to the database'
+            ? 'Your changes have been saved successfully'
+            : 'Your product is now live and ready for customers'
           }
         </p>
-        <div className="flex gap-3 justify-center">
-          <Button onClick={onClose}>
-            Back to Products
-          </Button>
-        </div>
+        <Button 
+          onClick={onClose}
+          size="lg"
+          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold px-8 shadow-lg hover:shadow-xl transition-all"
+        >
+          Back to Products
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">
-            {existingProduct ? 'Edit Product' : 'Add New Product'}
-          </h2>
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            {existingProduct ? 'Update product information below' : 'Fill in the product details below'}
+      <div className="relative overflow-hidden rounded-2xl bg-[hsl(var(--primary))] p-8 shadow-2xl">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-3 rounded-xl bg-white/20 backdrop-blur-sm">
+              <Package className="h-7 w-7 text-white" />
+            </div>
+            <h2 className="text-3xl font-black text-white tracking-tight">
+              {existingProduct ? 'Edit Product' : 'Add New Product'}
+            </h2>
+          </div>
+          <p className="text-white/90 font-medium ml-[52px]">
+            {existingProduct ? 'Update your product information' : 'Create a new product listing for your store'}
           </p>
         </div>
-        <Button variant="outline" onClick={handleCancel}>
-          Cancel
-        </Button>
+        <div className="absolute -right-8 -bottom-8 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -left-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
       </div>
 
       {/* Form */}
@@ -503,46 +482,57 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
         {/* Main Form - 2/3 width */}
         <div className="lg:col-span-2 space-y-6">
           {/* Basic Info Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
-              Basic Information
-            </h3>
-            <div className="space-y-4">
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="p-2 rounded-lg bg-[hsl(var(--primary))]/10">
+                <Tag className="h-5 w-5 text-[hsl(var(--primary))]" />
+              </div>
+              <h3 className="text-xl font-black text-[hsl(var(--foreground))] tracking-tight">
+                Basic Information
+              </h3>
+            </div>
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="name">Product Name *</Label>
+                <Label htmlFor="name" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Product Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   placeholder="e.g., Elegant Wedding Dress"
-                  className={errors.name ? 'border-red-500' : ''}
+                  className={cn(
+                    "h-12 text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all",
+                    errors.name ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                  )}
                 />
-                {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+                {errors.name && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.name}</p>}
               </div>
 
               <div>
-                <Label htmlFor="brand">Brand *</Label>
+                <Label htmlFor="brand" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Brand *</Label>
                 <Input
                   id="brand"
                   value={formData.brand}
                   onChange={(e) => handleChange('brand', e.target.value)}
                   placeholder="e.g., Ayojon Collection"
-                  className={errors.brand ? 'border-red-500' : ''}
+                  className={cn(
+                    "h-12 text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all",
+                    errors.brand ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                  )}
                 />
-                {errors.brand && <p className="text-sm text-red-500 mt-1">{errors.brand}</p>}
+                {errors.brand && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.brand}</p>}
               </div>
 
               <div>
-                <Label>SKU *</Label>
-                <div className="flex gap-2 mb-2">
+                <Label className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">SKU *</Label>
+                <div className="flex gap-3 mb-3">
                   <button
                     type="button"
                     onClick={() => handleSKUModeChange('auto')}
                     className={cn(
-                      'px-3 py-1 text-sm rounded border',
+                      'flex-1 px-4 py-2.5 text-sm font-bold rounded-xl border-2 transition-all',
                       formData.skuMode === 'auto'
-                        ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
-                        : 'border-[hsl(var(--border))] text-[hsl(var(--foreground))]'
+                        ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))] shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))]/30'
                     )}
                   >
                     Auto-generate
@@ -551,10 +541,10 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                     type="button"
                     onClick={() => handleSKUModeChange('custom')}
                     className={cn(
-                      'px-3 py-1 text-sm rounded border',
+                      'flex-1 px-4 py-2.5 text-sm font-bold rounded-xl border-2 transition-all',
                       formData.skuMode === 'custom'
-                        ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
-                        : 'border-[hsl(var(--border))] text-[hsl(var(--foreground))]'
+                        ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))] shadow-md'
+                        : 'border-slate-200 dark:border-slate-800 text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))]/30'
                     )}
                   >
                     Custom
@@ -565,38 +555,51 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   onChange={(e) => handleChange('sku', e.target.value)}
                   disabled={formData.skuMode === 'auto'}
                   placeholder="Enter custom SKU"
-                  className={errors.sku ? 'border-red-500' : ''}
+                  className={cn(
+                    "h-12 text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all",
+                    errors.sku ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                  )}
                 />
-                {errors.sku && <p className="text-sm text-red-500 mt-1">{errors.sku}</p>}
+                {errors.sku && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.sku}</p>}
               </div>
             </div>
           </div>
 
           {/* Description Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
-              Description
-            </h3>
-            <div className="space-y-4">
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="p-2 rounded-lg bg-[hsl(var(--primary))]/10">
+                <FileText className="h-5 w-5 text-[hsl(var(--primary))]" />
+              </div>
+              <h3 className="text-xl font-black text-[hsl(var(--foreground))] tracking-tight">
+                Description
+              </h3>
+            </div>
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="description">Full Description *</Label>
+                <Label htmlFor="description" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Full Description *</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
                   placeholder="Provide a detailed description of your product..."
                   rows={6}
-                  className={errors.description ? 'border-red-500' : ''}
+                  className={cn(
+                    "text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all resize-none",
+                    errors.description ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                  )}
                 />
-                {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description}</p>}
+                {errors.description && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.description}</p>}
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <Label htmlFor="shortDescription">Short Description *</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="shortDescription" className="text-sm font-bold text-[hsl(var(--foreground))]">Short Description *</Label>
                   <span className={cn(
-                    'text-xs',
-                    formData.shortDescription.length > 160 ? 'text-red-500' : 'text-[hsl(var(--muted-foreground))]'
+                    'text-xs font-bold px-2 py-1 rounded-lg',
+                    formData.shortDescription.length > 160 
+                      ? 'text-red-600 bg-red-50 dark:bg-red-950/30' 
+                      : 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30'
                   )}>
                     {formData.shortDescription.length}/160
                   </span>
@@ -605,67 +608,83 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   id="shortDescription"
                   value={formData.shortDescription}
                   onChange={(e) => handleChange('shortDescription', e.target.value)}
-                  placeholder="Brief summary for product listings..."
-                  rows={2}
+                  placeholder="Write a brief summary (max 160 characters)"
+                  rows={3}
                   maxLength={160}
-                  className={errors.shortDescription ? 'border-red-500' : ''}
+                  className={cn(
+                    "text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all resize-none",
+                    errors.shortDescription ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                  )}
                 />
-                {errors.shortDescription && <p className="text-sm text-red-500 mt-1">{errors.shortDescription}</p>}
+                {errors.shortDescription && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.shortDescription}</p>}
               </div>
             </div>
           </div>
 
           {/* Category Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
-              Category & Classification
-            </h3>
-            <div className="space-y-4">
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 p-8 shadow-lg hover:shadow-xl transition-all">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="w-10 h-10 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center shadow-md">
+                <Tag className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">
+                Category & Classification
+              </h3>
+            </div>
+            <div className="space-y-6">
               <div>
-                <Label htmlFor="category">Category *</Label>
+                <Label htmlFor="category" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Category *</Label>
                 <select
                   id="category"
                   value={formData.category}
                   onChange={(e) => handleChange('category', e.target.value)}
                   className={cn(
-                    'w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]',
-                    errors.category && 'border-red-500'
+                    'w-full h-12 text-base font-medium rounded-xl border-2 pl-4 pr-10 py-2 bg-[hsl(var(--background))] focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all appearance-none',
+                    errors.category ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
                   )}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em',
+                  }}
                 >
                   <option value="">Select category</option>
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
                   ))}
                 </select>
-                {errors.category && <p className="text-sm text-red-500 mt-1">{errors.category}</p>}
+                {errors.category && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.category}</p>}
               </div>
 
               <div>
-                <Label htmlFor="subcategory">Subcategory</Label>
+                <Label htmlFor="subcategory" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Subcategory</Label>
                 <Input
                   id="subcategory"
                   value={formData.subcategory}
                   onChange={(e) => handleChange('subcategory', e.target.value)}
                   placeholder="e.g., Traditional Wear"
+                  className="h-12 text-base font-medium border-2 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all"
                 />
               </div>
 
               <div>
-                <Label>Event Types</Label>
-                <div className="grid grid-cols-2 gap-2 mt-2">
+                <Label className="text-sm font-bold text-[hsl(var(--foreground))] mb-3 block">Event Types</Label>
+                <div className="grid grid-cols-2 gap-3">
                   {EVENT_TYPES.map((eventType) => (
                     <button
                       key={eventType}
                       type="button"
                       onClick={() => handleEventTypeToggle(eventType)}
                       className={cn(
-                        'px-3 py-2 text-sm rounded border text-left',
+                        'px-4 py-3 text-sm font-bold rounded-xl border-2 text-left transition-all flex items-center justify-between',
                         formData.eventTypes.includes(eventType)
-                          ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]'
-                          : 'border-[hsl(var(--border))] text-[hsl(var(--foreground))]'
+                          ? 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))] shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))]/30'
                       )}
                     >
-                      {eventType}
+                      <span>{eventType}</span>
+                      {formData.eventTypes.includes(eventType) && <Check className="h-4 w-4" />}
                     </button>
                   ))}
                 </div>
@@ -674,79 +693,121 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           </div>
 
           {/* Pricing Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
-              Pricing & Inventory
-            </h3>
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="p-2 rounded-lg bg-[hsl(var(--primary))]/10">
+                <DollarSign className="h-5 w-5 text-[hsl(var(--primary))]" />
+              </div>
+              <h3 className="text-xl font-black text-[hsl(var(--foreground))] tracking-tight">
+                Pricing & Inventory
+              </h3>
+            </div>
             <div className="space-y-4">
               <div>
-                <Label>Product Type *</Label>
-                <div className="flex gap-4 mt-2">
-                  {(['purchase', 'rental', 'both'] as const).map((type) => (
-                    <label key={type} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="productType"
-                        value={type}
-                        checked={formData.productType === type}
-                        onChange={(e) => handleChange('productType', e.target.value)}
-                        className="w-4 h-4"
-                      />
-                      <span className="text-sm text-[hsl(var(--foreground))]">
-                        {type === 'both' ? 'Both' : type.charAt(0).toUpperCase() + type.slice(1)}
-                      </span>
+                <Label className="text-sm font-bold text-[hsl(var(--foreground))] mb-3 block">Product Type *</Label>
+                <div className="flex gap-3 mt-2">
+                  {(['purchase'] as const).map((type) => (
+                    <label key={type} className="flex-1 group cursor-pointer">
+                      <div className={cn(
+                        "relative flex items-center gap-3 p-4 rounded-xl border-2 transition-all",
+                        formData.productType === type
+                          ? "bg-[hsl(var(--primary))]/10 border-[hsl(var(--primary))] shadow-md"
+                          : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-[hsl(var(--primary))]/30"
+                      )}>
+                        <input
+                          type="radio"
+                          name="productType"
+                          value={type}
+                          checked={formData.productType === type}
+                          onChange={(e) => handleChange('productType', e.target.value)}
+                          className="w-5 h-5 text-indigo-600"
+                        />
+                        <div className="flex-1">
+                          <span className="text-sm font-bold text-[hsl(var(--foreground))] block">
+                            {type.charAt(0).toUpperCase() + type.slice(1)} Only
+                          </span>
+                          <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                            Sell products directly to customers
+                          </span>
+                        </div>
+                        {formData.productType === type && (
+                          <Check className="h-5 w-5 text-[hsl(var(--primary))]" />
+                        )}
+                      </div>
                     </label>
                   ))}
+                </div>
+                <div className="mt-4 p-4 rounded-xl bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50">
+                  <div className="flex items-start gap-3">
+                    <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                        Rental Products Coming Soon
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        We're working on adding rental functionality. For now, you can only add purchase products.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Purchase Details */}
-              {(formData.productType === 'purchase' || formData.productType === 'both') && (
+              {formData.productType === 'purchase' && (
                 <div className="pt-4 border-t border-[hsl(var(--border))]">
-                  <h4 className="font-semibold text-[hsl(var(--foreground))] mb-3">Purchase Details</h4>
+                  <h4 className="font-bold text-[hsl(var(--foreground))] mb-4 text-base">Purchase Details</h4>
                   <div className="grid gap-4 sm:grid-cols-3">
                     <div>
-                      <Label htmlFor="regularPrice">Regular Price (৳) *</Label>
+                      <Label htmlFor="regularPrice" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Regular Price (৳) *</Label>
                       <Input
                         id="regularPrice"
                         type="number"
                         value={formData.regularPrice}
                         onChange={(e) => handleChange('regularPrice', e.target.value)}
                         placeholder="0.00"
-                        className={errors.regularPrice ? 'border-red-500' : ''}
+                        className={cn(
+                          "h-12 text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all",
+                          errors.regularPrice ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                        )}
                       />
-                      {errors.regularPrice && <p className="text-sm text-red-500 mt-1">{errors.regularPrice}</p>}
+                      {errors.regularPrice && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.regularPrice}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="salePrice">Sale Price (৳)</Label>
+                      <Label htmlFor="salePrice" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Sale Price (৳)</Label>
                       <Input
                         id="salePrice"
                         type="number"
                         value={formData.salePrice}
                         onChange={(e) => handleChange('salePrice', e.target.value)}
                         placeholder="0.00"
-                        className={errors.salePrice ? 'border-red-500' : ''}
+                        className={cn(
+                          "h-12 text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all",
+                          errors.salePrice ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                        )}
                       />
-                      {errors.salePrice && <p className="text-sm text-red-500 mt-1">{errors.salePrice}</p>}
+                      {errors.salePrice && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.salePrice}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="quantity">Quantity in Stock *</Label>
+                      <Label htmlFor="quantity" className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">Quantity in Stock *</Label>
                       <Input
                         id="quantity"
                         type="number"
                         value={formData.quantity}
                         onChange={(e) => handleChange('quantity', e.target.value)}
                         placeholder="0"
-                        className={errors.quantity ? 'border-red-500' : ''}
+                        className={cn(
+                          "h-12 text-base font-medium border-2 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all",
+                          errors.quantity ? 'border-red-500' : 'border-slate-200 dark:border-slate-800'
+                        )}
                       />
-                      {errors.quantity && <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>}
+                      {errors.quantity && <p className="text-sm text-red-500 mt-2 font-semibold flex items-center gap-1"><X className="h-4 w-4" />{errors.quantity}</p>}
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Rental Details */}
-              {(formData.productType === 'rental' || formData.productType === 'both') && (
+              {/* Rental Details - Currently Disabled */}
+              {false && (formData.productType === 'rental' || formData.productType === 'both') && (
                 <div className="pt-4 border-t border-[hsl(var(--border))]">
                   <h4 className="font-semibold text-[hsl(var(--foreground))] mb-3">Rental Details</h4>
                   <div className="grid gap-4 sm:grid-cols-2">
@@ -829,44 +890,65 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           </div>
 
           {/* Specifications Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[hsl(var(--foreground))]">
-                Specifications
-              </h3>
-              <Button type="button" variant="outline" size="sm" onClick={handleAddSpecification}>
-                Add Specification
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[hsl(var(--primary))] flex items-center justify-center shadow-md">
+                  <Settings className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">
+                  Specifications
+                </h3>
+              </div>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={handleAddSpecification}
+                className="font-bold text-[hsl(var(--primary))] border-2 border-[hsl(var(--primary))]/20 hover:bg-[hsl(var(--primary))]/5 transition-all"
+              >
+                <Tag className="h-4 w-4 mr-2" />
+                Add Spec
               </Button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {formData.specifications.map((spec, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    value={spec.key}
-                    onChange={(e) => handleSpecificationChange(index, 'key', e.target.value)}
-                    placeholder="Key (e.g., Dimensions)"
-                    className="flex-1"
-                  />
-                  <Input
-                    value={spec.value}
-                    onChange={(e) => handleSpecificationChange(index, 'value', e.target.value)}
-                    placeholder="Value (e.g., 10x20cm)"
-                    className="flex-1"
-                  />
+                <div key={index} className="flex gap-3 items-start p-4 rounded-xl bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 hover:border-[hsl(var(--primary))]/30 transition-all">
+                  <div className="flex-1 space-y-3">
+                    <Input
+                      value={spec.key}
+                      onChange={(e) => handleSpecificationChange(index, 'key', e.target.value)}
+                      placeholder="Key (e.g., Material, Size, Color)"
+                      className="h-11 text-base font-medium border-2 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all"
+                    />
+                    <Input
+                      value={spec.value}
+                      onChange={(e) => handleSpecificationChange(index, 'value', e.target.value)}
+                      placeholder="Value (e.g., 100% Cotton, Medium, Red)"
+                      className="h-11 text-base font-medium border-2 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-[hsl(var(--primary))] transition-all"
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => handleRemoveSpecification(index)}
+                    className="h-11 w-11 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </Button>
                 </div>
               ))}
               {formData.specifications.length === 0 && (
-                <p className="text-sm text-[hsl(var(--muted-foreground))] text-center py-4">
-                  No specifications added yet
-                </p>
+                <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/30">
+                  <Settings className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-600 mb-3" />
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    No specifications added yet
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500">
+                    Click "Add Spec" to add product specifications
+                  </p>
+                </div>
               )}
             </div>
           </div>
@@ -876,44 +958,47 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
         <div className="space-y-6">
           {/* Status Section - Only for existing products */}
           {existingProduct && (
-            <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-              <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
+            <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 p-6 shadow-lg hover:shadow-xl transition-all">
+              <h3 className="text-lg font-bold text-[hsl(var(--foreground))] mb-4 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[hsl(var(--primary))] flex items-center justify-center">
+                  <Info className="h-4 w-4 text-white" />
+                </div>
                 Product Status
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-[hsl(var(--foreground))] mb-2 block">
+                  <label className="text-sm font-bold text-[hsl(var(--foreground))] mb-2 block">
                     Current Status
                   </label>
                   <div className="flex gap-2">
                     <span
                       className={cn(
-                        'inline-flex rounded-full px-3 py-1 text-sm font-semibold',
+                        'inline-flex rounded-xl px-4 py-2 text-sm font-bold shadow-sm',
                         existingProduct.status === 'active'
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
                           : existingProduct.status === 'draft'
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-                            : 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                            ? 'bg-gradient-to-r from-yellow-500 to-amber-600 text-white'
+                            : 'bg-gradient-to-r from-gray-500 to-slate-600 text-white'
                       )}
                     >
                       {existingProduct.status === 'active'
-                        ? 'Active (Published)'
+                        ? '✓ Active (Published)'
                         : existingProduct.status === 'draft'
-                          ? 'Draft'
-                          : 'Archived'}
+                          ? '○ Draft'
+                          : '⊗ Archived'}
                     </span>
                   </div>
                 </div>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 p-3 rounded-lg bg-slate-100 dark:bg-slate-900/50">
                   {existingProduct.status === 'active'
-                    ? 'This product is live and visible to customers'
+                    ? '✓ This product is live and visible to customers'
                     : existingProduct.status === 'draft'
-                      ? 'This product is not visible to customers yet'
-                      : 'This product is archived and not visible'}
+                      ? '○ This product is not visible to customers yet'
+                      : '⊗ This product is archived and not visible'}
                 </p>
-                <div className="pt-3 border-t border-[hsl(var(--border))]">
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
-                    Use the action buttons below to change the status when saving
+                <div className="pt-3 border-t-2 border-slate-200 dark:border-slate-800">
+                  <p className="text-xs font-bold text-[hsl(var(--primary))]">
+                    💡 Use action buttons below to change status
                   </p>
                 </div>
               </div>
@@ -921,21 +1006,34 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           )}
 
           {/* Images Section */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-4">
-              Product Images *
-            </h3>
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="p-2 rounded-lg bg-[hsl(var(--primary))]/10">
+                <ImageIcon className="h-5 w-5 text-[hsl(var(--primary))]" />
+              </div>
+              <h3 className="text-xl font-black text-[hsl(var(--foreground))] tracking-tight">
+                Product Images *
+              </h3>
+            </div>
 
             {/* Upload Area */}
-            <div className="mb-4">
-              <label className="block border-2 border-dashed border-[hsl(var(--border))] rounded-lg p-6 text-center cursor-pointer hover:border-[hsl(var(--primary))] transition-colors">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-[hsl(var(--muted-foreground))]" />
-                <p className="text-sm text-[hsl(var(--foreground))] mb-1">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                  PNG, JPG, WEBP up to 5MB each (5-10 images)
-                </p>
+            <div className="mb-6">
+              <label className="relative block border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center cursor-pointer hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5 transition-all group overflow-hidden">
+                <div className="absolute inset-0 bg-[hsl(var(--primary))]/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="relative">
+                  <div className="mx-auto w-16 h-16 rounded-full bg-[hsl(var(--primary))]/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Upload className="h-8 w-8 text-[hsl(var(--primary))]" />
+                  </div>
+                  <p className="text-base font-bold text-[hsl(var(--foreground))] mb-2">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))] mb-1">
+                    PNG, JPG, WEBP up to 5MB each
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Upload 5-10 high-quality images for best results
+                  </p>
+                </div>
                 <input
                   type="file"
                   accept="image/*"
@@ -944,7 +1042,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   className="hidden"
                 />
               </label>
-              {errors.images && <p className="text-sm text-red-500 mt-1">{errors.images}</p>}
+              {errors.images && <p className="text-sm text-red-500 mt-2 font-semibold">{errors.images}</p>}
             </div>
 
             {/* Image Previews */}
@@ -1000,25 +1098,39 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           </div>
 
           {/* Action Buttons */}
-          <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 space-y-3">
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg space-y-4">
             <Button
               onClick={() => handleSubmit(false)}
-              className="w-full"
+              size="lg"
+              className="w-full bg-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/90 text-white font-bold text-base shadow-lg hover:shadow-xl transition-all"
               disabled={isUploading}
             >
               {isUploading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Uploading...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Uploading Images...
                 </>
               ) : (
-                existingProduct ? 'Update Product' : 'Publish Product'
+                <>
+                  {existingProduct ? (
+                    <>
+                      <Check className="mr-2 h-5 w-5" />
+                      Update Product
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-5 w-5" />
+                      Publish Product
+                    </>
+                  )}
+                </>
               )}
             </Button>
             <Button
               onClick={() => handleSubmit(true)}
+              size="lg"
               variant="outline"
-              className="w-full"
+              className="w-full border-2 font-bold text-base"
               disabled={isUploading}
             >
               Save as Draft
@@ -1026,8 +1138,9 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
             {existingProduct && (
               <Button
                 onClick={handleMarkOutOfStock}
+                size="lg"
                 variant="outline"
-                className="w-full"
+                className="w-full border-2 font-bold text-base border-[hsl(var(--primary))]/30 text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5"
                 disabled={isUploading}
               >
                 Mark as Out of Stock
@@ -1035,8 +1148,9 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
             )}
             <Button
               onClick={handleCancel}
+              size="lg"
               variant="ghost"
-              className="w-full"
+              className="w-full font-bold text-base"
               disabled={isUploading}
             >
               Cancel

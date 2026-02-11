@@ -124,8 +124,8 @@ export function VendorSettingsPage() {
       newErrors.description = 'Store description is required';
     }
 
-    if (formData.phone && !/^01[0-9]{9}$/.test(formData.phone.replace(/[\s-]/g, ''))) {
-      newErrors.phone = 'Invalid phone number format (01XXXXXXXXX)';
+    if (formData.phone && !/^\d{11}$/.test(formData.phone)) {
+      newErrors.phone = 'Mobile number must be exactly 11 digits';
     }
 
     setErrors(newErrors);
@@ -205,19 +205,7 @@ export function VendorSettingsPage() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">Store Settings</h1>
-            <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={isSaving || !hasChanges}>
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
-            </div>
-          </div>
+          <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2">Store Settings</h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             Customize your store appearance and information
           </p>
@@ -236,7 +224,7 @@ export function VendorSettingsPage() {
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Store Name *</Label>
+                <Label htmlFor="name" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Store Name *</Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -250,7 +238,7 @@ export function VendorSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="description">Store Description *</Label>
+                <Label htmlFor="description" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Store Description *</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -276,7 +264,7 @@ export function VendorSettingsPage() {
             <div className="space-y-6">
               {/* Logo */}
               <div>
-                <Label>Store Logo</Label>
+                <Label className="text-base font-semibold text-[hsl(var(--foreground))]">Store Logo</Label>
                 <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
                   Recommended size: 200x200px
                 </p>
@@ -312,7 +300,7 @@ export function VendorSettingsPage() {
 
               {/* Banner */}
               <div>
-                <Label>Store Banner</Label>
+                <Label className="text-base font-semibold text-[hsl(var(--foreground))]">Store Banner</Label>
                 <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
                   Recommended size: 1200x400px
                 </p>
@@ -360,12 +348,18 @@ export function VendorSettingsPage() {
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="phone">Business Phone</Label>
+                  <Label htmlFor="phone" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Business Phone</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) => handleChange('phone', e.target.value)}
+                    onChange={(e) => {
+                      const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 11);
+                      handleChange('phone', digitsOnly);
+                    }}
                     placeholder="01XXXXXXXXX"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={11}
                     className={errors.phone ? 'border-red-500' : ''}
                   />
                   {errors.phone && (
@@ -374,7 +368,7 @@ export function VendorSettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="address">Business Address</Label>
+                  <Label htmlFor="address" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Business Address</Label>
                   <Input
                     id="address"
                     value={formData.address}
