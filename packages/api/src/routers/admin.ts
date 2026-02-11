@@ -3,6 +3,7 @@ import { adminProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import * as paymentService from "../services/payment-service";
 import * as payoutService from "../services/payout-service";
+import * as orderService from "../services/order-service";
 import { notifyVendorApproved, notifyVendorRejected } from "../services/notification-service";
 import {
   user,
@@ -956,6 +957,7 @@ export const adminRouter = os.router({
           "payment_submitted",
           "payment_received",
           "placed",
+          "confirmed",
           "pending",
           "processing",
           "shipped",
@@ -1021,7 +1023,7 @@ export const adminRouter = os.router({
 
   updateOrderStatus: adminProcedure
     .route({
-      method: "PATCH",
+      method: "POST",
       operationId: "updateOrderStatus",
       summary: "Update Order Status",
       description: "Updates the status of an order.",
@@ -1035,6 +1037,7 @@ export const adminRouter = os.router({
           "payment_submitted",
           "payment_received",
           "placed",
+          "confirmed",
           "pending",
           "processing",
           "shipped",
@@ -1046,23 +1049,23 @@ export const adminRouter = os.router({
           "cancelled",
           "returned",
         ]),
+        reason: z.string().optional(),
       })
     )
-    .handler(async ({ input }) => {
-      const result = await db
-        .update(orders)
-        .set({
-          status: input.status,
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, input.id))
-        .returning();
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
+      const result = await orderService.transitionOrderStatus(
+        input.id, 
+        input.status as any, 
+        adminId,
+        input.reason
+      );
 
-      if (result.length === 0) {
-        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
       }
 
-      return result[0];
+      return result.order;
     }),
 
   getPlatformMetrics: adminProcedure
@@ -1213,11 +1216,13 @@ export const adminRouter = os.router({
         notes: z.string().optional(),
       })
     )
-    .handler(async ({ input }) => {
+    .handler(async ({ input, context }) => {
+      const adminId = context.session.user.id;
       const result = await paymentService.recordCashCollection(
         input.orderId,
         input.collectionProof,
-        input.notes
+        input.notes,
+        adminId
       );
 
       if (!result.success) {

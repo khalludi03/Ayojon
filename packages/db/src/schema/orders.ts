@@ -11,7 +11,7 @@ import { relations } from "drizzle-orm";
  * awaiting_payment → payment_submitted → payment_received → shipped → delivered → vendor_paid
  *
  * Cash on Delivery (COD) Flow:
- * placed → shipped → cash_collected → settlement_ready → vendor_settled
+ * placed → confirmed → shipped → delivered → settlement_ready → vendor_settled
  *
  * Both flows can transition to 'cancelled' at any point before delivery
  */
@@ -23,10 +23,11 @@ export type OrderStatus =
   | "payment_rejected"    // Admin rejected payment details
   // COD flow statuses
   | "placed"             // COD order placed, ready for fulfillment
+  | "confirmed"          // Order confirmed by vendor/admin
   // Common statuses
   | "shipped"            // Vendor marked as shipped (both flows)
-  | "delivered"          // Order delivered to customer (bKash flow)
-  | "cash_collected"     // Cash collected from customer (COD flow)
+  | "delivered"          // Order delivered to customer (both flows)
+  | "cash_collected"     // Cash collected from customer (COD flow - deprecated as order status, use delivered + payment status instead)
   | "settlement_ready"   // Ready for vendor payout (COD flow)
   | "vendor_paid"        // Vendor paid (bKash flow)
   | "vendor_settled"     // Vendor paid (COD flow)
@@ -72,6 +73,7 @@ export const orders = pgTable(
     
     // Notes
     customerNote: text("customer_note"),
+    cancellationReason: text("cancellation_reason"),
     
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -145,7 +147,7 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
  * For bKash: Customer submits transaction ID, admin verifies
  * For COD: Payment recorded when cash is collected on delivery
  */
-export type PaymentStatus = "pending" | "submitted" | "verified" | "rejected";
+export type PaymentStatus = "pending" | "submitted" | "verified" | "rejected" | "cash_collected";
 
 export const payments = pgTable(
   "payments",

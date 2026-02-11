@@ -60,13 +60,16 @@ const PREPAID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
  */
 const COD_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   // Initial state for COD orders
-  placed: ["shipped", "cancelled"],
+  placed: ["confirmed", "cancelled"],
+
+  // Vendor/Admin confirmed the order
+  confirmed: ["shipped", "cancelled"],
 
   // Vendor marked as shipped
-  shipped: ["cash_collected", "cancelled"],
+  shipped: ["delivered", "cancelled"],
 
-  // Delivery person collected cash from customer
-  cash_collected: ["settlement_ready"],
+  // Courier delivered product and collected cash
+  delivered: ["settlement_ready"],
 
   // Ready for admin to pay vendor
   settlement_ready: ["vendor_settled"],
@@ -79,7 +82,7 @@ const COD_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   payment_submitted: [],
   payment_received: [],
   payment_rejected: [],
-  delivered: [],
+  cash_collected: [],
   vendor_paid: [],
   cancelled: [],
 };
@@ -188,27 +191,27 @@ export const OrderActions = {
   },
 
   /**
+   * Can vendor/admin confirm order? (COD only)
+   */
+  canConfirmOrder: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
+    return paymentMethod === "cod" && status === "placed";
+  },
+
+  /**
    * Can vendor mark as shipped?
    */
   canMarkShipped: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
     if (paymentMethod === "bkash") {
       return status === "payment_received";
     }
-    return status === "placed";
+    return status === "confirmed";
   },
 
   /**
-   * Can mark as delivered? (bKash only)
+   * Can mark as delivered?
    */
   canMarkDelivered: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return (paymentMethod === "bkash") && status === "shipped";
-  },
-
-  /**
-   * Can mark cash collected? (COD only)
-   */
-  canMarkCashCollected: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return paymentMethod === "cod" && status === "shipped";
+    return status === "shipped";
   },
 
   /**
@@ -234,8 +237,8 @@ export const OrderActions = {
     if ((paymentMethod === "bkash") && status === "delivered") {
       return false;
     }
-    // For COD, can't cancel after cash collection
-    if (paymentMethod === "cod" && (status === "cash_collected" || status === "settlement_ready")) {
+    // For COD, can't cancel after delivery
+    if (paymentMethod === "cod" && (status === "delivered" || status === "settlement_ready")) {
       return false;
     }
     return true;

@@ -84,7 +84,7 @@ export const vendorRouter = os.router({
 
   updateOrderStatus: protectedProcedure
     .route({
-      method: "PATCH",
+      method: "POST",
       operationId: "updateVendorOrderStatus",
       summary: "Update Vendor Order Status",
       description: "Allows a vendor to update the status of an order containing their products.",
@@ -94,6 +94,7 @@ export const vendorRouter = os.router({
       orderId: z.string(),
       status: z.enum(["pending", "confirmed", "shipped", "delivered", "cancelled", "returned"]),
       trackingNumber: z.string().optional(),
+      reason: z.string().optional(),
     }))
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
@@ -136,24 +137,32 @@ export const vendorRouter = os.router({
         updateData.trackingNumber = input.trackingNumber;
       }
 
-      console.log(`[updateOrderStatus] Executing DB update for order ${input.orderId}`);
+      console.log(`[updateOrderStatus] Executing transition for order ${input.orderId} to ${input.status}`);
       try {
-        const updated = await db
-          .update(orders)
-          .set(updateData)
-          .where(eq(orders.id, input.orderId))
-          .returning();
+        // Use transitionOrderStatus to ensure state machine rules and side effects are applied
+        const result = await orderService.transitionOrderStatus(
+          input.orderId, 
+          input.status as any,
+          userId,
+          input.reason
+        );
 
-        if (updated.length === 0) {
-          console.warn(`[updateOrderStatus] No order found with ID ${input.orderId}`);
-          throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+        if (!result.success) {
+          console.warn(`[updateOrderStatus] Transition failed: ${result.error}`);
+          throw new ORPCError("BAD_REQUEST", { message: result.error });
+        }
+
+        // If tracking number provided, update it separately
+        if (input.trackingNumber) {
+          await orderService.updateOrderTracking(input.orderId, input.trackingNumber, vendor.id);
         }
 
         console.log(`[updateOrderStatus] Order ${input.orderId} updated successfully to ${input.status}`);
-        return updated[0];
+        return result.order;
       } catch (err) {
-        console.error(`[updateOrderStatus] DB UPDATE FAILED:`, err);
-        throw err;
+        console.error(`[updateOrderStatus] TRANSITION FAILED:`, err);
+        if (err instanceof ORPCError) throw err;
+        throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to update order status" });
       }
     }),
 
@@ -729,6 +738,42 @@ export const vendorRouter = os.router({
   // New Payment Flow Endpoints
   // ====================================================================
 
+  confirmOrder: protectedProcedure
+    .route({
+      method: "POST",
+      operationId: "confirmOrder",
+      summary: "Confirm Order",
+      description: "Vendor confirms a COD order. This moves it from 'placed' to 'confirmed'.",
+      tags: ["Vendor", "Orders"],
+    })
+    .input(z.object({ orderId: z.string() }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      const hasItems = await orderService.vendorOwnsOrderItems(input.orderId, vendor.id);
+      if (!hasItems) {
+        throw new ORPCError("FORBIDDEN", { message: "You do not have items in this order" });
+      }
+
+      const result = await orderService.transitionOrderStatus(input.orderId, "confirmed", userId);
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.order;
+    }),
+
   markOrderShipped: protectedProcedure
     .route({
       method: "POST",
@@ -765,25 +810,7 @@ export const vendorRouter = os.router({
         });
       }
 
-      // 3. Get order to check status
-      const [order] = await db
-        .select()
-        .from(orders)
-        .where(eq(orders.id, input.orderId))
-        .limit(1);
-
-      if (!order) {
-        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
-      }
-
-      // 4. Verify order can be marked as shipped
-      if (!OrderActions.canMarkShipped(order.status, order.paymentMethod)) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: `Cannot mark order as shipped from status: ${order.status}`,
-        });
-      }
-
-      // 5. Update tracking number if provided
+      // 3. Update tracking number if provided
       if (input.trackingNumber) {
         await orderService.updateOrderTracking(
           input.orderId,
@@ -792,8 +819,44 @@ export const vendorRouter = os.router({
         );
       }
 
-      // 6. Transition order to shipped status
-      const result = await orderService.transitionOrderStatus(input.orderId, "shipped");
+      // 4. Transition order to shipped status
+      const result = await orderService.transitionOrderStatus(input.orderId, "shipped", userId);
+
+      if (!result.success) {
+        throw new ORPCError("BAD_REQUEST", { message: result.error });
+      }
+
+      return result.order;
+    }),
+
+  markOrderDelivered: protectedProcedure
+    .route({
+      method: "POST",
+      operationId: "markOrderDelivered",
+      summary: "Mark Order as Delivered",
+      description: "Vendor marks an order as delivered. For COD orders, this also records cash collection.",
+      tags: ["Vendor", "Orders"],
+    })
+    .input(z.object({ orderId: z.string() }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      const hasItems = await orderService.vendorOwnsOrderItems(input.orderId, vendor.id);
+      if (!hasItems) {
+        throw new ORPCError("FORBIDDEN", { message: "You do not have items in this order" });
+      }
+
+      const result = await orderService.transitionOrderStatus(input.orderId, "delivered", userId);
 
       if (!result.success) {
         throw new ORPCError("BAD_REQUEST", { message: result.error });

@@ -88,7 +88,7 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
 
   const renderActionButtons = () => {
     switch (order.status) {
-      case 'pending':
+      case 'placed':
         return (
           <Button onClick={handleConfirmOrder} disabled={isUpdating} className="w-full sm:w-auto">
             {isUpdating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Check className="h-4 w-4 mr-2" />}
@@ -97,6 +97,7 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
         );
 
       case 'confirmed':
+      case 'payment_received':
         if (showTrackingInput) {
           return (
             <div className="space-y-3 w-full">

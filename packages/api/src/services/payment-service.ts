@@ -323,78 +323,38 @@ export async function getOrderPayment(orderId: string) {
  * Record COD cash collection
  *
  * When delivery person collects cash, this records it and updates order status.
- * This moves order from shipped → cash_collected
+ * This moves order from shipped → delivered
  *
  * @param orderId - Order ID
  * @param collectionProof - Optional proof URL (photo of collected cash)
  * @param notes - Optional notes
+ * @param adminId - ID of admin/courier recording the collection
  * @returns Updated payment record
  */
 export async function recordCashCollection(
   orderId: string,
   collectionProof?: string,
-  notes?: string
+  notes?: string,
+  adminId?: string
 ): Promise<{ success: boolean; payment?: typeof payments.$inferSelect; error?: string }> {
-  return await db.transaction(async (tx) => {
-    // 1. Get order
-    const [order] = await tx
-      .select()
-      .from(orders)
-      .where(eq(orders.id, orderId))
-      .limit(1);
+  const result = await transitionOrderStatus(orderId, "delivered", adminId);
 
-    if (!order) {
-      return { success: false, error: "Order not found" };
-    }
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
 
-    // 2. Verify it's a COD order
-    if (order.paymentMethod !== "cod") {
-      return {
-        success: false,
-        error: "This is not a COD order",
-      };
-    }
-
-    // 3. Verify order is shipped
-    if (!OrderActions.canMarkCashCollected(order.status, order.paymentMethod)) {
-      return {
-        success: false,
-        error: `Cannot record cash collection for order in status: ${order.status}`,
-      };
-    }
-
-    // 4. Get payment record
-    const [existingPayment] = await tx
-      .select()
-      .from(payments)
-      .where(eq(payments.orderId, orderId))
-      .limit(1);
-
-    if (!existingPayment) {
-      return { success: false, error: "Payment record not found" };
-    }
-
-    // 5. Update payment record
-    const [updatedPayment] = await tx
+  // Update payment record with extra details if provided
+  if (collectionProof || notes) {
+    await db
       .update(payments)
       .set({
-        status: "verified",
         collectionProof,
         notes,
         updatedAt: new Date(),
       })
-      .where(eq(payments.id, existingPayment.id))
-      .returning();
+      .where(eq(payments.orderId, orderId));
+  }
 
-    // 6. Update order status to cash_collected
-    await tx
-      .update(orders)
-      .set({
-        status: "cash_collected",
-        updatedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId));
-
-    return { success: true, payment: updatedPayment! };
-  });
+  const payment = await getOrderPayment(orderId);
+  return { success: true, payment: payment as any };
 }
