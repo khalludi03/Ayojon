@@ -9,7 +9,10 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () => void }) {
+export default function SignInForm({ onSwitchToSignUp, onSuccess }: { 
+  onSwitchToSignUp: () => void
+  onSuccess?: () => void
+}) {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate({
     from: "/",
@@ -28,23 +31,30 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
         },
         {
           onSuccess: (ctx) => {
-            const user = ctx.data?.user as any;
-            let redirectPath = '/';
+            if (onSuccess) {
+              // If custom onSuccess is provided, use it instead of navigation
+              onSuccess();
+              toast.success("Sign in successful");
+            } else {
+              // Default navigation behavior
+              const user = ctx.data?.user as any;
+              let redirectPath = '/';
 
-            if (user?.role === 'admin') {
-              redirectPath = '/admin/dashboard';
-            } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
-              redirectPath = '/vendor/dashboard';
-            } else if (user?.vendorStatus === 'pending') {
-              redirectPath = '/vendor/application-pending';
-            } else if (user?.vendorStatus === 'rejected') {
-              redirectPath = '/vendor/application-rejected';
+              if (user?.role === 'admin') {
+                redirectPath = '/admin/dashboard';
+              } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
+                redirectPath = '/vendor/dashboard';
+              } else if (user?.vendorStatus === 'pending') {
+                redirectPath = '/vendor/application-pending';
+              } else if (user?.vendorStatus === 'rejected') {
+                redirectPath = '/vendor/application-rejected';
+              }
+
+              navigate({
+                to: redirectPath,
+              });
+              toast.success("Sign in successful");
             }
-
-            navigate({
-              to: redirectPath,
-            });
-            toast.success("Sign in successful");
           },
           onError: (error) => {
             toast.error(error.error.message || error.error.statusText);
@@ -196,41 +206,6 @@ export default function SignInForm({ onSwitchToSignUp }: { onSwitchToSignUp: () 
           ></path>
         </svg>
         Sign in with Google
-      </Button>
-
-      <Button
-        variant="outline"
-        type="button"
-        className="mt-2 w-full"
-        onClick={async () => {
-          await authClient.signIn.social(
-            {
-              provider: "facebook",
-              callbackURL: window.location.origin + "/",
-            },
-            {
-              // Force account picker for consistency
-              prompt: "select_account",
-            }
-          );
-        }}
-      >
-        <svg
-          className="mr-2 h-4 w-4"
-          aria-hidden="true"
-          focusable="false"
-          data-prefix="fab"
-          data-icon="facebook"
-          role="img"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 512 512"
-        >
-          <path
-            fill="currentColor"
-            d="M504 256C504 119 393 8 256 8S8 119 8 256c0 123.78 90.69 226.38 209.25 245V327.69h-63V256h63v-54.64c0-62.15 37-96.48 93.67-96.48 27.14 0 55.52 4.84 55.52 4.84v61h-31.28c-30.8 0-40.41 19.12-40.41 38.73V256h68.78l-11 71.69h-57.78V501C413.31 482.38 504 379.78 504 256z"
-          ></path>
-        </svg>
-        Sign in with Facebook
       </Button>
 
       <div className="mt-4 text-center">

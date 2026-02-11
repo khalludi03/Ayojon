@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Minus, Plus, ShoppingBag, Trash2, ChevronDown, ChevronUp, X, Tag } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCart, type CartItem } from '@/stores/cart-store'
@@ -11,6 +11,16 @@ import { ProductCard } from '@/components/product/ProductCard'
 import { orpcClient } from '@/utils/orpc'
 import { CouponSection } from '@/components/cart/CouponSection'
 import type { Product } from '@/types'
+import { authClient } from '@/lib/auth-client'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import SignInForm from '@/components/sign-in-form'
+import SignUpForm from '@/components/sign-up-form'
 
 export const Route = createFileRoute('/cart')({
   component: CartPage,
@@ -280,15 +290,35 @@ function CartPage() {
     discountAmount, 
     total 
   } = useCart()
+  const { data: session } = authClient.useSession()
+  const navigate = useNavigate()
   const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval()
   const [clearConfirm, setClearConfirm] = useState(false)
   const [suggested, setSuggested] = useState<Product[]>([])
   const [mounted, setMounted] = useState(false)
   const [isSummaryOpen, setIsSummaryOpen] = useState(false)
+  const [showLoginDialog, setShowLoginDialog] = useState(false)
+  const [authView, setAuthView] = useState<'signin' | 'signup'>('signin')
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  const handleCheckout = () => {
+    if (session?.user) {
+      navigate({ to: '/checkout' })
+    } else {
+      setShowLoginDialog(true)
+    }
+  }
+
+  const handleAuthSuccess = () => {
+    setShowLoginDialog(false)
+    toast.success('Welcome back! Proceeding to checkout...')
+    setTimeout(() => {
+      navigate({ to: '/checkout' })
+    }, 500)
+  }
 
   useEffect(() => {
     if (items.length === 0) {
@@ -519,11 +549,13 @@ function CartPage() {
                 </span>
               </div>
 
-              <Link to="/checkout">
-                <Button className="mt-6 w-full" size="lg">
-                  Proceed to Checkout
-                </Button>
-              </Link>
+              <Button 
+                className="mt-6 w-full" 
+                size="lg"
+                onClick={handleCheckout}
+              >
+                Proceed to Checkout
+              </Button>
 
               <Link to="/">
                 <Button variant="outline" className="mt-3 w-full" size="lg">
@@ -648,11 +680,13 @@ function CartPage() {
                     {formatPrice(total)}
                   </span>
                 </div>
-                <Link to="/checkout" className="flex-1 max-w-xs">
-                  <Button className="w-full" size="lg">
-                    Checkout
-                  </Button>
-                </Link>
+                <Button 
+                  className="flex-1 max-w-xs w-full" 
+                  size="lg"
+                  onClick={handleCheckout}
+                >
+                  Checkout
+                </Button>
               </div>
             </div>
           </div>
@@ -664,6 +698,33 @@ function CartPage() {
         onClose={() => setPendingRemoveItem(null)}
         onConfirm={handleConfirmRemove}
       />
+
+      {/* Quick Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              {authView === 'signin' ? 'Sign In to Continue' : 'Create an Account'}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              Please sign in to proceed with checkout
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4">
+            {authView === 'signin' ? (
+              <SignInForm 
+                onSwitchToSignUp={() => setAuthView('signup')}
+                onSuccess={handleAuthSuccess}
+              />
+            ) : (
+              <SignUpForm 
+                onSwitchToSignIn={() => setAuthView('signin')}
+                onSuccess={handleAuthSuccess}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
