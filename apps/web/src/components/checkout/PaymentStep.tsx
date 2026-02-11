@@ -9,7 +9,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Banknote, CreditCard, Lock, ShieldCheck, Smartphone, Wallet, Loader2, Info, Hash } from "lucide-react";
+import { Banknote, Lock, ShieldCheck, Smartphone, Loader2, Info } from "lucide-react";
+
+// Custom bKash icon component using the actual logo
+function BkashIcon({ className }: { className?: string }) {
+  return (
+    <div className="rounded bg-white dark:bg-white p-1.5 flex items-center justify-center">
+      <img 
+        src="/bkash.svg" 
+        alt="bKash" 
+        className={className}
+        style={{ objectFit: 'contain', height: '100%', width: '100%' }}
+      />
+    </div>
+  );
+}
 import { cn } from "@/lib/utils";
 
 interface PaymentStepProps {
@@ -42,7 +56,7 @@ export function PaymentStep({
 
     // Validate based on payment method
     if (formData.paymentMethod === 'bkash') {
-      if (!formData.mobileNumber || !formData.bkashTransactionId) {
+      if (!formData.mobileNumber || formData.mobileNumber.length !== 11 || !formData.bkashTransactionId) {
         return;
       }
     }
@@ -64,7 +78,7 @@ export function PaymentStep({
     {
       id: 'bkash',
       label: 'bKash',
-      icon: Wallet,
+      icon: BkashIcon,
       description: 'Pay via bKash mobile wallet',
       fee: 0,
       badge: '⚡ Instant',
@@ -220,12 +234,23 @@ export function PaymentStep({
                   <Input
                     id="mobileNumber"
                     value={formData.mobileNumber || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('mobileNumber', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                      if (value.length <= 11) {
+                        onFormChange('mobileNumber', value);
+                      }
+                    }}
                     placeholder="017XXXXXXXX"
                     type="tel"
+                    pattern="[0-9]{11}"
+                    minLength={11}
+                    maxLength={11}
                     className="bg-white dark:bg-slate-900"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Enter 11-digit mobile number {formData.mobileNumber && `(${formData.mobileNumber.length}/11)`}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bkashTransactionId" className="text-sm font-bold">Transaction ID (TrxID) *</Label>
@@ -306,9 +331,11 @@ export function PaymentStep({
               Please select a payment method above
             </p>
           )}
-          {formData.paymentMethod === 'bkash' && (!formData.mobileNumber || !formData.bkashTransactionId) && (
+          {formData.paymentMethod === 'bkash' && (!formData.mobileNumber || formData.mobileNumber.length !== 11 || !formData.bkashTransactionId) && (
             <p className="text-xs font-bold text-destructive">
-              Please enter TrxID and Mobile Number
+              {!formData.mobileNumber || formData.mobileNumber.length !== 11 
+                ? 'Please enter valid 11-digit mobile number' 
+                : 'Please enter Transaction ID'}
             </p>
           )}
           
@@ -317,9 +344,9 @@ export function PaymentStep({
             size="lg"
             onClick={handleSubmit}
             className={cn(
-              "w-full sm:w-auto px-16 text-lg font-black h-14 transition-all duration-300",
+              "w-full sm:w-auto px-8 h-12 transition-all duration-300",
               formData.paymentMethod 
-                ? "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-[0_8px_25px_-4px_rgba(249,115,22,0.4)] scale-105"
+                ? "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-[0_8px_25px_-4px_rgba(249,115,22,0.4)]"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             )}
             disabled={!formData.paymentMethod || isSubmitting}
