@@ -82,6 +82,62 @@ export const vendorRouter = os.router({
       };
     }),
 
+  getOrderDetails: protectedProcedure
+    .route({
+      operationId: "getVendorOrderDetails",
+      summary: "Get Vendor Order Details",
+      description: "Get full details for a single order containing this vendor's items.",
+      tags: ["Vendor"],
+    })
+    .input(z.object({
+      orderId: z.string(),
+    }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // 1. Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      const vendorId = vendor.id;
+
+      // 2. Verify vendor owns items in this order
+      const item = await db.query.orderItems.findFirst({
+        where: and(
+          eq(orderItems.orderId, input.orderId),
+          eq(orderItems.vendorId, vendorId)
+        )
+      });
+
+      if (!item) {
+        throw new ORPCError("FORBIDDEN", { message: "Order does not belong to this vendor" });
+      }
+
+      // 3. Load order with vendor-specific items
+      const order = await db.query.orders.findFirst({
+        where: eq(orders.id, input.orderId),
+        with: {
+          items: {
+            where: eq(orderItems.vendorId, vendorId),
+          },
+          user: true,
+        }
+      });
+
+      if (!order) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      }
+
+      return order;
+    }),
+
   updateOrderStatus: protectedProcedure
     .route({
       method: "PATCH",

@@ -4,11 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Search, Filter, Calendar, Loader2, ShoppingBag } from 'lucide-react';
 import { orpc } from '@/utils/orpc';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { OrdersTable } from './OrdersTable';
-import { OrderDetailModal } from './OrderDetailModal';
 
 export function VendorOrdersPage() {
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
@@ -87,11 +87,10 @@ export function VendorOrdersPage() {
     (dateRangeFilter !== 'all' ? 1 : 0);
 
   const handleOrderClick = (order: any) => {
-    setSelectedOrder(order);
-  };
-
-  const handleCloseDetail = () => {
-    setSelectedOrder(null);
+    navigate({
+      to: '/vendor/orders/$orderId',
+      params: { orderId: order.id },
+    });
   };
 
   // Stats
@@ -246,10 +245,6 @@ export function VendorOrdersPage() {
           </div>
         )}
 
-        {/* Order Detail Modal */}
-        {selectedOrder && (
-          <OrderDetailModal order={selectedOrder} onClose={handleCloseDetail} />
-        )}
       </div>
     </div>
   );

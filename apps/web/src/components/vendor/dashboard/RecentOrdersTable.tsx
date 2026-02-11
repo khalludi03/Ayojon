@@ -90,7 +90,7 @@ export function RecentOrdersTable() {
                       className="h-8 font-bold text-xs px-4 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
                       asChild
                     >
-                      <Link to="/vendor/orders" search={{ orderId: order.id }}>
+                      <Link to="/vendor/orders/$orderId" params={{ orderId: order.id }}>
                         Manage
                       </Link>
                     </Button>

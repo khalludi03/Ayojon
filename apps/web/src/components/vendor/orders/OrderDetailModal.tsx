@@ -11,7 +11,8 @@ import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 
 interface OrderDetailModalProps {
   order: any;
-  onClose: () => void;
+  onClose?: () => void;
+  variant?: 'modal' | 'page';
 }
 
 const getPaymentMethodLabel = (method: string) => {
@@ -35,11 +36,12 @@ const formatDate = (dateString: string | undefined) => {
   });
 };
 
-export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailModalProps) {
+export function OrderDetailModal({ order: initialOrder, onClose, variant = 'modal' }: OrderDetailModalProps) {
   const [order, setOrder] = useState(initialOrder);
   const [trackingNumber, setTrackingNumber] = useState(initialOrder.trackingNumber || '');
   const [showTrackingInput, setShowTrackingInput] = useState(false);
   const queryClient = useQueryClient();
+  const isModal = variant === 'modal';
 
   useEffect(() => {
     setOrder(initialOrder);
@@ -160,20 +162,34 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-[hsl(var(--card))] rounded-lg shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div className={cn(
+      isModal ? 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50' : 'w-full'
+    )}>
+      <div
+        className={cn(
+          'bg-[hsl(var(--card))] shadow-lg max-w-4xl w-full',
+          isModal
+            ? 'rounded-lg max-h-[90vh] overflow-y-auto'
+            : 'rounded-2xl border border-[hsl(var(--border))]'
+        )}
+      >
         {/* Header */}
-        <div className="sticky top-0 bg-[hsl(var(--card))] border-b border-[hsl(var(--border))] p-6 flex items-center justify-between">
+        <div className={cn(
+          'bg-[hsl(var(--card))] border-b border-[hsl(var(--border))] p-6 flex items-center justify-between',
+          isModal ? 'sticky top-0' : ''
+        )}>
           <div>
             <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">Order Details</h2>
             <p className="text-sm text-[hsl(var(--muted-foreground))]">{order.orderNumber}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
-          >
-            <X className="h-6 w-6" />
-          </button>
+          {isModal && onClose && (
+            <button
+              onClick={onClose}
+              className="text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          )}
         </div>
 
         {/* Content */}
@@ -374,11 +390,13 @@ export function OrderDetailModal({ order: initialOrder, onClose }: OrderDetailMo
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-[hsl(var(--card))] border-t border-[hsl(var(--border))] p-6 flex justify-end">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-        </div>
+        {isModal && onClose && (
+          <div className="sticky bottom-0 bg-[hsl(var(--card))] border-t border-[hsl(var(--border))] p-6 flex justify-end">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
