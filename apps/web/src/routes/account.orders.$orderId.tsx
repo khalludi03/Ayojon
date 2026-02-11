@@ -136,7 +136,11 @@ function OrderDetailsPage() {
       toast.error('Please select a reason for cancellation');
       return;
     }
-    (cancelOrderMutation.mutate as any)({ id: orderId });
+    const fullReason = cancelComment ? `${cancelReason}: ${cancelComment}` : cancelReason;
+    (cancelOrderMutation.mutate as any)({ 
+      id: orderId,
+      reason: fullReason
+    });
   };
 
   const handleBuyAgain = () => {
@@ -703,27 +707,29 @@ function ReviewButton({ productId, onWriteReview }: { productId: string, onWrite
 
 function OrderProgress({ currentStatus }: { currentStatus: any }) {
   const steps = [
-    { id: 'awaiting_payment', label: 'Payment', icon: Clock },
-    { id: 'payment_submitted', label: 'Submitted', icon: Smartphone },
-    { id: 'payment_received', label: 'Confirmed', icon: CheckCircle },
+    { id: 'initial', label: 'Placed', icon: ShoppingBag },
+    { id: 'confirmed', label: 'Confirmed', icon: CheckCircle },
     { id: 'shipped', label: 'Shipped', icon: Truck },
     { id: 'delivered', label: 'Delivered', icon: CheckCircle2 },
   ];
 
-  const currentIdx = steps.findIndex(s => s.id === currentStatus) === -1 
-    ? (currentStatus === 'placed' ? 2 : steps.length) // Handle other statuses
-    : steps.findIndex(s => s.id === currentStatus);
-    
-  const activeIdx = currentStatus === 'payment_received' || currentStatus === 'placed' || currentStatus === 'processing' ? 2 : currentIdx;
-  const shippedIdx = currentStatus === 'shipped' ? 3 : activeIdx;
-  const finalIdx = currentStatus === 'delivered' ? 4 : shippedIdx;
+  // Map status to step index
+  const getActiveIndex = (status: string) => {
+    if (status === 'delivered') return 3;
+    if (status === 'shipped') return 2;
+    if (['confirmed', 'payment_received', 'processing'].includes(status)) return 1;
+    if (['placed', 'awaiting_payment', 'payment_submitted'].includes(status)) return 0;
+    return -1;
+  };
+
+  const activeIdx = getActiveIndex(currentStatus);
 
   return (
     <div className="relative">
       <div className="flex items-center justify-between">
         {steps.map((step, idx) => {
-          const isCompleted = idx < finalIdx || (currentStatus === 'delivered' && idx === 4);
-          const isActive = idx === finalIdx;
+          const isCompleted = idx < activeIdx || (currentStatus === 'delivered' && idx === 3);
+          const isActive = idx === activeIdx;
           const Icon = step.icon;
 
           return (
@@ -750,7 +756,7 @@ function OrderProgress({ currentStatus }: { currentStatus: any }) {
                 <div className="absolute top-6 left-[50%] right-[-50%] h-[2px] bg-slate-100 dark:bg-slate-800 -z-10">
                   <div className={cn(
                     "h-full bg-indigo-600 transition-all duration-1000",
-                    idx < finalIdx ? "w-full" : "w-0"
+                    idx < activeIdx ? "w-full" : "w-0"
                   )} />
                 </div>
               )}

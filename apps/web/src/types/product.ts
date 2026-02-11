@@ -81,7 +81,7 @@ export interface Product {
 }
 
 // Deal-specific product extension
-export type DealType = 'flash' | 'daily' | 'clearance' | 'bundle';
+export type DealType = 'flash' | 'hot' | 'daily' | 'clearance' | 'bundle';
 
 export interface DealProduct extends Product {
   dealType: DealType;

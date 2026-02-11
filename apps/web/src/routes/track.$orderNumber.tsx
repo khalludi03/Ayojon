@@ -104,7 +104,7 @@ function TrackOrderPage() {
   const getStepIndex = (status: string) => {
     if (status === 'delivered') return 4;
     if (status === 'shipped') return 2; // Can be 2 (Shipped) or 3 (Out for delivery)
-    if (status === 'payment_received' || status === 'placed' || status === 'processing') return 1;
+    if (status === 'confirmed' || status === 'payment_received' || status === 'placed' || status === 'processing') return 1;
     return 0; // awaiting_payment, payment_submitted
   };
 

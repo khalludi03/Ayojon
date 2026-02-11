@@ -207,7 +207,7 @@ export function useHotDeals(
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
-      input: { limit, featured: true },
+      input: { limit, dealType: 'hot' },
       select: (result: any) => result.data,
       ...options as any,
     })

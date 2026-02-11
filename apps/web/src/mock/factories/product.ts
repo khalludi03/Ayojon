@@ -368,7 +368,7 @@ export function createProducts(count: number, vendors?: Array<{ id: string; name
 }
 
 export function createDealProducts(count: number, dealType?: DealType): Array<DealProduct> {
-  const dealTypes: Array<DealType> = ['flash', 'daily', 'clearance', 'bundle'];
+  const dealTypes: Array<DealType> = ['flash', 'hot', 'daily', 'clearance', 'bundle'];
   return Array.from({ length: count }, () =>
     createDealProduct(dealType || faker.helpers.arrayElement(dealTypes))
   );

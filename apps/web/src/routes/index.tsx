@@ -1,8 +1,7 @@
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { Award, Flame, Heart, Home, ShoppingCart, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
+import { Award, Flame, Home, ShoppingCart, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
 
 import { HeroCarousel } from '@/components/carousel/HeroCarousel'
-import { DealsSection } from '@/components/deals/DealsSection'
 import { FlashSaleSection } from '@/components/deals/FlashSaleSection'
 import { ProductSection } from '@/components/product/ProductSection'
 import { FilterSidebar } from '@/components/product/FilterSidebar'
@@ -11,7 +10,7 @@ import { ActiveFilters } from '@/components/product/ActiveFilters'
 import { InfiniteProductGrid } from '@/components/product/InfiniteProductGrid'
 import { EventsSection } from '@/components/events/EventsSection'
 import { FeaturedProductsSection } from '@/components/product/FeaturedProductsSection'
-import { useForYou, useHotDeals, useProductsByCategory } from '@/hooks/use-products'
+import { useHotDeals, useProductsByCategory } from '@/hooks/use-products'
 import { getUser } from '@/functions/get-user'
 import { useCart } from '@/stores/cart-store'
 import { Button } from '@/components/ui/button'
@@ -37,7 +36,6 @@ export const Route = createFileRoute('/')({
 function HomePage() {
   const { itemCount } = useCart()
   // Fetch product sections
-  const { data: forYouProducts, isLoading: forYouLoading } = useForYou(12)
   const { data: hotDealsProducts, isLoading: hotDealsLoading } = useHotDeals(12)
   
   // Fetch category sections
@@ -137,21 +135,8 @@ function HomePage() {
       {/* Featured Products Section */}
       <FeaturedProductsSection />
 
-      {/* Today's Deals */}
-      <DealsSection />
-
       {/* Flash Sale Section */}
       <FlashSaleSection className="bg-gradient-to-r from-[hsl(var(--accent))]/10 to-transparent" />
-
-      {/* For You Section */}
-      <ProductSection
-        title="For You"
-        subtitle="Personalized picks based on your preferences"
-        icon={<Heart className="h-5 w-5" />}
-        products={forYouProducts || []}
-        isLoading={forYouLoading}
-        viewAllLink="/for-you"
-      />
 
       {/* Hot Deals Section */}
       <ProductSection

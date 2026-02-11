@@ -14,7 +14,10 @@ import {
   Store,
   Tag,
   AlertTriangle,
-  ExternalLink
+  ExternalLink,
+  Sparkles,
+  Zap,
+  Flame
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -86,6 +89,14 @@ function AdminProductsPage() {
   // Helper Queries for Filters
   const { data: vendorsData } = useQuery(orpc.admin.listVendors.queryOptions({ input: { limit: 100 } }));
 
+  const promotionsMutation = useMutation(orpc.admin.updateProductPromotions.mutationOptions({
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: orpc.admin.listAllProducts.key() });
+      toast.success('Homepage section updated');
+    },
+    onError: (error) => toast.error(error.message),
+  }));
+
   // Mutations
   const removeMutation = useMutation(orpc.admin.adminDeleteProduct.mutationOptions({
     onSuccess: () => {
@@ -104,6 +115,15 @@ function AdminProductsPage() {
   const openRemoveDialog = (id: string, title: string) => {
     setProductToRemove({ id, title });
     setIsRemoveDialogOpen(true);
+  };
+
+  const toggleFeatured = (id: string, current: boolean) => {
+    promotionsMutation.mutate({ id, isFeatured: !current });
+  };
+
+  const toggleDealType = (id: string, currentDealType: string | null | undefined, nextType: 'flash' | 'hot') => {
+    const nextValue = currentDealType === nextType ? null : nextType;
+    promotionsMutation.mutate({ id, dealType: nextValue });
   };
 
   const totalPages = Math.ceil((data?.totalCount ?? 0) / ITEMS_PER_PAGE);
@@ -180,14 +200,15 @@ function AdminProductsPage() {
                   <th className="px-6 py-4 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Vendor</th>
                   <th className="px-6 py-4 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Price</th>
                   <th className="px-6 py-4 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+                  <th className="px-6 py-4 text-left text-[10px] font-black text-slate-500 uppercase tracking-widest">Homepage</th>
                   <th className="px-6 py-4 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {isLoading ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Loading products...</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-500">Loading products...</td></tr>
                 ) : data?.products.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">No products matching your filters.</td></tr>
+                  <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-500">No products matching your filters.</td></tr>
                 ) : data?.products.map((product) => (
                   <tr key={product.id} className="group hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -226,6 +247,60 @@ function AdminProductsPage() {
                         <span className={cn("mr-1.5 h-1.5 w-1.5 rounded-full", product.status === 'active' ? "bg-green-600" : "bg-slate-400")} />
                         {product.status === 'active' ? 'Published' : product.status}
                       </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={product.isFeatured ? 'default' : 'outline'}
+                          onClick={() => toggleFeatured(product.id, !!product.isFeatured)}
+                          className={cn(
+                            "h-8 min-w-[110px] justify-center gap-1.5 px-3 text-[11px] font-semibold bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800",
+                            product.isFeatured && "bg-indigo-600 hover:bg-indigo-700 text-white"
+                          )}
+                          title={product.isFeatured ? 'Remove from Featured Products' : 'Add to Featured Products'}
+                          aria-pressed={!!product.isFeatured}
+                          disabled={promotionsMutation.isPending}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Featured
+                        </Button>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={product.dealType === 'flash' ? 'default' : 'outline'}
+                          onClick={() => toggleDealType(product.id, product.dealType, 'flash')}
+                          className={cn(
+                            "h-8 min-w-[120px] justify-center gap-1.5 px-3 text-[11px] font-semibold bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800",
+                            product.dealType === 'flash' && "bg-amber-600 hover:bg-amber-700 text-white"
+                          )}
+                          title={product.dealType === 'flash' ? 'Remove from Flash Deals' : 'Add to Flash Deals'}
+                          aria-pressed={product.dealType === 'flash'}
+                          disabled={promotionsMutation.isPending}
+                        >
+                          <Zap className="h-3.5 w-3.5" />
+                          Flash Deals
+                        </Button>
+
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant={product.dealType === 'hot' ? 'default' : 'outline'}
+                          onClick={() => toggleDealType(product.id, product.dealType, 'hot')}
+                          className={cn(
+                            "h-8 min-w-[110px] justify-center gap-1.5 px-3 text-[11px] font-semibold bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800",
+                            product.dealType === 'hot' && "bg-rose-600 hover:bg-rose-700 text-white"
+                          )}
+                          title={product.dealType === 'hot' ? 'Remove from Hot Deals' : 'Add to Hot Deals'}
+                          aria-pressed={product.dealType === 'hot'}
+                          disabled={promotionsMutation.isPending}
+                        >
+                          <Flame className="h-3.5 w-3.5" />
+                          Hot Deals
+                        </Button>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <DropdownMenu>
