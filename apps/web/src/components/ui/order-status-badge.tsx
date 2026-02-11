@@ -6,6 +6,7 @@ export type OrderStatus =
   | 'payment_submitted'
   | 'payment_received'
   | 'placed'
+  | 'confirmed'
   | 'pending'
   | 'processing'
   | 'shipped'
@@ -38,6 +39,10 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   placed: {
     label: 'Placed',
     className: 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-800',
+  },
+  confirmed: {
+    label: 'Confirmed',
+    className: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-400 dark:border-indigo-800',
   },
   pending: {
     label: 'Pending',

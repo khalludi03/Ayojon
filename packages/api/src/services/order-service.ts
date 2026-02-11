@@ -200,12 +200,14 @@ export async function createOrder(orderData: {
  * @param orderId - Order ID
  * @param newStatus - New status to transition to
  * @param adminId - ID of admin performing the action (for audit)
+ * @param reason - Reason for cancellation (optional)
  * @returns Updated order or error
  */
 export async function transitionOrderStatus(
   orderId: string,
   newStatus: OrderStatus,
-  adminId?: string
+  adminId?: string,
+  reason?: string
 ): Promise<{ success: boolean; order?: typeof orders.$inferSelect; error?: string }> {
   return await db.transaction(async (tx) => {
     // 1. Get current order
@@ -231,16 +233,35 @@ export async function transitionOrderStatus(
     }
 
     // 3. Update order status
+    const updateData: Partial<typeof orders.$inferSelect> = {
+      status: newStatus,
+      updatedAt: new Date(),
+    };
+
+    if (newStatus === "cancelled" && reason) {
+      updateData.cancellationReason = reason;
+    }
+
     const [updatedOrder] = await tx
       .update(orders)
-      .set({
-        status: newStatus,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(orders.id, orderId))
       .returning();
 
-    // 4. Update scores for all involved vendors
+    // 4. Handle specific flow side effects
+    if (newStatus === "delivered" && order.paymentMethod === "cod") {
+      // For COD, when delivered, mark payment as cash_collected
+      await tx
+        .update(payments)
+        .set({ 
+          status: "cash_collected",
+          verifiedAt: new Date(),
+          verifiedBy: adminId || null
+        })
+        .where(eq(payments.orderId, orderId));
+    }
+
+    // 5. Update scores for all involved vendors
     const involvedVendors = await tx
       .select({ vendorId: orderItems.vendorId })
       .from(orderItems)
@@ -263,7 +284,11 @@ export async function transitionOrderStatus(
       }
     }
 
-    return { success: result.success, order: result.order };
+    return { 
+      success: result.success, 
+      order: result.order,
+      error: (result as any).error 
+    };
   });
 }
 

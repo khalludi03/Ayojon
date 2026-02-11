@@ -203,10 +203,13 @@ export const orderRouter = os.router({
       summary: "Cancel an order",
       tags: ["Orders"],
     })
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ 
+      id: z.string(),
+      reason: z.string().optional()
+    }))
     .handler(async ({ input, context }) => {
       const userId = context.session.user.id;
-      return await orderService.transitionOrderStatus(input.id, "cancelled", userId);
+      return await orderService.transitionOrderStatus(input.id, "cancelled", userId, input.reason);
     }),
 
   trackOrder: publicProcedure

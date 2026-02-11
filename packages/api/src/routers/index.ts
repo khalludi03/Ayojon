@@ -10,6 +10,7 @@ import { wishlistRouter } from "./wishlist";
 import { cartRouter } from "./cart";
 import { notificationRouter } from "./notification";
 import { reviewRouter } from "./review";
+import { homepageRouter } from "./homepage";
 
 export const appRouter = os.router({
   storage: storageRouter,
@@ -24,6 +25,7 @@ export const appRouter = os.router({
   vendorProduct: productRouter,
   catalog: productRouter, // Alias for backward compatibility
   admin: adminRouter,
+  homepage: homepageRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",
