@@ -99,7 +99,7 @@ export function Header() {
               </Button>
               <ThemeToggle />
               <WishlistIcon
-                onClick={() => navigate({ to: '/account', search: { section: 'wishlist' } })}
+                onClick={() => navigate({ to: '/account/wishlist' })}
               />
               <NotificationBell />
               <CartIcon onClick={openDrawer} />
