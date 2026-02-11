@@ -206,25 +206,25 @@ export function UserMenu() {
         
         <div className="p-2">
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Link to="/account" search={{ section: "overview" }} className="flex items-center">
+            <Link to="/account" className="flex items-center">
               <User className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-              <span>My Profile</span>
+              <span>My Dashboard</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Link to="/account" search={{ section: "orders" }} className="flex items-center">
+            <Link to="/account/orders" className="flex items-center">
               <Package className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>My Orders</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Link to="/account" search={{ section: "wishlist" }} className="flex items-center">
+            <Link to="/account/wishlist" className="flex items-center">
               <Heart className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Wishlist</span>
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Link to="/account" search={{ section: "addresses" }} className="flex items-center">
+            <Link to="/account/addresses" className="flex items-center">
               <MapPin className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Addresses</span>
             </Link>
@@ -234,7 +234,7 @@ export function UserMenu() {
             <span>Payment Methods</span>
           </DropdownMenuItem>
           <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
-            <Link to="/account" search={{ section: "settings" }} className="flex items-center">
+            <Link to="/account/settings" className="flex items-center">
               <Settings className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Settings</span>
             </Link>

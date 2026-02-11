@@ -1,17 +1,35 @@
 import { useState } from 'react';
-import { Star, ThumbsUp, ThumbsDown, BadgeCheck, Check, X as XIcon } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown, BadgeCheck, Check, X as XIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Review } from '@/types/product';
 import { cn } from '@/lib/utils';
+import { orpcClient } from '@/utils/orpc';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { authClient } from '@/lib/auth-client';
 
 interface ReviewCardProps {
   review: Review;
 }
 
 export function ReviewCard({ review }: ReviewCardProps) {
-  const [helpfulVoted, setHelpfulVoted] = useState<'yes' | 'no' | null>(null);
   const [showAllImages, setShowAllImages] = useState(false);
+  const queryClient = useQueryClient();
+  const { data: session } = authClient.useSession();
+
+  // Mutation for voting
+  const voteMutation = useMutation({
+    mutationFn: (vars: { reviewId: string; voteType: 'helpful' | 'not_helpful' }) => 
+      orpcClient.review.voteReview(vars),
+    onSuccess: () => {
+      // Invalidate both product reviews and my reviews
+      queryClient.invalidateQueries({ queryKey: ['review'] });
+    },
+    onError: (error: any) => {
+      toast.error(error?.message || "Failed to process vote. Please login to vote.");
+    }
+  });
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -22,15 +40,19 @@ export function ReviewCard({ review }: ReviewCardProps) {
     });
   };
 
-  const handleHelpfulVote = (vote: 'yes' | 'no') => {
-    if (helpfulVoted === vote) {
-      setHelpfulVoted(null);
-    } else {
-      setHelpfulVoted(vote);
+  const handleHelpfulVote = (voteType: 'helpful' | 'not_helpful') => {
+    if (!session) {
+      toast.error("Please sign in to vote on reviews");
+      return;
     }
+    voteMutation.mutate({ reviewId: review.id, voteType });
   };
 
   const displayImages = showAllImages ? review.images : review.images.slice(0, 3);
+
+  // We should ideally have information about whether the current user has voted
+  // For now, we'll assume it's null unless we add that to the review type
+  const helpfulVoted: 'helpful' | 'not_helpful' | null = (review as any).myVote || null;
 
   return (
     <div className="border-b border-[hsl(var(--border))] pb-6 last:border-b-0">
@@ -138,27 +160,37 @@ export function ReviewCard({ review }: ReviewCardProps) {
             </span>
             <div className="flex items-center gap-2">
               <Button
-                variant={helpfulVoted === 'yes' ? 'primary' : 'outline'}
+                variant={helpfulVoted === 'helpful' ? 'primary' : 'outline'}
                 size="sm"
-                className="gap-1.5 h-8"
-                onClick={() => handleHelpfulVote('yes')}
+                className="gap-1.5 h-8 min-w-[70px]"
+                onClick={() => handleHelpfulVote('helpful')}
+                disabled={voteMutation.isPending}
               >
-                <ThumbsUp className="h-3.5 w-3.5" />
+                {voteMutation.isPending && voteMutation.variables?.voteType === 'helpful' ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ThumbsUp className={cn("h-3.5 w-3.5", helpfulVoted === 'helpful' && "fill-current")} />
+                )}
                 <span>Yes</span>
                 <span className="ml-0.5">
-                  ({review.helpfulVotes + (helpfulVoted === 'yes' ? 1 : 0)})
+                  ({review.helpfulVotes})
                 </span>
               </Button>
               <Button
-                variant={helpfulVoted === 'no' ? 'primary' : 'outline'}
+                variant={helpfulVoted === 'not_helpful' ? 'primary' : 'outline'}
                 size="sm"
-                className="gap-1.5 h-8"
-                onClick={() => handleHelpfulVote('no')}
+                className="gap-1.5 h-8 min-w-[70px]"
+                onClick={() => handleHelpfulVote('not_helpful')}
+                disabled={voteMutation.isPending}
               >
-                <ThumbsDown className="h-3.5 w-3.5" />
+                {voteMutation.isPending && voteMutation.variables?.voteType === 'not_helpful' ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <ThumbsDown className={cn("h-3.5 w-3.5", helpfulVoted === 'not_helpful' && "fill-current")} />
+                )}
                 <span>No</span>
                 <span className="ml-0.5">
-                  ({review.notHelpfulVotes + (helpfulVoted === 'no' ? 1 : 0)})
+                  ({review.notHelpfulVotes || 0})
                 </span>
               </Button>
             </div>

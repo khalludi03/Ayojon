@@ -360,7 +360,7 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
             </Button>
           </Link>
         ) : (
-          <Link to="/account" search={{ section: "orders" }} className="flex-1">
+          <Link to="/account/orders" className="flex-1">
             <Button 
               variant="outline" 
               size="lg" 

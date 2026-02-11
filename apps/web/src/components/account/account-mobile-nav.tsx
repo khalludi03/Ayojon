@@ -3,7 +3,7 @@ import { Check, ChevronDown } from "lucide-react";
 import type { AccountSection } from "@/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +28,6 @@ const navigationItems = [
 
 export function AccountMobileNav({ activeSection }: AccountMobileNavProps) {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
   const activeItem = navigationItems.find((item) => item.id === activeSection);
 
   return (
@@ -47,19 +46,22 @@ export function AccountMobileNav({ activeSection }: AccountMobileNavProps) {
           {navigationItems.map((item) => (
             <DropdownMenuItem
               key={item.id}
-              onClick={() => {
-                navigate({ to: item.id === "overview" ? "/account" : `/account/${item.id}` });
-                setOpen(false);
-              }}
+              asChild
               className={cn(
                 "cursor-pointer",
                 activeSection === item.id && "bg-accent"
               )}
             >
-              <span className="flex-1">{item.label}</span>
-              {activeSection === item.id && (
-                <Check className="h-4 w-4" />
-              )}
+              <Link
+                to={item.id === "overview" ? "/account" : `/account/${item.id}`}
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center"
+              >
+                <span className="flex-1">{item.label}</span>
+                {activeSection === item.id && (
+                  <Check className="h-4 w-4" />
+                )}
+              </Link>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
