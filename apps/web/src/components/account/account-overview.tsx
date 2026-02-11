@@ -1,17 +1,19 @@
 import { Link } from "@tanstack/react-router";
-import { Package, Heart, ArrowRight, User } from "lucide-react";
+import { Package, Heart, ArrowRight, User, ShoppingBag } from "lucide-react";
 import type { AccountStats, Order } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCurrencyPrice } from "@/lib/currency";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AccountOverviewProps {
   userName: string;
   userImage?: string;
   stats: AccountStats;
   recentOrders: Order[];
+  isLoading?: boolean;
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -27,7 +29,7 @@ const statusConfig: Record<string, { label: string; color: string }> = {
   cancelled: { label: "Cancelled", color: "bg-red-500" },
 };
 
-export function AccountOverview({ userName, userImage, stats, recentOrders }: AccountOverviewProps) {
+export function AccountOverview({ userName, userImage, stats, recentOrders, isLoading }: AccountOverviewProps) {
   const getInitials = (name: string) => {
     return name
       .split(" ")
@@ -82,7 +84,11 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalOrders}</div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              <div className="text-2xl font-bold">{stats.totalOrders}</div>
+            )}
             <p className="text-xs text-muted-foreground">
               Lifetime purchases
             </p>
@@ -111,69 +117,104 @@ export function AccountOverview({ userName, userImage, stats, recentOrders }: Ac
         </CardHeader>
         <CardContent>
           <div className="space-y-3 sm:space-y-4">
-            {recentOrders.map((order) => (
-              <Link
-                key={order.id}
-                to="/account/orders/$orderId"
-                params={{ orderId: order.id }}
-                className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
-              >
-                {/* Left side: Image and Order Info */}
-                <div className="flex items-start gap-2 sm:items-center sm:gap-3 md:gap-4">
-                  {order.imageUrl && (
-                    <img
-                      src={order.imageUrl}
-                      alt="Order"
-                      className="h-12 w-12 shrink-0 rounded object-cover sm:h-14 sm:w-14 md:h-16 md:w-16"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold sm:text-base">{order.orderNumber}</p>
-                    <p className="text-xs text-muted-foreground sm:text-sm">
-                      {/* Mobile: Short date format */}
-                      <span className="sm:hidden">
-                        {new Date(order.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                      {/* Desktop: Long date format */}
-                      <span className="hidden sm:inline">
-                        {new Date(order.createdAt).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </span>
-                    </p>
-                    <p className="text-xs text-muted-foreground sm:text-sm">
-                      {Array.isArray(order.items) ? order.items.length : order.items} {((Array.isArray(order.items) ? order.items.length : order.items) === 1) ? "item" : "items"}
-                    </p>
+            {isLoading ? (
+              // Loading Skeletons
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-4 rounded-xl border border-[hsl(var(--border))] p-4">
+                  <Skeleton className="h-16 w-16 rounded" />
+                  <div className="flex-1 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-3 w-1/4" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-16 ml-auto" />
+                    <Skeleton className="h-5 w-24 ml-auto rounded-full" />
                   </div>
                 </div>
+              ))
+            ) : recentOrders.length > 0 ? (
+              recentOrders.map((order) => (
+                <Link
+                  key={order.id}
+                  to="/account/orders/$orderId"
+                  params={{ orderId: order.id }}
+                  className="flex flex-col gap-3 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-4"
+                >
+                  {/* Left side: Image and Order Info */}
+                  <div className="flex items-start gap-2 sm:items-center sm:gap-3 md:gap-4">
+                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded bg-[hsl(var(--muted))] sm:h-14 sm:w-14 md:h-16 md:w-16">
+                      {order.imageUrl ? (
+                        <img
+                          src={order.imageUrl}
+                          alt="Order"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center">
+                          <Package className="h-6 w-6 text-[hsl(var(--muted-foreground))]" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold sm:text-base">{order.orderNumber}</p>
+                      <p className="text-xs text-muted-foreground sm:text-sm">
+                        {/* Mobile: Short date format */}
+                        <span className="sm:hidden">
+                          {new Date(order.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                        {/* Desktop: Long date format */}
+                        <span className="hidden sm:inline">
+                          {new Date(order.date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </p>
+                      <p className="text-xs text-muted-foreground sm:text-sm">
+                        {order.items} {(order.items === 1) ? "item" : "items"}
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Right side: Price, Status, and Button */}
-                <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
-                  <div className="flex flex-col items-start sm:items-end">
-                    <p className="text-sm font-semibold sm:text-base">{formatCurrencyPrice(parseFloat(order.total as any))}</p>
-                    <Badge
-                      variant="secondary"
-                      className={`${statusConfig[order.status]?.color || "bg-slate-500"} mt-1 text-[10px] text-white sm:text-xs`}
-                    >
-                      {statusConfig[order.status]?.label || order.status}
-                    </Badge>
+                  {/* Right side: Price, Status, and Button */}
+                  <div className="flex items-center justify-between gap-2 sm:gap-3 md:gap-4">
+                    <div className="flex flex-col items-start sm:items-end">
+                      <p className="text-sm font-semibold sm:text-base">{formatCurrencyPrice(parseFloat(order.total as any))}</p>
+                      <Badge
+                        variant="secondary"
+                        className={`${statusConfig[order.status]?.color || "bg-slate-500"} mt-1 text-[10px] text-white sm:text-xs`}
+                      >
+                        {statusConfig[order.status]?.label || order.status}
+                      </Badge>
+                    </div>
+                    <Button variant="ghost" size="sm" className="h-8 px-2 font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 gap-1 hidden sm:flex">
+                      View Details
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Button>
+                    <div className="h-8 w-8 flex items-center justify-center shrink-0 sm:hidden text-muted-foreground">
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </div>
                   </div>
-                  <Button variant="ghost" size="sm" className="h-8 px-2 font-bold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/20 gap-1 hidden sm:flex">
-                    View Details
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                  <div className="h-8 w-8 flex items-center justify-center shrink-0 sm:hidden text-muted-foreground">
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </div>
+                </Link>
+              ))
+            ) : (
+              // Empty State
+              <div className="flex flex-col items-center justify-center py-8 text-center border-2 border-dashed border-[hsl(var(--border))] rounded-xl">
+                <div className="h-12 w-12 rounded-full bg-[hsl(var(--muted))] flex items-center justify-center mb-3">
+                  <ShoppingBag className="h-6 w-6 text-[hsl(var(--muted-foreground))]" />
                 </div>
-              </Link>
-            ))}
+                <p className="text-sm font-medium text-[hsl(var(--foreground))]">No orders yet</p>
+                <p className="text-xs text-[hsl(var(--muted-foreground))] mt-1 mb-4">You haven't placed any orders yet.</p>
+                <Button size="sm" asChild>
+                  <Link to="/products">Start Shopping</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

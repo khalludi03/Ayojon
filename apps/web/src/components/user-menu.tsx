@@ -63,17 +63,27 @@ export default function UserMenu() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to="/account" search={{ section: "overview" }}>
+            <Link to="/account">
               Dashboard
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/account" search={{ section: "profile" }}>
+            <Link to="/account/orders">
+              My Orders
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/account/wishlist">
+              Wishlist
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/account/profile">
               My Profile
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/account" search={{ section: "settings" }}>
+            <Link to="/account/settings">
               Settings
             </Link>
           </DropdownMenuItem>

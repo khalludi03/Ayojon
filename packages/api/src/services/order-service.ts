@@ -89,9 +89,7 @@ export async function createOrder(orderData: {
   // If we have a transaction ID, we can move directly to payment_submitted for prepaid methods
   if (
     orderData.paymentDetails?.transactionId &&
-    (orderData.paymentMethod === "bkash" ||
-      orderData.paymentMethod === "nagad" ||
-      orderData.paymentMethod === "card")
+    orderData.paymentMethod === "bkash"
   ) {
     initialStatus = "payment_submitted";
   }

@@ -38,7 +38,7 @@ export const orderRouter = os.router({
       deliveryMethod: z.string().optional(),
       customerNote: z.string().optional(),
       payment: z.object({
-        method: z.enum(["bkash", "cod", "nagad", "card"]),
+        method: z.enum(["bkash", "cod"]),
         transactionId: z.string().optional(),
         senderMobile: z.string().optional(),
       }),

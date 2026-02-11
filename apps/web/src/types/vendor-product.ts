@@ -70,7 +70,7 @@ export interface VendorProduct {
   specifications: ProductSpecification[];
 
   // Shipping
-  shipping: ShippingDetails;
+  shipping?: ShippingDetails;
 
   // Metadata
   status: ProductStatus;
@@ -116,12 +116,4 @@ export interface ProductFormData {
 
   // Specifications
   specifications: ProductSpecification[];
-
-  // Shipping
-  weight: string;
-  length: string;
-  width: string;
-  height: string;
-  isFragile: boolean;
-  requiresSetup: boolean;
 }

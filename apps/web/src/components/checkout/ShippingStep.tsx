@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getSessionFromLocalStorage } from "@/lib/session";
 import { toast } from "sonner";
 import { 
   BD_DIVISIONS, 
@@ -12,8 +11,11 @@ import {
   validateBDPostalCode,
   type Division 
 } from "@/lib/bd-locations";
-import { MapPin, Plus, Check } from "lucide-react";
+import { MapPin, Plus, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth-client";
+import { orpc, orpcClient } from "@/utils/orpc";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface SavedAddress {
   id: string;
@@ -48,42 +50,66 @@ interface ShippingStepProps {
 export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepProps) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isFormValid, setIsFormValid] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [showNewAddressForm, setShowNewAddressForm] = useState(true);
   const [availableCities, setAvailableCities] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Check if user is logged in
+  const queryClient = useQueryClient();
+  const { data: session } = authClient.useSession();
+
+  // Fetch addresses from backend if logged in
+  const { data: backendAddresses = [], isLoading: isLoadingAddresses } = useQuery({
+    ...orpc.address.listAddresses.queryOptions(),
+    enabled: !!session,
+  } as any);
+
+  // Mutation to add address
+  const addAddressMutation = useMutation({
+    mutationFn: (data: any) => orpcClient.address.addAddress(data), // Using direct client for manual trigger
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
+      toast.success('Address saved to your account');
+    },
+    onError: (error) => {
+      console.error('Failed to save address:', error);
+      toast.error('Failed to save address to account');
+    }
+  } as any);
+
+  // Computed saved addresses (backend or guest-local)
+  const [guestAddresses, setGuestAddresses] = useState<SavedAddress[]>([]);
+
+  // Load guest addresses only if not logged in
   useEffect(() => {
-    const userSession = getSessionFromLocalStorage();
-    console.log('🔐 Checkout - User session:', userSession ? 'Logged in' : 'Not logged in');
-    setSession(userSession);
-
-    // Load saved addresses from localStorage (same key as account page)
-    const saved = localStorage.getItem('saved-addresses');
-    console.log('📍 Checkout - Saved addresses in localStorage:', saved);
-
-    if (saved) {
-      try {
-        const addresses = JSON.parse(saved);
-        console.log('📍 Checkout - Parsed addresses:', addresses);
-        setSavedAddresses(addresses);
-
-        // If user has saved addresses, hide new form initially
-        if (addresses.length > 0) {
-          setShowNewAddressForm(false);
-          console.log('✅ Checkout - Showing saved addresses, hiding form');
-        } else {
-          console.log('⚠️ Checkout - No saved addresses found');
+    if (!session) {
+      const saved = localStorage.getItem('guest-saved-addresses');
+      if (saved) {
+        try {
+          setGuestAddresses(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to parse guest addresses', e);
         }
-      } catch (e) {
-        console.error('❌ Failed to parse saved addresses:', e);
       }
     } else {
-      console.log('⚠️ Checkout - No saved-addresses key in localStorage');
+      setGuestAddresses([]); // Clear guest addresses if logged in
     }
-  }, []);
+  }, [session]);
+
+  const savedAddresses: SavedAddress[] = session 
+    ? backendAddresses.map((addr: any) => ({
+        id: addr.id,
+        fullName: addr.name,
+        phone: addr.phone,
+        addressLine1: addr.addressLine1,
+        addressLine2: addr.addressLine2 || '',
+        city: addr.city,
+        division: addr.state as Division,
+        postalCode: addr.postalCode,
+        addressType: addr.type,
+        isDefault: addr.isDefault,
+      }))
+    : guestAddresses;
 
   // Auto-select default address when addresses are loaded
   useEffect(() => {
@@ -91,9 +117,17 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
       const defaultAddress = savedAddresses.find((addr) => addr.isDefault);
       if (defaultAddress) {
         handleUseSavedAddress(defaultAddress.id);
+      } else if (savedAddresses.length > 0) {
+        // If no default, select the first one
+        handleUseSavedAddress(savedAddresses[0].id);
+      }
+      
+      // If we have addresses, hide the new form by default
+      if (savedAddresses.length > 0) {
+        setShowNewAddressForm(false);
       }
     }
-  }, [savedAddresses]);
+  }, [savedAddresses.length, session]); // simplified dependency
 
   // Update available cities when division changes
   useEffect(() => {
@@ -149,41 +183,82 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
     setIsFormValid(Object.keys(newErrors).length === 0);
   }, [formData, session]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Need to import orpcClient for mutationFn if not available in closure
+  // We'll assume orpcClient is imported from @/utils/orpc
+  // But wait, I need to add the import to the top
+  // I added `import { orpc } from "@/utils/orpc";` but I also need `orpcClient` if I use it in mutationFn
+  // Or I can use `orpc.address.addAddress.mutationOptions()` if available, but let's stick to consistent usage.
+  // Actually `useMutation(orpc.address.addAddress.mutationOptions())` is cleaner.
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isFormValid) {
       return;
     }
 
-    // Save address to localStorage if checkbox is checked and user is logged in
-    if (formData.saveAddress && session) {
-      // Check if we already have 5 addresses
-      if (savedAddresses.length >= 5) {
-        toast.error('Maximum 5 addresses allowed. Please delete an address from your account.');
-        onNext();
-        return;
+    setIsSaving(true);
+
+    try {
+      // Save address if checked
+      if (formData.saveAddress) {
+        if (session) {
+          // Check limit
+          if (savedAddresses.length >= 5) {
+            toast.error('Maximum 5 addresses allowed. Please manage addresses in your account.');
+             // Proceed without saving
+          } else {
+             // Save to backend
+             // We can't use the mutation hook directly here as a function easily if we want to await it
+             // So we'll use the client directly or use mutateAsync from the hook
+             // But I didn't define the hook with mutateAsync exposed nicely, let's redefine above
+             // Actually I did: const addAddressMutation = useMutation(...)
+             
+             await addAddressMutation.mutateAsync({
+               name: formData.fullName,
+               phone: formData.phone,
+               addressLine1: formData.addressLine1,
+               addressLine2: formData.addressLine2,
+               city: formData.city,
+               state: formData.division,
+               postalCode: formData.postalCode,
+               type: formData.addressType as 'home' | 'office',
+               country: 'Bangladesh',
+               isDefault: savedAddresses.length === 0,
+             });
+          }
+        } else {
+          // Guest save to local storage
+          const newAddress: SavedAddress = {
+            id: `addr_${Date.now()}`,
+            fullName: formData.fullName,
+            phone: formData.phone,
+            addressLine1: formData.addressLine1,
+            addressLine2: formData.addressLine2,
+            city: formData.city,
+            division: formData.division as Division,
+            postalCode: formData.postalCode,
+            addressType: formData.addressType,
+            isDefault: savedAddresses.length === 0,
+          };
+          const existing = [...guestAddresses, newAddress];
+          localStorage.setItem('guest-saved-addresses', JSON.stringify(existing));
+          setGuestAddresses(existing);
+          toast.success('Address saved for future guest checkout');
+        }
       }
-
-      const newAddress: SavedAddress = {
-        id: `addr_${Date.now()}`,
-        fullName: formData.fullName,
-        phone: formData.phone,
-        addressLine1: formData.addressLine1,
-        addressLine2: formData.addressLine2,
-        city: formData.city,
-        division: formData.division as Division,
-        postalCode: formData.postalCode,
-        addressType: formData.addressType,
-        isDefault: savedAddresses.length === 0, // First address is default
-      };
-
-      const existingAddresses = [...savedAddresses, newAddress];
-      localStorage.setItem('saved-addresses', JSON.stringify(existingAddresses));
-      toast.success('Address saved to your account');
+      
+      onNext();
+    } catch (error) {
+      // Error already handled in mutation
+      // But we should probably still proceed or let user retry?
+      // If saving fails, we probably shouldn't block checkout.
+      // So we catch and proceed.
+      console.error("Error in submit", error);
+      onNext();
+    } finally {
+      setIsSaving(false);
     }
-
-    onNext();
   };
 
   const handleUseSavedAddress = (addressId: string) => {

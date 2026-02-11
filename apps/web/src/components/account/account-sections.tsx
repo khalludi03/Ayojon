@@ -28,7 +28,7 @@ import type { Order } from "@/types";
 import { useWishlist } from "@/stores/wishlist-store";
 import { useCart } from "@/stores/cart-store";
 import { formatPrice } from "@/lib/utils";
-import { orpc } from "@/utils/orpc";
+import { orpc, orpcClient } from "@/utils/orpc";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function AccountOrders() {
@@ -1781,7 +1781,7 @@ export function AccountReviews() {
   );
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => orpc.review.updateReview(data),
+    mutationFn: (data: any) => orpcClient.review.updateReview(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["review", "listMyReviews"] });
       toast.success("Review updated successfully!");
@@ -1793,7 +1793,7 @@ export function AccountReviews() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (data: any) => orpc.review.deleteReview(data),
+    mutationFn: (data: any) => orpcClient.review.deleteReview(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["review", "listMyReviews"] });
       toast.success("Review deleted successfully!");
