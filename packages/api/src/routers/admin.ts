@@ -774,6 +774,10 @@ export const adminRouter = os.router({
           slug: products.slug,
           price: products.price,
           status: products.status,
+          isFeatured: products.isFeatured,
+          dealType: products.dealType,
+          dealStartsAt: products.dealStartsAt,
+          dealEndsAt: products.dealEndsAt,
           createdAt: products.createdAt,
           vendorName: vendors.name,
           categoryName: categories.name,
@@ -797,6 +801,71 @@ export const adminRouter = os.router({
         products: productList,
         totalCount: totalCount?.value ?? 0,
       };
+    }),
+
+  updateProductPromotions: adminProcedure
+    .route({
+      method: "PATCH",
+      operationId: "updateProductPromotions",
+      summary: "Update Product Promotions",
+      description: "Sets featured, hot deal, or flash deal flags for a product.",
+      tags: ["Admin", "Homepage"],
+    })
+    .input(
+      z.object({
+        id: z.string(),
+        isFeatured: z.boolean().optional(),
+        dealType: z.enum(["flash", "hot", "daily", "clearance", "bundle"]).nullable().optional(),
+      })
+    )
+    .handler(async ({ input }) => {
+      const { id, isFeatured, dealType } = input;
+
+      const [existing] = await db
+        .select({
+          id: products.id,
+          dealStartsAt: products.dealStartsAt,
+          dealEndsAt: products.dealEndsAt,
+        })
+        .from(products)
+        .where(eq(products.id, id))
+        .limit(1);
+
+      if (!existing) {
+        throw new ORPCError("NOT_FOUND", { message: "Product not found" });
+      }
+
+      const updates: Record<string, any> = {
+        updatedAt: new Date(),
+      };
+
+      if (typeof isFeatured === "boolean") {
+        updates.isFeatured = isFeatured;
+      }
+
+      if (dealType !== undefined) {
+        if (dealType === null) {
+          updates.dealType = null;
+          updates.dealStartsAt = null;
+          updates.dealEndsAt = null;
+        } else {
+          updates.dealType = dealType;
+          if (!existing.dealStartsAt) {
+            updates.dealStartsAt = new Date();
+          }
+          if (!existing.dealEndsAt) {
+            updates.dealEndsAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          }
+        }
+      }
+
+      const result = await db
+        .update(products)
+        .set(updates)
+        .where(eq(products.id, id))
+        .returning();
+
+      return result[0];
     }),
 
   adminDeleteProduct: adminProcedure
