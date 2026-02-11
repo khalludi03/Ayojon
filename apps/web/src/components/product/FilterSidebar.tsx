@@ -4,8 +4,8 @@ import { useFilters, usePriceRange } from '@/stores/filter-store';
 import { RangeSlider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { PRICE_PRESETS, EVENT_TYPES, PRODUCT_CONDITIONS, DELIVERY_OPTIONS } from '@/types';
-import type { ProductCondition, DeliveryOption } from '@/types';
+import { PRICE_PRESETS, EVENT_TYPES, PRODUCT_CONDITIONS } from '@/types';
+import type { ProductCondition } from '@/types';
 import { cn, formatPrice } from '@/lib/utils';
 
 interface FilterSidebarProps {
@@ -201,38 +201,6 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
               onClick={() => clearFilter('minRating')}
             >
               Any rating
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Delivery Options Filter */}
-      <div>
-        <h3 className="mb-3 font-medium">Delivery Options</h3>
-        <div className="space-y-2">
-          {DELIVERY_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className="flex cursor-pointer items-center gap-2"
-            >
-              <input
-                type="radio"
-                name="delivery"
-                checked={filters.deliveryOption === option.value}
-                onChange={() => setFilter('deliveryOption', option.value as DeliveryOption)}
-                className="h-4 w-4 border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
-              />
-              <span className="text-sm">{option.label}</span>
-            </label>
-          ))}
-          {filters.deliveryOption && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 text-xs"
-              onClick={() => clearFilter('deliveryOption')}
-            >
-              Any delivery
             </Button>
           )}
         </div>
