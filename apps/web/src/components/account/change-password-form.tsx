@@ -60,20 +60,36 @@ export function ChangePasswordForm({ userEmail }: { userEmail?: string }) {
     setIsLoadingAccount(true);
     try {
       // Force refresh session to get latest account data
-      const sessionData = await authClient.getSession({
+      const { data: sessionData, error: sessionError } = await authClient.getSession({
         fetchOptions: {
-          cache: 'no-store'
+          cache: 'no-store',
+          credentials: 'include'
         }
       });
 
+      if (sessionError || !sessionData) {
+        console.warn("No active session found during account check");
+        setHasPassword(null);
+        setIsLoadingAccount(false);
+        return;
+      }
+
       const { data, error } = await authClient.listAccounts({
         fetchOptions: {
-          cache: 'no-store'
+          cache: 'no-store',
+          credentials: 'include'
         }
       });
 
       if (error) {
+        // If 401, it might be a temporary issue or specific protection
+        // We'll fallback to assuming they have a password to show the form
+        // rather than stuck in loading or showing 'set password' UI incorrectly
         console.error("Error fetching accounts:", error);
+        if (error.status === 401) {
+          setHasPassword(true);
+          return;
+        }
         throw error;
       }
 

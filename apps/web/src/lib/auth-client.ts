@@ -4,6 +4,9 @@ import { emailOTPClient } from "better-auth/client/plugins";
 
 export const authClient = createAuthClient({
   baseURL: env.VITE_SERVER_URL,
+  fetchOptions: {
+    credentials: "include",
+  },
   user: {
     additionalFields: {
       phoneNumber: { type: "string" },

@@ -15,6 +15,7 @@ import {
 import { orpcClient } from '@/utils/orpc';
 import { uploadFile } from '@/lib/storage-utils';
 import { toast } from 'sonner';
+import { ChangePasswordForm } from '@/components/account/change-password-form';
 
 export function VendorSettingsPage() {
   const [formData, setFormData] = useState({
@@ -378,6 +379,14 @@ export function VendorSettingsPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Security */}
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-[hsl(var(--foreground))] px-1">
+              Security
+            </h2>
+            <ChangePasswordForm userEmail={formData.email} />
           </div>
 
           {/* Action Buttons */}
