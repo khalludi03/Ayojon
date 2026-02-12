@@ -196,7 +196,10 @@ export function ReviewsSection({ productId, productName, productImage }: Reviews
                 variant={filter === option.value ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => setFilter(option.value)}
-                className={cn("rounded-full px-4 font-bold", filter === option.value && "bg-slate-900 dark:bg-slate-100")}
+                className={cn(
+                  "rounded-full px-4 font-bold",
+                  filter === option.value && "bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100"
+                )}
               >
                 {option.label}
               </Button>

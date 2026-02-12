@@ -116,4 +116,7 @@ export interface ProductFormData {
 
   // Specifications
   specifications: ProductSpecification[];
+
+  // Key Features (Highlights)
+  keyFeatures: string[];
 }

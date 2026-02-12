@@ -5,7 +5,6 @@ import { addOrder } from '@/stores/order-store';
 import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { ShippingStep } from '@/components/checkout/ShippingStep';
-import { DeliveryMethodStep } from '@/components/checkout/DeliveryMethodStep';
 import { PaymentStep } from '@/components/checkout/PaymentStep';
 import { OrderReviewStep } from '@/components/checkout/OrderReviewStep';
 import { ConfirmationStep } from '@/components/checkout/ConfirmationStep';
@@ -70,7 +69,7 @@ function CheckoutPage() {
     postalCode: '',
     addressType: 'home',
     saveAddress: false,
-    deliveryMethod: '',
+    deliveryMethod: 'standard',
     paymentMethod: '',
     mobileNumber: undefined,
     bkashTransactionId: undefined,
@@ -78,16 +77,21 @@ function CheckoutPage() {
     bkashPaidAt: undefined,
   });
 
+  // Set default delivery method in cart store on mount
+  useEffect(() => {
+    setDeliveryMethod('standard');
+  }, [setDeliveryMethod]);
+
   // Redirect to cart if no items
   useEffect(() => {
-    if (items.length === 0 && currentStep !== 5 && !isOrderPlaced) {
+    if (items.length === 0 && currentStep !== 4 && !isOrderPlaced) {
       navigate({ to: '/cart' });
     }
   }, [items, navigate, currentStep, isOrderPlaced]);
 
   // Generate order number when reaching confirmation
   useEffect(() => {
-    if (currentStep === 5 && !orderNumber) {
+    if (currentStep === 4 && !orderNumber) {
       const year = new Date().getFullYear();
       const random = Math.floor(100000 + Math.random() * 900000);
       const orderNum = `AYJ-${year}-${random}`;
@@ -105,7 +109,7 @@ function CheckoutPage() {
   };
 
   const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 5));
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -222,7 +226,7 @@ function CheckoutPage() {
       setOrderNumber(orderNum);
       setOrderId(newOrderId);
       setIsOrderPlaced(true);
-      setCurrentStep(5);
+      setCurrentStep(4);
       clearCart();
       setDeliveryMethod(null);
       toast.success("Order placed successfully!");
@@ -247,15 +251,6 @@ function CheckoutPage() {
         );
       case 2:
         return (
-          <DeliveryMethodStep
-            onNext={handleNextStep}
-            onBack={handleBackStep}
-            formData={formData}
-            onFormChange={handleFormChange}
-          />
-        );
-      case 3:
-        return (
           <OrderReviewStep
             onBack={handleBackStep}
             onPlaceOrder={handleNextStep}
@@ -264,7 +259,7 @@ function CheckoutPage() {
             formData={formData}
           />
         );
-      case 4:
+      case 3:
         return (
           <PaymentStep
             onPlaceOrder={handlePlaceOrder}
@@ -275,7 +270,7 @@ function CheckoutPage() {
             totalAmount={getTotal()}
           />
         );
-      case 5:
+      case 4:
         return (
           <ConfirmationStep
             orderDetails={{
@@ -294,7 +289,6 @@ function CheckoutPage() {
                 addressType: formData.addressType,
               },
               scheduling: {
-                deliveryMethod: formData.deliveryMethod,
               },
               payment: {
                 paymentMethod: formData.paymentMethod,
@@ -321,15 +315,15 @@ function CheckoutPage() {
             Checkout
           </h1>
           <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
-            Complete your order in {currentStep === 5 ? '5' : '5 simple'} steps
+            Complete your order in {currentStep === 4 ? '4' : '4 simple'} steps
           </p>
         </div>
 
         {/* Progress Indicator */}
         <CheckoutProgress currentStep={currentStep} />
 
-        {/* Mobile Summary Toggle (only show on steps 1-4) */}
-        {currentStep < 5 && (
+        {/* Mobile Summary Toggle (only show on steps 1-3) */}
+        {currentStep < 4 && (
           <div className="mb-4 lg:hidden">
             <Button
               variant="outline"
@@ -347,7 +341,7 @@ function CheckoutPage() {
         )}
 
         {/* Mobile Collapsible Summary */}
-        {currentStep < 5 && isSummaryOpen && (
+        {currentStep < 4 && isSummaryOpen && (
           <div className="mb-6 lg:hidden">
             <CheckoutOrderSummary />
           </div>
@@ -358,8 +352,8 @@ function CheckoutPage() {
           {/* Checkout Steps - 2/3 width on desktop */}
           <div className="lg:col-span-2">{renderStep()}</div>
 
-          {/* Order Summary Sidebar - 1/3 width, sticky on desktop, only show on steps 1-4 */}
-          {currentStep < 5 && (
+          {/* Order Summary Sidebar - 1/3 width, sticky on desktop, only show on steps 1-3 */}
+          {currentStep < 4 && (
             <div className="hidden lg:block">
               <div className="lg:sticky lg:top-24">
                 <CheckoutOrderSummary />

@@ -16,6 +16,11 @@ export const notificationTypes = [
   "vendor_rejected",
   "new_order",
   "order_status_updated",
+  "low_stock_alert",
+  "out_of_stock_alert",
+  "return_request",
+  "payout_processed",
+  "product_review",
 ] as const;
 
 export type NotificationType = (typeof notificationTypes)[number];

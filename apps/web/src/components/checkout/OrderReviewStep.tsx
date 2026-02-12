@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCart, type CartItem } from "@/stores/cart-store";
 import { formatPrice } from "@/lib/utils";
-import { CreditCard, Mail, MapPin, Package, Phone, Truck, User, Loader2 } from "lucide-react";
+import { CreditCard, Mail, MapPin, Package, Phone, User, Loader2 } from "lucide-react";
 
 interface OrderReviewStepProps {
   onBack: () => void;
@@ -28,7 +28,6 @@ interface OrderReviewStepProps {
     city: string;
     division: string;
     postalCode: string;
-    deliveryMethod: string;
     paymentMethod: string;
   };
 }
@@ -42,19 +41,6 @@ export function OrderReviewStep({
 }: OrderReviewStepProps) {
   const { items, getSubtotal, getShipping, getTax, getTotal } = useCart();
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-
-  const getDeliveryMethodLabel = (method: string) => {
-    switch (method) {
-      case "standard":
-        return "Standard Delivery (3-5 business days)";
-      case "express":
-        return "Express Delivery (1-2 business days)";
-      case "same-day":
-        return "Same-Day Delivery (Order before 12 PM)";
-      default:
-        return "Delivery method not selected";
-    }
-  };
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
@@ -163,27 +149,6 @@ export function OrderReviewStep({
                 {formData.postalCode ? ` - ${formData.postalCode}` : ""}
               </p>
             </div>
-          </div>
-
-          <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Truck className="h-5 w-5 text-[hsl(var(--primary))]" />
-                <h3 className="text-base font-semibold text-[hsl(var(--foreground))]">
-                  Delivery Method
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => onEditStep(2)}
-                className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--primary))] hover:underline"
-              >
-                Edit
-              </button>
-            </div>
-            <p className="mt-4 text-sm text-[hsl(var(--muted-foreground))]">
-              {getDeliveryMethodLabel(formData.deliveryMethod)}
-            </p>
           </div>
 
           <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">

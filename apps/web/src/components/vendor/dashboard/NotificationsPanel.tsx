@@ -1,7 +1,8 @@
 import { Bell, ShoppingCart, RotateCcw, AlertTriangle, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { orpc } from '@/utils/orpc';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { orpc, orpcClient } from '@/utils/orpc';
+import { toast } from 'sonner';
 
 interface Notification {
   id: string;
@@ -39,9 +40,35 @@ const getNotificationStyles = (type: Notification['type']) => {
 };
 
 export function NotificationsPanel() {
+  const queryClient = useQueryClient();
   const { data: notifications, isLoading } = useQuery(
     orpc.vendor.getNotifications.queryOptions()
   );
+
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
+      return await orpcClient.vendor.markAllNotificationsAsRead({});
+    },
+    onSuccess: () => {
+      // Immediately update the UI to show empty state
+      queryClient.setQueryData(
+        orpc.vendor.getNotifications.queryOptions().queryKey,
+        []
+      );
+      // Refetch notifications list
+      queryClient.refetchQueries({ 
+        queryKey: orpc.vendor.getNotifications.queryOptions().queryKey 
+      });
+      // Also refetch the unread count in the navbar bell
+      queryClient.refetchQueries({
+        queryKey: ['vendor', 'getNotificationsUnreadCount']
+      });
+      toast.success('All notifications cleared');
+    },
+    onError: () => {
+      toast.error('Failed to clear notifications');
+    },
+  });
 
   const mockNotifications = notifications || [];
   const unreadCount = mockNotifications.filter((n) => n.unread).length;
@@ -59,8 +86,12 @@ export function NotificationsPanel() {
             </span>
           )}
         </div>
-        <button className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest hover:text-[hsl(var(--primary))] transition-colors">
-          Clear
+        <button 
+          onClick={() => markAllAsReadMutation.mutate({})}
+          disabled={markAllAsReadMutation.isPending || mockNotifications.length === 0}
+          className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest hover:text-[hsl(var(--primary))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {markAllAsReadMutation.isPending ? 'Clearing...' : 'Clear'}
         </button>
       </div>
 
