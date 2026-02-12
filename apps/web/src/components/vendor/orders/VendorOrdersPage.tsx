@@ -5,10 +5,8 @@ import { Search, Filter, Calendar, Loader2, ShoppingBag } from 'lucide-react';
 import { orpc } from '@/utils/orpc';
 import { useQuery } from '@tanstack/react-query';
 import { OrdersTable } from './OrdersTable';
-import { OrderDetailModal } from './OrderDetailModal';
 
 export function VendorOrdersPage() {
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
@@ -85,14 +83,6 @@ export function VendorOrdersPage() {
     (statusFilter ? 1 : 0) +
     (paymentMethodFilter ? 1 : 0) +
     (dateRangeFilter !== 'all' ? 1 : 0);
-
-  const handleOrderClick = (order: any) => {
-    setSelectedOrder(order);
-  };
-
-  const handleCloseDetail = () => {
-    setSelectedOrder(null);
-  };
 
   // Stats
   const stats = {
@@ -235,7 +225,7 @@ export function VendorOrdersPage() {
             <p className="text-sm text-[hsl(var(--muted-foreground))]">Loading your orders...</p>
           </div>
         ) : filteredOrders.length > 0 ? (
-          <OrdersTable orders={filteredOrders} onOrderClick={handleOrderClick} />
+          <OrdersTable orders={filteredOrders} />
         ) : (
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-12 text-center">
             <ShoppingBag className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
@@ -244,11 +234,6 @@ export function VendorOrdersPage() {
               {activeFilterCount > 0 ? 'Try adjusting your filters' : 'You haven\'t received any orders yet'}
             </p>
           </div>
-        )}
-
-        {/* Order Detail Modal */}
-        {selectedOrder && (
-          <OrderDetailModal order={selectedOrder} onClose={handleCloseDetail} />
         )}
       </div>
     </div>

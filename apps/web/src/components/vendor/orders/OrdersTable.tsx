@@ -1,10 +1,10 @@
 import { ShoppingBag } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { OrderStatusBadge } from '@/components/ui/order-status-badge';
 
 interface OrdersTableProps {
   orders: any[];
-  onOrderClick: (order: any) => void;
 }
 
 const getPaymentMethodLabel = (method: string) => {
@@ -27,7 +27,7 @@ const formatDate = (date: any) => {
   });
 };
 
-export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
+export function OrdersTable({ orders }: OrdersTableProps) {
   if (orders.length === 0) {
     return (
       <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-12 text-center">
@@ -79,8 +79,7 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
               return (
                 <tr
                   key={order.id}
-                  className="hover:bg-[hsl(var(--muted))]/30 transition-colors cursor-pointer"
-                  onClick={() => onOrderClick(order)}
+                  className="hover:bg-[hsl(var(--muted))]/30 transition-colors"
                 >
                   <td className="p-3 text-sm font-medium text-[hsl(var(--foreground))]">
                     {order.orderNumber}
@@ -118,15 +117,13 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
                     <OrderStatusBadge status={order.status} />
                   </td>
                   <td className="p-3 text-right">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOrderClick(order);
-                      }}
+                    <Link
+                      to="/vendor/orders/$orderId"
+                      params={{ orderId: order.id }}
                       className="text-sm text-[hsl(var(--primary))] hover:underline"
                     >
                       View Details
-                    </button>
+                    </Link>
                   </td>
                 </tr>
               );
@@ -142,8 +139,7 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
           return (
             <div
               key={order.id}
-              className="p-4 space-y-3 hover:bg-[hsl(var(--muted))]/30 transition-colors cursor-pointer"
-              onClick={() => onOrderClick(order)}
+              className="p-4 space-y-3"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
@@ -177,15 +173,13 @@ export function OrdersTable({ orders, onOrderClick }: OrdersTableProps) {
                 </div>
               </div>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOrderClick(order);
-                }}
-                className="text-sm text-[hsl(var(--primary))] hover:underline"
+              <Link
+                to="/vendor/orders/$orderId"
+                params={{ orderId: order.id }}
+                className="text-sm text-[hsl(var(--primary))] hover:underline inline-block"
               >
                 View Details →
-              </button>
+              </Link>
             </div>
           );
         })}

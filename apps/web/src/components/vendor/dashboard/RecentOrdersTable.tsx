@@ -18,18 +18,20 @@ export function RecentOrdersTable() {
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] overflow-hidden shadow-sm">
-      <div className="p-6 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--muted))]/30">
+      <div className="p-4 sm:p-6 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--muted))]/30">
         <div>
-          <h3 className="text-xl font-bold text-[hsl(var(--foreground))] tracking-tight">
+          <h3 className="text-lg sm:text-xl font-bold text-[hsl(var(--foreground))] tracking-tight">
             Incoming Orders
           </h3>
-          <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
+          <p className="text-xs sm:text-sm font-medium text-[hsl(var(--muted-foreground))] hidden sm:block">
             Review and fulfill your latest customer requests
           </p>
         </div>
-        <Button variant="ghost" size="sm" className="font-bold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10" asChild>
+        <Button variant="ghost" size="sm" className="font-bold text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/10 text-xs sm:text-sm" asChild>
           <Link to="/vendor/orders">
-            View All <ChevronRight className="ml-1 h-4 w-4" />
+            <span className="hidden sm:inline">View All</span>
+            <span className="sm:hidden">All</span>
+            <ChevronRight className="ml-0.5 sm:ml-1 h-3 w-3 sm:h-4 sm:w-4" />
           </Link>
         </Button>
       </div>

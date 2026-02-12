@@ -99,6 +99,63 @@ export const vendorRouter = os.router({
       };
     }),
 
+  getOrderDetails: protectedProcedure
+    .route({
+      method: "GET",
+      path: "/orders/{orderId}",
+      operationId: "getVendorOrderDetails",
+      summary: "Get Vendor Order Details",
+      description: "Get detailed information about a specific order containing vendor's products.",
+      tags: ["Vendor"],
+    })
+    .input(z.object({
+      orderId: z.string(),
+    }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // 1. Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      // 2. Verify order contains this vendor's items
+      const item = await db.query.orderItems.findFirst({
+        where: and(
+          eq(orderItems.orderId, input.orderId),
+          eq(orderItems.vendorId, vendor.id)
+        )
+      });
+
+      if (!item) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found or does not contain your products" });
+      }
+
+      // 3. Get the full order details with only this vendor's items
+      const order = await db.query.orders.findFirst({
+        where: eq(orders.id, input.orderId),
+        with: {
+          items: {
+            where: eq(orderItems.vendorId, vendor.id),
+          },
+          user: true,
+          payments: true,
+        }
+      });
+
+      if (!order) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      }
+
+      return order;
+    }),
+
   updateOrderStatus: protectedProcedure
     .route({
       method: "POST",
