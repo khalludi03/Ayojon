@@ -1,7 +1,7 @@
 import { RPCHandler } from "@orpc/server/fetch";
 import { OpenAPIGenerator } from "@orpc/openapi";
 import { ZodToJsonSchemaConverter } from "@orpc/zod";
-import { Scalar } from "@scalar/hono-api-reference";
+import { apiReference } from "@scalar/hono-api-reference";
 import { createContext } from "@my-better-t-app/api/context";
 import { appRouter } from "@my-better-t-app/api/routers/index";
 import { auth } from "@my-better-t-app/auth";
@@ -11,11 +11,12 @@ import { db } from "@my-better-t-app/db";
 import { user as userTable, account as accountTable } from "@my-better-t-app/db/schema/auth";
 import { session as sessionTable } from "@my-better-t-app/db/schema/auth";
 import { orders } from "@my-better-t-app/db/schema/orders";
+import { products } from "@my-better-t-app/db/schema/products";
+import { categories, vendors } from "@my-better-t-app/db/schema/catalog";
 import { env } from "@my-better-t-app/env/server";
 import { and, eq, ne, notInArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
-import { logger } from "hono/logger";
 import { z } from "zod";
 import { rateLimiter, getClientIp } from "./middleware/rate-limit";
 import { customLogger } from "./middleware/logger";
@@ -37,7 +38,7 @@ app.use(customLogger);
 // Rate limiters
 const authLimiter = rateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // 20 attempts per 15 mins per IP
+  max: 100, // 100 attempts per 15 mins per IP (increased for session checks)
   keyGenerator: (c) => `auth:${getClientIp(c)}`,
   message: "Too many authentication attempts. Please try again later.",
 });
@@ -472,8 +473,10 @@ app.get("/doc", async (c) => {
 // Scalar API documentation
 app.get(
   "/scalar",
-  Scalar({
-    url: "/doc",
+  apiReference({
+    spec: {
+      url: "/doc",
+    },
     theme: "purple",
     pageTitle: "My Better T-App API Documentation",
   }),
@@ -481,6 +484,131 @@ app.get(
 
 app.get("/", (c) => {
   return c.text("OK");
+});
+
+app.get("/sitemap.xml", async (c) => {
+  const baseUrl = env.CORS_ORIGIN || "https://ayojon.com";
+  
+  try {
+    const [allProducts, allCategories, allVendors] = await Promise.all([
+      db.select({ slug: products.slug, updatedAt: products.updatedAt })
+        .from(products)
+        .where(eq(products.status, "active"))
+        .limit(50000),
+      db.select({ slug: categories.slug, updatedAt: categories.updatedAt })
+        .from(categories)
+        .where(eq(categories.isActive, true)),
+      db.select({ slug: vendors.slug, updatedAt: vendors.updatedAt })
+        .from(vendors)
+        .where(eq(vendors.isActive, true)),
+    ]);
+
+    const staticPages = [
+      { loc: "/", changefreq: "daily", priority: "1.0" },
+      { loc: "/products", changefreq: "daily", priority: "0.9" },
+      { loc: "/hot-deals", changefreq: "daily", priority: "0.8" },
+      { loc: "/flash-deals", changefreq: "daily", priority: "0.8" },
+      { loc: "/wishlist", changefreq: "weekly", priority: "0.5" },
+      { loc: "/cart", changefreq: "weekly", priority: "0.5" },
+      { loc: "/become-vendor", changefreq: "monthly", priority: "0.6" },
+    ];
+
+    let sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`;
+
+    staticPages.forEach((page) => {
+      sitemap += `
+  <url>
+    <loc>${baseUrl}${page.loc}</loc>
+    <changefreq>${page.changefreq}</changefreq>
+    <priority>${page.priority}</priority>
+  </url>`;
+    });
+
+    allProducts.forEach((product) => {
+      const lastmod = product.updatedAt instanceof Date 
+        ? product.updatedAt.toISOString().split('T')[0] 
+        : new Date().toISOString().split('T')[0];
+      sitemap += `
+  <url>
+    <loc>${baseUrl}/product/${product.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`;
+    });
+
+    allCategories.forEach((category) => {
+      const lastmod = category.updatedAt instanceof Date 
+        ? category.updatedAt.toISOString().split('T')[0] 
+        : new Date().toISOString().split('T')[0];
+      sitemap += `
+  <url>
+    <loc>${baseUrl}/category/${category.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+    });
+
+    allVendors.forEach((vendor) => {
+      const lastmod = vendor.updatedAt instanceof Date 
+        ? vendor.updatedAt.toISOString().split('T')[0] 
+        : new Date().toISOString().split('T')[0];
+      sitemap += `
+  <url>
+    <loc>${baseUrl}/vendor/${vendor.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`;
+    });
+
+    sitemap += `
+</urlset>`;
+
+    return new Response(sitemap, {
+      headers: {
+        "Content-Type": "application/xml",
+        "Cache-Control": "public, max-age=3600",
+      },
+    });
+  } catch (error) {
+    console.error("Error generating sitemap:", error);
+    return c.text("Error generating sitemap", 500);
+  }
+});
+
+app.get("/robots.txt", (c) => {
+  const baseUrl = env.CORS_ORIGIN || "https://ayojon.com";
+  
+  const robotsTxt = `User-agent: *
+Allow: /
+Allow: /product/
+Allow: /category/
+Allow: /vendor/
+Allow: /products
+Disallow: /admin/
+Disallow: /vendor/dashboard
+Disallow: /vendor/products
+Disallow: /vendor/orders
+Disallow: /vendor/settings
+Disallow: /vendor/application-pending
+Disallow: /vendor/application-rejected
+Disallow: /account/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /api/
+Disallow: /auth/
+
+Sitemap: ${baseUrl}/sitemap.xml`;
+
+  return new Response(robotsTxt, {
+    headers: {
+      "Content-Type": "text/plain",
+      "Cache-Control": "public, max-age=86400",
+    },
+  });
 });
 
 export default app;

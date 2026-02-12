@@ -5,11 +5,9 @@ import { ProductDetailPage } from '@/components/product/ProductDetailPage';
 
 export const Route = createFileRoute('/product/$productSlug')({
   component: RouteComponent,
-  // Load data before rendering if possible, or handle in component
   loader: async ({ params }) => {
     console.log(`[ProductLoader] Loading product for slug: "${params.productSlug}"`);
     try {
-      // Try direct fetch to debug what's happening at network level
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
       const apiUrl = `${baseUrl}/api/product.getProductBySlug?slug=${encodeURIComponent(params.productSlug)}`;
       console.log(`[ProductLoader] Fetching from: ${apiUrl}`);
@@ -23,7 +21,6 @@ export const Route = createFileRoute('/product/$productSlug')({
 
       console.log(`[ProductLoader] Product found: "${product.title}"`);
 
-      // Fetch related products (same category)
       let relatedProducts: any[] = [];
       try {
         const relatedResponse = await orpcClient.product.getProducts({ 
@@ -43,6 +40,71 @@ export const Route = createFileRoute('/product/$productSlug')({
       console.error(`[ProductLoader] Unexpected error:`, error);
       throw error;
     }
+  },
+  head: ({ loaderData }) => {
+    const product = loaderData?.product;
+    if (!product) {
+      return {
+        meta: [
+          { title: 'Product Not Found - Ayojon' },
+          { name: 'description', content: 'The product you are looking for could not be found.' },
+        ],
+      };
+    }
+
+    const title = `${product.title} - Ayojon`;
+    const description = product.descriptionShort || product.description?.slice(0, 160) || `Rent ${product.title} for your next event. Available at Ayojon marketplace.`;
+    const image = product.images?.[0]?.url || '/og-image.png';
+    const url = `https://ayojon.com/product/${product.slug}`;
+
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { name: 'keywords', content: `${product.title}, ${product.categoryId}, event rental, rent ${product.title}, Ayojon` },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:image', content: image },
+        { property: 'og:url', content: url },
+        { property: 'og:type', content: 'product' },
+        { property: 'og:site_name', content: 'Ayojon' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: title },
+        { name: 'twitter:description', content: description },
+        { name: 'twitter:image', content: image },
+      ],
+      links: [
+        { rel: 'canonical', href: url },
+      ],
+      scripts: [
+        {
+          type: 'application/ld+json',
+          children: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Product',
+            name: product.title,
+            description: description,
+            image: product.images?.map((img: any) => img.url) || [],
+            offers: {
+              '@type': 'Offer',
+              price: product.pricing?.currentPrice || product.price,
+              priceCurrency: product.pricing?.currency || 'BDT',
+              availability: product.stockStatus === 'in_stock' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+              seller: {
+                '@type': 'Organization',
+                name: product.vendor?.name || 'Ayojon',
+              },
+            },
+            aggregateRating: product.rating?.count > 0 ? {
+              '@type': 'AggregateRating',
+              ratingValue: product.rating?.average || 0,
+              reviewCount: product.rating?.count || 0,
+            } : undefined,
+            brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
+          }),
+        },
+      ],
+    };
   },
   notFoundComponent: () => {
     return (

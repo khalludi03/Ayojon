@@ -11,15 +11,39 @@ import { useProducts } from '@/hooks/use-products';
 import { useFilters, filterStore } from '@/stores/filter-store';
 import z from 'zod';
 
-// Define search params schema
 const searchParamsSchema = z.object({
   search: z.string().optional(),
   page: z.coerce.number().optional().default(1),
+  eventType: z.string().optional(),
 });
 
 export const Route = createFileRoute('/products')({
   component: SearchResultsPage,
   validateSearch: searchParamsSchema,
+  head: () => {
+    const title = 'All Products - Event Rentals | Ayojon';
+    const description = 'Browse all event rental products. Decorations, furniture, catering equipment, and more available at Ayojon.';
+    const url = 'https://ayojon.com/products';
+
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { name: 'keywords', content: 'event rental, product catalog, Ayojon products' },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:url', content: url },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'Ayojon' },
+        { name: 'twitter:card', content: 'summary' },
+        { name: 'twitter:title', content: title },
+        { name: 'twitter:description', content: description },
+      ],
+      links: [
+        { rel: 'canonical', href: url },
+      ],
+    };
+  },
 });
 
 function SearchResultsPage() {
@@ -27,20 +51,25 @@ function SearchResultsPage() {
   const searchParams = Route.useSearch();
   const { filters } = useFilters();
 
-  // Get search query from URL or filters
+  // Get search query and eventType from URL or filters
   const searchQuery = searchParams.search || filters.search || '';
+  const eventType = searchParams.eventType || (filters.eventTypes?.[0]);
   const currentPage = searchParams.page || 1;
 
-  // Update filter store with search query from URL
+  // Update filter store with search query and eventType from URL
   useEffect(() => {
     if (searchParams.search && searchParams.search !== filters.search) {
       filterStore.setFilter('search', searchParams.search);
     }
-  }, [searchParams.search, filters.search]);
+    if (searchParams.eventType && !filters.eventTypes?.includes(searchParams.eventType)) {
+      filterStore.setFilter('eventTypes', [searchParams.eventType]);
+    }
+  }, [searchParams.search, searchParams.eventType, filters.search, filters.eventTypes]);
 
   // Fetch products with pagination
   const { data, isLoading } = useProducts({
     search: searchQuery,
+    eventTypes: eventType ? [eventType] : filters.eventTypes,
     category: filters.category,
     minPrice: filters.minPrice,
     maxPrice: filters.maxPrice,
@@ -85,6 +114,7 @@ function SearchResultsPage() {
   // Check if there are active filters (excluding search and sort)
   const hasActiveFilters =
     filters.category ||
+    filters.eventTypes?.length ||
     filters.minPrice !== undefined ||
     filters.maxPrice !== undefined ||
     filters.minRating ||

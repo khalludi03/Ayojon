@@ -50,6 +50,7 @@ export function useProducts(
         q: filters.search,
         featured: filters.featured,
         dealType: filters.dealType,
+        eventType: filters.eventTypes?.[0],
       },
       ...options as any,
     })
@@ -75,6 +76,7 @@ export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) 
         q: filters.search,
         featured: filters.featured,
         dealType: filters.dealType,
+        eventType: filters.eventTypes?.[0],
       }),
     initialPageParam: 1,
     getNextPageParam: (lastPage: any) => {

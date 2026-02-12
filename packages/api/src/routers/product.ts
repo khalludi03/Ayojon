@@ -211,6 +211,22 @@ export const productRouter = os.router({
       return category;
     }),
 
+  listEventTypes: publicProcedure
+    .route({
+      operationId: "listEventTypes",
+      summary: "List Event Types",
+      description: "Returns all active event types for filtering products.",
+      tags: ["Catalog"],
+    })
+    .handler(async () => {
+      const allEventTypes = await db.query.eventTypes.findMany({
+        where: eq(eventTypes.isActive, true),
+        orderBy: [asc(eventTypes.sortOrder)],
+      });
+
+      return allEventTypes;
+    }),
+
   getProducts: publicProcedure
     .route({
       operationId: "getProducts",
@@ -230,9 +246,10 @@ export const productRouter = os.router({
       q: z.string().optional(),
       featured: z.boolean().optional(),
       dealType: z.string().optional(),
+      eventType: z.string().optional(),
     }))
     .handler(async ({ input }) => {
-      const { page, limit, category, subcategory, vendor, minPrice, maxPrice, sort, q, featured, dealType } = input;
+      const { page, limit, category, subcategory, vendor, minPrice, maxPrice, sort, q, featured, dealType, eventType } = input;
       const offset = (page - 1) * limit;
 
       const whereClauses = [eq(products.status, "active")];
@@ -309,6 +326,24 @@ export const productRouter = os.router({
 
       if (q) {
         whereClauses.push(sql`${products.title} ILIKE ${`%${q}%`}`);
+      }
+
+      if (eventType) {
+        const eventTypeRecord = await db.query.eventTypes.findFirst({
+          where: eq(eventTypes.slug, eventType),
+        });
+        if (eventTypeRecord) {
+          const productIdsWithType = await db
+            .select({ productId: productEventTypes.productId })
+            .from(productEventTypes)
+            .where(eq(productEventTypes.eventTypeId, eventTypeRecord.id));
+          
+          if (productIdsWithType.length > 0) {
+            whereClauses.push(inArray(products.id, productIdsWithType.map(p => p.productId)));
+          } else {
+            whereClauses.push(sql`FALSE`);
+          }
+        }
       }
 
       const orderBy = [];

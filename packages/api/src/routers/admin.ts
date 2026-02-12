@@ -1219,8 +1219,6 @@ export const adminRouter = os.router({
           )
         );
 
-      console.log('[Admin Metrics] Monthly Revenue (subtotal only):', monthlyRevenue);
-
       const recentOrders = await db
         .select()
         .from(orders)

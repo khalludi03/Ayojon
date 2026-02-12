@@ -13,9 +13,9 @@ import { NoResults } from '@/components/product/NoResults';
 import { useCategoryBySlug } from '@/hooks/use-categories';
 import { useProducts } from '@/hooks/use-products';
 import { useFilters, filterStore } from '@/stores/filter-store';
+import { orpcClient } from '@/utils/orpc';
 import z from 'zod';
 
-// Define search params schema
 const searchParamsSchema = z.object({
   page: z.coerce.number().optional().default(1),
   subcategory: z.string().optional(),
@@ -24,6 +24,44 @@ const searchParamsSchema = z.object({
 export const Route = createFileRoute('/category/$categorySlug')({
   component: CategoryPage,
   validateSearch: searchParamsSchema,
+  loader: async ({ params }) => {
+    const category = await orpcClient.product.getCategoryBySlug({ slug: params.categorySlug });
+    return { category };
+  },
+  head: ({ loaderData, params }) => {
+    const category = loaderData?.category;
+    if (!category) {
+      return {
+        meta: [
+          { title: 'Category Not Found - Ayojon' },
+          { name: 'description', content: 'The category you are looking for could not be found.' },
+        ],
+      };
+    }
+
+    const title = `${category.name} - Event Rentals | Ayojon`;
+    const description = category.description || `Browse ${category.name} for your next event. Quality rentals available at Ayojon marketplace.`;
+    const url = `https://ayojon.com/category/${params.categorySlug}`;
+
+    return {
+      meta: [
+        { title },
+        { name: 'description', content: description },
+        { name: 'keywords', content: `${category.name}, event rental, ${category.name} rental, Ayojon` },
+        { property: 'og:title', content: title },
+        { property: 'og:description', content: description },
+        { property: 'og:url', content: url },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'Ayojon' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: title },
+        { name: 'twitter:description', content: description },
+      ],
+      links: [
+        { rel: 'canonical', href: url },
+      ],
+    };
+  },
 });
 
 function CategoryPage() {
