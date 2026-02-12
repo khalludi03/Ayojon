@@ -9,6 +9,9 @@ export const platformSettings = pgTable("platform_settings", {
   supportPhone: text("support_phone").notNull(),
   platformCommission: integer("platform_commission").default(10).notNull(), // Percentage
   
+  // Deal Settings
+  flashDealEndsAt: timestamp("flash_deal_ends_at"),
+
   // Shipping Settings
   freeShippingThreshold: integer("free_shipping_threshold").default(2000).notNull(),
   insideDhakaRate: integer("inside_dhaka_rate").default(60).notNull(),
