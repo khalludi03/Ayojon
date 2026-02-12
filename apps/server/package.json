@@ -15,6 +15,7 @@
     "@my-better-t-app/auth": "workspace:*",
     "@my-better-t-app/db": "workspace:*",
     "@my-better-t-app/env": "workspace:*",
+    "@scalar/hono-api-reference": "^0.5.0",
     "@sentry/node": "^10.38.0",
     "better-auth": "catalog:",
     "dotenv": "catalog:",

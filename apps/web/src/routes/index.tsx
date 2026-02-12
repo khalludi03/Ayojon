@@ -20,16 +20,34 @@ export const Route = createFileRoute('/')({
     const session = await getUser();
     if (session) {
       const user = session.user as any;
-      // Redirect admin users to admin dashboard
       if (user.role === 'admin') {
         throw redirect({ to: '/admin/dashboard' });
       }
-      // Redirect vendor users to vendor dashboard
       if (user.role === 'vendor') {
         throw redirect({ to: '/vendor/dashboard' });
       }
     }
   },
+  head: () => ({
+    meta: [
+      { title: 'Ayojon - Your Event Marketplace' },
+      { name: 'description', content: 'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.' },
+      { name: 'keywords', content: 'event rental, wedding supplies, party decorations, catering equipment, furniture rental, Ayojon' },
+      { property: 'og:title', content: 'Ayojon - Your Event Marketplace' },
+      { property: 'og:description', content: 'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.' },
+      { property: 'og:image', content: '/og-image.png' },
+      { property: 'og:url', content: 'https://ayojon.com' },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:site_name', content: 'Ayojon' },
+      { name: 'twitter:card', content: 'summary_large_image' },
+      { name: 'twitter:title', content: 'Ayojon - Your Event Marketplace' },
+      { name: 'twitter:description', content: 'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more.' },
+      { name: 'twitter:image', content: '/og-image.png' },
+    ],
+    links: [
+      { rel: 'canonical', href: 'https://ayojon.com' },
+    ],
+  }),
   component: HomePage
 })
 

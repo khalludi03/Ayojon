@@ -1,4 +1,4 @@
-import { Context, Next } from "hono";
+import type { Context, Next } from "hono";
 import { Logtail } from "@logtail/node";
 import { env } from "@my-better-t-app/env/server";
 
