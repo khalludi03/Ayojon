@@ -14,6 +14,7 @@ import { orpc } from "@/utils/orpc";
 import { useLocation } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/stores/theme-store";
+import * as Sentry from "@sentry/react";
 
 import appCss from "../index.css?url";
 export interface RouterAppContext {
@@ -47,7 +48,20 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     ],
   }),
 
-  component: RootDocument,
+  component: Sentry.withErrorBoundary(RootDocument, {
+    fallback: ({ error, resetError }) => (
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
+        <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+        <p className="text-muted-foreground mb-6">{error.message}</p>
+        <button
+          onClick={resetError}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+        >
+          Try again
+        </button>
+      </div>
+    ),
+  }),
 });
 
 function RootDocument() {

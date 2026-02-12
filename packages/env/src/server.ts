@@ -25,6 +25,8 @@ export const env = createEnv({
     S3_ENDPOINT: z.string().url(),
     S3_BUCKET: z.string().min(1),
     S3_PUBLIC_URL: z.string().url().optional(),
+    SENTRY_DSN: z.string().url().optional(),
+    LOGTAIL_SOURCE_TOKEN: z.string().min(1).optional(),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

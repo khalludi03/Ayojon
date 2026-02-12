@@ -18,10 +18,21 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { z } from "zod";
 import { rateLimiter, getClientIp } from "./middleware/rate-limit";
+import { customLogger } from "./middleware/logger";
+import * as Sentry from "@sentry/node";
+
+// Initialize Sentry
+if (env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: env.SENTRY_DSN,
+    environment: env.NODE_ENV,
+    tracesSampleRate: 1.0,
+  });
+}
 
 const app = new Hono();
 
-app.use(logger());
+app.use(customLogger);
 
 // Rate limiters
 const authLimiter = rateLimiter({
@@ -48,6 +59,11 @@ const otpLimiter = rateLimiter({
 });
 
 app.onError((err, c) => {
+  // Capture exception in Sentry
+  if (env.SENTRY_DSN) {
+    Sentry.captureException(err);
+  }
+
   // Always log full error details server-side for debugging
   console.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
 
