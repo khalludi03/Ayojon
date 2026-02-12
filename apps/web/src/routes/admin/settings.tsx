@@ -11,7 +11,9 @@ import {
   Phone, 
   Percent,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -53,6 +55,7 @@ function AdminSettingsPage() {
         contactEmail: "admin@ayojon.com",
         supportPhone: "+880-1234-567890",
         platformCommission: 10,
+        flashDealEndsAt: null,
         freeShippingThreshold: 2000,
         insideDhakaRate: 60,
         outsideDhakaRate: 120,
@@ -175,6 +178,34 @@ function AdminSettingsPage() {
                   />
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
+              </div>
+            </div>
+          </Section>
+
+          {/* Deal Settings */}
+          <Section icon={Zap} title="Campaign & Deals">
+            <div className="space-y-6">
+              <div className="space-y-2 max-w-sm">
+                <Label htmlFor="flashDealEndsAt" className="text-[10px] font-black uppercase tracking-widest text-slate-500">Flash Deal Global End Time</Label>
+                <div className="relative">
+                  <Input 
+                    id="flashDealEndsAt" 
+                    type="datetime-local"
+                    value={formData.flashDealEndsAt ? new Date(new Date(formData.flashDealEndsAt).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''} 
+                    onChange={(e) => handleChange('flashDealEndsAt', e.target.value ? new Date(e.target.value) : null)}
+                    className="h-12 rounded-xl border-slate-200 dark:border-slate-800 pl-10"
+                  />
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium">This overrides individual product deal times for the homepage countdown.</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-[10px] uppercase font-bold tracking-wider"
+                  onClick={() => handleChange('flashDealEndsAt', new Date(Date.now() + 24 * 60 * 60 * 1000))}
+                >
+                  Set to 24h from now
+                </Button>
               </div>
             </div>
           </Section>

@@ -1,0 +1,1 @@
+ALTER TABLE "platform_settings" ADD COLUMN "flash_deal_ends_at" timestamp;

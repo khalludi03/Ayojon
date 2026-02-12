@@ -17,7 +17,8 @@ import {
   ExternalLink,
   Sparkles,
   Zap,
-  Flame
+  Flame,
+  Clock
 } from 'lucide-react';
 import { getUser } from '@/functions/get-user';
 import { orpc } from '@/utils/orpc';
@@ -283,6 +284,23 @@ function AdminProductsPage() {
                           <Zap className="h-3.5 w-3.5" />
                           Flash Deals
                         </Button>
+
+                        {product.dealType === 'flash' && (
+                          <div className="flex items-center gap-1 ml-1">
+                            <Clock className="h-3 w-3 text-amber-600" />
+                            <input
+                              type="datetime-local"
+                              defaultValue={product.dealEndsAt ? new Date(new Date(product.dealEndsAt).getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                              className="text-[10px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-1 h-6 focus:ring-1 focus:ring-amber-500 outline-none"
+                              onBlur={(e) => {
+                                const newDate = e.target.value ? new Date(e.target.value) : null;
+                                if (newDate && (!product.dealEndsAt || new Date(product.dealEndsAt).getTime() !== newDate.getTime())) {
+                                  promotionsMutation.mutate({ id: product.id, dealEndsAt: newDate });
+                                }
+                              }}
+                            />
+                          </div>
+                        )}
 
                         <Button
                           type="button"

@@ -816,10 +816,11 @@ export const adminRouter = os.router({
         id: z.string(),
         isFeatured: z.boolean().optional(),
         dealType: z.enum(["flash", "hot", "daily", "clearance", "bundle"]).nullable().optional(),
+        dealEndsAt: z.coerce.date().nullable().optional(),
       })
     )
     .handler(async ({ input }) => {
-      const { id, isFeatured, dealType } = input;
+      const { id, isFeatured, dealType, dealEndsAt } = input;
 
       const [existing] = await db
         .select({
@@ -853,10 +854,14 @@ export const adminRouter = os.router({
           if (!existing.dealStartsAt) {
             updates.dealStartsAt = new Date();
           }
-          if (!existing.dealEndsAt) {
+          if (!existing.dealEndsAt && dealEndsAt === undefined) {
             updates.dealEndsAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
           }
         }
+      }
+
+      if (dealEndsAt !== undefined) {
+        updates.dealEndsAt = dealEndsAt;
       }
 
       const result = await db
@@ -979,6 +984,7 @@ export const adminRouter = os.router({
         contactEmail: z.string().email().optional(),
         supportPhone: z.string().optional(),
         platformCommission: z.coerce.number().int().min(0).max(100).optional(),
+        flashDealEndsAt: z.coerce.date().nullable().optional(),
         freeShippingThreshold: z.coerce.number().int().min(0).optional(),
         insideDhakaRate: z.coerce.number().int().min(0).optional(),
         outsideDhakaRate: z.coerce.number().int().min(0).optional(),

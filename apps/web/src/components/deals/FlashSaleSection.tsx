@@ -6,6 +6,8 @@ import { useFlashDeals } from '@/hooks/use-deals';
 import { useCountdown } from '@/hooks/use-countdown';
 import { ProductCardSkeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { orpc } from '@/utils/orpc';
+import { useQuery } from '@tanstack/react-query';
 
 interface FlashSaleSectionProps {
   className?: string;
@@ -15,10 +17,17 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
   const { data: deals, isLoading } = useFlashDeals(12);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Use the first deal's end time for the global countdown, or a default
+  const { data: settings } = useQuery(
+    orpc.homepage.getPublicSettings.queryOptions()
+  );
+
+  // Use the flashDealEndsAt from settings, or first deal's end time, or a default
   const globalEndTime = useMemo(() => {
+    if (settings?.flashDealEndsAt) {
+      return new Date(settings.flashDealEndsAt).toISOString();
+    }
     return deals?.[0]?.dealEndsAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  }, [deals]);
+  }, [deals, settings]);
 
   const countdown = useCountdown(globalEndTime);
 
