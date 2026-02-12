@@ -93,6 +93,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
     quantityAvailable: '',
     images: [],
     specifications: [],
+    keyFeatures: [],
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -132,6 +133,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
       quantityAvailable: product.rentalDetails?.quantityAvailable.toString() || '',
       images: product.images,
       specifications: product.specifications,
+      keyFeatures: (product as any).keyFeatures || [],
     });
   };
 
@@ -241,6 +243,29 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
     setFormData(prev => ({
       ...prev,
       specifications: prev.specifications.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAddKeyFeature = () => {
+    setFormData(prev => ({
+      ...prev,
+      keyFeatures: [...prev.keyFeatures, ''],
+    }));
+  };
+
+  const handleKeyFeatureChange = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      keyFeatures: prev.keyFeatures.map((feature, i) =>
+        i === index ? value : feature
+      ),
+    }));
+  };
+
+  const handleRemoveKeyFeature = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      keyFeatures: prev.keyFeatures.filter((_, i) => i !== index),
     }));
   };
 
@@ -397,6 +422,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
         stock: parseInt(formData.quantity) || 0,
         status: asDraft ? ('draft' as const) : ('active' as const),
         images: uploadedImages.length > 0 ? uploadedImages : undefined,
+        keyFeatures: formData.keyFeatures.filter(f => f.trim() !== ''), // Filter out empty features
       };
 
       if (existingProduct) {
@@ -411,6 +437,7 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
           price: apiData.price,
           stock: apiData.stock,
           status: apiData.status,
+          keyFeatures: apiData.keyFeatures.length > 0 ? apiData.keyFeatures : undefined,
         });
       } else {
         createProductMutation.mutate(apiData);
@@ -945,6 +972,69 @@ export function AddProductForm({ existingProduct, onClose, onSuccess }: AddProdu
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-500">
                     Click "Add Spec" to add product specifications
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Key Features (Highlights) Section */}
+          <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-900/50 p-8 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-md">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-[hsl(var(--foreground))]">
+                    Product Highlights
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Key features displayed prominently to customers
+                  </p>
+                </div>
+              </div>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                onClick={handleAddKeyFeature}
+                className="font-bold text-amber-600 dark:text-amber-400 border-2 border-amber-500/20 hover:bg-amber-500/5 transition-all"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Add Feature
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {formData.keyFeatures.map((feature, index) => (
+                <div key={index} className="flex gap-3 items-center p-4 rounded-xl bg-white dark:bg-slate-950 border-2 border-slate-200 dark:border-slate-800 hover:border-amber-500/30 transition-all">
+                  <div className="flex-1">
+                    <Input
+                      value={feature}
+                      onChange={(e) => handleKeyFeatureChange(index, e.target.value)}
+                      placeholder="e.g., Premium quality materials, Easy to setup, Weather resistant"
+                      className="h-11 text-base font-medium border-2 border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-amber-500 transition-all"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemoveKeyFeature(index)}
+                    className="h-11 w-11 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all flex-shrink-0"
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+              ))}
+              {formData.keyFeatures.length === 0 && (
+                <div className="text-center py-12 px-4 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/30">
+                  <Sparkles className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-600 mb-3" />
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                    No highlights added yet
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500">
+                    Click "Add Feature" to highlight key product features
                   </p>
                 </div>
               )}

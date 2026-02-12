@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Star, ThumbsUp, ThumbsDown, BadgeCheck, Check, X as XIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +18,27 @@ export function ReviewCard({ review }: ReviewCardProps) {
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
 
+  // Local state for optimistic updates
+  const [helpfulVoted, setHelpfulVoted] = useState<'helpful' | 'not_helpful' | null>(
+    (review as any).myVote || null
+  );
+  const [helpfulCount, setHelpfulCount] = useState(review.helpfulVotes);
+  const [notHelpfulCount, setNotHelpfulCount] = useState(review.notHelpfulVotes || 0);
+
+  // Ref to store rollback context
+  const rollbackContextRef = useRef<{
+    previousVote: 'helpful' | 'not_helpful' | null;
+    previousHelpfulCount: number;
+    previousNotHelpfulCount: number;
+  } | null>(null);
+
+  // Sync local state when review prop changes
+  useEffect(() => {
+    setHelpfulVoted((review as any).myVote || null);
+    setHelpfulCount(review.helpfulVotes);
+    setNotHelpfulCount(review.notHelpfulVotes || 0);
+  }, [review.id, review.helpfulVotes, review.notHelpfulVotes, (review as any).myVote]);
+
   // Mutation for voting
   const voteMutation = useMutation({
     mutationFn: (vars: { reviewId: string; voteType: 'helpful' | 'not_helpful' }) => 
@@ -25,8 +46,16 @@ export function ReviewCard({ review }: ReviewCardProps) {
     onSuccess: () => {
       // Invalidate both product reviews and my reviews
       queryClient.invalidateQueries({ queryKey: ['review'] });
+      rollbackContextRef.current = null;
     },
     onError: (error: any) => {
+      // Revert optimistic update on error
+      if (rollbackContextRef.current) {
+        setHelpfulVoted(rollbackContextRef.current.previousVote);
+        setHelpfulCount(rollbackContextRef.current.previousHelpfulCount);
+        setNotHelpfulCount(rollbackContextRef.current.previousNotHelpfulCount);
+        rollbackContextRef.current = null;
+      }
       toast.error(error?.message || "Failed to process vote. Please login to vote.");
     }
   });
@@ -45,14 +74,44 @@ export function ReviewCard({ review }: ReviewCardProps) {
       toast.error("Please sign in to vote on reviews");
       return;
     }
+
+    // Store previous state for rollback
+    rollbackContextRef.current = {
+      previousVote: helpfulVoted,
+      previousHelpfulCount: helpfulCount,
+      previousNotHelpfulCount: notHelpfulCount,
+    };
+
+    // Optimistic update
+    if (helpfulVoted === voteType) {
+      // User is removing their vote
+      setHelpfulVoted(null);
+      if (voteType === 'helpful') {
+        setHelpfulCount(prev => Math.max(0, prev - 1));
+      } else {
+        setNotHelpfulCount(prev => Math.max(0, prev - 1));
+      }
+    } else {
+      // User is changing or adding their vote
+      setHelpfulVoted(voteType);
+      
+      if (rollbackContextRef.current.previousVote === 'helpful') {
+        setHelpfulCount(prev => Math.max(0, prev - 1));
+      } else if (rollbackContextRef.current.previousVote === 'not_helpful') {
+        setNotHelpfulCount(prev => Math.max(0, prev - 1));
+      }
+      
+      if (voteType === 'helpful') {
+        setHelpfulCount(prev => prev + 1);
+      } else {
+        setNotHelpfulCount(prev => prev + 1);
+      }
+    }
+
     voteMutation.mutate({ reviewId: review.id, voteType });
   };
 
   const displayImages = showAllImages ? review.images : review.images.slice(0, 3);
-
-  // We should ideally have information about whether the current user has voted
-  // For now, we'll assume it's null unless we add that to the review type
-  const helpfulVoted: 'helpful' | 'not_helpful' | null = (review as any).myVote || null;
 
   return (
     <div className="border-b border-[hsl(var(--border))] pb-6 last:border-b-0">
@@ -80,7 +139,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
               {review.user.name}
             </span>
             {review.isVerifiedPurchase && (
-              <Badge variant="verified" className="gap-1 bg-blue-50 text-blue-700 border-blue-200">
+              <Badge variant="verified" className="gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800">
                 <BadgeCheck className="h-3 w-3" />
                 Verified Purchase
               </Badge>
@@ -89,8 +148,8 @@ export function ReviewCard({ review }: ReviewCardProps) {
               <div className={cn(
                 "flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border",
                 review.recommend 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                  : "bg-red-50 text-red-700 border-red-200"
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800" 
+                  : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800"
               )}>
                 {review.recommend ? <Check className="h-2.5 w-2.5" /> : <XIcon className="h-2.5 w-2.5" />}
                 {review.recommend ? "Recommended" : "Not Recommended"}
@@ -173,7 +232,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
                 )}
                 <span>Yes</span>
                 <span className="ml-0.5">
-                  ({review.helpfulVotes})
+                  ({helpfulCount})
                 </span>
               </Button>
               <Button
@@ -190,7 +249,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
                 )}
                 <span>No</span>
                 <span className="ml-0.5">
-                  ({review.notHelpfulVotes || 0})
+                  ({notHelpfulCount})
                 </span>
               </Button>
             </div>

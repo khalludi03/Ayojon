@@ -557,6 +557,7 @@ export const productRouter = os.router({
             alt: z.string().optional().nullable(),
             isPrimary: z.boolean().default(false),
           })).optional(),
+          keyFeatures: z.array(z.string()).optional(),
         });
 
         const result = schema.safeParse(input);
@@ -586,6 +587,7 @@ export const productRouter = os.router({
             salePrice: parsedInput.salePrice,
             stock: parsedInput.stock,
             status: parsedInput.status,
+            content: parsedInput.keyFeatures ? { keyFeatures: parsedInput.keyFeatures } : undefined,
           });
 
           if (parsedInput.images && parsedInput.images.length > 0) {
@@ -640,17 +642,49 @@ export const productRouter = os.router({
         price: z.string().optional(),
         stock: z.coerce.number().int().optional(),
         status: z.enum(["draft", "active", "out_of_stock", "archived"]).optional(),
+        keyFeatures: z.array(z.string()).optional(),
       })
     )
     .handler(async ({ input, context }) => {
       const vendorId = await getVendorId(context.session.user.id);
 
+      // Prepare update data
+      const updateData: any = {
+        ...input,
+        updatedAt: new Date(),
+      };
+
+      // If keyFeatures is provided, update the content field
+      if (input.keyFeatures !== undefined) {
+        // First get the existing product to merge content
+        const existingProduct = await db
+          .select()
+          .from(products)
+          .where(
+            and(
+              eq(products.id, input.id),
+              eq(products.vendorId, vendorId)
+            )
+          )
+          .limit(1);
+
+        if (existingProduct.length === 0) {
+          throw new ORPCError("NOT_FOUND", {
+            message: "Product not found or unauthorized",
+          });
+        }
+
+        const existingContent = (existingProduct[0].content as any) || {};
+        updateData.content = {
+          ...existingContent,
+          keyFeatures: input.keyFeatures,
+        };
+        delete updateData.keyFeatures;
+      }
+
       const result = await db
         .update(products)
-        .set({
-          ...input,
-          updatedAt: new Date(),
-        })
+        .set(updateData)
         .where(
           and(
             eq(products.id, input.id),
