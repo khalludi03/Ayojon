@@ -106,6 +106,16 @@ export function verifyOTP(email: string, providedOTP: string): {
     console.log(
       `[OTP STORE] Invalid OTP for ${email}. Attempts: ${data.attempts}/${MAX_ATTEMPTS}`
     );
+
+    if (data.attempts >= MAX_ATTEMPTS) {
+      console.log(`[OTP STORE] Too many attempts for ${email}`);
+      otpStore.delete(normalizedEmail);
+      return {
+        valid: false,
+        error: "Too many failed attempts. Please request a new code.",
+      };
+    }
+
     return {
       valid: false,
       error: `Invalid code. ${MAX_ATTEMPTS - data.attempts} attempts remaining.`,

@@ -1,10 +1,38 @@
 import { z } from "zod";
 import { publicProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
-import { homeBanners, homePromoCards } from "@my-better-t-app/db/schema/index";
+import { homeBanners, homePromoCards, platformSettings } from "@my-better-t-app/db/schema/index";
 import { eq, asc } from "drizzle-orm";
 
 export const homepageRouter = os.router({
+  getPublicSettings: publicProcedure
+    .route({
+      method: "GET",
+      path: "/homepage/settings",
+      operationId: "getPublicSettings",
+      summary: "Get Public Platform Settings",
+      description: "Returns public platform configuration like flash deal end times.",
+      tags: ["Homepage"],
+    })
+    .output(
+      z.object({
+        flashDealEndsAt: z.date().nullable(),
+      })
+    )
+    .handler(async () => {
+      const settings = await db
+        .select({
+          flashDealEndsAt: platformSettings.flashDealEndsAt,
+        })
+        .from(platformSettings)
+        .where(eq(platformSettings.id, "current"))
+        .limit(1);
+
+      return {
+        flashDealEndsAt: settings[0]?.flashDealEndsAt ?? null,
+      };
+    }),
+
   listBanners: publicProcedure
     .route({
       method: "GET",
