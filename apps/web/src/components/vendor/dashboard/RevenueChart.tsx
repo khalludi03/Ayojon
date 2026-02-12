@@ -36,58 +36,58 @@ export function RevenueChart() {
   const totalRevenue = data.reduce((sum, d) => sum + d.revenue, 0);
 
   return (
-    <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-8 shadow-sm transition-all hover:shadow-md">
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-[hsl(var(--primary))]">
-            <div className="h-2 w-2 rounded-full bg-current animate-pulse" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Live Analytics</span>
+    <div className="rounded-xl sm:rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-6 md:p-8 shadow-sm transition-all hover:shadow-md">
+      <div className="mb-4 sm:mb-6 md:mb-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 md:gap-6">
+        <div className="space-y-1 sm:space-y-1.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-[hsl(var(--primary))]">
+            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-current animate-pulse" />
+            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.15em] sm:tracking-[0.2em]">Live Analytics</span>
           </div>
-          <h3 className="text-2xl font-black text-[hsl(var(--foreground))] tracking-tight">
+          <h3 className="text-lg sm:text-xl md:text-2xl font-black text-[hsl(var(--foreground))] tracking-tight">
             Revenue Performance
           </h3>
         </div>
 
-        <div className="flex items-center gap-2 bg-[hsl(var(--muted))]/50 p-1 rounded-xl border border-[hsl(var(--border))]">
-          <button className="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors">14D</button>
-          <button className="px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[hsl(var(--card))] text-[hsl(var(--primary))] shadow-sm border border-[hsl(var(--border))]">30D</button>
+        <div className="flex items-center gap-1 sm:gap-2 bg-[hsl(var(--muted))]/50 p-0.5 sm:p-1 rounded-lg sm:rounded-xl border border-[hsl(var(--border))]">
+          <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors">14D</button>
+          <button className="px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-[hsl(var(--card))] text-[hsl(var(--primary))] shadow-sm border border-[hsl(var(--border))]">30D</button>
         </div>
       </div>
 
-      <div className="mb-10 grid grid-cols-1 sm:grid-cols-2 gap-8">
-        <div className="space-y-1">
-          <p className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest">Total Gross Revenue</p>
-          <div className="flex items-baseline gap-2">
+      <div className="mb-4 sm:mb-6 md:mb-10 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+        <div className="space-y-0.5 sm:space-y-1">
+          <p className="text-[9px] sm:text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest">Total Gross Revenue</p>
+          <div className="flex items-baseline gap-1 sm:gap-2">
             {isLoading ? (
-              <span className="inline-block h-9 w-32 bg-[hsl(var(--muted))] animate-pulse rounded" />
+              <span className="inline-block h-7 sm:h-9 w-24 sm:w-32 bg-[hsl(var(--muted))] animate-pulse rounded" />
             ) : (
-              <span className="text-3xl font-black text-[hsl(var(--foreground))] tracking-tighter">৳{totalRevenue.toLocaleString()}</span>
+              <span className="text-xl sm:text-2xl md:text-3xl font-black text-[hsl(var(--foreground))] tracking-tighter">৳{totalRevenue.toLocaleString()}</span>
             )}
           </div>
         </div>
-        <div className="space-y-1 sm:border-l sm:border-[hsl(var(--border))] sm:pl-8">
-          <p className="text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest">Average Daily</p>
-          <div className="flex items-baseline gap-2">
+        <div className="space-y-0.5 sm:space-y-1 sm:border-l sm:border-[hsl(var(--border))] sm:pl-4 md:pl-8">
+          <p className="text-[9px] sm:text-[10px] font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest">Average Daily</p>
+          <div className="flex items-baseline gap-1 sm:gap-2">
             {isLoading ? (
-              <span className="inline-block h-9 w-32 bg-[hsl(var(--muted))] animate-pulse rounded" />
+              <span className="inline-block h-7 sm:h-9 w-24 sm:w-32 bg-[hsl(var(--muted))] animate-pulse rounded" />
             ) : (
               <>
-                <span className="text-3xl font-black text-[hsl(var(--foreground))] tracking-tighter">৳{Math.floor(totalRevenue / (data.length || 1)).toLocaleString()}</span>
-                <span className="text-xs font-bold text-[hsl(var(--muted-foreground))]">/ day</span>
+                <span className="text-xl sm:text-2xl md:text-3xl font-black text-[hsl(var(--foreground))] tracking-tighter">৳{Math.floor(totalRevenue / (data.length || 1)).toLocaleString()}</span>
+                <span className="text-[10px] sm:text-xs font-bold text-[hsl(var(--muted-foreground))]">/ day</span>
               </>
             )}
           </div>
         </div>
       </div>
 
-      <div className="h-72 w-full min-h-[300px]">
+      <div className="h-48 sm:h-64 md:h-72 w-full">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="h-8 w-8 border-4 border-[hsl(var(--primary))] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%" minHeight={300} minWidth={0}>
-            <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={data} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />

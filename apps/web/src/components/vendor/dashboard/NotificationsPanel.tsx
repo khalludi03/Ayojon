@@ -74,14 +74,14 @@ export function NotificationsPanel() {
   const unreadCount = mockNotifications.filter((n) => n.unread).length;
 
   return (
-    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col h-full shadow-sm overflow-hidden transition-all hover:shadow-md">
-      <div className="p-6 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--muted))]/30">
-        <div className="flex items-center gap-2">
-          <h3 className="text-xl font-bold text-[hsl(var(--foreground))] tracking-tight">
+    <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] flex flex-col shadow-sm overflow-hidden transition-all hover:shadow-md">
+      <div className="p-4 sm:p-6 border-b border-[hsl(var(--border))] flex items-center justify-between bg-[hsl(var(--muted))]/30">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <h3 className="text-lg sm:text-xl font-bold text-[hsl(var(--foreground))] tracking-tight">
             Activity
           </h3>
           {unreadCount > 0 && (
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-[10px] font-black text-white">
+            <span className="flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded-full bg-[hsl(var(--primary))] text-[9px] sm:text-[10px] font-black text-white">
               {unreadCount}
             </span>
           )}
@@ -89,7 +89,7 @@ export function NotificationsPanel() {
         <button 
           onClick={() => markAllAsReadMutation.mutate({})}
           disabled={markAllAsReadMutation.isPending || mockNotifications.length === 0}
-          className="text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest hover:text-[hsl(var(--primary))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="text-[10px] sm:text-xs font-bold text-[hsl(var(--muted-foreground))] uppercase tracking-widest hover:text-[hsl(var(--primary))] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {markAllAsReadMutation.isPending ? 'Clearing...' : 'Clear'}
         </button>

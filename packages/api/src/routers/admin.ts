@@ -1194,9 +1194,10 @@ export const adminRouter = os.router({
           )
         );
 
+      // Admin revenue = subtotal (product prices only) after payment approval
       const [monthlyRevenue] = await db
         .select({ 
-          value: sql<string>`sum(${orders.total})` 
+          value: sql<string>`sum(${orders.subtotal})` 
         })
         .from(orders)
         .where(
@@ -1217,6 +1218,8 @@ export const adminRouter = os.router({
             )
           )
         );
+
+      console.log('[Admin Metrics] Monthly Revenue (subtotal only):', monthlyRevenue);
 
       const recentOrders = await db
         .select()

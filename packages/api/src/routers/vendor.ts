@@ -11,7 +11,8 @@ import {
   vendors, 
   orders, 
   products, 
-  orderItems 
+  orderItems,
+  platformSettings
 } from "@my-better-t-app/db/schema/index";
 import { eq, and, desc, sql, gte, inArray, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
@@ -96,6 +97,63 @@ export const vendorRouter = os.router({
         data,
         total: orderIds.length,
       };
+    }),
+
+  getOrderDetails: protectedProcedure
+    .route({
+      method: "GET",
+      path: "/orders/{orderId}",
+      operationId: "getVendorOrderDetails",
+      summary: "Get Vendor Order Details",
+      description: "Get detailed information about a specific order containing vendor's products.",
+      tags: ["Vendor"],
+    })
+    .input(z.object({
+      orderId: z.string(),
+    }))
+    .handler(async ({ input, context }) => {
+      const userId = context.session.user.id;
+
+      // 1. Get vendor profile
+      const [vendor] = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.userId, userId))
+        .limit(1);
+
+      if (!vendor) {
+        throw new ORPCError("FORBIDDEN", { message: "User is not a registered vendor" });
+      }
+
+      // 2. Verify order contains this vendor's items
+      const item = await db.query.orderItems.findFirst({
+        where: and(
+          eq(orderItems.orderId, input.orderId),
+          eq(orderItems.vendorId, vendor.id)
+        )
+      });
+
+      if (!item) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found or does not contain your products" });
+      }
+
+      // 3. Get the full order details with only this vendor's items
+      const order = await db.query.orders.findFirst({
+        where: eq(orders.id, input.orderId),
+        with: {
+          items: {
+            where: eq(orderItems.vendorId, vendor.id),
+          },
+          user: true,
+          payments: true,
+        }
+      });
+
+      if (!order) {
+        throw new ORPCError("NOT_FOUND", { message: "Order not found" });
+      }
+
+      return order;
     }),
 
   updateOrderStatus: protectedProcedure
@@ -482,7 +540,7 @@ export const vendorRouter = os.router({
 
       const vendorId = vendor.id;
 
-      // Get total revenue from vendor's items in delivered orders
+      // Get total revenue from vendor's items in delivered orders (after commission deduction)
       const vendorItems = await db
         .select({
           price: orderItems.price,
@@ -494,9 +552,34 @@ export const vendorRouter = os.router({
         .innerJoin(orders, eq(orderItems.orderId, orders.id))
         .where(eq(orderItems.vendorId, vendorId));
 
+      // Get platform commission rate
+      const settings = await db.query.platformSettings.findFirst({
+        where: eq(platformSettings.id, "current"),
+      });
+      const commissionRate = settings?.platformCommission ?? 10;
+
+      console.log('[Vendor Metrics] Commission Rate:', commissionRate);
+      console.log('[Vendor Metrics] Settings:', settings);
+
+      // Calculate vendor earnings (subtotal - commission) for delivered orders only
       const totalRevenue = vendorItems
         .filter(item => ["delivered", "vendor_paid", "cash_collected", "settlement_ready", "vendor_settled"].includes(item.status))
-        .reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+        .reduce((sum, item) => {
+          const itemTotal = parseFloat(item.price) * item.quantity;
+          const commissionAmount = (itemTotal * commissionRate) / 100;
+          const vendorAmount = itemTotal - commissionAmount;
+          console.log('[Vendor Metrics] Item:', {
+            price: item.price,
+            quantity: item.quantity,
+            status: item.status,
+            itemTotal,
+            commissionAmount,
+            vendorAmount
+          });
+          return sum + vendorAmount;
+        }, 0);
+
+      console.log('[Vendor Metrics] Total Revenue (after commission):', totalRevenue);
 
       // Orders this month
       const startOfMonth = new Date();
@@ -614,7 +697,15 @@ export const vendorRouter = os.router({
         revenueByDate.set(key, 0);
       }
 
-      // Add actual revenue
+      // Get platform commission rate
+      const settingsForChart = await db.query.platformSettings.findFirst({
+        where: eq(platformSettings.id, "current"),
+      });
+      const commissionRateForChart = settingsForChart?.platformCommission ?? 10;
+
+      console.log('[Vendor Chart] Commission Rate:', commissionRateForChart);
+
+      // Add actual revenue (vendor earnings after commission)
       recentItems.forEach((item) => {
         const date = new Date(item.createdAt);
         const key = date.toLocaleDateString("en-US", {
@@ -622,7 +713,17 @@ export const vendorRouter = os.router({
           day: "numeric",
         });
         const current = revenueByDate.get(key) || 0;
-        revenueByDate.set(key, current + (parseFloat(item.price) * item.quantity));
+        const itemTotal = parseFloat(item.price) * item.quantity;
+        const commissionAmount = (itemTotal * commissionRateForChart) / 100;
+        const vendorAmount = itemTotal - commissionAmount;
+        console.log('[Vendor Chart] Item:', {
+          date: key,
+          itemTotal,
+          commissionAmount,
+          vendorAmount,
+          status: item.status
+        });
+        revenueByDate.set(key, current + vendorAmount);
       });
 
       // Convert to array

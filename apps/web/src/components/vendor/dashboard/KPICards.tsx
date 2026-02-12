@@ -21,20 +21,20 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm transition-all duration-300',
+        'group relative overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-6 shadow-sm transition-all duration-300',
         clickable && 'cursor-pointer hover:border-[hsl(var(--primary))] hover:shadow-lg hover:-translate-y-1'
       )}
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
+        <div className="space-y-1.5 sm:space-y-2">
+          <p className="text-[10px] sm:text-sm font-semibold text-[hsl(var(--muted-foreground))] uppercase tracking-wider">
             {title}
           </p>
           <div className="flex items-baseline gap-1">
-            <h3 className="text-3xl font-extrabold text-[hsl(var(--foreground))] tracking-tight">
+            <h3 className="text-2xl sm:text-3xl font-extrabold text-[hsl(var(--foreground))] tracking-tight">
               {isLoading ? (
-                <span className="inline-block h-8 w-20 bg-[hsl(var(--muted))] animate-pulse rounded" />
+                <span className="inline-block h-6 sm:h-8 w-16 sm:w-20 bg-[hsl(var(--muted))] animate-pulse rounded" />
               ) : (
                 value
               )}
@@ -42,7 +42,7 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
           </div>
 
           {trend && !isLoading && (
-            <div className="flex items-center gap-1.5 pt-1">
+            <div className="flex items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
               <div className={cn(
                 "flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold",
                 trend.isPositive
@@ -60,10 +60,10 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
         </div>
 
         <div className={cn(
-          "rounded-2xl p-3 transition-colors duration-300",
+          "rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-colors duration-300",
           color ? color : "bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
         )}>
-          <Icon className="h-6 w-6" />
+          <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </div>
 
@@ -80,7 +80,7 @@ export function KPICards() {
   } as any);
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-3">
       <KPICard
         title="Total Revenue"
         value={stats ? `৳${parseFloat(stats.totalRevenue).toLocaleString()}` : '৳0'}
