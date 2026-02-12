@@ -8,12 +8,15 @@ import {
   orders,
   orderItems,
   products,
+  vendors,
+  user,
   type VoteType
 } from "@my-better-t-app/db/schema/index";
 import { eq, and, desc, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
 import { updateVendorScore } from "../services/vendor-service";
+import * as notificationService from "../services/notification-service";
 
 // =============================================================================
 // HELPERS
@@ -91,6 +94,9 @@ export const reviewRouter = os.router({
         }
 
         const reviewId = nanoid();
+        let vendorUserId: string | undefined;
+        let productTitle: string | undefined;
+        let reviewerName: string | undefined;
 
         await db.transaction(async (tx) => {
           // 3. Create the review
@@ -136,14 +142,47 @@ export const reviewRouter = os.router({
               updatedAt: new Date(),
             })
             .where(eq(products.id, productId))
-            .returning({ vendorId: products.vendorId });
+            .returning({ vendorId: products.vendorId, title: products.title });
 
           // 6. Update Vendor Score
           const vendorId = updatedProducts[0]?.vendorId;
+          productTitle = updatedProducts[0]?.title;
           if (vendorId) {
             await updateVendorScore(vendorId, tx);
+            
+            // Get vendor's userId for notification
+            const [vendor] = await tx
+              .select({ userId: vendors.userId })
+              .from(vendors)
+              .where(eq(vendors.id, vendorId))
+              .limit(1);
+            vendorUserId = vendor?.userId;
           }
+
+          // Get reviewer's name
+          const [reviewer] = await tx
+            .select({ name: user.name })
+            .from(user)
+            .where(eq(user.id, userId))
+            .limit(1);
+          reviewerName = reviewer?.name || "A customer";
         });
+
+        // Send notification after transaction commits
+        if (vendorUserId && productTitle) {
+          try {
+            await notificationService.notifyProductReview(
+              vendorUserId,
+              productId,
+              productTitle,
+              rating,
+              reviewerName || "A customer"
+            );
+          } catch (error) {
+            // Log error but don't fail the review creation
+            console.error("Failed to send review notification:", error);
+          }
+        }
 
         return { id: reviewId };
       } catch (error) {

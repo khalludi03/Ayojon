@@ -15,6 +15,7 @@ import {
 import { eq, and, desc, sql, asc, gte, lte, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
+import * as notificationService from "../services/notification-service";
 
 // =============================================================================
 // HELPERS
@@ -647,6 +648,28 @@ export const productRouter = os.router({
     )
     .handler(async ({ input, context }) => {
       const vendorId = await getVendorId(context.session.user.id);
+      const vendorUserId = context.session.user.id;
+
+      // Get existing product to check stock levels
+      const existingProduct = await db
+        .select()
+        .from(products)
+        .where(
+          and(
+            eq(products.id, input.id),
+            eq(products.vendorId, vendorId)
+          )
+        )
+        .limit(1);
+
+      if (existingProduct.length === 0) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Product not found or unauthorized",
+        });
+      }
+
+      const oldStock = existingProduct[0].stock;
+      const oldProduct = existingProduct[0];
 
       // Prepare update data
       const updateData: any = {
@@ -656,25 +679,7 @@ export const productRouter = os.router({
 
       // If keyFeatures is provided, update the content field
       if (input.keyFeatures !== undefined) {
-        // First get the existing product to merge content
-        const existingProduct = await db
-          .select()
-          .from(products)
-          .where(
-            and(
-              eq(products.id, input.id),
-              eq(products.vendorId, vendorId)
-            )
-          )
-          .limit(1);
-
-        if (existingProduct.length === 0) {
-          throw new ORPCError("NOT_FOUND", {
-            message: "Product not found or unauthorized",
-          });
-        }
-
-        const existingContent = (existingProduct[0].content as any) || {};
+        const existingContent = (oldProduct.content as any) || {};
         updateData.content = {
           ...existingContent,
           keyFeatures: input.keyFeatures,
@@ -699,7 +704,34 @@ export const productRouter = os.router({
         });
       }
 
-      return result[0];
+      const updatedProduct = result[0];
+
+      // Check stock levels and send notifications if needed
+      if (input.stock !== undefined && input.stock !== oldStock) {
+        const newStock = input.stock;
+        const lowStockThreshold = 5;
+
+        // Out of stock notification
+        if (newStock === 0 && oldStock > 0) {
+          await notificationService.notifyOutOfStock(
+            vendorUserId,
+            updatedProduct.id,
+            updatedProduct.title
+          );
+        }
+        // Low stock notification
+        else if (newStock > 0 && newStock <= lowStockThreshold && (oldStock > lowStockThreshold || oldStock === 0)) {
+          await notificationService.notifyLowStock(
+            vendorUserId,
+            updatedProduct.id,
+            updatedProduct.title,
+            newStock,
+            lowStockThreshold
+          );
+        }
+      }
+
+      return updatedProduct;
     }),
 
   deleteProduct: protectedProcedure

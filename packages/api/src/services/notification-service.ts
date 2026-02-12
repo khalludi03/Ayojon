@@ -227,3 +227,107 @@ export async function deleteNotification(notificationId: string, userId: string)
 
   return true;
 }
+
+/**
+ * Delete all notifications for a user
+ */
+export async function deleteAllNotifications(userId: string) {
+  await db
+    .delete(notifications)
+    .where(eq(notifications.userId, userId));
+
+  return true;
+}
+
+/**
+ * Notify vendor about low stock
+ */
+export async function notifyLowStock(
+  vendorUserId: string,
+  productId: string,
+  productTitle: string,
+  currentStock: number,
+  threshold: number
+) {
+  return createNotification({
+    userId: vendorUserId,
+    type: "low_stock_alert",
+    title: "Low Stock Alert",
+    message: `Product "${productTitle}" is running low on stock (${currentStock} remaining). Consider restocking soon.`,
+    metadata: { productId, productTitle, currentStock, threshold },
+  });
+}
+
+/**
+ * Notify vendor about out of stock
+ */
+export async function notifyOutOfStock(
+  vendorUserId: string,
+  productId: string,
+  productTitle: string
+) {
+  return createNotification({
+    userId: vendorUserId,
+    type: "out_of_stock_alert",
+    title: "Out of Stock Alert",
+    message: `Product "${productTitle}" is now out of stock. Update inventory to continue selling.`,
+    metadata: { productId, productTitle },
+  });
+}
+
+/**
+ * Notify vendor about return request
+ */
+export async function notifyReturnRequest(
+  vendorUserId: string,
+  orderId: string,
+  orderNumber: string,
+  reason: string
+) {
+  return createNotification({
+    userId: vendorUserId,
+    type: "return_request",
+    title: "Return Request Received",
+    message: `Customer has requested a return for order #${orderNumber}. Reason: ${reason}`,
+    orderId,
+    metadata: { orderNumber, reason },
+  });
+}
+
+/**
+ * Notify vendor about payout processed
+ */
+export async function notifyPayoutProcessed(
+  vendorUserId: string,
+  payoutId: string,
+  amount: string,
+  orderId?: string
+) {
+  return createNotification({
+    userId: vendorUserId,
+    type: "payout_processed",
+    title: "Payout Processed",
+    message: `Your payout of ৳${amount} has been processed successfully.`,
+    orderId,
+    metadata: { payoutId, amount },
+  });
+}
+
+/**
+ * Notify vendor about new product review
+ */
+export async function notifyProductReview(
+  vendorUserId: string,
+  productId: string,
+  productTitle: string,
+  rating: number,
+  reviewerName: string
+) {
+  return createNotification({
+    userId: vendorUserId,
+    type: "product_review",
+    title: "New Product Review",
+    message: `${reviewerName} left a ${rating}-star review for "${productTitle}".`,
+    metadata: { productId, productTitle, rating, reviewerName },
+  });
+}
