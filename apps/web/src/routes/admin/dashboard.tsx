@@ -18,6 +18,27 @@ import { orpc } from '@/utils/orpc';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
+// Status badge configuration matching orders page
+const getStatusBadgeConfig = (status: string) => {
+  const statusConfig: Record<string, { label: string; color: string }> = {
+    payment_received: { label: 'Payment Received', color: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
+    payment_rejected: { label: 'Payment Rejected', color: 'bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 border-rose-300 dark:border-rose-800' },
+    placed: { label: 'Order Placed', color: 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-400 border-sky-300 dark:border-sky-800' },
+    confirmed: { label: 'Confirmed', color: 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-700 dark:text-indigo-400 border-indigo-300 dark:border-indigo-800' },
+    pending: { label: 'Pending', color: 'bg-yellow-50 dark:bg-yellow-950/30 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-800' },
+    processing: { label: 'Processing', color: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-800' },
+    shipped: { label: 'Shipped', color: 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-400 border-purple-300 dark:border-purple-800' },
+    delivered: { label: 'Delivered', color: 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-800' },
+    cash_collected: { label: 'Cash Collected', color: 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800' },
+    settlement_ready: { label: 'Settlement Ready', color: 'bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-400 border-cyan-300 dark:border-cyan-800' },
+    vendor_paid: { label: 'Vendor Paid', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800' },
+    vendor_settled: { label: 'Vendor Settled', color: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border-green-300 dark:border-green-800' },
+    cancelled: { label: 'Cancelled', color: 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-800' },
+  };
+  
+  return statusConfig[status] || { label: status, color: 'bg-slate-50 dark:bg-slate-950/30 text-slate-700 dark:text-slate-400 border-slate-300 dark:border-slate-800' };
+};
+
 export const Route = createFileRoute('/admin/dashboard' as any)({
   beforeLoad: async () => {
     const session = await getUser();
@@ -126,8 +147,11 @@ function AdminDashboardPage() {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-sm font-black text-slate-900 dark:text-white">৳{parseFloat(order.total).toLocaleString()}</span>
-                    <div className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-700 border border-amber-200">
-                      {order.status}
+                    <div className={cn(
+                      "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border",
+                      getStatusBadgeConfig(order.status).color
+                    )}>
+                      {getStatusBadgeConfig(order.status).label}
                     </div>
                   </div>
                 </div>

@@ -8,7 +8,6 @@ export const homepageRouter = os.router({
   getPublicSettings: publicProcedure
     .route({
       method: "GET",
-      path: "/homepage/settings",
       operationId: "getPublicSettings",
       summary: "Get Public Platform Settings",
       description: "Returns public platform configuration like flash deal end times.",
@@ -36,7 +35,6 @@ export const homepageRouter = os.router({
   listBanners: publicProcedure
     .route({
       method: "GET",
-      path: "/homepage/banners",
       operationId: "listBanners",
       summary: "List Homepage Banners",
       description: "Returns all active homepage banner slides ordered by sort order.",
@@ -78,7 +76,6 @@ export const homepageRouter = os.router({
   listPromoCards: publicProcedure
     .route({
       method: "GET",
-      path: "/homepage/promo-cards",
       operationId: "listPromoCards",
       summary: "List Homepage Promo Cards",
       description: "Returns all active homepage promotional cards ordered by slot number.",
