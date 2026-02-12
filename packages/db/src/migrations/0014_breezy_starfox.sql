@@ -1,0 +1,1 @@
+ALTER TABLE "rate_limit" ALTER COLUMN "count" SET DATA TYPE integer;
