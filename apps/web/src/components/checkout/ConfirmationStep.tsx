@@ -3,15 +3,12 @@ import { Button } from "@/components/ui/button";
 import { 
   CheckCircle2, 
   Package, 
-  Calendar, 
   Mail, 
   Phone, 
   MapPin, 
   ArrowRight, 
   Home, 
   Building2, 
-  Zap, 
-  Clock,
   Smartphone,
   Info,
   ExternalLink,
@@ -35,7 +32,6 @@ interface ConfirmationStepProps {
       addressType: 'home' | 'office';
     };
     scheduling: {
-      deliveryMethod: string;
     };
     payment: {
       paymentMethod: string;
@@ -47,65 +43,6 @@ interface ConfirmationStepProps {
 export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
   const isBkash = orderDetails.payment.paymentMethod === 'bkash';
   const hasPaid = !!orderDetails.payment.transactionId;
-
-  const getDeliveryMethodDetails = (method: string) => {
-    switch (method) {
-      case 'standard':
-        return {
-          name: 'Standard Delivery',
-          duration: '3-5 Business Days',
-          icon: Package,
-          iconColor: 'from-blue-500 to-blue-600',
-        };
-      case 'express':
-        return {
-          name: 'Express Delivery',
-          duration: '1-2 Business Days',
-          icon: Zap,
-          iconColor: 'from-orange-500 to-red-500',
-        };
-      case 'same-day':
-        return {
-          name: 'Same-Day Delivery',
-          duration: 'Today',
-          icon: Clock,
-          iconColor: 'from-purple-500 to-pink-500',
-        };
-      default:
-        return {
-          name: 'Standard Delivery',
-          duration: '3-5 Business Days',
-          icon: Package,
-          iconColor: 'from-blue-500 to-blue-600',
-        };
-    }
-  };
-
-  const getEstimatedDeliveryDate = (method: string) => {
-    const today = new Date();
-    let minDays = 3;
-    let maxDays = 5;
-
-    if (method === 'express') {
-      minDays = 1;
-      maxDays = 2;
-    } else if (method === 'same-day') {
-      return 'Today';
-    }
-
-    const minDate = new Date(today);
-    const maxDate = new Date(today);
-    minDate.setDate(today.getDate() + minDays);
-    maxDate.setDate(today.getDate() + maxDays);
-
-    return `${minDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })} - ${maxDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })}`;
-  };
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
@@ -290,40 +227,8 @@ export function ConfirmationStep({ orderDetails }: ConfirmationStepProps) {
           </div>
         </div>
 
-        {/* Delivery Schedule & Payment */}
+        {/* Payment Method */}
         <div className="space-y-6">
-          {/* Delivery Method */}
-          <div className="group rounded-xl border-2 border-[hsl(var(--border))] bg-gradient-to-br from-[hsl(var(--card))] to-[hsl(var(--card))]/80 p-6 shadow-sm transition-all hover:border-[hsl(var(--primary))]/50 hover:shadow-md">
-            <div className="mb-5 flex items-center gap-3">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br shadow-md ${getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).iconColor}`}>
-                {(() => {
-                  const Icon = getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).icon;
-                  return <Icon className="h-5 w-5 text-white" strokeWidth={2.5} />;
-                })()}
-              </div>
-              <h3 className="text-lg font-bold text-[hsl(var(--foreground))]">
-                Delivery Method
-              </h3>
-            </div>
-            <div className="space-y-3">
-              <div className="rounded-lg bg-gradient-to-br from-blue-50/50 to-indigo-50/50 p-4 dark:from-blue-950/20 dark:to-indigo-950/20">
-                <p className="text-lg font-bold text-[hsl(var(--foreground))]">
-                  {getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).name}
-                </p>
-                <p className="text-sm font-medium text-[hsl(var(--muted-foreground))]">
-                  {getDeliveryMethodDetails(orderDetails.scheduling.deliveryMethod).duration}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 rounded-lg bg-[hsl(var(--muted))]/30 px-3 py-2">
-                <Calendar className="h-4 w-4 text-[hsl(var(--primary))]" />
-                <span className="text-sm font-medium text-[hsl(var(--foreground))]">
-                  Expected: {getEstimatedDeliveryDate(orderDetails.scheduling.deliveryMethod)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Method */}
           <div className="group rounded-xl border-2 border-[hsl(var(--border))] bg-gradient-to-br from-[hsl(var(--card))] to-[hsl(var(--card))]/80 p-6 shadow-sm transition-all hover:border-[hsl(var(--primary))]/50 hover:shadow-md">
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-emerald-500 shadow-md">

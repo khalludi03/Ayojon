@@ -3,6 +3,7 @@ import { protectedProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
 import * as orderService from "../services/order-service";
 import * as payoutService from "../services/payout-service";
+import * as notificationService from "../services/notification-service";
 import { OrderActions } from "../services/order-state-machine";
 import { 
   vendorApplications, 
@@ -15,6 +16,21 @@ import {
 import { eq, and, desc, sql, gte, inArray, or } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
+
+// Helper function to format time ago
+function formatTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
 
 export const vendorRouter = os.router({
   getOrders: protectedProcedure
@@ -723,10 +739,66 @@ export const vendorRouter = os.router({
         })
       )
     )
-    .handler(async () => {
-      // TODO: Implement notifications table and logic
-      // For now, return empty array
-      return [];
+    .handler(async ({ context }) => {
+      const userId = context.session.user.id;
+
+      // Get notifications from database
+      const notifications = await notificationService.getUserNotifications(userId, 10, 0);
+
+      // Map database notifications to the frontend format
+      return notifications.map((notification) => {
+        // Map notification types to frontend types
+        let type: "order" | "return" | "stock" = "order";
+        if (notification.type === "return_request") {
+          type = "return";
+        } else if (notification.type === "low_stock_alert" || notification.type === "out_of_stock_alert") {
+          type = "stock";
+        } else if (notification.type === "new_order" || notification.type === "order_status_updated") {
+          type = "order";
+        }
+
+        // Format time relative to now
+        const timeAgo = formatTimeAgo(notification.createdAt);
+
+        return {
+          id: notification.id,
+          type,
+          title: notification.title,
+          description: notification.message,
+          time: timeAgo,
+          unread: !notification.isRead,
+        };
+      });
+    }),
+
+  getNotificationsUnreadCount: protectedProcedure
+    .route({
+      operationId: "getVendorNotificationsUnreadCount",
+      summary: "Get Vendor Unread Notifications Count",
+      description: "Get the count of unread notifications for the vendor.",
+      tags: ["Vendor"],
+    })
+    .output(z.object({ count: z.number() }))
+    .handler(async ({ context }) => {
+      const userId = context.session.user.id;
+      const count = await notificationService.getUnreadCount(userId);
+      return { count };
+    }),
+
+  markAllNotificationsAsRead: protectedProcedure
+    .route({
+      method: "POST",
+      operationId: "markAllVendorNotificationsAsRead",
+      summary: "Clear All Notifications",
+      description: "Delete all vendor notifications.",
+      tags: ["Vendor"],
+    })
+    .input(z.object({}))
+    .output(z.object({ success: z.boolean() }))
+    .handler(async ({ context }) => {
+      const userId = context.session.user.id;
+      await notificationService.deleteAllNotifications(userId);
+      return { success: true };
     }),
 
   // ====================================================================

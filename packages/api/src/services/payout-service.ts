@@ -1,9 +1,10 @@
 import { db } from "@my-better-t-app/db";
-import { orders, orderItems, vendorPayouts, platformSettings, type PayoutStatus } from "@my-better-t-app/db/schema/index";
+import { orders, orderItems, vendorPayouts, platformSettings, vendors, type PayoutStatus } from "@my-better-t-app/db/schema/index";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { calculateVendorPayout } from "./order-service";
 import { OrderActions } from "./order-state-machine";
+import * as notificationService from "./notification-service";
 
 /**
  * Payout Service
@@ -150,7 +151,7 @@ export async function processPayout(
   },
   notes?: string
 ): Promise<{ success: boolean; payout?: typeof vendorPayouts.$inferSelect; error?: string }> {
-  return await db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     // 1. Get payout record
     const [payout] = await tx
       .select()
@@ -225,8 +226,34 @@ export async function processPayout(
         .where(eq(orders.id, payout.orderId));
     }
 
-    return { success: true, payout: updatedPayout! };
+    return { success: true, payout: updatedPayout!, orderId: order.id };
   });
+
+  // Send notification after transaction commits successfully
+  if (result.success && result.payout) {
+    try {
+      // Get vendor's userId
+      const [vendor] = await db
+        .select({ userId: vendors.userId })
+        .from(vendors)
+        .where(eq(vendors.id, result.payout.vendorId))
+        .limit(1);
+
+      if (vendor) {
+        await notificationService.notifyPayoutProcessed(
+          vendor.userId,
+          result.payout.id,
+          parseFloat(result.payout.amount),
+          result.orderId as string
+        );
+      }
+    } catch (error) {
+      // Log error but don't fail the payout
+      console.error("Failed to send payout notification:", error);
+    }
+  }
+
+  return result;
 }
 
 /**
