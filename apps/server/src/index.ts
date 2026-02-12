@@ -17,11 +17,53 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { z } from "zod";
+import { rateLimiter, getClientIp } from "./middleware/rate-limit";
+import { customLogger } from "./middleware/logger";
+import * as Sentry from "@sentry/node";
+
+// Initialize Sentry
+if (env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: env.SENTRY_DSN,
+    environment: env.NODE_ENV,
+    tracesSampleRate: 1.0,
+  });
+}
+
 const app = new Hono();
 
-app.use(logger());
+app.use(customLogger);
+
+// Rate limiters
+const authLimiter = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 attempts per 15 mins per IP
+  keyGenerator: (c) => `auth:${getClientIp(c)}`,
+  message: "Too many authentication attempts. Please try again later.",
+});
+
+const otpLimiter = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 OTP requests per 15 mins
+  keyGenerator: async (c) => {
+    try {
+      const cloned = c.req.raw.clone();
+      const body = (await cloned.json()) as { email?: string };
+      if (body.email) return `otp:${body.email.toLowerCase()}`;
+    } catch (e) {
+      // Fallback to IP if body can't be parsed
+    }
+    return `otp:${getClientIp(c)}`;
+  },
+  message: "Too many OTP requests. Please try again later.",
+});
 
 app.onError((err, c) => {
+  // Capture exception in Sentry
+  if (env.SENTRY_DSN) {
+    Sentry.captureException(err);
+  }
+
   // Always log full error details server-side for debugging
   console.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
 
@@ -46,7 +88,7 @@ app.use(
 );
 
 // Custom email change OTP endpoints
-app.post("/api/email-change/send-otp", async (c) => {
+app.post("/api/email-change/send-otp", otpLimiter, async (c) => {
   try {
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
@@ -81,17 +123,8 @@ app.post("/api/email-change/send-otp", async (c) => {
     // Generate OTP
     const otp = generateOTP();
 
-    // Store OTP with rate limiting
-    const storeResult = storeOTP(email, otp);
-    if (!storeResult.success) {
-      return c.json(
-        {
-          error: storeResult.error || "Too many OTP requests. Please try again later.",
-          retryAfterSeconds: storeResult.retryAfterSeconds,
-        },
-        429,
-      );
-    }
+    // Store OTP (Rate limiting now handled by middleware)
+    storeOTP(email, otp);
 
     // Send email
     await sendOTPEmail({
@@ -115,7 +148,7 @@ app.post("/api/email-change/send-otp", async (c) => {
 });
 
 // Signup OTP endpoints
-app.post("/api/signup/send-otp", async (c) => {
+app.post("/api/signup/send-otp", otpLimiter, async (c) => {
   try {
     const body = await c.req.json();
     const { email } = body;
@@ -143,17 +176,8 @@ app.post("/api/signup/send-otp", async (c) => {
     // Generate OTP
     const otp = generateOTP();
 
-    // Store OTP with rate limiting
-    const storeResult = storeOTP(email, otp);
-    if (!storeResult.success) {
-      return c.json(
-        {
-          error: storeResult.error || "Too many OTP requests. Please try again later.",
-          retryAfterSeconds: storeResult.retryAfterSeconds,
-        },
-        429,
-      );
-    }
+    // Store OTP (Rate limiting now handled by middleware)
+    storeOTP(email, otp);
 
     // Send email
     await sendOTPEmail({
@@ -379,7 +403,7 @@ app.post("/api/email-change/verify-otp", async (c) => {
   }
 });
 
-app.on(["POST", "GET"], "/api/auth/*", async (c) => {
+app.on(["POST", "GET"], "/api/auth/*", authLimiter, async (c) => {
   const response = await auth.handler(c.req.raw);
 
   // Clone the response to add CORS headers

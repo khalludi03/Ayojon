@@ -9,14 +9,11 @@ interface OTPData {
 }
 
 const otpStore = new Map<string, OTPData>();
-const otpRequestStore = new Map<string, number[]>();
 
 // Note: These mirror the better-auth emailOTP plugin defaults used for sign-in,
 // but this store is for the custom email-change flow which bypasses the plugin.
 const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
 const MAX_ATTEMPTS = 3;
-const OTP_REQUEST_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_OTP_REQUESTS_PER_WINDOW = 3;
 
 const assertNotProduction = () => {
   if (process.env.NODE_ENV === "production") {
@@ -31,31 +28,9 @@ export function storeOTP(
   otp: string,
 ): {
   success: boolean;
-  error?: string;
-  retryAfterSeconds?: number;
 } {
   assertNotProduction();
   console.log(`[OTP STORE] Storing OTP for ${email}`);
-
-  const normalizedEmail = email.toLowerCase();
-  const now = Date.now();
-  const requestTimestamps = otpRequestStore.get(normalizedEmail) ?? [];
-  const recentTimestamps = requestTimestamps.filter(
-    (timestamp) => now - timestamp < OTP_REQUEST_WINDOW_MS,
-  );
-
-  if (recentTimestamps.length >= MAX_OTP_REQUESTS_PER_WINDOW) {
-    const oldestTimestamp = recentTimestamps[0];
-    const retryAfterMs = OTP_REQUEST_WINDOW_MS - (now - oldestTimestamp);
-    return {
-      success: false,
-      error: "Too many OTP requests. Please try again later.",
-      retryAfterSeconds: Math.ceil(retryAfterMs / 1000),
-    };
-  }
-
-  recentTimestamps.push(now);
-  otpRequestStore.set(normalizedEmail, recentTimestamps);
 
   otpStore.set(email.toLowerCase(), {
     otp,
