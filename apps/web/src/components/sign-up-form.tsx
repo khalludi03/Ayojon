@@ -11,6 +11,15 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { env } from "@my-better-t-app/env/web";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 
 // Password strength indicator (copied from reset-password-form)
 function PasswordStrength({ password }: { password: string }) {
@@ -56,6 +65,11 @@ export default function SignUpForm({ onSwitchToSignIn, onSuccess }: {
 }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showOTPDialog, setShowOTPDialog] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+  const [signupData, setSignupData] = useState({ email: "", password: "", name: "" });
+
   const navigate = useNavigate({
     from: "/",
   });
@@ -68,31 +82,34 @@ export default function SignUpForm({ onSwitchToSignIn, onSuccess }: {
       name: "",
     },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
+      try {
+        // First, send OTP
+        const response = await fetch(`${env.VITE_SERVER_URL}/api/signup/send-otp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: value.email }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to send verification code");
+        }
+
+        // Store signup data for later use
+        setSignupData({
           email: value.email,
           password: value.password,
           name: value.name,
-        },
-        {
-          onSuccess: () => {
-            if (onSuccess) {
-              // If custom onSuccess is provided, use it instead of navigation
-              onSuccess();
-              toast.success("Sign up successful");
-            } else {
-              // Default navigation behavior
-              navigate({
-                to: "/",
-              });
-              toast.success("Sign up successful");
-            }
-          },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
-          },
-        },
-      );
+        });
+        
+        setShowOTPDialog(true);
+        toast.success(`Verification code sent to ${value.email}`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to start sign up");
+      }
     },
     validators: {
       onSubmit: z
@@ -114,6 +131,93 @@ export default function SignUpForm({ onSwitchToSignIn, onSuccess }: {
         }),
     },
   });
+
+  const handleVerifyOTP = async () => {
+    if (otp.length !== 6) {
+      toast.error("Please enter a 6-digit code");
+      return;
+    }
+
+    setIsVerifyingOTP(true);
+    try {
+      const response = await fetch(`${env.VITE_SERVER_URL}/api/signup/verify-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: signupData.email,
+          otp,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // If it was the 3rd attempt, the server returns a specific error
+        if (result.error?.includes("Too many failed attempts")) {
+          setShowOTPDialog(false);
+          setOtp("");
+          toast.error("Account creation unsuccessful: Too many failed OTP attempts. Please try signing up again.");
+          return;
+        }
+        throw new Error(result.error || "Invalid verification code");
+      }
+
+      // OTP verified, now create the account
+      await authClient.signUp.email(
+        {
+          email: signupData.email,
+          password: signupData.password,
+          name: signupData.name,
+        },
+        {
+          onSuccess: () => {
+            setShowOTPDialog(false);
+            if (onSuccess) {
+              onSuccess();
+              toast.success("Sign up successful");
+            } else {
+              navigate({
+                to: "/",
+              });
+              toast.success("Sign up successful");
+            }
+          },
+          onError: (error) => {
+            toast.error(error.error.message || error.error.statusText);
+          },
+        },
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to verify code");
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      const response = await fetch(`${env.VITE_SERVER_URL}/api/signup/send-otp`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: signupData.email }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to resend code");
+      }
+
+      toast.success(`Verification code resent to ${signupData.email}`);
+      setOtp("");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to resend code");
+    }
+  };
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -315,6 +419,73 @@ export default function SignUpForm({ onSwitchToSignIn, onSuccess }: {
           Already have an account? Sign In
         </Button>
       </div>
+
+      {/* OTP Verification Dialog */}
+      <Dialog
+        open={showOTPDialog}
+        onOpenChange={(open) => {
+          if (!open && !isVerifyingOTP) {
+            setShowOTPDialog(false);
+            setOtp("");
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Verify Your Email</DialogTitle>
+            <DialogDescription>
+              We've sent a 6-digit verification code to <strong>{signupData.email}</strong>.
+              Please enter it below to complete your registration.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="otp">Verification Code</Label>
+              <Input
+                id="otp"
+                placeholder="Enter 6-digit code"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                maxLength={6}
+                className="text-center text-lg tracking-widest"
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                The code will expire in 5 minutes
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={handleResendOTP}
+              disabled={isVerifyingOTP}
+            >
+              Resend Code
+            </Button>
+            <div className="flex gap-2 flex-1">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowOTPDialog(false);
+                  setOtp("");
+                }}
+                disabled={isVerifyingOTP}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleVerifyOTP}
+                disabled={isVerifyingOTP || otp.length !== 6}
+                className="flex-1"
+              >
+                {isVerifyingOTP ? "Verifying..." : "Verify"}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -114,6 +114,90 @@ app.post("/api/email-change/send-otp", async (c) => {
   }
 });
 
+// Signup OTP endpoints
+app.post("/api/signup/send-otp", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email } = body;
+
+    if (!email) {
+      return c.json({ error: "Email is required" }, 400);
+    }
+
+    const emailValidation = z.string().email().safeParse(email);
+    if (!emailValidation.success) {
+      return c.json({ error: "Invalid email format" }, 400);
+    }
+
+    // Check if user already exists
+    const existingUser = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.email, email))
+      .limit(1);
+
+    if (existingUser.length > 0) {
+      return c.json({ error: "Email is already in use" }, 409);
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Store OTP with rate limiting
+    const storeResult = storeOTP(email, otp);
+    if (!storeResult.success) {
+      return c.json(
+        {
+          error: storeResult.error || "Too many OTP requests. Please try again later.",
+          retryAfterSeconds: storeResult.retryAfterSeconds,
+        },
+        429,
+      );
+    }
+
+    // Send email
+    await sendOTPEmail({
+      to: email,
+      otp,
+      type: "email-verification",
+    });
+
+    return c.json({
+      success: true,
+      // Only include OTP in development for testing
+      ...(process.env.NODE_ENV !== 'production' && { otp })
+    });
+  } catch (error) {
+    console.error("Error sending signup OTP:", error);
+    return c.json(
+      { error: "Failed to send verification code" },
+      500
+    );
+  }
+});
+
+app.post("/api/signup/verify-otp", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { email, otp } = body;
+
+    if (!email || !otp) {
+      return c.json({ error: "Email and OTP are required" }, 400);
+    }
+
+    const result = verifyOTP(email, otp);
+
+    if (!result.valid) {
+      return c.json({ error: result.error }, 400);
+    }
+
+    return c.json({ success: true });
+  } catch (error) {
+    console.error("Error verifying signup OTP:", error);
+    return c.json({ error: "Failed to verify code" }, 500);
+  }
+});
+
 // Deactivate account endpoint
 app.post("/api/account/deactivate", async (c) => {
   try {
