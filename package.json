@@ -27,6 +27,8 @@
     "db:studio": "bun run --filter @my-better-t-app/db db:studio",
     "db:generate": "bun run --filter @my-better-t-app/db db:generate",
     "db:migrate": "bun run --filter @my-better-t-app/db db:migrate",
+    "db:seed": "bun run packages/db/src/seed.ts",
+    "db:seed:production": "bun run packages/db/src/seed-production.ts",
     "check:emails": "bun scripts/check-email-mismatch.ts",
     "fix:emails": "bun scripts/fix-email-accounts.ts",
     "verify:db": "bun scripts/verify-db-state.ts",

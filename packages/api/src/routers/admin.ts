@@ -16,7 +16,9 @@ import {
   categories,
   vendorApplications,
   homeBanners,
-  homePromoCards
+  homePromoCards,
+  type VendorLocation,
+  type OrderStatus
 } from "@my-better-t-app/db/schema/index";
 import { count, eq, gte, sql, or, ilike, and, desc, notInArray , asc} from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
@@ -412,7 +414,7 @@ export const adminRouter = os.router({
               }
 
               // Extract division from address for location field if possible
-              let location: any = "Dhaka";
+              let location: VendorLocation = "Dhaka";
               try {
                 if (app.businessAddress.startsWith("{")) {
                   const addr = JSON.parse(app.businessAddress);
@@ -721,8 +723,8 @@ export const adminRouter = os.router({
           .update(user)
           .set({
             role: "customer",
-            vendorStatus: "none"
-          } as any)
+            vendorStatus: "none" as const
+          })
           .where(eq(user.id, vendor.userId));
 
         // Delete vendor record
@@ -1047,7 +1049,7 @@ export const adminRouter = os.router({
     )
     .handler(async ({ input }) => {
       const conditions = [];
-      if (input.status) conditions.push(eq(orders.status, input.status));
+      if (input.status) conditions.push(eq(orders.status, input.status as OrderStatus));
       if (input.search) {
         conditions.push(or(
           ilike(user.name, `%${input.search}%`),

@@ -138,7 +138,54 @@ bun run dev
 | `bun run db:generate` | Generate Drizzle migrations |
 | `bun run db:migrate` | Run pending migrations |
 | `bun run db:studio` | Open Drizzle Studio (database GUI) |
+| `bun run db:seed` | Run basic seed script |
+| `bun run db:seed:production` | Run production seed with S3 image uploads |
 | `bun run prepare` | Initialize Husky git hooks |
+
+---
+
+## Database Seeding
+
+### Production Seed Script
+
+The production seed script populates the database with realistic Bangladesh market data and uploads images to your S3 bucket.
+
+```bash
+bun run db:seed:production
+# Or directly:
+bun run packages/db/src/seed-production.ts
+```
+
+**What it creates:**
+
+| Data | Count | Description |
+|------|-------|-------------|
+| Categories | 10 | Event categories (Decorations, Sound & Lighting, Furniture, etc.) |
+| Subcategories | 61 | Detailed subcategories per category |
+| Event Types | 10 | Wedding, Birthday, Corporate, Anniversary, etc. |
+| Vendors | 15 | Realistic Bangladesh vendors (Dhaka, Chittagong, Sylhet, etc.) |
+| Products | 41 | With BDT pricing, variants, and images |
+| Reviews | 100+ | Verified purchase reviews |
+| Home Banners | 4 | Hero carousel slides |
+| Promo Cards | 4 | Homepage promotional cards |
+
+**Images:** Downloaded from Unsplash and uploaded to your S3 bucket.
+
+### Basic Seed Script
+
+For basic testing data:
+
+```bash
+bun run db:seed
+```
+
+### Custom Production Seed
+
+To seed a production database:
+
+```bash
+DATABASE_URL="postgresql://..." bun run packages/db/src/seed-production.ts
+```
 
 ---
 

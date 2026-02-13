@@ -11,6 +11,10 @@ export const baseProcedure = os.$context<Context>();
 export const publicProcedure = baseProcedure;
 
 // Protected procedure (requires auth)
+import type { user } from "@my-better-t-app/db/schema/auth";
+
+type SessionUser = typeof user.$inferSelect;
+
 export const protectedProcedure = baseProcedure.use(async ({ context, next }) => {
   if (!context.session) {
     throw new ORPCError("UNAUTHORIZED", {
@@ -18,9 +22,8 @@ export const protectedProcedure = baseProcedure.use(async ({ context, next }) =>
     });
   }
 
-  // Block deactivated users from accessing protected routes
-  const user = context.session.user as any;
-  if (user?.isDeactivated) {
+  const sessionUser = context.session.user as SessionUser;
+  if (sessionUser?.isDeactivated) {
     throw new ORPCError("FORBIDDEN", {
       message: "Your account is deactivated. Please log in again to reactivate.",
     });
@@ -29,15 +32,14 @@ export const protectedProcedure = baseProcedure.use(async ({ context, next }) =>
   return next({
     context: {
       ...context,
-      session: context.session!, // We know it's not null due to check above
+      session: context.session!,
     },
   });
 });
 
-// Admin procedure (requires admin role)
 export const adminProcedure = protectedProcedure.use(async ({ context, next }) => {
-  const user = context.session.user as any;
-  if (user?.role !== 'admin') {
+  const sessionUser = context.session.user as SessionUser;
+  if (sessionUser?.role !== 'admin') {
     throw new ORPCError("FORBIDDEN", {
       message: "Admin access required",
     });

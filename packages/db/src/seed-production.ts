@@ -1989,6 +1989,89 @@ async function seedReviews(userIds: string[]) {
   console.log(`  ✓ Seeded ${upserted} reviews`);
 }
 
+async function seedCoupons() {
+  console.log("Seeding coupons...");
+
+  const coupons: Array<{
+    id: string;
+    code: string;
+    type: "percentage" | "fixed" | "free_shipping";
+    value: string;
+    minOrderAmount?: string;
+    maxDiscountAmount?: string;
+    usageLimit: number;
+    status: "active" | "expired" | "disabled";
+  }> = [
+    {
+      id: "coupon-save10",
+      code: "SAVE10",
+      type: "percentage",
+      value: "10",
+      minOrderAmount: "1000",
+      usageLimit: 100,
+      status: "active",
+    },
+    {
+      id: "coupon-flat500",
+      code: "FLAT500",
+      type: "fixed",
+      value: "500",
+      minOrderAmount: "2000",
+      maxDiscountAmount: "500",
+      usageLimit: 50,
+      status: "active",
+    },
+    {
+      id: "coupon-freeship",
+      code: "FREESHIP",
+      type: "free_shipping",
+      value: "0",
+      minOrderAmount: "1500",
+      usageLimit: 200,
+      status: "active",
+    },
+    {
+      id: "coupon-wedding20",
+      code: "WEDDING20",
+      type: "percentage",
+      value: "20",
+      minOrderAmount: "10000",
+      maxDiscountAmount: "5000",
+      usageLimit: 30,
+      status: "active",
+    },
+    {
+      id: "coupon-newuser",
+      code: "NEWUSER",
+      type: "fixed",
+      value: "200",
+      minOrderAmount: "500",
+      usageLimit: 1000,
+      status: "active",
+    },
+  ];
+
+  for (const coupon of coupons) {
+    await db
+      .insert(schema.coupons)
+      .values(coupon)
+      .onConflictDoUpdate({
+        target: schema.coupons.id,
+        set: {
+          code: coupon.code,
+          type: coupon.type,
+          value: coupon.value,
+          minOrderAmount: coupon.minOrderAmount,
+          maxDiscountAmount: coupon.maxDiscountAmount,
+          usageLimit: coupon.usageLimit,
+          status: coupon.status,
+        },
+      });
+  }
+
+  console.log(`  ✓ Seeded ${coupons.length} coupons`);
+}
+
 async function main() {
   console.log("\n🌱 Starting production seed with S3 uploads...\n");
 
@@ -2006,6 +2089,7 @@ async function main() {
     
     await seedHomeBanners(imageUrls);
     await seedPromoCards(imageUrls);
+    await seedCoupons();
 
     console.log("\n📊 Summary:");
     console.log(`  ✓ ${(await db.select().from(schema.categories)).length} Categories`);
@@ -2017,6 +2101,7 @@ async function main() {
     console.log(`  ✓ ${(await db.select().from(schema.reviews)).length} Reviews`);
     console.log(`  ✓ ${(await db.select().from(schema.homeBanners)).length} Home Banners`);
     console.log(`  ✓ ${(await db.select().from(schema.homePromoCards)).length} Promo Cards`);
+    console.log(`  ✓ ${(await db.select().from(schema.coupons)).length} Coupons`);
 
     console.log("\n✅ Production seed completed with S3 image uploads!\n");
   } catch (error) {

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export function CouponSection() {
-  const { discount, applyCoupon, removeCoupon, getSubtotal, discountAmount } = useCart();
+  const { discount, applyCoupon, removeCoupon, discountAmount } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -24,37 +24,18 @@ export function CouponSection() {
     setIsLoading(true);
     setError(null);
 
-    // Simulate API call with realistic delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const subtotal = getSubtotal();
-
-    // Mock validation logic
-    if (code === 'SAVE10') {
-      applyCoupon(code, 'percentage', 10);
-      toast.success(`Coupon applied! You saved ${formatPrice((subtotal * 10) / 100)}`);
-      setCouponCode('');
-      setIsOpen(false);
-    } else if (code === 'FLAT500') {
-      if (subtotal < 1000) {
-        setError('Minimum order of ৳1,000 required for this coupon');
-      } else {
-        applyCoupon(code, 'fixed', 500);
-        toast.success(`Coupon applied! You saved ${formatPrice(500)}`);
+    try {
+      const result = await applyCoupon(code);
+      
+      if (result.valid && result.coupon) {
+        toast.success(result.coupon.message || 'Coupon applied successfully!');
         setCouponCode('');
         setIsOpen(false);
+      } else {
+        setError(result.error || 'Invalid coupon code');
       }
-    } else if (code === 'FREESHIP') {
-      applyCoupon(code, 'free_shipping', 0);
-      toast.success('Coupon applied! Free shipping activated');
-      setCouponCode('');
-      setIsOpen(false);
-    } else if (code === 'EXPIRED') {
-      setError('This coupon code has expired');
-    } else if (code === 'MIN1000') {
-      setError('Minimum order of ৳1,000 required');
-    } else {
-      setError('Invalid coupon code. Please try again.');
+    } catch (e) {
+      setError('Failed to validate coupon. Please try again.');
     }
 
     setIsLoading(false);
@@ -174,26 +155,6 @@ export function CouponSection() {
                 <span>{error}</span>
               </div>
             )}
-          </div>
-
-          <div className="rounded-lg bg-[hsl(var(--muted))]/50 p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
-              Available Offers:
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {['SAVE10', 'FLAT500', 'FREESHIP'].map((code) => (
-                <button
-                  key={code}
-                  onClick={() => {
-                    setCouponCode(code);
-                    setError(null);
-                  }}
-                  className="rounded-md border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-2 py-1 text-[10px] font-bold text-[hsl(var(--foreground))] transition-colors hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]"
-                >
-                  {code}
-                </button>
-              ))}
-            </div>
           </div>
         </div>
       )}
