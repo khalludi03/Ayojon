@@ -36,6 +36,19 @@ interface CartState {
   isInitialized?: boolean;
 }
 
+interface CouponValidationResult {
+  valid: boolean;
+  coupon?: {
+    id: string;
+    code: string;
+    type: 'percentage' | 'fixed' | 'free_shipping';
+    value: number;
+    discountAmount: number;
+    message?: string;
+  };
+  error?: string;
+}
+
 interface CartStore {
   getState: () => CartState;
   addItem: (product: Product, quantity?: number, variant?: ProductVariant) => Promise<void>;
@@ -49,7 +62,7 @@ interface CartStore {
   moveToCart: (itemId: string) => Promise<void>;
   removeSavedItem: (itemId: string) => Promise<void>;
   setDeliveryMethod: (method: DeliveryMethodType | null) => void;
-  applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => void;
+  applyCoupon: (code: string) => Promise<CouponValidationResult>;
   removeCoupon: () => void;
   getDiscount: () => number;
   openDrawer: () => void;
@@ -324,7 +337,7 @@ function createCartStore(): CartStore {
             variantId: item.selectedVariant?.id || '',
             quantity: item.quantity,
             savedForLater: 0
-          } as any).catch(e => console.error(e));
+          } as any).catch((e: unknown) => console.error(e));
         }
       }
     },
@@ -343,7 +356,7 @@ function createCartStore(): CartStore {
           orpcClient.cart.remove({
             productId: item.productId,
             variantId: item.selectedVariant?.id || ''
-          } as any).catch(e => console.error(e));
+          } as any).catch((e: unknown) => console.error(e));
         });
       }
     },
@@ -475,16 +488,32 @@ function createCartStore(): CartStore {
       }
     },
 
-    applyCoupon: (code: string, type: 'percentage' | 'fixed' | 'free_shipping', value: number) => {
+    applyCoupon: async (code: string) => {
       const subtotal = cartStore.getSubtotal();
-      let discountAmount = 0;
-      if (type === 'percentage') discountAmount = (subtotal * value) / 100;
-      else if (type === 'fixed') discountAmount = value;
-      else if (type === 'free_shipping') discountAmount = cartStore.getShipping();
-      discountAmount = Math.min(discountAmount, subtotal + (type === 'free_shipping' ? discountAmount : cartStore.getShipping()));
-      state = { ...state, discount: { code, type, value, amount: discountAmount } };
-      persist();
-      notify();
+      try {
+        const result = await orpcClient.coupon.validateCoupon({
+          code,
+          orderAmount: subtotal,
+        });
+        
+        if (result.valid && result.coupon) {
+          state = { 
+            ...state, 
+            discount: { 
+              code: result.coupon.code, 
+              type: result.coupon.type, 
+              value: result.coupon.value, 
+              amount: result.coupon.discountAmount 
+            } 
+          };
+          persist();
+          notify();
+        }
+        return result;
+      } catch (e) {
+        console.error('[Cart] Coupon validation failed:', e);
+        return { valid: false, error: 'Failed to validate coupon' };
+      }
     },
 
     removeCoupon: () => { state = { ...state, discount: null }; persist(); notify(); },

@@ -1,4 +1,34 @@
-import { pgTable, text, timestamp, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, integer, numeric, index } from "drizzle-orm/pg-core";
+
+export type CouponType = "percentage" | "fixed" | "free_shipping";
+export type CouponStatus = "active" | "expired" | "disabled";
+
+export const coupons = pgTable(
+  "coupons",
+  {
+    id: text("id").primaryKey(),
+    code: text("code").notNull().unique(),
+    type: text("type").$type<CouponType>().notNull(),
+    value: numeric("value", { precision: 10, scale: 2 }).notNull(),
+    minOrderAmount: numeric("min_order_amount", { precision: 12, scale: 2 }),
+    maxDiscountAmount: numeric("max_discount_amount", { precision: 10, scale: 2 }),
+    usageLimit: integer("usage_limit"),
+    usageCount: integer("usage_count").default(0).notNull(),
+    status: text("status").$type<CouponStatus>().default("active").notNull(),
+    startsAt: timestamp("starts_at"),
+    endsAt: timestamp("ends_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("coupons_code_idx").on(table.code),
+    index("coupons_status_idx").on(table.status),
+    index("coupons_ends_at_idx").on(table.endsAt),
+  ]
+);
 
 export const platformSettings = pgTable("platform_settings", {
   id: text("id").primaryKey(), // Usually just 'current'

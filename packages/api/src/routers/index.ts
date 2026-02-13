@@ -11,6 +11,7 @@ import { cartRouter } from "./cart";
 import { notificationRouter } from "./notification";
 import { reviewRouter } from "./review";
 import { homepageRouter } from "./homepage";
+import { couponRouter } from "./coupon";
 
 export const appRouter = os.router({
   storage: storageRouter,
@@ -23,9 +24,10 @@ export const appRouter = os.router({
   notifications: notificationRouter,
   review: reviewRouter,
   vendorProduct: productRouter,
-  catalog: productRouter, // Alias for backward compatibility
+  catalog: productRouter,
   admin: adminRouter,
   homepage: homepageRouter,
+  coupon: couponRouter,
   healthCheck: publicProcedure
     .route({
       method: "GET",
