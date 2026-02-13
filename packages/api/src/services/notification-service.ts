@@ -1,16 +1,20 @@
-import { db } from "@my-better-t-app/db";
-import { notifications, type NotificationType } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc } from "drizzle-orm";
-import { nanoid } from "nanoid";
+import { db } from '@my-better-t-app/db'
+import {
+  
+  notifications
+} from '@my-better-t-app/db/schema/index'
+import { and, desc, eq } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
+import type {NotificationType} from '@my-better-t-app/db/schema/index';
 
 interface CreateNotificationInput {
-  userId: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  orderId?: string;
-  vendorApplicationId?: string;
-  metadata?: Record<string, any>;
+  userId: string
+  type: NotificationType
+  title: string
+  message: string
+  orderId?: string
+  vendorApplicationId?: string
+  metadata?: Record<string, any>
 }
 
 /**
@@ -23,23 +27,27 @@ export async function createNotification(input: CreateNotificationInput) {
       id: nanoid(),
       ...input,
     })
-    .returning();
+    .returning()
 
-  return notification[0];
+  return notification[0]
 }
 
 /**
  * Notify customer when order is placed
  */
-export async function notifyOrderPlaced(userId: string, orderId: string, orderNumber: string) {
+export async function notifyOrderPlaced(
+  userId: string,
+  orderId: string,
+  orderNumber: string,
+) {
   return createNotification({
     userId,
-    type: "order_placed",
-    title: "Order Placed Successfully",
+    type: 'order_placed',
+    title: 'Order Placed Successfully',
     message: `Your order #${orderNumber} has been placed successfully.`,
     orderId,
     metadata: { orderNumber },
-  });
+  })
 }
 
 /**
@@ -49,16 +57,16 @@ export async function notifyVendorNewOrder(
   vendorUserId: string,
   orderId: string,
   orderNumber: string,
-  itemCount: number
+  itemCount: number,
 ) {
   return createNotification({
     userId: vendorUserId,
-    type: "new_order",
-    title: "New Order Received",
-    message: `You have received a new order #${orderNumber} with ${itemCount} item${itemCount > 1 ? "s" : ""}.`,
+    type: 'new_order',
+    title: 'New Order Received',
+    message: `You have received a new order #${orderNumber} with ${itemCount} item${itemCount > 1 ? 's' : ''}.`,
     orderId,
     metadata: { orderNumber, itemCount },
-  });
+  })
 }
 
 /**
@@ -68,50 +76,53 @@ export async function notifyOrderStatusUpdate(
   userId: string,
   orderId: string,
   orderNumber: string,
-  newStatus: string
+  newStatus: string,
 ) {
-  const statusMessages: Record<string, { title: string; message: string; type: NotificationType }> = {
+  const statusMessages: Record<
+    string,
+    { title: string; message: string; type: NotificationType }
+  > = {
     payment_received: {
-      title: "Payment Confirmed",
+      title: 'Payment Confirmed',
       message: `Your payment for order #${orderNumber} has been verified and confirmed.`,
-      type: "payment_received",
+      type: 'payment_received',
     },
     payment_rejected: {
-      title: "Payment Verification Failed",
+      title: 'Payment Verification Failed',
       message: `Your payment for order #${orderNumber} could not be verified. Please check your payment details.`,
-      type: "payment_rejected",
+      type: 'payment_rejected',
     },
     placed: {
-      title: "Order Placed",
+      title: 'Order Placed',
       message: `Your order #${orderNumber} has been placed successfully.`,
-      type: "order_placed",
+      type: 'order_placed',
     },
     confirmed: {
-      title: "Order Confirmed",
+      title: 'Order Confirmed',
       message: `Your order #${orderNumber} has been confirmed and is being prepared.`,
-      type: "order_confirmed",
+      type: 'order_confirmed',
     },
     shipped: {
-      title: "Order Shipped",
+      title: 'Order Shipped',
       message: `Your order #${orderNumber} has been shipped and is on its way.`,
-      type: "order_shipped",
+      type: 'order_shipped',
     },
     delivered: {
-      title: "Order Delivered",
+      title: 'Order Delivered',
       message: `Your order #${orderNumber} has been delivered. Thank you for shopping with us!`,
-      type: "order_delivered",
+      type: 'order_delivered',
     },
     cash_collected: {
-      title: "Order Delivered",
+      title: 'Order Delivered',
       message: `Your order #${orderNumber} has been delivered and payment collected.`,
-      type: "order_delivered",
+      type: 'order_delivered',
     },
-  };
+  }
 
-  const statusInfo = statusMessages[newStatus];
+  const statusInfo = statusMessages[newStatus]
   if (!statusInfo) {
     // For statuses we don't notify about, return null
-    return null;
+    return null
   }
 
   return createNotification({
@@ -121,21 +132,25 @@ export async function notifyOrderStatusUpdate(
     message: statusInfo.message,
     orderId,
     metadata: { orderNumber, status: newStatus },
-  });
+  })
 }
 
 /**
  * Notify vendor when application is approved
  */
-export async function notifyVendorApproved(userId: string, vendorApplicationId: string, storeName: string) {
+export async function notifyVendorApproved(
+  userId: string,
+  vendorApplicationId: string,
+  storeName: string,
+) {
   return createNotification({
     userId,
-    type: "vendor_approved",
-    title: "Vendor Application Approved",
+    type: 'vendor_approved',
+    title: 'Vendor Application Approved',
     message: `Congratulations! Your vendor application for "${storeName}" has been approved. You can now start selling on Ayojon.`,
     vendorApplicationId,
     metadata: { storeName },
-  });
+  })
 }
 
 /**
@@ -145,34 +160,38 @@ export async function notifyVendorRejected(
   userId: string,
   vendorApplicationId: string,
   storeName: string,
-  reason?: string
+  reason?: string,
 ) {
   const message = reason
     ? `Your vendor application for "${storeName}" has been rejected. Reason: ${reason}`
-    : `Your vendor application for "${storeName}" has been rejected. Please contact support for more information.`;
+    : `Your vendor application for "${storeName}" has been rejected. Please contact support for more information.`
 
   return createNotification({
     userId,
-    type: "vendor_rejected",
-    title: "Vendor Application Rejected",
+    type: 'vendor_rejected',
+    title: 'Vendor Application Rejected',
     message,
     vendorApplicationId,
     metadata: { storeName, reason },
-  });
+  })
 }
 
 /**
  * Get user notifications with pagination
  */
-export async function getUserNotifications(userId: string, limit = 20, offset = 0) {
+export async function getUserNotifications(
+  userId: string,
+  limit = 20,
+  offset = 0,
+) {
   const userNotifications = await db.query.notifications.findMany({
     where: eq(notifications.userId, userId),
     orderBy: [desc(notifications.createdAt)],
     limit,
     offset,
-  });
+  })
 
-  return userNotifications;
+  return userNotifications
 }
 
 /**
@@ -180,10 +199,13 @@ export async function getUserNotifications(userId: string, limit = 20, offset = 
  */
 export async function getUnreadCount(userId: string) {
   const unreadNotifications = await db.query.notifications.findMany({
-    where: and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
-  });
+    where: and(
+      eq(notifications.userId, userId),
+      eq(notifications.isRead, false),
+    ),
+  })
 
-  return unreadNotifications.length;
+  return unreadNotifications.length
 }
 
 /**
@@ -196,10 +218,15 @@ export async function markAsRead(notificationId: string, userId: string) {
       isRead: true,
       readAt: new Date(),
     })
-    .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)))
-    .returning();
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId),
+      ),
+    )
+    .returning()
 
-  return result[0];
+  return result[0]
 }
 
 /**
@@ -212,31 +239,39 @@ export async function markAllAsRead(userId: string) {
       isRead: true,
       readAt: new Date(),
     })
-    .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    .where(
+      and(eq(notifications.userId, userId), eq(notifications.isRead, false)),
+    )
 
-  return true;
+  return true
 }
 
 /**
  * Delete notification
  */
-export async function deleteNotification(notificationId: string, userId: string) {
+export async function deleteNotification(
+  notificationId: string,
+  userId: string,
+) {
   await db
     .delete(notifications)
-    .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)));
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, userId),
+      ),
+    )
 
-  return true;
+  return true
 }
 
 /**
  * Delete all notifications for a user
  */
 export async function deleteAllNotifications(userId: string) {
-  await db
-    .delete(notifications)
-    .where(eq(notifications.userId, userId));
+  await db.delete(notifications).where(eq(notifications.userId, userId))
 
-  return true;
+  return true
 }
 
 /**
@@ -247,15 +282,15 @@ export async function notifyLowStock(
   productId: string,
   productTitle: string,
   currentStock: number,
-  threshold: number
+  threshold: number,
 ) {
   return createNotification({
     userId: vendorUserId,
-    type: "low_stock_alert",
-    title: "Low Stock Alert",
+    type: 'low_stock_alert',
+    title: 'Low Stock Alert',
     message: `Product "${productTitle}" is running low on stock (${currentStock} remaining). Consider restocking soon.`,
     metadata: { productId, productTitle, currentStock, threshold },
-  });
+  })
 }
 
 /**
@@ -264,15 +299,15 @@ export async function notifyLowStock(
 export async function notifyOutOfStock(
   vendorUserId: string,
   productId: string,
-  productTitle: string
+  productTitle: string,
 ) {
   return createNotification({
     userId: vendorUserId,
-    type: "out_of_stock_alert",
-    title: "Out of Stock Alert",
+    type: 'out_of_stock_alert',
+    title: 'Out of Stock Alert',
     message: `Product "${productTitle}" is now out of stock. Update inventory to continue selling.`,
     metadata: { productId, productTitle },
-  });
+  })
 }
 
 /**
@@ -282,16 +317,16 @@ export async function notifyReturnRequest(
   vendorUserId: string,
   orderId: string,
   orderNumber: string,
-  reason: string
+  reason: string,
 ) {
   return createNotification({
     userId: vendorUserId,
-    type: "return_request",
-    title: "Return Request Received",
+    type: 'return_request',
+    title: 'Return Request Received',
     message: `Customer has requested a return for order #${orderNumber}. Reason: ${reason}`,
     orderId,
     metadata: { orderNumber, reason },
-  });
+  })
 }
 
 /**
@@ -301,16 +336,16 @@ export async function notifyPayoutProcessed(
   vendorUserId: string,
   payoutId: string,
   amount: string,
-  orderId?: string
+  orderId?: string,
 ) {
   return createNotification({
     userId: vendorUserId,
-    type: "payout_processed",
-    title: "Payout Processed",
+    type: 'payout_processed',
+    title: 'Payout Processed',
     message: `Your payout of ৳${amount} has been processed successfully.`,
     orderId,
     metadata: { payoutId, amount },
-  });
+  })
 }
 
 /**
@@ -321,13 +356,13 @@ export async function notifyProductReview(
   productId: string,
   productTitle: string,
   rating: number,
-  reviewerName: string
+  reviewerName: string,
 ) {
   return createNotification({
     userId: vendorUserId,
-    type: "product_review",
-    title: "New Product Review",
+    type: 'product_review',
+    title: 'New Product Review',
     message: `${reviewerName} left a ${rating}-star review for "${productTitle}".`,
     metadata: { productId, productTitle, rating, reviewerName },
-  });
+  })
 }

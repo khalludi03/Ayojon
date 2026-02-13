@@ -1,62 +1,62 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Plus, ArrowRight, Loader2 } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { orpc } from '@/utils/orpc';
-import { toast } from 'sonner';
-import type { VendorProduct, ProductStatus } from '@/types/vendor-product';
-import { ProductsList } from './ProductsList';
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, Plus } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { ProductsList } from './ProductsList'
+import type { ProductStatus, VendorProduct } from '@/types/vendor-product'
+import { orpc } from '@/utils/orpc'
+import { Button } from '@/components/ui/button'
 
 export function ProductsManagement() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   // Fetch products from API
-  const { data: apiProducts = [], isLoading, refetch } = useQuery(
+  const { data: apiProducts = [], refetch } = useQuery(
     orpc.product.listMyProducts.queryOptions({
       input: { limit: 5, offset: 0 },
-    })
-  );
+    }),
+  )
 
   // Update product status mutation
   const updateStatusMutation = useMutation(
     orpc.product.updateProduct.mutationOptions({
       onSuccess: () => {
-        toast.success('Product updated');
-        refetch();
+        toast.success('Product updated')
+        refetch()
       },
       onError: (error: any) => {
-        toast.error('Failed to update product');
-        console.error('Update error:', error);
+        toast.error('Failed to update product')
+        console.error('Update error:', error)
       },
-    })
-  );
+    }),
+  )
 
   // Delete product mutation
   const deleteMutation = useMutation(
     orpc.product.deleteProduct.mutationOptions({
       onSuccess: () => {
-        toast.success('Product deleted successfully');
-        refetch();
+        toast.success('Product deleted successfully')
+        refetch()
       },
       onError: (error: any) => {
-        toast.error('Failed to delete product');
-        console.error('Delete error:', error);
+        toast.error('Failed to delete product')
+        console.error('Delete error:', error)
       },
-    })
-  );
+    }),
+  )
 
   const handleToggleStatus = (product: VendorProduct) => {
-    const newStatus = product.status === 'published' ? 'draft' : 'active';
-    updateStatusMutation.mutate({ id: product.id, status: newStatus as any });
-  };
+    const newStatus = product.status === 'published' ? 'draft' : 'active'
+    updateStatusMutation.mutate({ id: product.id, status: newStatus as any })
+  }
 
   const handleDeleteProduct = (productId: string) => {
-    deleteMutation.mutate({ id: productId });
-  };
+    deleteMutation.mutate({ id: productId })
+  }
 
   // Map API products to VendorProduct format for UI compatibility
-  const products: VendorProduct[] = useMemo(() => {
+  const products: Array<VendorProduct> = useMemo(() => {
     return apiProducts.map((p: any) => ({
       id: p.id,
       vendorId: p.vendorId,
@@ -85,21 +85,12 @@ export function ProductsManagement() {
       status: p.status as ProductStatus,
       createdAt: p.createdAt?.toString() || new Date().toISOString(),
       updatedAt: p.updatedAt?.toString() || new Date().toISOString(),
-    }));
-  }, [apiProducts]);
+    }))
+  }, [apiProducts])
 
   const handleEditProduct = (product: VendorProduct) => {
     // Navigate to full products page
-    navigate({ to: '/vendor/products' });
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-48 items-center justify-center rounded-lg border border-dashed border-[hsl(var(--border))]">
-        <Loader2 className="h-6 w-6 animate-spin text-[hsl(var(--muted-foreground))]" />
-        <span className="ml-2 text-sm text-[hsl(var(--muted-foreground))]">Loading inventory...</span>
-      </div>
-    );
+    navigate({ to: '/vendor/products' })
   }
 
   return (
@@ -107,13 +98,18 @@ export function ProductsManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">Products Overview</h2>
+          <h2 className="text-2xl font-bold text-[hsl(var(--foreground))]">
+            Products Overview
+          </h2>
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             Quick view of your product catalog
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate({ to: '/vendor/products' })}>
+          <Button
+            variant="outline"
+            onClick={() => navigate({ to: '/vendor/products' })}
+          >
             View All
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
@@ -135,12 +131,15 @@ export function ProductsManagement() {
 
       {products.length > 5 && (
         <div className="text-center">
-          <Button variant="outline" onClick={() => navigate({ to: '/vendor/products' })}>
+          <Button
+            variant="outline"
+            onClick={() => navigate({ to: '/vendor/products' })}
+          >
             View All {products.length} Products
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>
       )}
     </div>
-  );
+  )
 }

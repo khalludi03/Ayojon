@@ -1,18 +1,18 @@
-import { Link } from '@tanstack/react-router';
-import { Search, Lightbulb, Grid3x3 } from 'lucide-react';
-import { useCategories } from '@/hooks/use-categories';
-import { CategoryCard } from '@/components/categories/CategoryCard';
+import { Link } from '@tanstack/react-router'
+import { Grid3x3, Lightbulb, Search } from 'lucide-react'
+import { useCategories } from '@/hooks/use-categories'
+import { CategoryCard } from '@/components/categories/CategoryCard'
 
 interface NoResultsProps {
-  searchQuery?: string;
-  onClearFilters?: () => void;
+  searchQuery?: string
+  onClearFilters?: () => void
 }
 
 export function NoResults({ searchQuery, onClearFilters }: NoResultsProps) {
-  const { data: categories } = useCategories();
+  const { data: categories } = useCategories()
 
   // Get top 6 popular categories
-  const popularCategories = categories?.slice(0, 6) || [];
+  const popularCategories = categories?.slice(0, 6) || []
 
   return (
     <div className="py-12 text-center">
@@ -97,5 +97,5 @@ export function NoResults({ searchQuery, onClearFilters }: NoResultsProps) {
         </Link>
       </div>
     </div>
-  );
+  )
 }

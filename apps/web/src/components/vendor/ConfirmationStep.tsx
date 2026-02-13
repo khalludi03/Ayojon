@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { CheckCircle2, Mail, Clock, ArrowRight } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, Mail } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface ConfirmationStepProps {
-  applicationId: string;
-  email: string;
-  onBackToHome: () => void;
+  applicationId: string
+  email: string
+  onBackToHome: () => void
 }
 
 export function ConfirmationStep({
@@ -59,7 +59,9 @@ export function ConfirmationStep({
                 </p>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
                   A confirmation email has been sent to{' '}
-                  <span className="font-medium text-[hsl(var(--foreground))]">{email}</span>
+                  <span className="font-medium text-[hsl(var(--foreground))]">
+                    {email}
+                  </span>
                 </p>
               </div>
             </div>
@@ -73,7 +75,8 @@ export function ConfirmationStep({
                   Status: Pending Review
                 </p>
                 <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                  You'll receive an email notification once your application is reviewed
+                  You'll receive an email notification once your application is
+                  reviewed
                 </p>
               </div>
             </div>
@@ -86,7 +89,9 @@ export function ConfirmationStep({
             <p className="font-semibold mb-2">What happens next?</p>
             <ol className="space-y-2 list-decimal list-inside">
               <li>Our team will review your application and documents</li>
-              <li>You'll receive an email with the decision (approved/rejected)</li>
+              <li>
+                You'll receive an email with the decision (approved/rejected)
+              </li>
               <li>If approved, you can access your vendor dashboard</li>
               <li>Start listing your products and begin selling!</li>
             </ol>
@@ -95,19 +100,16 @@ export function ConfirmationStep({
 
         {/* Note */}
         <p className="text-sm text-[hsl(var(--muted-foreground))] mb-8">
-          You cannot access the vendor dashboard until your application is approved.
+          You cannot access the vendor dashboard until your application is
+          approved.
         </p>
 
         {/* Action Button */}
-        <Button
-          size="lg"
-          onClick={onBackToHome}
-          className="min-w-[200px]"
-        >
+        <Button size="lg" onClick={onBackToHome} className="min-w-[200px]">
           Back to Home
           <ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
     </div>
-  );
+  )
 }

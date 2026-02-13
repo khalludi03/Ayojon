@@ -2,13 +2,14 @@
 
 A full-stack multi-vendor e-commerce platform for event products, targeting the South Asian market (primarily Bangladesh). Built with the [Better-T-Stack].
 
-> *"The Daraz for events — buy everything you need for any occasion, from hundreds of vendors in one place."*
+> _"The Daraz for events — buy everything you need for any occasion, from hundreds of vendors in one place."_
 
 ---
 
 ## Tech Stack
 
 ### Frontend
+
 - **React 19** with **TanStack Router** (file-based routing, type-safe loaders)
 - **TanStack Query** for server state management & caching
 - **Vite** as build tool & dev server
@@ -18,6 +19,7 @@ A full-stack multi-vendor e-commerce platform for event products, targeting the 
 - **Recharts** for dashboard analytics charts
 
 ### Backend
+
 - **Hono** HTTP framework on **Bun** runtime
 - **oRPC** for type-safe RPC with auto-generated OpenAPI docs
 - **better-auth** for authentication (email/password, Google OAuth, Facebook OAuth, Email OTP)
@@ -71,7 +73,7 @@ ayojon/
 
 ### Prerequisites
 
-- [Bun]( https://bun.sh/) v1.3+
+- [Bun](https://bun.sh/) v1.3+
 - PostgreSQL database (or [Supabase](https://supabase.com/) project)
 - S3-compatible storage bucket (AWS S3, Supabase Storage, etc.)
 - Google & Facebook OAuth app credentials
@@ -93,17 +95,17 @@ cp .env.example .env
 
 **Required variables:**
 
-| Variable | Purpose |
-|----------|---------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `BETTER_AUTH_SECRET` | Auth secret key (min 32 chars) |
-| `BETTER_AUTH_URL` | Auth base URL |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth |
-| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | Facebook OAuth |
-| `CORS_ORIGIN` | Allowed frontend origin |
-| `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USER` / `EMAIL_PASS` | SMTP config |
-| `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_REGION` / `S3_ENDPOINT` / `S3_BUCKET` | S3 storage |
-| `VITE_API_URL` | Backend URL for frontend |
+| Variable                                                                      | Purpose                        |
+| ----------------------------------------------------------------------------- | ------------------------------ |
+| `DATABASE_URL`                                                                | PostgreSQL connection string   |
+| `BETTER_AUTH_SECRET`                                                          | Auth secret key (min 32 chars) |
+| `BETTER_AUTH_URL`                                                             | Auth base URL                  |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                   | Google OAuth                   |
+| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET`                               | Facebook OAuth                 |
+| `CORS_ORIGIN`                                                                 | Allowed frontend origin        |
+| `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USER` / `EMAIL_PASS`                     | SMTP config                    |
+| `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_REGION` / `S3_ENDPOINT` / `S3_BUCKET` | S3 storage                     |
+| `VITE_API_URL`                                                                | Backend URL for frontend       |
 
 ### 3. Set up the database
 
@@ -125,22 +127,22 @@ bun run dev
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start all apps in development mode |
-| `bun run build` | Build all applications |
-| `bun run dev:web` | Start only the web frontend |
-| `bun run dev:server` | Start only the API server |
-| `bun run check-types` | TypeScript type checking across all packages |
-| `bun run lint` | Run ESLint |
-| `bun run format` | Format code with Prettier |
-| `bun run db:push` | Push schema changes to database |
-| `bun run db:generate` | Generate Drizzle migrations |
-| `bun run db:migrate` | Run pending migrations |
-| `bun run db:studio` | Open Drizzle Studio (database GUI) |
-| `bun run db:seed` | Run basic seed script |
-| `bun run db:seed:production` | Run production seed with S3 image uploads |
-| `bun run prepare` | Initialize Husky git hooks |
+| Command                      | Description                                  |
+| ---------------------------- | -------------------------------------------- |
+| `bun run dev`                | Start all apps in development mode           |
+| `bun run build`              | Build all applications                       |
+| `bun run dev:web`            | Start only the web frontend                  |
+| `bun run dev:server`         | Start only the API server                    |
+| `bun run check-types`        | TypeScript type checking across all packages |
+| `bun run lint`               | Run ESLint                                   |
+| `bun run format`             | Format code with Prettier                    |
+| `bun run db:push`            | Push schema changes to database              |
+| `bun run db:generate`        | Generate Drizzle migrations                  |
+| `bun run db:migrate`         | Run pending migrations                       |
+| `bun run db:studio`          | Open Drizzle Studio (database GUI)           |
+| `bun run db:seed`            | Run basic seed script                        |
+| `bun run db:seed:production` | Run production seed with S3 image uploads    |
+| `bun run prepare`            | Initialize Husky git hooks                   |
 
 ---
 
@@ -158,16 +160,16 @@ bun run packages/db/src/seed-production.ts
 
 **What it creates:**
 
-| Data | Count | Description |
-|------|-------|-------------|
-| Categories | 10 | Event categories (Decorations, Sound & Lighting, Furniture, etc.) |
-| Subcategories | 61 | Detailed subcategories per category |
-| Event Types | 10 | Wedding, Birthday, Corporate, Anniversary, etc. |
-| Vendors | 15 | Realistic Bangladesh vendors (Dhaka, Chittagong, Sylhet, etc.) |
-| Products | 41 | With BDT pricing, variants, and images |
-| Reviews | 100+ | Verified purchase reviews |
-| Home Banners | 4 | Hero carousel slides |
-| Promo Cards | 4 | Homepage promotional cards |
+| Data          | Count | Description                                                       |
+| ------------- | ----- | ----------------------------------------------------------------- |
+| Categories    | 10    | Event categories (Decorations, Sound & Lighting, Furniture, etc.) |
+| Subcategories | 61    | Detailed subcategories per category                               |
+| Event Types   | 10    | Wedding, Birthday, Corporate, Anniversary, etc.                   |
+| Vendors       | 15    | Realistic Bangladesh vendors (Dhaka, Chittagong, Sylhet, etc.)    |
+| Products      | 41    | With BDT pricing, variants, and images                            |
+| Reviews       | 100+  | Verified purchase reviews                                         |
+| Home Banners  | 4     | Hero carousel slides                                              |
+| Promo Cards   | 4     | Homepage promotional cards                                        |
 
 **Images:** Downloaded from Unsplash and uploaded to your S3 bucket.
 

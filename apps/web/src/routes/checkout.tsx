@@ -1,47 +1,47 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
-import { useCart } from '@/stores/cart-store';
-import { addOrder } from '@/stores/order-store';
-import { CheckoutProgress } from '@/components/checkout/CheckoutProgress';
-import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
-import { ShippingStep } from '@/components/checkout/ShippingStep';
-import { PaymentStep } from '@/components/checkout/PaymentStep';
-import { OrderReviewStep } from '@/components/checkout/OrderReviewStep';
-import { ConfirmationStep } from '@/components/checkout/ConfirmationStep';
-import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import { orpcClient } from '@/utils/orpc';
-import { toast } from 'sonner';
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import { ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { useCart } from '@/stores/cart-store'
+import { addOrder } from '@/stores/order-store'
+import { CheckoutProgress } from '@/components/checkout/CheckoutProgress'
+import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary'
+import { ShippingStep } from '@/components/checkout/ShippingStep'
+import { PaymentStep } from '@/components/checkout/PaymentStep'
+import { OrderReviewStep } from '@/components/checkout/OrderReviewStep'
+import { ConfirmationStep } from '@/components/checkout/ConfirmationStep'
+import { Button } from '@/components/ui/button'
+import { orpcClient } from '@/utils/orpc'
 
 export const Route = createFileRoute('/checkout')({
   component: CheckoutPage,
-});
+})
 
 interface FormData {
   // Shipping
-  fullName: string;
-  email: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  division: string;
-  postalCode: string;
-  addressType: 'home' | 'office';
-  saveAddress: boolean;
+  fullName: string
+  email: string
+  phone: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  division: string
+  postalCode: string
+  addressType: 'home' | 'office'
+  saveAddress: boolean
   // Delivery
-  deliveryMethod: string;
+  deliveryMethod: string
   // Payment
-  paymentMethod: string;
-  mobileNumber?: string;
+  paymentMethod: string
+  mobileNumber?: string
   // bKash Payment
-  bkashTransactionId?: string;
-  bkashAmount?: number;
-  bkashPaidAt?: string;
+  bkashTransactionId?: string
+  bkashAmount?: number
+  bkashPaidAt?: string
 }
 
 function CheckoutPage() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const {
     items,
     getSubtotal,
@@ -51,13 +51,13 @@ function CheckoutPage() {
     getTotal,
     clearCart,
     setDeliveryMethod,
-  } = useCart();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
-  const [orderNumber, setOrderNumber] = useState('');
-  const [orderId, setOrderId] = useState('');
-  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  } = useCart()
+  const [currentStep, setCurrentStep] = useState(1)
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false)
+  const [orderNumber, setOrderNumber] = useState('')
+  const [orderId, setOrderId] = useState('')
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     email: '',
@@ -75,59 +75,59 @@ function CheckoutPage() {
     bkashTransactionId: undefined,
     bkashAmount: undefined,
     bkashPaidAt: undefined,
-  });
+  })
 
   // Set default delivery method in cart store on mount
   useEffect(() => {
-    setDeliveryMethod('standard');
-  }, [setDeliveryMethod]);
+    setDeliveryMethod('standard')
+  }, [setDeliveryMethod])
 
   // Redirect to cart if no items
   useEffect(() => {
     if (items.length === 0 && currentStep !== 4 && !isOrderPlaced) {
-      navigate({ to: '/cart' });
+      navigate({ to: '/cart' })
     }
-  }, [items, navigate, currentStep, isOrderPlaced]);
+  }, [items, navigate, currentStep, isOrderPlaced])
 
   // Generate order number when reaching confirmation
   useEffect(() => {
     if (currentStep === 4 && !orderNumber) {
-      const year = new Date().getFullYear();
-      const random = Math.floor(100000 + Math.random() * 900000);
-      const orderNum = `AYJ-${year}-${random}`;
-      setOrderNumber(orderNum);
+      const year = new Date().getFullYear()
+      const random = Math.floor(100000 + Math.random() * 900000)
+      const orderNum = `AYJ-${year}-${random}`
+      setOrderNumber(orderNum)
     }
-  }, [currentStep, orderNumber]);
+  }, [currentStep, orderNumber])
 
   const handleFormChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }))
+
     // Sync delivery method with cart store
     if (field === 'deliveryMethod' && typeof value === 'string') {
-      setDeliveryMethod(value as 'standard' | 'express' | 'same-day');
+      setDeliveryMethod(value as 'standard' | 'express' | 'same-day')
     }
-  };
+  }
 
   const handleNextStep = () => {
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    setCurrentStep((prev) => Math.min(prev + 1, 4))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handleBackStep = () => {
-    setCurrentStep((prev) => Math.max(prev - 1, 1));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   const handlePlaceOrder = async () => {
-    setIsSubmitting(true);
-    const year = new Date().getFullYear();
-    const random = Math.floor(100000 + Math.random() * 900000);
-    const orderNum = orderNumber || `AYJ-${year}-${random}`;
-    const subtotal = getSubtotal();
-    const shipping = getShipping();
-    const tax = getTax();
-    const discount = getDiscount();
-    const orderTotal = subtotal + tax + shipping - discount;
+    setIsSubmitting(true)
+    const year = new Date().getFullYear()
+    const random = Math.floor(100000 + Math.random() * 900000)
+    const orderNum = orderNumber || `AYJ-${year}-${random}`
+    const subtotal = getSubtotal()
+    const shipping = getShipping()
+    const tax = getTax()
+    const discount = getDiscount()
+    const orderTotal = subtotal + tax + shipping - discount
 
     try {
       const response = await orpcClient.order.placeOrder({
@@ -148,29 +148,34 @@ function CheckoutPage() {
         },
         payment: {
           method: formData.paymentMethod as any,
-          transactionId: formData.bkashTransactionId || formData.cardTransactionId,
+          transactionId:
+            formData.bkashTransactionId || formData.cardTransactionId,
           senderMobile: formData.mobileNumber,
         },
-        items: items.map(item => ({
+        items: items.map((item) => ({
           productId: item.product.id,
           vendorId: item.product.vendor.id,
           title: item.product.title,
           price: item.product.pricing.currentPrice,
           quantity: item.quantity,
           variantInfo: undefined,
-          imageUrl: item.product.images?.[0]?.url,
-        }))
-      });
+          imageUrl: item.product.images[0]?.url,
+        })),
+      })
 
-      const newOrderId = response.id;
-      const firstItemImage = items[0]?.product?.images?.[0]?.url;
-      const placedAt = formData.bkashPaidAt || new Date().toISOString();
+      const newOrderId = response.id
+      const firstItemImage = items[0].product.images[0]?.url
+      const placedAt = formData.bkashPaidAt || new Date().toISOString()
 
       // For bKash, if not yet paid, we stay on confirmation but with instructions
-      const isPrepaid = formData.paymentMethod === 'bkash';
-      const hasPaid = !!(formData.bkashTransactionId);
-      
-      const initialStatus = hasPaid ? 'processing' : (isPrepaid ? 'awaiting_payment' : 'processing');
+      const isPrepaid = formData.paymentMethod === 'bkash'
+      const hasPaid = !!formData.bkashTransactionId
+
+      const initialStatus = hasPaid
+        ? 'processing'
+        : isPrepaid
+          ? 'awaiting_payment'
+          : 'processing'
 
       // Keep updating local store
       addOrder({
@@ -187,7 +192,7 @@ function CheckoutPage() {
           title: item.product.title,
           quantity: item.quantity,
           price: item.product.pricing.currentPrice,
-          imageUrl: item.product.images?.[0]?.url,
+          imageUrl: item.product.images[0]?.url,
           productId: item.product.id,
           product: item.product,
         })),
@@ -221,23 +226,25 @@ function CheckoutPage() {
         timeline: {
           placedAt,
         },
-      });
+      })
 
-      setOrderNumber(orderNum);
-      setOrderId(newOrderId);
-      setIsOrderPlaced(true);
-      setCurrentStep(4);
-      clearCart();
-      setDeliveryMethod(null);
-      toast.success("Order placed successfully!");
+      setOrderNumber(orderNum)
+      setOrderId(newOrderId)
+      setIsOrderPlaced(true)
+      setCurrentStep(4)
+      clearCart()
+      setDeliveryMethod(null)
+      toast.success('Order placed successfully!')
     } catch (error) {
-      console.error("Order error:", error);
-      toast.error("Failed to place order. Please check your connection and try again.");
+      console.error('Order error:', error)
+      toast.error(
+        'Failed to place order. Please check your connection and try again.',
+      )
     } finally {
-      setIsSubmitting(false);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsSubmitting(false)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
-  };
+  }
 
   const renderStep = () => {
     switch (currentStep) {
@@ -248,7 +255,7 @@ function CheckoutPage() {
             formData={formData}
             onFormChange={handleFormChange}
           />
-        );
+        )
       case 2:
         return (
           <OrderReviewStep
@@ -258,7 +265,7 @@ function CheckoutPage() {
             isSubmitting={isSubmitting}
             formData={formData}
           />
-        );
+        )
       case 3:
         return (
           <PaymentStep
@@ -269,7 +276,7 @@ function CheckoutPage() {
             isSubmitting={isSubmitting}
             totalAmount={getTotal()}
           />
-        );
+        )
       case 4:
         return (
           <ConfirmationStep
@@ -288,22 +295,21 @@ function CheckoutPage() {
                 postalCode: formData.postalCode,
                 addressType: formData.addressType,
               },
-              scheduling: {
-              },
+              scheduling: {},
               payment: {
                 paymentMethod: formData.paymentMethod,
                 transactionId: formData.bkashTransactionId,
               },
             }}
           />
-        );
+        )
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   if (items.length === 0 && currentStep !== 5 && !isOrderPlaced) {
-    return null;
+    return null
   }
 
   return (
@@ -363,7 +369,7 @@ function CheckoutPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default CheckoutPage;
+export default CheckoutPage

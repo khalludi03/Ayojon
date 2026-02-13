@@ -1,44 +1,52 @@
-import { Button } from '@/components/ui/button';
-import { Edit, Trash2, Eye, Package } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { VendorProduct } from '@/types/vendor-product';
+import { Edit, Eye, Package, Trash2 } from 'lucide-react'
+import type { VendorProduct } from '@/types/vendor-product'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface ProductsListProps {
-  products: VendorProduct[];
-  onEdit: (product: VendorProduct) => void;
-  onDelete: (productId: string) => void;
-  onToggleStatus: (product: VendorProduct) => void;
-  onRefresh: () => void;
+  products: Array<VendorProduct>
+  onEdit: (product: VendorProduct) => void
+  onDelete: (productId: string) => void
+  onToggleStatus: (product: VendorProduct) => void
+  onRefresh: () => void
 }
 
 const getStatusColor = (status: VendorProduct['status']) => {
   switch (status) {
     case 'active':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
     case 'draft':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
     case 'archived':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
   }
-};
+}
 
 const getProductTypeLabel = (product: VendorProduct) => {
-  if (product.productType === 'both') return 'Purchase & Rental';
-  return product.productType.charAt(0).toUpperCase() + product.productType.slice(1);
-};
+  if (product.productType === 'both') return 'Purchase & Rental'
+  return (
+    product.productType.charAt(0).toUpperCase() + product.productType.slice(1)
+  )
+}
 
-export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRefresh }: ProductsListProps) {
+export function ProductsList({
+  products,
+  onEdit,
+  onDelete,
+  onToggleStatus,
+  onRefresh,
+}: ProductsListProps) {
   const handleDelete = (productId: string) => {
     if (confirm('Are you sure you want to delete this product?')) {
-      onDelete(productId);
+      onDelete(productId)
     }
-  };
+  }
 
   const handleToggleStatus = (product: VendorProduct) => {
-    onToggleStatus(product);
-  };
+    onToggleStatus(product)
+  }
 
   if (products.length === 0) {
     return (
@@ -51,7 +59,7 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
           Get started by adding your first product
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -86,21 +94,29 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
           </thead>
           <tbody className="divide-y divide-[hsl(var(--border))]">
             {products.map((product) => {
-              const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
-              const price = product.purchaseDetails?.regularPrice || product.rentalDetails?.dailyRate || 0;
-              const stock = product.purchaseDetails?.quantity || product.rentalDetails?.quantityAvailable || 0;
+              const primaryImage =
+                product.images.find((img) => img.isPrimary) || product.images[0]
+              const price =
+                product.purchaseDetails?.regularPrice ||
+                product.rentalDetails?.dailyRate ||
+                0
+              const stock =
+                product.purchaseDetails?.quantity ||
+                product.rentalDetails?.quantityAvailable ||
+                0
 
               return (
-                <tr key={product.id} className="hover:bg-[hsl(var(--muted))]/50 transition-colors">
+                <tr
+                  key={product.id}
+                  className="hover:bg-[hsl(var(--muted))]/50 transition-colors"
+                >
                   <td className="py-4">
                     <div className="flex items-center gap-3">
-                      {primaryImage && (
-                        <img
-                          src={primaryImage.url}
-                          alt={product.name}
-                          className="h-12 w-12 rounded object-cover"
-                        />
-                      )}
+                      <img
+                        src={primaryImage.url}
+                        alt={product.name}
+                        className="h-12 w-12 rounded object-cover"
+                      />
                       <div>
                         <p className="text-sm font-medium text-[hsl(var(--foreground))]">
                           {product.name}
@@ -127,10 +143,11 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
                     <span
                       className={cn(
                         'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                        getStatusColor(product.status)
+                        getStatusColor(product.status),
                       )}
                     >
-                      {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                      {product.status.charAt(0).toUpperCase() +
+                        product.status.slice(1)}
                     </span>
                   </td>
                   <td className="py-4 text-right">
@@ -162,7 +179,7 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
                     </div>
                   </td>
                 </tr>
-              );
+              )
             })}
           </tbody>
         </table>
@@ -171,9 +188,16 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
       {/* Mobile Cards */}
       <div className="md:hidden space-y-4">
         {products.map((product) => {
-          const primaryImage = product.images.find(img => img.isPrimary) || product.images[0];
-          const price = product.purchaseDetails?.regularPrice || product.rentalDetails?.dailyRate || 0;
-          const stock = product.purchaseDetails?.quantity || product.rentalDetails?.quantityAvailable || 0;
+          const primaryImage =
+            product.images.find((img) => img.isPrimary) || product.images[0]
+          const price =
+            product.purchaseDetails?.regularPrice ||
+            product.rentalDetails?.dailyRate ||
+            0
+          const stock =
+            product.purchaseDetails?.quantity ||
+            product.rentalDetails?.quantityAvailable ||
+            0
 
           return (
             <div
@@ -181,25 +205,30 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
               className="rounded-lg border border-[hsl(var(--border))] p-4 space-y-3"
             >
               <div className="flex items-start gap-3">
-                {primaryImage && (
-                  <img
-                    src={primaryImage.url}
-                    alt={product.name}
-                    className="h-16 w-16 rounded object-cover"
-                  />
-                )}
+                <img
+                  src={primaryImage.url}
+                  alt={product.name}
+                  className="h-16 w-16 rounded object-cover"
+                />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-sm truncate">{product.name}</h4>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">{product.brand}</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">SKU: {product.sku}</p>
+                  <h4 className="font-medium text-sm truncate">
+                    {product.name}
+                  </h4>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {product.brand}
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    SKU: {product.sku}
+                  </p>
                 </div>
                 <span
                   className={cn(
                     'inline-flex rounded-full px-2 py-1 text-xs font-semibold shrink-0',
-                    getStatusColor(product.status)
+                    getStatusColor(product.status),
                   )}
                 >
-                  {product.status.charAt(0).toUpperCase() + product.status.slice(1)}
+                  {product.status.charAt(0).toUpperCase() +
+                    product.status.slice(1)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-sm">
@@ -235,9 +264,9 @@ export function ProductsList({ products, onEdit, onDelete, onToggleStatus, onRef
                 </Button>
               </div>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

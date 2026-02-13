@@ -1,120 +1,136 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useRouterState } from '@tanstack/react-router';
-import { ChevronDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useRouterState } from '@tanstack/react-router'
+import { ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface DropdownItem {
-  href: string;
-  label: string;
-  description?: string;
+  href: string
+  label: string
+  description?: string
 }
 
 interface NavDropdownProps {
-  label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  items: Array<DropdownItem>;
-  highlight?: boolean;
-  className?: string;
+  label: string
+  icon?: React.ComponentType<{ className?: string }>
+  items: Array<DropdownItem>
+  highlight?: boolean
+  className?: string
 }
 
-export function NavDropdown({ label, icon: Icon, items, highlight, className }: NavDropdownProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(-1);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const itemRefs = useRef<Array<HTMLAnchorElement | null>>([]);
+export function NavDropdown({
+  label,
+  icon: Icon,
+  items,
+  highlight,
+  className,
+}: NavDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const itemRefs = useRef<Array<HTMLAnchorElement | null>>([])
 
   // Check if current route matches any dropdown items
-  const routerState = useRouterState();
-  const currentPath = routerState.location.pathname;
-  const isActive = items.some(item => currentPath.startsWith(item.href));
+  const routerState = useRouterState()
+  const currentPath = routerState.location.pathname
+  const isActive = items.some((item) => currentPath.startsWith(item.href))
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-        setActiveIndex(-1);
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
+        setActiveIndex(-1)
       }
-    };
+    }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Close on ESC key
   useEffect(() => {
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
-        setIsOpen(false);
-        setActiveIndex(-1);
-        triggerRef.current?.focus();
+        setIsOpen(false)
+        setActiveIndex(-1)
+        triggerRef.current?.focus()
       }
-    };
+    }
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen]);
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen])
 
   // Keyboard navigation
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (!isOpen) {
-      if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
-        event.preventDefault();
-        setIsOpen(true);
-        setActiveIndex(0);
-      }
-      return;
-    }
-
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        setActiveIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0));
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        setActiveIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1));
-        break;
-      case 'Tab':
-        setIsOpen(false);
-        setActiveIndex(-1);
-        break;
-      case 'Enter':
-        if (activeIndex >= 0 && itemRefs.current[activeIndex]) {
-          itemRefs.current[activeIndex]?.click();
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!isOpen) {
+        if (
+          event.key === 'Enter' ||
+          event.key === ' ' ||
+          event.key === 'ArrowDown'
+        ) {
+          event.preventDefault()
+          setIsOpen(true)
+          setActiveIndex(0)
         }
-        break;
-    }
-  }, [isOpen, items.length, activeIndex]);
+        return
+      }
+
+      switch (event.key) {
+        case 'ArrowDown':
+          event.preventDefault()
+          setActiveIndex((prev) => (prev < items.length - 1 ? prev + 1 : 0))
+          break
+        case 'ArrowUp':
+          event.preventDefault()
+          setActiveIndex((prev) => (prev > 0 ? prev - 1 : items.length - 1))
+          break
+        case 'Tab':
+          setIsOpen(false)
+          setActiveIndex(-1)
+          break
+        case 'Enter':
+          if (activeIndex >= 0 && itemRefs.current[activeIndex]) {
+            itemRefs.current[activeIndex]?.click()
+          }
+          break
+      }
+    },
+    [isOpen, items.length, activeIndex],
+  )
 
   // Focus active item
   useEffect(() => {
     if (activeIndex >= 0 && itemRefs.current[activeIndex]) {
-      itemRefs.current[activeIndex]?.focus();
+      itemRefs.current[activeIndex]?.focus()
     }
-  }, [activeIndex]);
+  }, [activeIndex])
 
   // Handle hover for desktop
   const handleMouseEnter = () => {
     if (window.innerWidth >= 1024) {
-      setIsOpen(true);
+      setIsOpen(true)
     }
-  };
+  }
 
   const handleMouseLeave = () => {
     if (window.innerWidth >= 1024) {
-      setIsOpen(false);
-      setActiveIndex(-1);
+      setIsOpen(false)
+      setActiveIndex(-1)
     }
-  };
+  }
 
   // Handle click for mobile
   const handleClick = () => {
     if (window.innerWidth < 1024) {
-      setIsOpen(!isOpen);
+      setIsOpen(!isOpen)
     }
-  };
+  }
 
   return (
     <div
@@ -134,10 +150,11 @@ export function NavDropdown({ label, icon: Icon, items, highlight, className }: 
           'flex items-center gap-1.5 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200',
           'hover:bg-[hsl(var(--card))] hover:shadow-sm',
           isOpen && 'bg-[hsl(var(--card))] shadow-sm',
-          isActive && 'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90',
+          isActive &&
+            'bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary))]/90',
           highlight && !isActive
             ? 'text-[hsl(var(--accent))] font-semibold'
-            : !isActive && 'text-[hsl(var(--foreground))]'
+            : !isActive && 'text-[hsl(var(--foreground))]',
         )}
       >
         {Icon && <Icon className="h-4 w-4" />}
@@ -145,7 +162,7 @@ export function NavDropdown({ label, icon: Icon, items, highlight, className }: 
         <ChevronDown
           className={cn(
             'h-3 w-3 ml-0.5 transition-transform duration-200',
-            isOpen && 'rotate-180'
+            isOpen && 'rotate-180',
           )}
         />
       </button>
@@ -160,29 +177,34 @@ export function NavDropdown({ label, icon: Icon, items, highlight, className }: 
           'transition-all duration-200 ease-out',
           isOpen
             ? 'visible scale-100 opacity-100 translate-y-0'
-            : 'invisible scale-95 opacity-0 -translate-y-2'
+            : 'invisible scale-95 opacity-0 -translate-y-2',
         )}
       >
         <div className="py-2">
           {items.map((item, index) => (
             <Link
               key={item.href}
-              ref={(el) => { itemRefs.current[index] = el; }}
+              ref={(el) => {
+                itemRefs.current[index] = el
+              }}
               to={item.href}
               role="menuitem"
               tabIndex={isOpen ? 0 : -1}
               onClick={() => {
-                setIsOpen(false);
-                setActiveIndex(-1);
+                setIsOpen(false)
+                setActiveIndex(-1)
               }}
               className={cn(
                 'block px-4 py-2.5 text-sm transition-colors duration-150',
                 'hover:bg-[hsl(var(--muted))] focus:bg-[hsl(var(--muted))] focus:outline-none',
                 activeIndex === index && 'bg-[hsl(var(--muted))]',
-                currentPath === item.href && 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] font-semibold'
+                currentPath === item.href &&
+                  'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))] font-semibold',
               )}
             >
-              <span className="font-medium text-[hsl(var(--foreground))]">{item.label}</span>
+              <span className="font-medium text-[hsl(var(--foreground))]">
+                {item.label}
+              </span>
               {item.description && (
                 <span className="block text-xs text-[hsl(var(--muted-foreground))] mt-0.5">
                   {item.description}
@@ -193,7 +215,7 @@ export function NavDropdown({ label, icon: Icon, items, highlight, className }: 
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default NavDropdown;
+export default NavDropdown

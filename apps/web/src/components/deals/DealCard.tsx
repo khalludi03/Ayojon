@@ -1,46 +1,46 @@
-import { ShoppingCart, Eye } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
-import type { DealProduct } from '@/types';
-import { useCountdown } from '@/hooks/use-countdown';
-import { useCart } from '@/stores/cart-store';
-import { useQuickView } from '@/stores/quick-view-store';
-import { Badge, DiscountBadge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn, formatPrice } from '@/lib/utils';
+import { Eye, ShoppingCart } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import type { DealProduct } from '@/types'
+import { useCountdown } from '@/hooks/use-countdown'
+import { useCart } from '@/stores/cart-store'
+import { useQuickView } from '@/stores/quick-view-store'
+import { Badge, DiscountBadge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { cn, formatPrice } from '@/lib/utils'
 
 interface DealCardProps {
-  deal: DealProduct;
+  deal: DealProduct
 }
 
 export function DealCard({ deal }: DealCardProps) {
-  const navigate = useNavigate();
-  const countdown = useCountdown(deal.dealEndsAt);
-  const { addItem, toggleItem, isInCart } = useCart();
-  const { openQuickView } = useQuickView();
+  const navigate = useNavigate()
+  const countdown = useCountdown(deal.dealEndsAt)
+  const { addItem, toggleItem, isInCart } = useCart()
+  const { openQuickView } = useQuickView()
 
   const handleToggleCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleItem(deal);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    toggleItem(deal)
+  }
 
   const handleBuyNow = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(deal);
-    navigate({ to: '/checkout' });
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    addItem(deal)
+    navigate({ to: '/checkout' })
+  }
 
   const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openQuickView(deal);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    openQuickView(deal)
+  }
 
-  const inCart = isInCart(deal.id);
+  const inCart = isInCart(deal.id)
 
   // Product detail page URL
-  const productUrl = `/product/${deal.slug}`;
+  const productUrl = `/product/${deal.slug}`
 
   return (
     <a
@@ -49,7 +49,7 @@ export function DealCard({ deal }: DealCardProps) {
       aria-label={`View ${deal.title} - ${formatPrice(deal.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
-      <div 
+      <div
         className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]"
         onClick={handleQuickView}
       >
@@ -62,11 +62,11 @@ export function DealCard({ deal }: DealCardProps) {
 
         {/* Quick View Overlay Button (Desktop) */}
         <button
-            onClick={handleQuickView}
-            className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20 cursor-pointer hidden sm:flex"
-            aria-label="Quick view"
+          onClick={handleQuickView}
+          className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20 cursor-pointer hidden sm:flex"
+          aria-label="Quick view"
         >
-            <Eye className="h-8 w-8 text-white opacity-70 drop-shadow-lg transition-transform hover:scale-125" />
+          <Eye className="h-8 w-8 text-white opacity-70 drop-shadow-lg transition-transform hover:scale-125" />
         </button>
 
         {/* Discount Badge */}
@@ -116,11 +116,17 @@ export function DealCard({ deal }: DealCardProps) {
         </div>
 
         {/* Timer - Fixed height (always reserve space) */}
-        <div className="mt-1.5 h-4 text-[9px] text-[hsl(var(--muted-foreground))] sm:mt-2 sm:text-[10px] md:text-xs" suppressHydrationWarning>
+        <div
+          className="mt-1.5 h-4 text-[9px] text-[hsl(var(--muted-foreground))] sm:mt-2 sm:text-[10px] md:text-xs"
+          suppressHydrationWarning
+        >
           {!countdown.isExpired ? (
             <>
               Ends in{' '}
-              <span className="font-mono font-semibold text-[hsl(var(--accent))]" suppressHydrationWarning>
+              <span
+                className="font-mono font-semibold text-[hsl(var(--accent))]"
+                suppressHydrationWarning
+              >
                 {countdown.hours}:{countdown.minutes}:{countdown.seconds}
               </span>
             </>
@@ -154,5 +160,5 @@ export function DealCard({ deal }: DealCardProps) {
         </div>
       </div>
     </a>
-  );
+  )
 }

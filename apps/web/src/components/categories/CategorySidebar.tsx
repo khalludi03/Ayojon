@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from 'react'
 import {
   Baby,
   ChevronRight,
@@ -11,8 +11,8 @@ import {
   Sparkles,
   Tv,
   Watch,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 // Category data with subcategories
 const SIDEBAR_CATEGORIES = [
@@ -54,7 +54,11 @@ const SIDEBAR_CATEGORIES = [
       { id: 'smartphones', name: 'Smartphones', slug: 'smartphones' },
       { id: 'cases-covers', name: 'Cases & Covers', slug: 'cases-covers' },
       { id: 'chargers', name: 'Chargers & Cables', slug: 'chargers' },
-      { id: 'screen-protectors', name: 'Screen Protectors', slug: 'screen-protectors' },
+      {
+        id: 'screen-protectors',
+        name: 'Screen Protectors',
+        slug: 'screen-protectors',
+      },
       { id: 'earphones', name: 'Earphones & Headsets', slug: 'earphones' },
     ],
   },
@@ -68,7 +72,11 @@ const SIDEBAR_CATEGORIES = [
       { id: 'laptops', name: 'Laptops', slug: 'laptops' },
       { id: 'desktops', name: 'Desktops', slug: 'desktops' },
       { id: 'monitors', name: 'Monitors', slug: 'monitors' },
-      { id: 'keyboards-mice', name: 'Keyboards & Mice', slug: 'keyboards-mice' },
+      {
+        id: 'keyboards-mice',
+        name: 'Keyboards & Mice',
+        slug: 'keyboards-mice',
+      },
       { id: 'printers', name: 'Printers & Scanners', slug: 'printers' },
     ],
   },
@@ -83,7 +91,11 @@ const SIDEBAR_CATEGORIES = [
       { id: 'audio', name: 'Audio & Speakers', slug: 'audio' },
       { id: 'cameras', name: 'Cameras', slug: 'cameras' },
       { id: 'gaming', name: 'Gaming Consoles', slug: 'gaming' },
-      { id: 'home-appliances', name: 'Home Appliances', slug: 'home-appliances' },
+      {
+        id: 'home-appliances',
+        name: 'Home Appliances',
+        slug: 'home-appliances',
+      },
     ],
   },
   {
@@ -152,26 +164,29 @@ const SIDEBAR_CATEGORIES = [
       { id: 'bedding', name: 'Bedding', slug: 'bedding' },
     ],
   },
-];
+]
 
 interface CategorySidebarProps {
-  className?: string;
-  onCategorySelect?: (categorySlug: string) => void;
+  className?: string
+  onCategorySelect?: (categorySlug: string) => void
 }
 
-export function CategorySidebar({ className, onCategorySelect }: CategorySidebarProps) {
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
+export function CategorySidebar({
+  className,
+  onCategorySelect,
+}: CategorySidebarProps) {
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
+  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
 
   const handleCategoryClick = (categoryId: string) => {
-    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
-  };
+    setExpandedCategory(expandedCategory === categoryId ? null : categoryId)
+  }
 
   return (
     <aside
       className={cn(
         'w-64 flex-shrink-0 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg overflow-hidden',
-        className
+        className,
       )}
     >
       {/* Header */}
@@ -186,9 +201,9 @@ export function CategorySidebar({ className, onCategorySelect }: CategorySidebar
       <nav className="max-h-[calc(100vh-200px)] overflow-y-auto">
         <ul className="py-2">
           {SIDEBAR_CATEGORIES.map((category) => {
-            const isExpanded = expandedCategory === category.id;
-            const isHovered = hoveredCategory === category.id;
-            const Icon = category.icon;
+            const isExpanded = expandedCategory === category.id
+            const isHovered = hoveredCategory === category.id
+            const Icon = category.icon
 
             return (
               <li
@@ -202,27 +217,38 @@ export function CategorySidebar({ className, onCategorySelect }: CategorySidebar
                   className={cn(
                     'flex w-full items-center justify-between px-4 py-3 text-left transition-all duration-200',
                     'hover:bg-[hsl(var(--muted))] hover:pl-5',
-                    isExpanded && 'bg-[hsl(var(--primary))]/5 border-l-4 border-[hsl(var(--primary))]'
+                    isExpanded &&
+                      'bg-[hsl(var(--primary))]/5 border-l-4 border-[hsl(var(--primary))]',
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={cn(
-                      'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
-                      isHovered || isExpanded ? 'bg-[hsl(var(--primary))]/10' : 'bg-[hsl(var(--muted))]'
-                    )}>
+                    <div
+                      className={cn(
+                        'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
+                        isHovered || isExpanded
+                          ? 'bg-[hsl(var(--primary))]/10'
+                          : 'bg-[hsl(var(--muted))]',
+                      )}
+                    >
                       <Icon className={cn('h-4 w-4', category.color)} />
                     </div>
-                    <span className={cn(
-                      'text-sm font-medium transition-colors',
-                      isExpanded ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--foreground))]'
-                    )}>
+                    <span
+                      className={cn(
+                        'text-sm font-medium transition-colors',
+                        isExpanded
+                          ? 'text-[hsl(var(--primary))]'
+                          : 'text-[hsl(var(--foreground))]',
+                      )}
+                    >
                       {category.name}
                     </span>
                   </div>
-                  <div className={cn(
-                    'transition-transform duration-200',
-                    isExpanded && 'rotate-90'
-                  )}>
+                  <div
+                    className={cn(
+                      'transition-transform duration-200',
+                      isExpanded && 'rotate-90',
+                    )}
+                  >
                     <ChevronRight className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                   </div>
                 </button>
@@ -231,7 +257,7 @@ export function CategorySidebar({ className, onCategorySelect }: CategorySidebar
                 <div
                   className={cn(
                     'overflow-hidden transition-all duration-300 ease-in-out',
-                    isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                    isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
                   )}
                 >
                   <ul className="border-l-2 border-[hsl(var(--border))] ml-6 py-1 bg-[hsl(var(--muted))]/30">
@@ -240,13 +266,13 @@ export function CategorySidebar({ className, onCategorySelect }: CategorySidebar
                         <a
                           href={`/category/${category.slug}/${sub.slug}`}
                           onClick={(e) => {
-                            e.preventDefault();
-                            onCategorySelect?.(`${category.slug}/${sub.slug}`);
+                            e.preventDefault()
+                            onCategorySelect?.(`${category.slug}/${sub.slug}`)
                           }}
                           className={cn(
                             'block py-2 pl-4 pr-4 text-sm text-[hsl(var(--muted-foreground))]',
                             'hover:text-[hsl(var(--primary))] hover:bg-[hsl(var(--primary))]/5',
-                            'transition-all duration-150 hover:pl-5'
+                            'transition-all duration-150 hover:pl-5',
                           )}
                         >
                           {sub.name}
@@ -256,7 +282,7 @@ export function CategorySidebar({ className, onCategorySelect }: CategorySidebar
                   </ul>
                 </div>
               </li>
-            );
+            )
           })}
         </ul>
 
@@ -272,7 +298,7 @@ export function CategorySidebar({ className, onCategorySelect }: CategorySidebar
         </div>
       </nav>
     </aside>
-  );
+  )
 }
 
-export default CategorySidebar;
+export default CategorySidebar

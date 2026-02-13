@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useCart } from '@/stores/cart-store';
-import { cn } from '@/lib/utils';
+import { useEffect, useState } from 'react'
+import { ShoppingCart } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useCart } from '@/stores/cart-store'
+import { cn } from '@/lib/utils'
 
 interface CartIconProps {
-  onClick?: () => void;
+  onClick?: () => void
 }
 
 export function CartIcon({ onClick }: CartIconProps) {
-  const { itemCount } = useCart();
-  const [mounted, setMounted] = useState(false);
+  const { itemCount } = useCart()
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   return (
     <Button
@@ -29,12 +29,12 @@ export function CartIcon({ onClick }: CartIconProps) {
         <span
           className={cn(
             'absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[hsl(var(--accent))] px-0.5 text-[10px] font-bold text-white sm:-right-1 sm:-top-1 sm:h-5 sm:min-w-5 sm:px-1 sm:text-xs',
-            itemCount > 99 && 'text-[8px] sm:text-[10px]'
+            itemCount > 99 && 'text-[8px] sm:text-[10px]',
           )}
         >
           {itemCount > 99 ? '99+' : itemCount}
         </span>
       )}
     </Button>
-  );
+  )
 }

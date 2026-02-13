@@ -1,8 +1,8 @@
-import type { AppRouter } from "@my-better-t-app/api/routers/index";
-import { env } from "@my-better-t-app/env/web";
-import { createORPCClient } from "@orpc/client";
-import { RPCLink } from "@orpc/client/fetch";
-import { createTanstackQueryUtils } from "@orpc/tanstack-query";
+import { env } from '@my-better-t-app/env/web'
+import { createORPCClient } from '@orpc/client'
+import { RPCLink } from '@orpc/client/fetch'
+import { createTanstackQueryUtils } from '@orpc/tanstack-query'
+import type { AppRouter } from '@my-better-t-app/api/routers/index'
 
 // Create oRPC client
 const link = new RPCLink({
@@ -10,12 +10,12 @@ const link = new RPCLink({
   fetch: (input, init) => {
     return fetch(input, {
       ...init,
-      credentials: "include", // For cookies/session
-    });
+      credentials: 'include', // For cookies/session
+    })
   },
-});
+})
 
-export const orpcClient = createORPCClient<AppRouter>(link);
+export const orpcClient = createORPCClient<AppRouter>(link)
 
 // Create TanStack Query utils
-export const orpc = createTanstackQueryUtils(orpcClient) as any;
+export const orpc = createTanstackQueryUtils(orpcClient) as any

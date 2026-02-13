@@ -1,17 +1,42 @@
-import { useMemo, useState, useEffect } from "react";
-import { Link } from "@tanstack/react-router";
-import { Camera, Heart, ShoppingCart, Trash2, MapPin, Plus, Check, Loader2, Star } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "@tanstack/react-router";
-import { authClient } from "@/lib/auth-client";
-import { env } from "@my-better-t-app/env/web";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useRouter } from '@tanstack/react-router'
+import {
+  Camera,
+  Check,
+  Heart,
+  Loader2,
+  MapPin,
+  Plus,
+  ShoppingCart,
+  Star,
+  Trash2,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { env } from '@my-better-t-app/env/web'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { ChangePasswordForm } from './change-password-form'
+import type { Order } from '@/types'
+import { authClient } from '@/lib/auth-client'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -19,125 +44,157 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
+import { getRecentOrders } from '@/mock/services/account'
+import { useWishlist } from '@/stores/wishlist-store'
+import { useCart } from '@/stores/cart-store'
+import { formatPrice } from '@/lib/utils'
+import { orpc, orpcClient } from '@/utils/orpc'
 
-type UpdateUserData = Parameters<typeof authClient.updateUser>[0];
-type AuthSession = Awaited<ReturnType<typeof authClient.getSession>>;
-import { getRecentOrders } from "@/mock/services/account";
-import type { Order } from "@/types";
-import { useWishlist } from "@/stores/wishlist-store";
-import { useCart } from "@/stores/cart-store";
-import { formatPrice } from "@/lib/utils";
-import { orpc, orpcClient } from "@/utils/orpc";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+type UpdateUserData = Parameters<typeof authClient.updateUser>[0]
+type AuthSession = Awaited<ReturnType<typeof authClient.getSession>>
 
 export function AccountOrders() {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data: orders = [], isLoading } = useQuery(
-    orpc.order.listMyOrders.queryOptions()
-  );
+    orpc.order.listMyOrders.queryOptions(),
+  )
 
-  const pageSize = 10;
+  const pageSize = 10
   const statusFilters = [
-    { value: "all", label: "All" },
-    { value: "pending_all", label: "Pending" },
-    { value: "delivered", label: "Delivered" },
-  ];
+    { value: 'all', label: 'All' },
+    { value: 'pending_all', label: 'Pending' },
+    { value: 'delivered', label: 'Delivered' },
+  ]
 
   const statusConfig: Record<string, { label: string; className: string }> = {
-    pending: { label: "Pending", className: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300" },
-    processing: { label: "Confirmed", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
-    shipped: { label: "Shipped", className: "bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300" },
-    delivered: { label: "Delivered", className: "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300" },
-    cancelled: { label: "Cancelled", className: "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300" },
-    payment_rejected: { label: "Payment Rejected", className: "bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300" },
-    awaiting_payment: { label: "Awaiting Payment", className: "bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300" },
-    payment_submitted: { label: "Payment Submitted", className: "bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300" },
-    payment_received: { label: "Payment Confirmed", className: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300" },
-    placed: { label: "Order Placed", className: "bg-sky-100 text-sky-700 dark:bg-sky-950/30 dark:text-sky-300" },
-  };
+    pending: {
+      label: 'Pending',
+      className:
+        'bg-yellow-100 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-300',
+    },
+    processing: {
+      label: 'Confirmed',
+      className:
+        'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300',
+    },
+    shipped: {
+      label: 'Shipped',
+      className:
+        'bg-purple-100 text-purple-700 dark:bg-purple-950/30 dark:text-purple-300',
+    },
+    delivered: {
+      label: 'Delivered',
+      className:
+        'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-300',
+    },
+    cancelled: {
+      label: 'Cancelled',
+      className: 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-300',
+    },
+    payment_rejected: {
+      label: 'Payment Rejected',
+      className:
+        'bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300',
+    },
+    awaiting_payment: {
+      label: 'Awaiting Payment',
+      className:
+        'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300',
+    },
+    payment_submitted: {
+      label: 'Payment Submitted',
+      className:
+        'bg-blue-100 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300',
+    },
+    payment_received: {
+      label: 'Payment Confirmed',
+      className:
+        'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-300',
+    },
+    placed: {
+      label: 'Order Placed',
+      className: 'bg-sky-100 text-sky-700 dark:bg-sky-950/30 dark:text-sky-300',
+    },
+  }
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, searchTerm, startDate, endDate, orders.length]);
+    setCurrentPage(1)
+  }, [statusFilter, searchTerm, startDate, endDate, orders.length])
 
   const formatDeliveryMethod = (method?: string) => {
     switch (method) {
-      case "standard":
-        return "Standard Delivery";
-      case "express":
-        return "Express Delivery";
-      case "same-day":
-        return "Same-Day Delivery";
+      case 'standard':
+        return 'Standard Delivery'
+      case 'express':
+        return 'Express Delivery'
+      case 'same-day':
+        return 'Same-Day Delivery'
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   const filteredOrders = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const startDateValue = startDate ? new Date(startDate) : null;
-    const endDateValue = endDate ? new Date(endDate) : null;
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const startDateValue = startDate ? new Date(startDate) : null
+    const endDateValue = endDate ? new Date(endDate) : null
     if (endDateValue) {
-      endDateValue.setHours(23, 59, 59, 999);
+      endDateValue.setHours(23, 59, 59, 999)
     }
 
     return orders
       .filter((order) => {
-        if (statusFilter === "all") {
-          return true;
+        if (statusFilter === 'all') {
+          return true
         }
-        if (statusFilter === "pending_all") {
-          return !["delivered", "cancelled"].includes(order.status);
+        if (statusFilter === 'pending_all') {
+          return !['delivered', 'cancelled'].includes(order.status)
         }
-        return order.status === statusFilter;
+        return order.status === statusFilter
       })
       .filter((order) => {
         if (!normalizedSearch) {
-          return true;
+          return true
         }
-        return order.orderNumber.toLowerCase().includes(normalizedSearch);
+        return order.orderNumber.toLowerCase().includes(normalizedSearch)
       })
       .filter((order) => {
-        const orderDate = new Date(order.createdAt);
+        const orderDate = new Date(order.createdAt)
         if (startDateValue && orderDate < startDateValue) {
-          return false;
+          return false
         }
         if (endDateValue && orderDate > endDateValue) {
-          return false;
+          return false
         }
-        return true;
+        return true
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [orders, statusFilter, searchTerm, startDate, endDate]);
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+  }, [orders, statusFilter, searchTerm, startDate, endDate])
 
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize))
   const pagedOrders = filteredOrders.slice(
     (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+    currentPage * pageSize,
+  )
 
-  const hasOrders = orders.length > 0;
-  const hasFilteredResults = pagedOrders.length > 0;
-  const resultsStart = filteredOrders.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
-  const resultsEnd = Math.min(currentPage * pageSize, filteredOrders.length);
+  const hasOrders = orders.length > 0
+  const hasFilteredResults = pagedOrders.length > 0
+  const resultsStart =
+    filteredOrders.length === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const resultsEnd = Math.min(currentPage * pageSize, filteredOrders.length)
 
   const formatOrderNumber = (orderNumber: string) => {
-    if (!orderNumber) return "";
-    return orderNumber.startsWith("#") ? orderNumber : `#${orderNumber}`;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    if (!orderNumber) return ''
+    return orderNumber.startsWith('#') ? orderNumber : `#${orderNumber}`
   }
 
   return (
@@ -150,7 +207,7 @@ export function AccountOrders() {
           </p>
         </div>
         <span className="rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/40 px-3 py-1 text-xs font-semibold text-[hsl(var(--foreground))]">
-          {orders.length} {orders.length === 1 ? "order" : "orders"}
+          {orders.length} {orders.length === 1 ? 'order' : 'orders'}
         </span>
       </div>
 
@@ -163,7 +220,10 @@ export function AccountOrders() {
           <div className="space-y-4">
             <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
               <div className="space-y-3">
-                <Label htmlFor="order-search" className="text-xs uppercase tracking-wide text-muted-foreground">
+                <Label
+                  htmlFor="order-search"
+                  className="text-xs uppercase tracking-wide text-muted-foreground"
+                >
                   Search by order number
                 </Label>
                 <Input
@@ -177,7 +237,9 @@ export function AccountOrders() {
                 {statusFilters.map((filter) => (
                   <Button
                     key={filter.value}
-                    variant={statusFilter === filter.value ? "primary" : "outline"}
+                    variant={
+                      statusFilter === filter.value ? 'primary' : 'outline'
+                    }
                     size="sm"
                     onClick={() => setStatusFilter(filter.value)}
                   >
@@ -189,7 +251,10 @@ export function AccountOrders() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="orders-start-date" className="text-xs uppercase tracking-wide text-muted-foreground">
+                <Label
+                  htmlFor="orders-start-date"
+                  className="text-xs uppercase tracking-wide text-muted-foreground"
+                >
                   Start date
                 </Label>
                 <Input
@@ -200,7 +265,10 @@ export function AccountOrders() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="orders-end-date" className="text-xs uppercase tracking-wide text-muted-foreground">
+                <Label
+                  htmlFor="orders-end-date"
+                  className="text-xs uppercase tracking-wide text-muted-foreground"
+                >
                   End date
                 </Label>
                 <Input
@@ -219,7 +287,9 @@ export function AccountOrders() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold">No orders yet</p>
-                  <p className="text-xs text-muted-foreground">Start shopping to place your first order.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Start shopping to place your first order.
+                  </p>
                 </div>
                 <Button size="sm" asChild>
                   <Link to="/products">Start Shopping</Link>
@@ -229,16 +299,18 @@ export function AccountOrders() {
               <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-[hsl(var(--border))] p-6 text-center">
                 <div>
                   <p className="text-sm font-semibold">No matching orders</p>
-                  <p className="text-xs text-muted-foreground">Try adjusting your filters or search.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Try adjusting your filters or search.
+                  </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    setStatusFilter("all");
-                    setSearchTerm("");
-                    setStartDate("");
-                    setEndDate("");
+                    setStatusFilter('all')
+                    setSearchTerm('')
+                    setStartDate('')
+                    setEndDate('')
                   }}
                 >
                   Clear filters
@@ -250,9 +322,11 @@ export function AccountOrders() {
                   const thumbnails = (order.items || [])
                     .map((item: any) => item.imageUrl)
                     .filter(Boolean)
-                    .slice(0, 3) as string[];
-                  const hasThumbnails = thumbnails.length > 0;
-                  const badge = statusConfig[order.status as keyof typeof statusConfig] || statusConfig.pending;
+                    .slice(0, 3) as Array<string>
+                  const hasThumbnails = thumbnails.length > 0
+                  const badge =
+                    statusConfig[order.status as keyof typeof statusConfig] ??
+                    statusConfig.pending
 
                   return (
                     <div
@@ -262,15 +336,24 @@ export function AccountOrders() {
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div className="space-y-2">
                           <div className="flex flex-wrap items-center gap-3">
-                            <p className="text-sm font-semibold">{formatOrderNumber(order.orderNumber)}</p>
-                            <Badge className={`${badge.className} text-[10px] sm:text-xs font-bold uppercase tracking-wider`}>{badge.label}</Badge>
+                            <p className="text-sm font-semibold">
+                              {formatOrderNumber(order.orderNumber)}
+                            </p>
+                            <Badge
+                              className={`${badge.className} text-[10px] sm:text-xs font-bold uppercase tracking-wider`}
+                            >
+                              {badge.label}
+                            </Badge>
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {new Date(order.createdAt).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
+                            {new Date(order.createdAt).toLocaleDateString(
+                              'en-US',
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                              },
+                            )}
                           </p>
                           {formatDeliveryMethod(order.deliveryMethod) && (
                             <p className="text-xs text-muted-foreground">
@@ -279,17 +362,32 @@ export function AccountOrders() {
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm">
-                          <span className="text-muted-foreground">{(order.items || []).length} items</span>
-                          <span className="font-semibold">{formatPrice(parseFloat(order.total))}</span>
+                          <span className="text-muted-foreground">
+                            {(order.items || []).length} items
+                          </span>
+                          <span className="font-semibold">
+                            {formatPrice(parseFloat(order.total))}
+                          </span>
                           <div className="flex flex-wrap gap-2">
-                            <Button type="button" size="sm" variant="outline" asChild>
-                              <Link to="/account/orders/$orderId" params={{ orderId: order.id }}>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              asChild
+                            >
+                              <Link
+                                to="/account/orders/$orderId"
+                                params={{ orderId: order.id }}
+                              >
                                 View Details
                               </Link>
                             </Button>
-                            {order.status === "shipped" && (
+                            {order.status === 'shipped' && (
                               <Button type="button" size="sm" asChild>
-                                <Link to="/track/$orderNumber" params={{ orderNumber: order.orderNumber }}>
+                                <Link
+                                  to="/track/$orderNumber"
+                                  params={{ orderNumber: order.orderNumber }}
+                                >
                                   Track Order
                                 </Link>
                               </Button>
@@ -298,7 +396,7 @@ export function AccountOrders() {
                         </div>
                       </div>
 
-                        <div className="flex flex-wrap items-center gap-3 border-t border-[hsl(var(--border))] pt-3">
+                      <div className="flex flex-wrap items-center gap-3 border-t border-[hsl(var(--border))] pt-3">
                         {hasThumbnails ? (
                           thumbnails.map((imageUrl, index) => (
                             <img
@@ -315,12 +413,13 @@ export function AccountOrders() {
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
 
                 <div className="flex flex-col gap-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 p-4 text-sm sm:flex-row sm:items-center sm:justify-between">
                   <span className="text-muted-foreground">
-                    Showing {resultsStart}-{resultsEnd} of {filteredOrders.length} orders
+                    Showing {resultsStart}-{resultsEnd} of{' '}
+                    {filteredOrders.length} orders
                   </span>
                   <div className="flex flex-wrap items-center gap-2">
                     <Button
@@ -328,7 +427,9 @@ export function AccountOrders() {
                       size="sm"
                       variant="outline"
                       disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
                     >
                       Previous
                     </Button>
@@ -340,7 +441,9 @@ export function AccountOrders() {
                       size="sm"
                       variant="outline"
                       disabled={currentPage === totalPages}
-                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                      }
                     >
                       Next
                     </Button>
@@ -352,44 +455,59 @@ export function AccountOrders() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 export function AccountWishlist() {
-  const { items, removeItem } = useWishlist();
-  const { addItem } = useCart();
-  const [sortBy, setSortBy] = useState<'recent' | 'price-asc' | 'price-desc'>('recent');
+  const { items, removeItem } = useWishlist()
+  const { addItem } = useCart()
+  const [sortBy, setSortBy] = useState<'recent' | 'price-asc' | 'price-desc'>(
+    'recent',
+  )
 
   const sortedItems = useMemo(() => {
-    const sorted = [...items];
+    const sorted = [...items]
     switch (sortBy) {
       case 'price-asc':
-        return sorted.sort((a, b) => a.product.pricing.currentPrice - b.product.pricing.currentPrice);
+        return sorted.sort(
+          (a, b) =>
+            a.product.pricing.currentPrice - b.product.pricing.currentPrice,
+        )
       case 'price-desc':
-        return sorted.sort((a, b) => b.product.pricing.currentPrice - a.product.pricing.currentPrice);
+        return sorted.sort(
+          (a, b) =>
+            b.product.pricing.currentPrice - a.product.pricing.currentPrice,
+        )
       case 'recent':
       default:
-        return sorted.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
+        return sorted.sort(
+          (a, b) =>
+            new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
+        )
     }
-  }, [items, sortBy]);
+  }, [items, sortBy])
 
   const handleMoveToCart = (productId: string) => {
-    const item = items.find((wishlistItem) => wishlistItem.productId === productId);
-    if (!item) return;
-    addItem(item.product, 1, item.product.variants?.[0]);
-    removeItem(productId);
-    toast.success('Moved to cart');
-  };
+    const item = items.find(
+      (wishlistItem) => wishlistItem.productId === productId,
+    )
+    if (!item) return
+    addItem(item.product, 1, item.product.variants[0])
+    removeItem(productId)
+    toast.success('Moved to cart')
+  }
 
   const handleMoveAllToCart = () => {
-    let movedCount = 0;
-    for (const item of items) {
-      addItem(item.product, 1, item.product.variants?.[0]);
-      removeItem(item.productId);
-      movedCount++;
+    let movedCount = 0
+    for (const wishlistItem of items) {
+      addItem(wishlistItem.product, 1, wishlistItem.product.variants[0])
+      removeItem(wishlistItem.productId)
+      movedCount++
     }
-    toast.success(`Moved ${movedCount} item${movedCount > 1 ? 's' : ''} to cart`);
-  };
+    toast.success(
+      `Moved ${movedCount} item${movedCount > 1 ? 's' : ''} to cart`,
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -416,7 +534,10 @@ export function AccountWishlist() {
               <CardDescription>Your wishlist collection</CardDescription>
             </div>
             {items.length > 1 && (
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+              <Select
+                value={sortBy}
+                onValueChange={(v) => setSortBy(v as typeof sortBy)}
+              >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -437,7 +558,9 @@ export function AccountWishlist() {
               </div>
               <div>
                 <p className="text-sm font-semibold">Your wishlist is empty</p>
-                <p className="text-xs text-muted-foreground">Save items to view them here.</p>
+                <p className="text-xs text-muted-foreground">
+                  Save items to view them here.
+                </p>
               </div>
               <Button size="sm" asChild>
                 <Link to="/products">Browse products</Link>
@@ -452,8 +575,8 @@ export function AccountWishlist() {
                 >
                   <div className="flex items-start gap-4">
                     <img
-                      src={item.product.images?.[0]?.url || "/placeholder.png"}
-                      alt={item.product.images?.[0]?.alt || item.product.title}
+                      src={item.product.images[0]?.url || '/placeholder.png'}
+                      alt={item.product.images[0]?.alt || item.product.title}
                       className="h-16 w-16 rounded-lg border border-[hsl(var(--border))] object-cover"
                     />
                     <div className="min-w-0 flex-1">
@@ -461,10 +584,11 @@ export function AccountWishlist() {
                         {item.product.title}
                       </p>
                       <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                        Saved on {new Date(item.addedAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
+                        Saved on{' '}
+                        {new Date(item.addedAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
                         })}
                       </p>
                       <p className="mt-2 text-sm font-bold text-[hsl(var(--foreground))]">
@@ -478,11 +602,13 @@ export function AccountWishlist() {
                       type="button"
                       size="sm"
                       className="flex-1"
-                      disabled={item.product.stockStatus === "out_of_stock"}
+                      disabled={item.product.stockStatus === 'out_of_stock'}
                       onClick={() => handleMoveToCart(item.productId)}
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" />
-                      {item.product.stockStatus === "out_of_stock" ? "Out of Stock" : "Move to Cart"}
+                      {item.product.stockStatus === 'out_of_stock'
+                        ? 'Out of Stock'
+                        : 'Move to Cart'}
                     </Button>
                     <Button
                       type="button"
@@ -502,134 +628,140 @@ export function AccountWishlist() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 export function AccountAddresses() {
-  const queryClient = useQueryClient();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<any | null>(null);
-  const [addressToDelete, setAddressToDelete] = useState<any | null>(null);
+  const queryClient = useQueryClient()
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedAddress, setSelectedAddress] = useState<any | null>(null)
+  const [addressToDelete, setAddressToDelete] = useState<any | null>(null)
 
   // Fetch addresses from backend
-  const { data: addresses = [], isLoading, error } = useQuery({
+  const {
+    data: addresses = [],
+    isLoading,
+    error,
+  } = useQuery({
     ...orpc.address.listAddresses.queryOptions(),
     ssr: false,
-  } as any);
+  })
 
   // Mutations
   const createMutation = useMutation({
     ...orpc.address.addAddress.mutationOptions(),
     onSuccess: () => {
-      toast.success('Address added successfully');
-      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
-      setIsAddDialogOpen(false);
+      toast.success('Address added successfully')
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })
+      setIsAddDialogOpen(false)
     },
-    onError: (error) => {
-      toast.error('Failed to add address');
-      console.error(error);
-    }
-  } as any);
+    onError: (err) => {
+      toast.error('Failed to add address')
+      console.error(err)
+    },
+  })
 
   const updateMutation = useMutation({
     ...orpc.address.updateAddress.mutationOptions(),
     onSuccess: () => {
-      toast.success('Address updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
-      setIsEditDialogOpen(false);
-      setSelectedAddress(null);
+      toast.success('Address updated successfully')
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })
+      setIsEditDialogOpen(false)
+      setSelectedAddress(null)
     },
-    onError: (error) => {
-      toast.error('Failed to update address');
-      console.error(error);
-    }
-  } as any);
+    onError: (err) => {
+      toast.error('Failed to update address')
+      console.error(err)
+    },
+  })
 
   const deleteMutation = useMutation({
     ...orpc.address.deleteAddress.mutationOptions(),
     onSuccess: () => {
-      toast.success('Address deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
-      setIsDeleteDialogOpen(false);
-      setAddressToDelete(null);
+      toast.success('Address deleted successfully')
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })
+      setIsDeleteDialogOpen(false)
+      setAddressToDelete(null)
     },
-    onError: (error) => {
-      toast.error('Failed to delete address');
-      console.error(error);
-    }
-  } as any);
+    onError: (err) => {
+      toast.error('Failed to delete address')
+      console.error(err)
+    },
+  })
 
   const setDefaultMutation = useMutation({
     ...orpc.address.setDefault.mutationOptions(),
     onSuccess: () => {
-      toast.success('Default address updated');
-      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
+      toast.success('Default address updated')
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })
     },
-    onError: (error) => {
-      toast.error('Failed to update default address');
-      console.error(error);
-    }
-  } as any);
+    onError: (err) => {
+      toast.error('Failed to update default address')
+      console.error(err)
+    },
+  })
 
   const handleAddAddress = (data: any) => {
     if (addresses.length >= 5) {
-      toast.error('Maximum 5 addresses allowed');
-      return;
+      toast.error('Maximum 5 addresses allowed')
+      return
     }
-    createMutation.mutate({ ...data, state: data.division });
-  };
+    createMutation.mutate({ ...data, state: data.division })
+  }
 
   const handleEditAddress = (data: any) => {
-    if (!selectedAddress) return;
-    updateMutation.mutate({ 
-      ...data, 
+    if (!selectedAddress) return
+    updateMutation.mutate({
+      ...data,
       id: selectedAddress.id,
-      state: data.division 
-    });
-  };
+      state: data.division,
+    })
+  }
 
   const handleDeleteAddress = () => {
-    if (!addressToDelete) return;
-    deleteMutation.mutate({ id: addressToDelete.id });
-  };
+    if (!addressToDelete) return
+    deleteMutation.mutate({ id: addressToDelete.id })
+  }
 
   const handleSetAsDefault = (addressId: string) => {
-    setDefaultMutation.mutate({ id: addressId });
-  };
+    setDefaultMutation.mutate({ id: addressId })
+  }
 
   const openEditDialog = (address: any) => {
-    setSelectedAddress(address);
-    setIsEditDialogOpen(true);
-  };
+    setSelectedAddress(address)
+    setIsEditDialogOpen(true)
+  }
 
   const openDeleteDialog = (address: any) => {
-    setAddressToDelete(address);
-    setIsDeleteDialogOpen(true);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-        <p className="text-muted-foreground">Loading your addresses...</p>
-      </div>
-    );
+    setAddressToDelete(address)
+    setIsDeleteDialogOpen(true)
   }
 
   if (error) {
     return (
       <Card className="border-destructive/50">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-destructive font-semibold mb-2">Failed to load addresses</p>
-          <p className="text-muted-foreground mb-4">There was an error connecting to the server.</p>
-          <Button variant="outline" onClick={() => queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })}>
+          <p className="text-destructive font-semibold mb-2">
+            Failed to load addresses
+          </p>
+          <p className="text-muted-foreground mb-4">
+            There was an error connecting to the server.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() =>
+              queryClient.invalidateQueries({
+                queryKey: ['address', 'listAddresses'],
+              })
+            }
+          >
             Try Again
           </Button>
         </CardContent>
       </Card>
-    );
+    )
   }
 
   return (
@@ -646,7 +778,11 @@ export function AccountAddresses() {
           disabled={addresses.length >= 5 || createMutation.isPending}
           size="lg"
         >
-          {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+          {createMutation.isPending ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="mr-2 h-4 w-4" />
+          )}
           Add New Address
         </Button>
       </div>
@@ -659,8 +795,15 @@ export function AccountAddresses() {
             <p className="text-muted-foreground text-center mb-6">
               Add your first delivery address to make checkout faster
             </p>
-            <Button onClick={() => setIsAddDialogOpen(true)} disabled={createMutation.isPending}>
-              {createMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              disabled={createMutation.isPending}
+            >
+              {createMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
               Add Your First Address
             </Button>
           </CardContent>
@@ -674,7 +817,11 @@ export function AccountAddresses() {
               onEdit={() => openEditDialog(address)}
               onDelete={() => openDeleteDialog(address)}
               onSetDefault={() => handleSetAsDefault(address.id)}
-              isUpdating={updateMutation.isPending || setDefaultMutation.isPending || (deleteMutation.isPending && addressToDelete?.id === address.id)}
+              isUpdating={
+                updateMutation.isPending ||
+                setDefaultMutation.isPending ||
+                (deleteMutation.isPending && addressToDelete?.id === address.id)
+              }
             />
           ))}
         </div>
@@ -693,8 +840,8 @@ export function AccountAddresses() {
       <AddressDialog
         open={isEditDialogOpen}
         onClose={() => {
-          setIsEditDialogOpen(false);
-          setSelectedAddress(null);
+          setIsEditDialogOpen(false)
+          setSelectedAddress(null)
         }}
         onSave={handleEditAddress}
         initialAddress={selectedAddress}
@@ -708,7 +855,8 @@ export function AccountAddresses() {
           <DialogHeader>
             <DialogTitle>Delete Address</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this address? This action cannot be undone.
+              Are you sure you want to delete this address? This action cannot
+              be undone.
             </DialogDescription>
           </DialogHeader>
           {addressToDelete && (
@@ -716,7 +864,8 @@ export function AccountAddresses() {
               <p className="font-semibold">{addressToDelete.name}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 {addressToDelete.addressLine1}
-                {addressToDelete.addressLine2 && `, ${addressToDelete.addressLine2}`}
+                {addressToDelete.addressLine2 &&
+                  `, ${addressToDelete.addressLine2}`}
               </p>
               <p className="text-sm text-muted-foreground">
                 {addressToDelete.city}, {addressToDelete.state}
@@ -724,29 +873,47 @@ export function AccountAddresses() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)} disabled={deleteMutation.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={deleteMutation.isPending}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteAddress} disabled={deleteMutation.isPending}>
-              {deleteMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAddress}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Trash2 className="mr-2 h-4 w-4" />
+              )}
               Delete Address
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 interface AddressCardProps {
-  address: any;
-  onEdit: () => void;
-  onDelete: () => void;
-  onSetDefault: () => void;
-  isUpdating?: boolean;
+  address: any
+  onEdit: () => void
+  onDelete: () => void
+  onSetDefault: () => void
+  isUpdating?: boolean
 }
 
-function AddressCard({ address, onEdit, onDelete, onSetDefault, isUpdating }: AddressCardProps) {
+function AddressCard({
+  address,
+  onEdit,
+  onDelete,
+  onSetDefault,
+  isUpdating,
+}: AddressCardProps) {
   return (
     <Card className={address.isDefault ? 'border-primary border-2' : ''}>
       <CardHeader className="pb-3">
@@ -790,7 +957,13 @@ function AddressCard({ address, onEdit, onDelete, onSetDefault, isUpdating }: Ad
               Set as Default
             </Button>
           )}
-          <Button variant="ghost" size="sm" onClick={onEdit} className="text-xs h-8" disabled={isUpdating}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onEdit}
+            className="text-xs h-8"
+            disabled={isUpdating}
+          >
             Edit
           </Button>
           <Button
@@ -806,16 +979,16 @@ function AddressCard({ address, onEdit, onDelete, onSetDefault, isUpdating }: Ad
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 interface AddressDialogProps {
-  open: boolean;
-  onClose: () => void;
-  onSave: (address: any) => void;
-  initialAddress?: any | null;
-  title: string;
-  description: string;
+  open: boolean
+  onClose: () => void
+  onSave: (address: any) => void
+  initialAddress?: any | null
+  title: string
+  description: string
 }
 
 function AddressDialog({
@@ -835,9 +1008,9 @@ function AddressDialog({
     city: '',
     postalCode: '',
     type: 'home' as 'home' | 'office',
-  });
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  })
+  const [availableCities, setAvailableCities] = useState<Array<string>>([])
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Load initial address data when editing
   useEffect(() => {
@@ -851,7 +1024,7 @@ function AddressDialog({
         city: initialAddress.city,
         postalCode: initialAddress.postalCode,
         type: initialAddress.type,
-      });
+      })
     } else {
       // Reset form when adding new address
       setFormData({
@@ -863,68 +1036,79 @@ function AddressDialog({
         city: '',
         postalCode: '',
         type: 'home',
-      });
+      })
     }
-    setErrors({});
-  }, [initialAddress, open]);
+    setErrors({})
+  }, [initialAddress, open])
 
   // Update available cities when division changes
   useEffect(() => {
-    const BD_CITIES: Record<string, string[]> = {
+    const BD_CITIES: Record<string, Array<string>> = {
       Dhaka: ['Dhaka', 'Gazipur', 'Narayanganj', 'Tangail', 'Manikganj'],
-      Chittagong: ['Chittagong', 'Cox\'s Bazar', 'Comilla', 'Feni'],
+      Chittagong: ['Chittagong', "Cox's Bazar", 'Comilla', 'Feni'],
       Rajshahi: ['Rajshahi', 'Bogra', 'Pabna', 'Sirajganj'],
       Khulna: ['Khulna', 'Jessore', 'Satkhira', 'Bagerhat'],
       Sylhet: ['Sylhet', 'Moulvibazar', 'Habiganj', 'Sunamganj'],
       Barisal: ['Barisal', 'Patuakhali', 'Bhola', 'Pirojpur'],
       Rangpur: ['Rangpur', 'Dinajpur', 'Kurigram', 'Thakurgaon'],
       Mymensingh: ['Mymensingh', 'Jamalpur', 'Netrokona', 'Sherpur'],
-    };
+    }
 
-    if (formData.division && BD_CITIES[formData.division]) {
-      setAvailableCities(BD_CITIES[formData.division]);
-      if (formData.city && !BD_CITIES[formData.division].includes(formData.city)) {
-        setFormData(prev => ({ ...prev, city: '' }));
+    if (formData.division) {
+      const cities = BD_CITIES[formData.division as Division]
+      setAvailableCities(cities)
+      if (formData.city && !cities.includes(formData.city)) {
+        setFormData((prev) => ({ ...prev, city: '' }))
       }
     } else {
-      setAvailableCities([]);
+      setAvailableCities([])
     }
-  }, [formData.division]);
+  }, [formData.division])
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {}
 
-    if (!formData.name.trim()) newErrors.name = 'Full name is required';
+    if (!formData.name.trim()) newErrors.name = 'Full name is required'
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = 'Phone number is required'
     } else if (formData.phone.length !== 11) {
-      newErrors.phone = 'Phone number must be exactly 11 digits';
+      newErrors.phone = 'Phone number must be exactly 11 digits'
     } else if (!/^01[3-9]\d{8}$/.test(formData.phone)) {
-      newErrors.phone = 'Invalid phone number format (e.g., 01712345678)';
+      newErrors.phone = 'Invalid phone number format (e.g., 01712345678)'
     }
-    if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address is required';
-    if (!formData.division) newErrors.division = 'Division is required';
-    if (!formData.city) newErrors.city = 'City is required';
+    if (!formData.addressLine1.trim())
+      newErrors.addressLine1 = 'Address is required'
+    if (!formData.division) newErrors.division = 'Division is required'
+    if (!formData.city) newErrors.city = 'City is required'
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+    e.preventDefault()
+    if (!validateForm()) return
 
-    onSave(formData);
-  };
+    onSave(formData)
+  }
 
   const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }))
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }))
     }
-  };
+  }
 
-  const BD_DIVISIONS = ['Dhaka', 'Chittagong', 'Rajshahi', 'Khulna', 'Sylhet', 'Barisal', 'Rangpur', 'Mymensingh'];
+  const BD_DIVISIONS = [
+    'Dhaka',
+    'Chittagong',
+    'Rajshahi',
+    'Khulna',
+    'Sylhet',
+    'Barisal',
+    'Rangpur',
+    'Mymensingh',
+  ]
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -961,9 +1145,9 @@ function AddressDialog({
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                  const value = e.target.value.replace(/\D/g, '') // Only allow digits
                   if (value.length <= 11) {
-                    handleChange('phone', value);
+                    handleChange('phone', value)
                   }
                 }}
                 placeholder="01712345678"
@@ -973,9 +1157,12 @@ function AddressDialog({
                 className={errors.phone ? 'border-red-500' : ''}
               />
               <p className="text-xs text-muted-foreground">
-                Enter 11-digit mobile number {formData.phone && `(${formData.phone.length}/11)`}
+                Enter 11-digit mobile number{' '}
+                {formData.phone && `(${formData.phone.length}/11)`}
               </p>
-              {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-xs text-red-500">{errors.phone}</p>
+              )}
             </div>
           </div>
 
@@ -1010,8 +1197,13 @@ function AddressDialog({
               <Label htmlFor="division">
                 Division <span className="text-red-500">*</span>
               </Label>
-              <Select value={formData.division} onValueChange={(value) => handleChange('division', value)}>
-                <SelectTrigger className={errors.division ? 'border-red-500' : ''}>
+              <Select
+                value={formData.division}
+                onValueChange={(value) => handleChange('division', value)}
+              >
+                <SelectTrigger
+                  className={errors.division ? 'border-red-500' : ''}
+                >
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1037,7 +1229,11 @@ function AddressDialog({
                 disabled={!formData.division}
               >
                 <SelectTrigger className={errors.city ? 'border-red-500' : ''}>
-                  <SelectValue placeholder={formData.division ? "Select" : "Select division first"} />
+                  <SelectValue
+                    placeholder={
+                      formData.division ? 'Select' : 'Select division first'
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {availableCities.map((city) => (
@@ -1047,7 +1243,9 @@ function AddressDialog({
                   ))}
                 </SelectContent>
               </Select>
-              {errors.city && <p className="text-xs text-red-500">{errors.city}</p>}
+              {errors.city && (
+                <p className="text-xs text-red-500">{errors.city}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -1103,112 +1301,130 @@ function AddressDialog({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 interface AccountProfileProps {
-  session: AuthSession;
+  session: AuthSession
 }
 
 export function AccountProfile({ session }: AccountProfileProps) {
-  const router = useRouter();
-  const user = session?.user;
+  const router = useRouter()
+  const user = session?.user
 
-  const [profileImage, setProfileImage] = useState<string | null>(user?.image || null);
-  const [name, setName] = useState(user?.name || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || "");
+  const [profileImage, setProfileImage] = useState<string | null>(
+    user?.image || null,
+  )
+  const [name, setName] = useState(user?.name || '')
+  const [email, setEmail] = useState(user?.email || '')
+  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
   const [dateOfBirth, setDateOfBirth] = useState(
-    user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : ""
-  );
-  const [gender, setGender] = useState(user?.gender || "");
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [showOTPDialog, setShowOTPDialog] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState("");
+    user?.dateOfBirth
+      ? new Date(user.dateOfBirth).toISOString().split('T')[0]
+      : '',
+  )
+  const [gender, setGender] = useState(user?.gender || '')
+  const [isSaving, setIsSaving] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
+  const [showOTPDialog, setShowOTPDialog] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false)
+  const [pendingEmail, setPendingEmail] = useState('')
 
   // Check for changes to enable/disable buttons
   useEffect(() => {
-    const isNameChanged = name !== (user?.name || "");
-    const isEmailChanged = email !== (user?.email || "");
-    const isPhoneChanged = phoneNumber !== (user?.phoneNumber || "");
-    const isGenderChanged = gender !== (user?.gender || "");
-    const isImageChanged = profileImage !== (user?.image || null);
-    
-    // Date comparison
-    const originalDob = user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "";
-    const isDobChanged = dateOfBirth !== originalDob;
+    const isNameChanged = name !== (user?.name || '')
+    const isEmailChanged = email !== (user?.email || '')
+    const isPhoneChanged = phoneNumber !== (user?.phoneNumber || '')
+    const isGenderChanged = gender !== (user?.gender || '')
+    const isImageChanged = profileImage !== (user?.image || null)
 
-    setHasChanges(isNameChanged || isEmailChanged || isPhoneChanged || isDobChanged || isGenderChanged || isImageChanged);
-  }, [name, email, phoneNumber, dateOfBirth, gender, profileImage, user]);
+    // Date comparison
+    const originalDob = user?.dateOfBirth
+      ? new Date(user.dateOfBirth).toISOString().split('T')[0]
+      : ''
+    const isDobChanged = dateOfBirth !== originalDob
+
+    setHasChanges(
+      isNameChanged ||
+        isEmailChanged ||
+        isPhoneChanged ||
+        isDobChanged ||
+        isGenderChanged ||
+        isImageChanged,
+    )
+  }, [name, email, phoneNumber, dateOfBirth, gender, profileImage, user])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image size must be less than 2MB");
-        return;
+        toast.error('Image size must be less than 2MB')
+        return
       }
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onloadend = () => {
-        setProfileImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+        setProfileImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
     }
-  };
+  }
 
   const handleRemoveImage = () => {
-    setProfileImage(null);
-  };
+    setProfileImage(null)
+  }
 
   const handleCancel = () => {
-    setName(user?.name || "");
-    setEmail(user?.email || "");
-    setPhoneNumber(user?.phoneNumber || "");
-    setGender(user?.gender || "");
-    setDateOfBirth(user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "");
-    setProfileImage(user?.image || null);
-    setHasChanges(false);
-    toast.info("Changes discarded");
-  };
+    setName(user?.name || '')
+    setEmail(user?.email || '')
+    setPhoneNumber(user?.phoneNumber || '')
+    setGender(user?.gender || '')
+    setDateOfBirth(
+      user?.dateOfBirth
+        ? new Date(user.dateOfBirth).toISOString().split('T')[0]
+        : '',
+    )
+    setProfileImage(user?.image || null)
+    setHasChanges(false)
+    toast.info('Changes discarded')
+  }
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
+  const getInitials = (userName: string) => {
+    return userName
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
   const handleSaveChanges = async () => {
     if (!name.trim()) {
-      toast.error("Full Name is required");
-      return;
+      toast.error('Full Name is required')
+      return
     }
 
-    const normalizedEmail = email.trim();
-    const currentEmail = user?.email || "";
+    const normalizedEmail = email.trim()
+    const currentEmail = user?.email || ''
 
     if (!normalizedEmail) {
-      toast.error("Email is required");
-      return;
+      toast.error('Email is required')
+      return
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailPattern.test(normalizedEmail)) {
-      toast.error("Please enter a valid email address");
-      return;
+      toast.error('Please enter a valid email address')
+      return
     }
 
-    const isSameEmail = normalizedEmail.toLowerCase() === currentEmail.toLowerCase();
+    const isSameEmail =
+      normalizedEmail.toLowerCase() === currentEmail.toLowerCase()
     if (isSameEmail && normalizedEmail !== currentEmail) {
-      setEmail(currentEmail);
+      setEmail(currentEmail)
     }
 
-    setIsSaving(true);
+    setIsSaving(true)
     try {
       const updateData: UpdateUserData = {
         name: name.trim(),
@@ -1216,96 +1432,109 @@ export function AccountProfile({ session }: AccountProfileProps) {
         gender: gender || undefined,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
         image: profileImage,
-      };
+      }
 
       const hasNonEmailChanges =
-        name.trim() !== (user?.name || "") ||
-        phoneNumber.trim() !== (user?.phoneNumber || "") ||
-        gender !== (user?.gender || "") ||
-        (dateOfBirth || "") !== (user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split("T")[0] : "") ||
-        profileImage !== (user?.image || null);
+        name.trim() !== (user?.name || '') ||
+        phoneNumber.trim() !== (user?.phoneNumber || '') ||
+        gender !== (user?.gender || '') ||
+        (dateOfBirth || '') !==
+          (user?.dateOfBirth
+            ? new Date(user.dateOfBirth).toISOString().split('T')[0]
+            : '') ||
+        profileImage !== (user?.image || null)
 
       // 1. Handle Email Change if it's different
       if (!isSameEmail) {
         // Save non-email changes first, so they aren't lost if OTP is canceled
         if (hasNonEmailChanges) {
-          const { error: updateError } = await authClient.updateUser(updateData);
-          if (updateError) throw new Error(updateError.message || "Failed to update profile details");
+          const { error: updateError } = await authClient.updateUser(updateData)
+          if (updateError)
+            throw new Error(
+              updateError.message || 'Failed to update profile details',
+            )
         }
 
         // Send OTP to the new email using custom endpoint
-        const response = await fetch(`${env.VITE_SERVER_URL}/api/email-change/send-otp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `${env.VITE_SERVER_URL}/api/email-change/send-otp`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ email: normalizedEmail }),
           },
-          credentials: "include",
-          body: JSON.stringify({ email: normalizedEmail }),
-        });
+        )
 
-        const result = await response.json();
+        const result = await response.json()
 
         if (!response.ok || result.error) {
-          throw new Error(
-            result.error || "Failed to send verification code"
-          );
+          throw new Error(result.error || 'Failed to send verification code')
         }
 
         // Store the pending email and show OTP dialog
-        setPendingEmail(normalizedEmail);
-        setShowOTPDialog(true);
-        toast.success(`Verification code sent to ${normalizedEmail}`);
-        setIsSaving(false);
-        return; // Stop here and wait for OTP verification
+        setPendingEmail(normalizedEmail)
+        setShowOTPDialog(true)
+        toast.success(`Verification code sent to ${normalizedEmail}`)
+        setIsSaving(false)
+        return // Stop here and wait for OTP verification
       }
 
       // 2. Handle Profile Update for other fields (when email hasn't changed)
-      const { error: updateError } = await authClient.updateUser(updateData);
+      const { error: updateError } = await authClient.updateUser(updateData)
 
-      if (updateError) throw new Error(updateError.message || "Failed to update profile details");
+      if (updateError)
+        throw new Error(
+          updateError.message || 'Failed to update profile details',
+        )
 
-      toast.success("Profile updated successfully!");
-      router.invalidate();
+      toast.success('Profile updated successfully!')
+      router.invalidate()
     } catch (error) {
-      console.error("Profile update error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to update profile");
+      console.error('Profile update error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update profile',
+      )
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleVerifyOTP = async () => {
     if (!otp.trim()) {
-      toast.error("Please enter the verification code");
-      return;
+      toast.error('Please enter the verification code')
+      return
     }
 
     if (otp.trim().length !== 6) {
-      toast.error("Please enter a 6-digit code");
-      return;
+      toast.error('Please enter a 6-digit code')
+      return
     }
 
-    setIsVerifyingOTP(true);
+    setIsVerifyingOTP(true)
     try {
       // Verify the OTP and update email using custom endpoint
-      const response = await fetch(`${env.VITE_SERVER_URL}/api/email-change/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${env.VITE_SERVER_URL}/api/email-change/verify-otp`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: pendingEmail,
+            otp: otp.trim(),
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          email: pendingEmail,
-          otp: otp.trim(),
-        }),
-      });
+      )
 
-      const verifyResult = await response.json();
+      const verifyResult = await response.json()
 
       if (!response.ok || verifyResult.error) {
-        throw new Error(
-          verifyResult.error || "Invalid verification code"
-        );
+        throw new Error(verifyResult.error || 'Invalid verification code')
       }
 
       // Email has been updated on the server
@@ -1317,60 +1546,66 @@ export function AccountProfile({ session }: AccountProfileProps) {
         gender: gender || undefined,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
         image: profileImage,
-      };
+      }
 
-      const { error: updateError } = await authClient.updateUser(updateData);
+      const { error: updateError } = await authClient.updateUser(updateData)
 
-      if (updateError) throw new Error(updateError.message || "Failed to update profile details");
+      if (updateError)
+        throw new Error(
+          updateError.message || 'Failed to update profile details',
+        )
 
-      toast.success("Email verified and profile updated successfully!");
-      setShowOTPDialog(false);
-      setOtp("");
-      setPendingEmail("");
-      router.invalidate();
+      toast.success('Email verified and profile updated successfully!')
+      setShowOTPDialog(false)
+      setOtp('')
+      setPendingEmail('')
+      router.invalidate()
     } catch (error) {
-      console.error("OTP verification error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to verify code");
+      console.error('OTP verification error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to verify code',
+      )
     } finally {
-      setIsVerifyingOTP(false);
+      setIsVerifyingOTP(false)
     }
-  };
+  }
 
   const handleResendOTP = async () => {
     try {
-      const response = await fetch(`${env.VITE_SERVER_URL}/api/email-change/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${env.VITE_SERVER_URL}/api/email-change/send-otp`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({ email: pendingEmail }),
         },
-        credentials: "include",
-        body: JSON.stringify({ email: pendingEmail }),
-      });
+      )
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok || result.error) {
-        throw new Error(
-          result.error || "Failed to resend code"
-        );
+        throw new Error(result.error || 'Failed to resend code')
       }
 
-      toast.success(`Verification code resent to ${pendingEmail}`);
-      setOtp(""); // Clear the input field
+      toast.success(`Verification code resent to ${pendingEmail}`)
+      setOtp('') // Clear the input field
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to resend code"
-      );
+        error instanceof Error ? error.message : 'Failed to resend code',
+      )
     }
-  };
+  }
 
   const handleCloseOTPDialog = () => {
-    setShowOTPDialog(false);
-    setOtp("");
-    setPendingEmail("");
+    setShowOTPDialog(false)
+    setOtp('')
+    setPendingEmail('')
     // Reset email to original value
-    setEmail(user?.email || "");
-  };
+    setEmail(user?.email || '')
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -1395,7 +1630,10 @@ export function AccountProfile({ session }: AccountProfileProps) {
             <div className="flex flex-col sm:flex-row items-center gap-6">
               <div className="relative group">
                 <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-2 border-muted transition-all duration-200 group-hover:opacity-90">
-                  <AvatarImage src={profileImage || undefined} className="object-cover" />
+                  <AvatarImage
+                    src={profileImage || undefined}
+                    className="object-cover"
+                  />
                   <AvatarFallback className="text-2xl font-semibold">
                     {getInitials(name)}
                   </AvatarFallback>
@@ -1448,7 +1686,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Full Name */}
               <div className="space-y-2">
-                <Label htmlFor="full-name" className="text-sm font-semibold">Full Name <span className="text-destructive">*</span></Label>
+                <Label htmlFor="full-name" className="text-sm font-semibold">
+                  Full Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="full-name"
                   placeholder="John Doe"
@@ -1459,7 +1699,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-semibold">Email Address <span className="text-destructive">*</span></Label>
+                <Label htmlFor="email" className="text-sm font-semibold">
+                  Email Address <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -1471,7 +1713,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
 
               {/* Phone */}
               <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm font-semibold">Phone Number</Label>
+                <Label htmlFor="phone" className="text-sm font-semibold">
+                  Phone Number
+                </Label>
                 <Input
                   id="phone"
                   placeholder="+880 1XXX-XXXXXX"
@@ -1482,7 +1726,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
 
               {/* DOB */}
               <div className="space-y-2">
-                <Label htmlFor="dob" className="text-sm font-semibold">Date of Birth</Label>
+                <Label htmlFor="dob" className="text-sm font-semibold">
+                  Date of Birth
+                </Label>
                 <Input
                   id="dob"
                   type="date"
@@ -1496,7 +1742,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
 
               {/* Gender */}
               <div className="space-y-2">
-                <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
+                <Label htmlFor="gender" className="text-sm font-semibold">
+                  Gender
+                </Label>
                 <Select value={gender} onValueChange={setGender}>
                   <SelectTrigger id="gender">
                     <SelectValue placeholder="Select gender" />
@@ -1523,7 +1771,7 @@ export function AccountProfile({ session }: AccountProfileProps) {
               disabled={!hasChanges || isSaving}
               className="px-8"
             >
-              {isSaving ? "Saving..." : "Save Changes"}
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </CardFooter>
         </Card>
@@ -1534,9 +1782,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
         open={showOTPDialog}
         onOpenChange={(open) => {
           if (open) {
-            setShowOTPDialog(true);
+            setShowOTPDialog(true)
           } else {
-            handleCloseOTPDialog();
+            handleCloseOTPDialog()
           }
         }}
       >
@@ -1544,8 +1792,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
           <DialogHeader>
             <DialogTitle>Verify Your Email</DialogTitle>
             <DialogDescription>
-              We've sent a 6-digit verification code to <strong>{pendingEmail}</strong>.
-              Please enter it below to confirm your new email address.
+              We've sent a 6-digit verification code to{' '}
+              <strong>{pendingEmail}</strong>. Please enter it below to confirm
+              your new email address.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1555,7 +1804,9 @@ export function AccountProfile({ session }: AccountProfileProps) {
                 id="otp"
                 placeholder="Enter 6-digit code"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+                }
                 maxLength={6}
                 className="text-center text-lg tracking-widest"
                 autoFocus
@@ -1587,78 +1838,83 @@ export function AccountProfile({ session }: AccountProfileProps) {
                 disabled={isVerifyingOTP || otp.length !== 6}
                 className="flex-1"
               >
-                {isVerifyingOTP ? "Verifying..." : "Verify"}
+                {isVerifyingOTP ? 'Verifying...' : 'Verify'}
               </Button>
             </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
-import { ChangePasswordForm } from "./change-password-form";
-
 export function AccountSettings({ session }: { session?: AuthSession }) {
-  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false);
-  const [deactivationReason, setDeactivationReason] = useState("");
-  const [deactivationFeedback, setDeactivationFeedback] = useState("");
-  const [isDeactivating, setIsDeactivating] = useState(false);
+  const [isDeactivateDialogOpen, setIsDeactivateDialogOpen] = useState(false)
+  const [deactivationReason, setDeactivationReason] = useState('')
+  const [deactivationFeedback, setDeactivationFeedback] = useState('')
+  const [isDeactivating, setIsDeactivating] = useState(false)
 
   const reasons = [
     "I'm taking a break from shopping",
-    "Privacy concerns",
-    "Too many notifications",
-    "Found a better alternative",
-    "Not satisfied with service",
-    "Other",
-  ];
+    'Privacy concerns',
+    'Too many notifications',
+    'Found a better alternative',
+    'Not satisfied with service',
+    'Other',
+  ]
 
   const handleDeactivate = async () => {
     if (!deactivationReason) {
-      toast.error("Please select a reason for deactivating your account");
-      return;
+      toast.error('Please select a reason for deactivating your account')
+      return
     }
 
-    setIsDeactivating(true);
+    setIsDeactivating(true)
     try {
-      const response = await fetch(`${env.VITE_SERVER_URL}/api/account/deactivate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${env.VITE_SERVER_URL}/api/account/deactivate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            reason: deactivationReason,
+            feedback: deactivationFeedback.trim() || undefined,
+          }),
         },
-        credentials: "include",
-        body: JSON.stringify({
-          reason: deactivationReason,
-          feedback: deactivationFeedback.trim() || undefined,
-        }),
-      });
+      )
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok || result.error) {
-        throw new Error(result.error || "Failed to deactivate account");
+        throw new Error(result.error || 'Failed to deactivate account')
       }
 
       // Logout and redirect
-      await authClient.signOut();
-      toast.success("Your account has been deactivated. You can reactivate it anytime by logging in again.");
+      await authClient.signOut()
+      toast.success(
+        'Your account has been deactivated. You can reactivate it anytime by logging in again.',
+      )
 
       // Redirect to home page
-      window.location.href = "/";
+      window.location.href = '/'
     } catch (error) {
-      console.error("Deactivation error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to deactivate account");
+      console.error('Deactivation error:', error)
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to deactivate account',
+      )
     } finally {
-      setIsDeactivating(false);
+      setIsDeactivating(false)
     }
-  };
+  }
 
   const handleOpenDialog = () => {
-    setDeactivationReason("");
-    setDeactivationFeedback("");
-    setIsDeactivateDialogOpen(true);
-  };
+    setDeactivationReason('')
+    setDeactivationFeedback('')
+    setIsDeactivateDialogOpen(true)
+  }
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -1675,16 +1931,21 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
         <Card className="opacity-60">
           <CardHeader>
             <CardTitle>Notifications</CardTitle>
-            <CardDescription>Coming soon: Manage how you receive updates</CardDescription>
+            <CardDescription>
+              Coming soon: Manage how you receive updates
+            </CardDescription>
           </CardHeader>
         </Card>
 
         {/* Deactivate Account */}
         <Card className="border-destructive/50">
           <CardHeader>
-            <CardTitle className="text-destructive">Deactivate Account</CardTitle>
+            <CardTitle className="text-destructive">
+              Deactivate Account
+            </CardTitle>
             <CardDescription>
-              Temporarily deactivate your account. Your data will be retained for 90 days, and you can reactivate by logging in again.
+              Temporarily deactivate your account. Your data will be retained
+              for 90 days, and you can reactivate by logging in again.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1711,12 +1972,16 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
       </div>
 
       {/* Deactivation Dialog */}
-      <Dialog open={isDeactivateDialogOpen} onOpenChange={setIsDeactivateDialogOpen}>
+      <Dialog
+        open={isDeactivateDialogOpen}
+        onOpenChange={setIsDeactivateDialogOpen}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Deactivate Your Account</DialogTitle>
             <DialogDescription>
-              We're sorry to see you go. Please let us know why you're deactivating your account.
+              We're sorry to see you go. Please let us know why you're
+              deactivating your account.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -1724,7 +1989,10 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
               <Label htmlFor="reason">
                 Reason <span className="text-red-500">*</span>
               </Label>
-              <Select value={deactivationReason} onValueChange={setDeactivationReason}>
+              <Select
+                value={deactivationReason}
+                onValueChange={setDeactivationReason}
+              >
                 <SelectTrigger id="reason">
                   <SelectValue placeholder="Select a reason" />
                 </SelectTrigger>
@@ -1758,7 +2026,8 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
                 Important Notice
               </p>
               <p className="text-xs text-muted-foreground">
-                You cannot deactivate your account if you have pending orders. Please wait for them to be delivered or cancel them first.
+                You cannot deactivate your account if you have pending orders.
+                Please wait for them to be delivered or cancel them first.
               </p>
             </div>
           </div>
@@ -1775,13 +2044,13 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
               onClick={handleDeactivate}
               disabled={!deactivationReason || isDeactivating}
             >
-              {isDeactivating ? "Deactivating..." : "Confirm Deactivation"}
+              {isDeactivating ? 'Deactivating...' : 'Confirm Deactivation'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 // =============================================================================
@@ -1789,68 +2058,60 @@ export function AccountSettings({ session }: { session?: AuthSession }) {
 // =============================================================================
 
 export function AccountReviews() {
-  const [editingReview, setEditingReview] = useState<any | null>(null);
-  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
-  const queryClient = useQueryClient();
+  const [editingReview, setEditingReview] = useState<any | null>(null)
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null)
+  const queryClient = useQueryClient()
 
   const { data: reviews = [], isLoading } = useQuery(
-    orpc.review.listMyReviews.queryOptions()
-  );
+    orpc.review.listMyReviews.queryOptions(),
+  )
 
   const updateMutation = useMutation({
     mutationFn: (data: any) => orpcClient.review.updateReview(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["review", "listMyReviews"] });
-      toast.success("Review updated successfully!");
-      setEditingReview(null);
+      queryClient.invalidateQueries({ queryKey: ['review', 'listMyReviews'] })
+      toast.success('Review updated successfully!')
+      setEditingReview(null)
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to update review");
+      toast.error(error?.message || 'Failed to update review')
     },
-  });
+  })
 
   const deleteMutation = useMutation({
     mutationFn: (data: any) => orpcClient.review.deleteReview(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["review", "listMyReviews"] });
-      toast.success("Review deleted successfully!");
-      setDeletingReviewId(null);
+      queryClient.invalidateQueries({ queryKey: ['review', 'listMyReviews'] })
+      toast.success('Review deleted successfully!')
+      setDeletingReviewId(null)
     },
     onError: (error: any) => {
-      toast.error(error?.message || "Failed to delete review");
+      toast.error(error?.message || 'Failed to delete review')
     },
-  });
+  })
 
   const handleEdit = (review: any) => {
-    setEditingReview(review);
-  };
+    setEditingReview(review)
+  }
 
   const handleDelete = (reviewId: string) => {
-    setDeletingReviewId(reviewId);
-  };
+    setDeletingReviewId(reviewId)
+  }
 
   const confirmDelete = () => {
     if (deletingReviewId) {
-      deleteMutation.mutate({ reviewId: deletingReviewId });
+      deleteMutation.mutate({ reviewId: deletingReviewId })
     }
-  };
-
-  const canEditReview = (createdAt: string) => {
-    const reviewDate = new Date(createdAt);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return reviewDate >= thirtyDaysAgo;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
   }
 
-  const reviewsList = reviews as any[];
+  const canEditReview = (createdAt: string) => {
+    const reviewDate = new Date(createdAt)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    return reviewDate >= thirtyDaysAgo
+  }
+
+  const reviewsList = reviews as Array<any>
 
   return (
     <div className="space-y-6">
@@ -1877,9 +2138,9 @@ export function AccountReviews() {
       ) : (
         <div className="space-y-4">
           {reviewsList.map((review: any) => {
-            const product = review.product;
-            const primaryImage = product?.images?.[0];
-            const canEdit = canEditReview(review.createdAt);
+            const product = review.product
+            const primaryImage = product?.images?.[0]
+            const canEdit = canEditReview(review.createdAt)
 
             return (
               <Card key={review.id}>
@@ -1890,15 +2151,15 @@ export function AccountReviews() {
                       {product?.slug ? (
                         <a href={`/product/${product.slug}`}>
                           <img
-                            src={primaryImage?.url || "/placeholder.png"}
-                            alt={product?.name || "Product"}
+                            src={primaryImage?.url || '/placeholder.png'}
+                            alt={product?.name || 'Product'}
                             className="w-24 h-24 object-cover rounded-lg border"
                           />
                         </a>
                       ) : (
                         <img
-                          src={primaryImage?.url || "/placeholder.png"}
-                          alt={product?.name || "Product"}
+                          src={primaryImage?.url || '/placeholder.png'}
+                          alt={product?.name || 'Product'}
                           className="w-24 h-24 object-cover rounded-lg border"
                         />
                       )}
@@ -1930,8 +2191,8 @@ export function AccountReviews() {
                               key={star}
                               className={`h-5 w-5 ${
                                 star <= review.rating
-                                  ? "fill-yellow-400 text-yellow-400"
-                                  : "text-gray-300"
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
                               }`}
                             />
                           ))}
@@ -1958,7 +2219,7 @@ export function AccountReviews() {
                             <img
                               key={img.id}
                               src={img.url}
-                              alt={img.alt || "Review"}
+                              alt={img.alt || 'Review'}
                               className="w-16 h-16 object-cover rounded border"
                             />
                           ))}
@@ -1968,7 +2229,8 @@ export function AccountReviews() {
                       {/* Meta Information */}
                       <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                         <span>
-                          Submitted: {new Date(review.createdAt).toLocaleDateString()}
+                          Submitted:{' '}
+                          {new Date(review.createdAt).toLocaleDateString()}
                         </span>
                         <span className="flex items-center gap-1">
                           <Heart className="h-4 w-4" />
@@ -2005,7 +2267,7 @@ export function AccountReviews() {
                   </div>
                 </CardContent>
               </Card>
-            );
+            )
           })}
         </div>
       )}
@@ -2019,19 +2281,23 @@ export function AccountReviews() {
             updateMutation.mutate({
               reviewId: editingReview.id,
               ...data,
-            });
+            })
           }}
           isSubmitting={updateMutation.isPending}
         />
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={!!deletingReviewId} onOpenChange={() => setDeletingReviewId(null)}>
+      <Dialog
+        open={!!deletingReviewId}
+        onOpenChange={() => setDeletingReviewId(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Review</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this review? This action cannot be undone.
+              Are you sure you want to delete this review? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -2047,13 +2313,13 @@ export function AccountReviews() {
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? "Deleting..." : "Delete Review"}
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete Review'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 // =============================================================================
@@ -2061,23 +2327,28 @@ export function AccountReviews() {
 // =============================================================================
 
 interface EditReviewDialogProps {
-  review: any;
-  onClose: () => void;
-  onSubmit: (data: any) => void;
-  isSubmitting: boolean;
+  review: any
+  onClose: () => void
+  onSubmit: (data: any) => void
+  isSubmitting: boolean
 }
 
-function EditReviewDialog({ review, onClose, onSubmit, isSubmitting }: EditReviewDialogProps) {
-  const [rating, setRating] = useState(review.rating);
-  const [title, setTitle] = useState(review.title || "");
-  const [comment, setComment] = useState(review.comment);
-  const [recommend, setRecommend] = useState(review.recommend);
-  const [hoveredRating, setHoveredRating] = useState(0);
+function EditReviewDialog({
+  review,
+  onClose,
+  onSubmit,
+  isSubmitting,
+}: EditReviewDialogProps) {
+  const [rating, setRating] = useState(review.rating)
+  const [title, setTitle] = useState(review.title || '')
+  const [comment, setComment] = useState(review.comment)
+  const [recommend, setRecommend] = useState(review.recommend)
+  const [hoveredRating, setHoveredRating] = useState(0)
 
   const handleSubmit = () => {
     if (comment.length < 20 || comment.length > 2000) {
-      toast.error("Review must be between 20 and 2000 characters");
-      return;
+      toast.error('Review must be between 20 and 2000 characters')
+      return
     }
 
     onSubmit({
@@ -2086,10 +2357,10 @@ function EditReviewDialog({ review, onClose, onSubmit, isSubmitting }: EditRevie
       comment,
       recommend,
       images: review.images?.map((img: any) => img.url) || [],
-    });
-  };
+    })
+  }
 
-  const isValid = rating > 0 && comment.length >= 20 && comment.length <= 2000;
+  const isValid = rating > 0 && comment.length >= 20 && comment.length <= 2000
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
@@ -2119,15 +2390,15 @@ function EditReviewDialog({ review, onClose, onSubmit, isSubmitting }: EditRevie
                     <Star
                       className={`h-8 w-8 transition-colors ${
                         star <= (hoveredRating || rating)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-gray-300"
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
                       }`}
                     />
                   </button>
                 ))}
               </div>
               <span className="text-sm text-muted-foreground">
-                {rating > 0 ? `${rating} out of 5` : "Select a rating"}
+                {rating > 0 ? `${rating} out of 5` : 'Select a rating'}
               </span>
             </div>
           </div>
@@ -2179,21 +2450,14 @@ function EditReviewDialog({ review, onClose, onSubmit, isSubmitting }: EditRevie
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!isValid || isSubmitting}
-          >
-            {isSubmitting ? "Updating..." : "Update Review"}
+          <Button onClick={handleSubmit} disabled={!isValid || isSubmitting}>
+            {isSubmitting ? 'Updating...' : 'Update Review'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

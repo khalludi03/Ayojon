@@ -1,78 +1,73 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { orpc } from '@/utils/orpc';
-import { cn } from '@/lib/utils';
-import { CarouselSkeleton } from '@/components/ui/skeleton';
-import { useSession } from '@/lib/session-context';
+import { useCallback, useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { orpc } from '@/utils/orpc'
+import { cn } from '@/lib/utils'
+import { CarouselSkeleton } from '@/components/ui/skeleton'
+import { useSession } from '@/lib/session-context'
 
 interface Banner {
-  id: string;
-  imageUrl: string;
-  title: string;
-  subtitle: string;
-  buttonText: string;
-  buttonLink: string;
-  sortOrder: number;
+  id: string
+  imageUrl: string
+  title: string
+  subtitle: string
+  buttonText: string
+  buttonLink: string
+  sortOrder: number
 }
 
 interface PromoCard {
-  id: string;
-  slotNumber: number;
-  imageUrl: string;
-  label: string;
-  title: string;
-  link: string;
+  id: string
+  slotNumber: number
+  imageUrl: string
+  label: string
+  title: string
+  link: string
 }
 
 export function HeroCarousel() {
   // Fetch banners and promo cards from API
   const { data: bannersData, isLoading: bannersLoading } = useQuery(
-    orpc.homepage.listBanners.queryOptions()
-  );
+    orpc.homepage.listBanners.queryOptions(),
+  )
   const { data: promoCardsData, isLoading: promoCardsLoading } = useQuery(
-    orpc.homepage.listPromoCards.queryOptions()
-  );
+    orpc.homepage.listPromoCards.queryOptions(),
+  )
 
-  const slides = bannersData?.banners || [];
-  const sideBanners = promoCardsData?.promoCards || [];
+  const slides = bannersData?.banners || []
+  const sideBanners = promoCardsData?.promoCards || []
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const isLoading = bannersLoading || promoCardsLoading;
-  const sessionContext = useSession();
-  const session = sessionContext?.session;
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const sessionContext = useSession()
+  const session = sessionContext?.session
 
   const goToSlide = useCallback((index: number) => {
-    setCurrentIndex(index);
-  }, []);
+    setCurrentIndex(index)
+  }, [])
 
   const goToPrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1));
-  }, [slides.length]);
+    setCurrentIndex((prev) => (prev === 0 ? slides.length - 1 : prev - 1))
+  }, [slides.length])
 
   const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-  }, [slides.length]);
+    setCurrentIndex((prev) => (prev === slides.length - 1 ? 0 : prev + 1))
+  }, [slides.length])
 
   // Auto-rotation
   useEffect(() => {
-    if (!isAutoPlaying || !session) return;
+    if (!isAutoPlaying || !session) return
 
-    const interval = setInterval(goToNext, 5000);
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, goToNext, session]);
+    const interval = setInterval(goToNext, 5000)
+    return () => clearInterval(interval)
+  }, [isAutoPlaying, goToNext, session])
 
   // Pause on hover
-  const handleMouseEnter = () => setIsAutoPlaying(false);
-  const handleMouseLeave = () => setIsAutoPlaying(true);
-
-  if (isLoading) {
-    return <CarouselSkeleton />;
-  }
+  const handleMouseEnter = () => setIsAutoPlaying(false)
+  const handleMouseLeave = () => setIsAutoPlaying(true)
 
   if (slides.length === 0) {
-    return null; // Don't show carousel if no active slides
+    return null // Don't show carousel if no active slides
   }
 
   return (
@@ -84,11 +79,13 @@ export function HeroCarousel() {
           - Small/Medium/Large (640px - 1279px): Main banner full width, 2x2 grid below (STACKED)
           - XL+ (1280px+): Main banner + 2x2 side banner grid (SIDE-BY-SIDE)
         */}
-        <div className="grid gap-2 sm:gap-3 md:gap-4
+        <div
+          className="grid gap-2 sm:gap-3 md:gap-4
           grid-cols-1
           sm:grid-cols-2
           xl:grid-cols-[2fr_1fr]
-        ">
+        "
+        >
           {/* Main Banner Carousel */}
           <div
             className="group/carousel relative overflow-hidden rounded-lg
@@ -111,10 +108,7 @@ export function HeroCarousel() {
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
               {slides.map((slide) => (
-                <div
-                  key={slide.id}
-                  className="relative h-full w-full shrink-0"
-                >
+                <div key={slide.id} className="relative h-full w-full shrink-0">
                   {/* Background Image */}
                   <img
                     src={slide.imageUrl}
@@ -177,7 +171,7 @@ export function HeroCarousel() {
                     'h-2 rounded-full transition-all duration-300 shadow-sm',
                     index === currentIndex
                       ? 'w-6 sm:w-8 bg-white'
-                      : 'w-2 bg-white/60 hover:bg-white/90 hover:w-3'
+                      : 'w-2 bg-white/60 hover:bg-white/90 hover:w-3',
                   )}
                   aria-label={`Go to slide ${index + 1}`}
                   aria-current={index === currentIndex ? 'true' : undefined}
@@ -197,7 +191,7 @@ export function HeroCarousel() {
                   href={banner.link}
                   className={cn(
                     'group relative overflow-hidden rounded-lg transition-all hover:shadow-xl hover:scale-[1.02]',
-                    'aspect-[4/3] xl:aspect-auto xl:h-full'
+                    'aspect-[4/3] xl:aspect-auto xl:h-full',
                   )}
                 >
                   {/* Background Image */}
@@ -228,7 +222,7 @@ export function HeroCarousel() {
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-export default HeroCarousel;
+export default HeroCarousel

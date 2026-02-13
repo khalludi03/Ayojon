@@ -1,9 +1,9 @@
-import { Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface VendorProgressBarProps {
-  currentStep: number;
-  totalSteps: number;
+  currentStep: number
+  totalSteps: number
 }
 
 const STEP_LABELS = [
@@ -11,9 +11,12 @@ const STEP_LABELS = [
   { number: 2, title: 'Business Info', description: 'Company details' },
   { number: 3, title: 'Store Details', description: 'Shop information' },
   { number: 4, title: 'Verification', description: 'Upload documents' },
-];
+]
 
-export function VendorProgressBar({ currentStep, totalSteps }: VendorProgressBarProps) {
+export function VendorProgressBar({
+  currentStep,
+  totalSteps,
+}: VendorProgressBarProps) {
   return (
     <div className="w-full">
       {/* Mobile View - Simplified */}
@@ -49,16 +52,18 @@ export function VendorProgressBar({ currentStep, totalSteps }: VendorProgressBar
           <div className="absolute left-0 right-0 top-5 h-0.5 bg-[hsl(var(--muted))]">
             <div
               className="h-full bg-[hsl(var(--primary))] transition-all duration-500"
-              style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
+              style={{
+                width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%`,
+              }}
             />
           </div>
 
           {/* Steps */}
           <div className="relative flex justify-between">
             {STEP_LABELS.map((step) => {
-              const isCompleted = step.number < currentStep;
-              const isCurrent = step.number === currentStep;
-              const isUpcoming = step.number > currentStep;
+              const isCompleted = step.number < currentStep
+              const isCurrent = step.number === currentStep
+              const isUpcoming = step.number > currentStep
 
               return (
                 <div key={step.number} className="flex flex-col items-center">
@@ -71,13 +76,15 @@ export function VendorProgressBar({ currentStep, totalSteps }: VendorProgressBar
                       isCurrent &&
                         'border-[hsl(var(--primary))] bg-[hsl(var(--background))] text-[hsl(var(--primary))]',
                       isUpcoming &&
-                        'border-[hsl(var(--muted))] bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))]'
+                        'border-[hsl(var(--muted))] bg-[hsl(var(--background))] text-[hsl(var(--muted-foreground))]',
                     )}
                   >
                     {isCompleted ? (
                       <Check className="h-5 w-5" />
                     ) : (
-                      <span className="text-sm font-semibold">{step.number}</span>
+                      <span className="text-sm font-semibold">
+                        {step.number}
+                      </span>
                     )}
                   </div>
 
@@ -88,7 +95,7 @@ export function VendorProgressBar({ currentStep, totalSteps }: VendorProgressBar
                         'text-sm font-medium',
                         (isCurrent || isCompleted) &&
                           'text-[hsl(var(--foreground))]',
-                        isUpcoming && 'text-[hsl(var(--muted-foreground))]'
+                        isUpcoming && 'text-[hsl(var(--muted-foreground))]',
                       )}
                     >
                       {step.title}
@@ -98,11 +105,11 @@ export function VendorProgressBar({ currentStep, totalSteps }: VendorProgressBar
                     </p>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

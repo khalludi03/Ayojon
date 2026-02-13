@@ -1,35 +1,39 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
-import { Search } from 'lucide-react';
-import { FilterSidebar } from '@/components/product/FilterSidebar';
-import { SortDropdown } from '@/components/product/SortDropdown';
-import { ActiveFilters } from '@/components/product/ActiveFilters';
-import { ProductGrid } from '@/components/product/ProductGrid';
-import { Pagination } from '@/components/product/Pagination';
-import { NoResults } from '@/components/product/NoResults';
-import { useProducts } from '@/hooks/use-products';
-import { useFilters, filterStore } from '@/stores/filter-store';
-import z from 'zod';
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { Search } from 'lucide-react'
+import z from 'zod'
+import { FilterSidebar } from '@/components/product/FilterSidebar'
+import { SortDropdown } from '@/components/product/SortDropdown'
+import { ActiveFilters } from '@/components/product/ActiveFilters'
+import { ProductGrid } from '@/components/product/ProductGrid'
+import { Pagination } from '@/components/product/Pagination'
+import { NoResults } from '@/components/product/NoResults'
+import { useProducts } from '@/hooks/use-products'
+import { filterStore, useFilters } from '@/stores/filter-store'
 
 const searchParamsSchema = z.object({
   search: z.string().optional(),
   page: z.coerce.number().optional().default(1),
   eventType: z.string().optional(),
-});
+})
 
 export const Route = createFileRoute('/products')({
   component: SearchResultsPage,
   validateSearch: searchParamsSchema,
   head: () => {
-    const title = 'All Products - Event Rentals | Ayojon';
-    const description = 'Browse all event rental products. Decorations, furniture, catering equipment, and more available at Ayojon.';
-    const url = 'https://ayojon.com/products';
+    const title = 'All Products - Event Rentals | Ayojon'
+    const description =
+      'Browse all event rental products. Decorations, furniture, catering equipment, and more available at Ayojon.'
+    const url = 'https://ayojon.com/products'
 
     return {
       meta: [
         { title },
         { name: 'description', content: description },
-        { name: 'keywords', content: 'event rental, product catalog, Ayojon products' },
+        {
+          name: 'keywords',
+          content: 'event rental, product catalog, Ayojon products',
+        },
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
         { property: 'og:url', content: url },
@@ -39,32 +43,38 @@ export const Route = createFileRoute('/products')({
         { name: 'twitter:title', content: title },
         { name: 'twitter:description', content: description },
       ],
-      links: [
-        { rel: 'canonical', href: url },
-      ],
-    };
+      links: [{ rel: 'canonical', href: url }],
+    }
   },
-});
+})
 
 function SearchResultsPage() {
-  const navigate = useNavigate();
-  const searchParams = Route.useSearch();
-  const { filters } = useFilters();
+  const navigate = useNavigate()
+  const searchParams = Route.useSearch()
+  const { filters } = useFilters()
 
   // Get search query and eventType from URL or filters
-  const searchQuery = searchParams.search || filters.search || '';
-  const eventType = searchParams.eventType || (filters.eventTypes?.[0]);
-  const currentPage = searchParams.page || 1;
+  const searchQuery = searchParams.search || filters.search || ''
+  const eventType = searchParams.eventType || filters.eventTypes?.[0]
+  const currentPage = searchParams.page || 1
 
   // Update filter store with search query and eventType from URL
   useEffect(() => {
     if (searchParams.search && searchParams.search !== filters.search) {
-      filterStore.setFilter('search', searchParams.search);
+      filterStore.setFilter('search', searchParams.search)
     }
-    if (searchParams.eventType && !filters.eventTypes?.includes(searchParams.eventType)) {
-      filterStore.setFilter('eventTypes', [searchParams.eventType]);
+    if (
+      searchParams.eventType &&
+      !filters.eventTypes?.includes(searchParams.eventType)
+    ) {
+      filterStore.setFilter('eventTypes', [searchParams.eventType])
     }
-  }, [searchParams.search, searchParams.eventType, filters.search, filters.eventTypes]);
+  }, [
+    searchParams.search,
+    searchParams.eventType,
+    filters.search,
+    filters.eventTypes,
+  ])
 
   // Fetch products with pagination
   const { data, isLoading } = useProducts({
@@ -80,11 +90,11 @@ function SearchResultsPage() {
     sort: filters.sort,
     page: currentPage,
     limit: 20,
-  });
+  })
 
-  const products = data?.data || [];
-  const totalCount = data?.total || 0;
-  const totalPages = data?.totalPages || 1;
+  const products = data?.data || []
+  const totalCount = data?.total || 0
+  const totalPages = data?.totalPages || 1
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -94,22 +104,22 @@ function SearchResultsPage() {
         ...searchParams,
         page,
       },
-    });
+    })
     // Scroll to top of page
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // Handle clear all filters
   const handleClearFilters = () => {
-    filterStore.clearAllFilters();
+    filterStore.clearAllFilters()
     navigate({
       to: '/products',
       search: {
         search: searchQuery,
         page: 1,
       },
-    });
-  };
+    })
+  }
 
   // Check if there are active filters (excluding search and sort)
   const hasActiveFilters =
@@ -120,7 +130,7 @@ function SearchResultsPage() {
     filters.minRating ||
     filters.freeShipping ||
     filters.onSale ||
-    filters.inStock;
+    filters.inStock
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -201,7 +211,9 @@ function SearchResultsPage() {
               {!isLoading && products.length === 0 ? (
                 <NoResults
                   searchQuery={searchQuery}
-                  onClearFilters={hasActiveFilters ? handleClearFilters : undefined}
+                  onClearFilters={
+                    hasActiveFilters ? handleClearFilters : undefined
+                  }
                 />
               ) : (
                 <>
@@ -238,5 +250,5 @@ function SearchResultsPage() {
         </div>
       </section>
     </div>
-  );
+  )
 }

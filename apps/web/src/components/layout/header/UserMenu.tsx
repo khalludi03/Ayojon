@@ -1,57 +1,68 @@
-import { useEffect, useState, useRef } from 'react';
-import { Heart, LogIn, LogOut, MapPin, Package, Settings, User, UserPlus } from 'lucide-react';
-import { useNavigate, Link } from '@tanstack/react-router';
-import { authClient } from '@/lib/auth-client';
+import { useEffect, useRef, useState } from 'react'
+import {
+  Heart,
+  LogIn,
+  LogOut,
+  MapPin,
+  Package,
+  Settings,
+  User,
+  UserPlus,
+} from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
+import { authClient } from '@/lib/auth-client'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export function UserMenu() {
-  const [isHovered, setIsHovered] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const hasLoadedOnce = useRef(false);
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { data: session, isPending } = authClient.useSession();
+  const [isHovered, setIsHovered] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const hasLoadedOnce = useRef(false)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const { data: session, isPending } = authClient.useSession()
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   // Mark as loaded once we have session data (or confirmed no session)
   useEffect(() => {
     if (!isPending) {
-      hasLoadedOnce.current = true;
+      hasLoadedOnce.current = true
     }
-  }, [isPending]);
+  }, [isPending])
 
-  const isLoggedIn = !!session?.user;
-  const user = session?.user ? {
-    name: session.user.name || 'User',
-    email: session.user.email,
-    avatar: session.user.image || null
-  } : null;
+  const isLoggedIn = !!session?.user
+  const user = session?.user
+    ? {
+        name: session.user.name || 'User',
+        email: session.user.email,
+        avatar: session.user.image || null,
+      }
+    : null
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
           // Clear all cached queries on logout
-          queryClient.clear();
-          toast.success('Signed out successfully');
-          navigate({ to: '/' });
-        }
-      }
-    });
-  };
+          queryClient.clear()
+          toast.success('Signed out successfully')
+          navigate({ to: '/' })
+        },
+      },
+    })
+  }
 
   // Only show loading state on initial load, not on subsequent navigations
   if (!mounted || (!hasLoadedOnce.current && isPending)) {
@@ -63,18 +74,27 @@ export function UserMenu() {
               <User className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
             </div>
             <div className="text-left">
-              <p className="text-xs text-[hsl(var(--muted-foreground))]">Loading...</p>
-              <p className="text-sm font-medium invisible">Sign In / Register</p>
+              <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                Loading...
+              </p>
+              <p className="text-sm font-medium invisible">
+                Sign In / Register
+              </p>
             </div>
           </Button>
         </div>
         <div className="sm:hidden">
-          <Button variant="ghost" size="icon-sm" className="rounded-full" disabled>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="rounded-full"
+            disabled
+          >
             <User className="h-5 w-5" />
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   if (!isLoggedIn) {
@@ -84,32 +104,43 @@ export function UserMenu() {
         <div className="hidden sm:flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="gap-2 hover:bg-[hsl(var(--muted))]"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
-                <div className={cn(
-                  'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
-                  isHovered ? 'bg-[hsl(var(--primary))] text-white' : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]'
-                )}>
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full transition-colors',
+                    isHovered
+                      ? 'bg-[hsl(var(--primary))] text-white'
+                      : 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]',
+                  )}
+                >
                   <User className="h-4 w-4" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">Welcome</p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    Welcome
+                  </p>
                   <p className="text-sm font-medium">Sign In / Register</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 p-0 overflow-hidden">
+            <DropdownMenuContent
+              align="end"
+              className="w-64 p-0 overflow-hidden"
+            >
               {/* Header */}
               <div className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary))]/80 px-4 py-4 text-white">
                 <p className="text-lg font-bold">Welcome to Ayojon!</p>
-                <p className="text-sm text-white/80">Sign in to discover events</p>
+                <p className="text-sm text-white/80">
+                  Sign in to discover events
+                </p>
               </div>
-              
+
               <div className="p-2">
                 <DropdownMenuItem
                   className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--primary))]/10"
@@ -121,7 +152,9 @@ export function UserMenu() {
                     </div>
                     <div>
                       <p className="font-medium">Sign In</p>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Access your account</p>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                        Access your account
+                      </p>
                     </div>
                   </div>
                 </DropdownMenuItem>
@@ -136,7 +169,9 @@ export function UserMenu() {
                     </div>
                     <div>
                       <p className="font-medium">Create Account</p>
-                      <p className="text-xs text-[hsl(var(--muted-foreground))]">Join Ayojon today</p>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                        Join Ayojon today
+                      </p>
                     </div>
                   </div>
                 </DropdownMenuItem>
@@ -163,16 +198,20 @@ export function UserMenu() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   // Logged in state
-  if (!user) return null;
+  if (!user) return null
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 hover:bg-[hsl(var(--muted))]">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2 hover:bg-[hsl(var(--muted))]"
+        >
           {user.avatar ? (
             <img
               src={user.avatar}
@@ -185,7 +224,9 @@ export function UserMenu() {
             </div>
           )}
           <div className="hidden sm:block text-left">
-            <p className="text-xs text-[hsl(var(--muted-foreground))]">My Account</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+              My Account
+            </p>
             <p className="text-sm font-medium">{user.name.split(' ')[0]}</p>
           </div>
         </Button>
@@ -203,33 +244,48 @@ export function UserMenu() {
             </div>
           </div>
         </div>
-        
+
         <div className="p-2">
-          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]"
+          >
             <Link to="/account" className="flex items-center">
               <User className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>My Dashboard</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]"
+          >
             <Link to="/account/orders" className="flex items-center">
               <Package className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>My Orders</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]"
+          >
             <Link to="/account/wishlist" className="flex items-center">
               <Heart className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Wishlist</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]"
+          >
             <Link to="/account/addresses" className="flex items-center">
               <MapPin className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Addresses</span>
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]">
+          <DropdownMenuItem
+            asChild
+            className="cursor-pointer rounded-lg p-3 hover:bg-[hsl(var(--muted))]"
+          >
             <Link to="/account/settings" className="flex items-center">
               <Settings className="mr-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
               <span>Settings</span>
@@ -238,7 +294,7 @@ export function UserMenu() {
         </div>
 
         <DropdownMenuSeparator className="m-0" />
-        
+
         <div className="p-2">
           <DropdownMenuItem
             className="cursor-pointer rounded-lg p-3 text-[hsl(var(--destructive))] hover:bg-[hsl(var(--destructive))]/10"
@@ -250,5 +306,5 @@ export function UserMenu() {
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }

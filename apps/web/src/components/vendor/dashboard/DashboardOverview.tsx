@@ -1,12 +1,12 @@
-import { KPICards } from './KPICards';
-import { RevenueChart } from './RevenueChart';
-import { RecentOrdersTable } from './RecentOrdersTable';
-import { NotificationsPanel } from './NotificationsPanel';
-import { authClient } from '@/lib/auth-client';
+import { KPICards } from './KPICards'
+import { RevenueChart } from './RevenueChart'
+import { RecentOrdersTable } from './RecentOrdersTable'
+import { NotificationsPanel } from './NotificationsPanel'
+import { authClient } from '@/lib/auth-client'
 
 export function DashboardOverview() {
-  const { data: session } = authClient.useSession();
-  const userName = session?.user?.name?.split(' ')[0] || 'Vendor';
+  const { data: session } = authClient.useSession()
+  const userName = session?.user.name.split(' ')[0] || 'Vendor'
 
   return (
     <div className="space-y-4 sm:space-y-6 md:space-y-8 animate-in fade-in duration-500">
@@ -40,21 +40,28 @@ export function DashboardOverview() {
         {/* Sidebar Area */}
         <div className="space-y-4 sm:space-y-6 md:space-y-8">
           <NotificationsPanel />
-          
+
           {/* Quick Setup Card */}
           <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-violet-700 p-4 sm:p-6 text-white shadow-lg overflow-hidden relative group">
             <div className="relative z-10">
-              <h4 className="text-base sm:text-lg font-bold mb-2">Get Started! 🚀</h4>
+              <h4 className="text-base sm:text-lg font-bold mb-2">
+                Get Started! 🚀
+              </h4>
               <p className="text-xs sm:text-sm text-white/80 mb-3 sm:mb-4 font-medium leading-relaxed">
-                Complete your store profile and list your first product to start reaching customers on Ayojon.
+                Complete your store profile and list your first product to start
+                reaching customers on Ayojon.
               </p>
               <div className="space-y-2 mb-4">
                 <div className="flex items-center gap-2 text-xs font-bold text-white/90 bg-white/10 px-2 py-1.5 rounded-lg border border-white/10">
-                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">1</div>
+                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
+                    1
+                  </div>
                   Update Store Settings
                 </div>
                 <div className="flex items-center gap-2 text-xs font-bold text-white/90 bg-white/10 px-2 py-1.5 rounded-lg border border-white/10">
-                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">2</div>
+                  <div className="h-4 w-4 rounded-full bg-white/20 flex items-center justify-center text-[10px]">
+                    2
+                  </div>
                   Add Your Products
                 </div>
               </div>
@@ -66,5 +73,5 @@ export function DashboardOverview() {
         </div>
       </div>
     </div>
-  );
+  )
 }

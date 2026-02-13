@@ -1,48 +1,56 @@
-import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
-import { useRef, useMemo } from 'react';
-import { Link } from '@tanstack/react-router';
-import { DealCard } from './DealCard';
-import { useFlashDeals } from '@/hooks/use-deals';
-import { useCountdown } from '@/hooks/use-countdown';
-import { ProductCardSkeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-import { orpc } from '@/utils/orpc';
-import { useQuery } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react'
+import { useMemo, useRef } from 'react'
+import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { DealCard } from './DealCard'
+import { useFlashDeals } from '@/hooks/use-deals'
+import { useCountdown } from '@/hooks/use-countdown'
+import { ProductCardSkeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
+import { orpc } from '@/utils/orpc'
 
 interface FlashSaleSectionProps {
-  className?: string;
+  className?: string
 }
 
 export function FlashSaleSection({ className }: FlashSaleSectionProps) {
-  const { data: deals, isLoading } = useFlashDeals(12);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: deals, isLoading } = useFlashDeals(12)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const { data: settings } = useQuery(
-    orpc.homepage.getPublicSettings.queryOptions()
-  );
+    orpc.homepage.getPublicSettings.queryOptions(),
+  )
 
   // Use the flashDealEndsAt from settings, or first deal's end time, or a default
   const globalEndTime = useMemo(() => {
     if (settings?.flashDealEndsAt) {
-      return new Date(settings.flashDealEndsAt).toISOString();
+      return new Date(settings.flashDealEndsAt).toISOString()
     }
-    return deals?.[0]?.dealEndsAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-  }, [deals, settings]);
+    return (
+      deals?.[0]?.dealEndsAt ||
+      new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    )
+  }, [deals, settings])
 
-  const countdown = useCountdown(globalEndTime);
+  const countdown = useCountdown(globalEndTime)
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 300;
+      const scrollAmount = 300
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
-      });
+      })
     }
-  };
+  }
 
   return (
-    <section className={cn('bg-[radial-gradient(70%_40%_at_50%_0%,hsla(12,85%,55%,0.12)_0%,transparent_70%)] py-5 sm:py-6 md:py-8', className)}>
+    <section
+      className={cn(
+        'bg-[radial-gradient(70%_40%_at_50%_0%,hsla(12,85%,55%,0.12)_0%,transparent_70%)] py-5 sm:py-6 md:py-8',
+        className,
+      )}
+    >
       <div className="mx-auto max-w-7xl px-2 sm:px-4">
         <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 shadow-[var(--shadow-card)] sm:p-5 md:p-6">
           {/* Section Header */}
@@ -64,17 +72,31 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
               {/* Countdown Timer */}
               <div className="flex items-center gap-1.5 text-[hsl(var(--accent))] sm:gap-2">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden text-sm font-medium sm:inline">Ends in:</span>
-                <div className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg" suppressHydrationWarning>
-                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                <span className="hidden text-sm font-medium sm:inline">
+                  Ends in:
+                </span>
+                <div
+                  className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg"
+                  suppressHydrationWarning
+                >
+                  <span
+                    className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1"
+                    suppressHydrationWarning
+                  >
                     {countdown.hours}
                   </span>
                   <span className="text-xs sm:text-base">:</span>
-                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                  <span
+                    className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1"
+                    suppressHydrationWarning
+                  >
                     {countdown.minutes}
                   </span>
                   <span className="text-xs sm:text-base">:</span>
-                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                  <span
+                    className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1"
+                    suppressHydrationWarning
+                  >
                     {countdown.seconds}
                   </span>
                 </div>
@@ -107,28 +129,34 @@ export function FlashSaleSection({ className }: FlashSaleSectionProps) {
             ref={scrollRef}
             className="scrollbar-hide -mx-2 flex flex-row items-stretch gap-2 overflow-x-auto overflow-y-hidden px-2 pb-2 sm:-mx-4 sm:gap-3 sm:px-4 md:gap-4"
           >
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                    <ProductCardSkeleton />
-                  </div>
-                ))
-              : deals && deals.length > 0 ? (
-                  deals.map((deal) => (
-                    <div key={deal.id} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                      <DealCard deal={deal} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
-                    No flash deals available at the moment
-                  </div>
-                )}
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]"
+                >
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : deals && deals.length > 0 ? (
+              deals.map((deal) => (
+                <div
+                  key={deal.id}
+                  className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]"
+                >
+                  <DealCard deal={deal} />
+                </div>
+              ))
+            ) : (
+              <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
+                No flash deals available at the moment
+              </div>
+            )}
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-export default FlashSaleSection;
+export default FlashSaleSection

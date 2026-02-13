@@ -1,64 +1,64 @@
 // Session Store - Manages unique session IDs and session-scoped data
 
-import { generateId } from '@/lib/utils';
+import { generateId } from '@/lib/utils'
 
-const SESSION_ID_KEY = 'ayojon-session-id';
-const LEGACY_SESSION_ID_KEY = 'zynex-session-id';
-const SESSION_KEYS_TO_CLEAR = ['ayojon-cart', 'ayojon-wishlist'];
-const LEGACY_KEYS_TO_CLEAR = ['zynex-cart', 'zynex-wishlist'];
+const SESSION_ID_KEY = 'ayojon-session-id'
+const LEGACY_SESSION_ID_KEY = 'zynex-session-id'
+const SESSION_KEYS_TO_CLEAR = ['ayojon-cart', 'ayojon-wishlist']
+const LEGACY_KEYS_TO_CLEAR = ['zynex-cart', 'zynex-wishlist']
 
 interface SessionManager {
-  getSessionId: () => string;
-  isNewSession: () => boolean;
-  clearSessionData: () => void;
-  initializeSession: () => string;
+  getSessionId: () => string
+  isNewSession: () => boolean
+  clearSessionData: () => void
+  initializeSession: () => string
 }
 
 function createSessionManager(): SessionManager {
-  let sessionId: string | null = null;
-  let isNew = false;
+  let sessionId: string | null = null
+  let isNew = false
 
   return {
     /**
      * Get the current session ID, creating one if it doesn't exist
      */
     getSessionId: () => {
-      if (sessionId) return sessionId;
+      if (sessionId) return sessionId
 
       if (typeof window !== 'undefined') {
         // Check sessionStorage for existing session ID
-        let stored = sessionStorage.getItem(SESSION_ID_KEY);
+        let stored = sessionStorage.getItem(SESSION_ID_KEY)
 
         // If not found, migrate from legacy key
         if (!stored) {
-          const legacy = sessionStorage.getItem(LEGACY_SESSION_ID_KEY);
+          const legacy = sessionStorage.getItem(LEGACY_SESSION_ID_KEY)
           if (legacy) {
-            sessionStorage.setItem(SESSION_ID_KEY, legacy);
-            sessionStorage.removeItem(LEGACY_SESSION_ID_KEY);
-            stored = legacy;
+            sessionStorage.setItem(SESSION_ID_KEY, legacy)
+            sessionStorage.removeItem(LEGACY_SESSION_ID_KEY)
+            stored = legacy
           }
         }
 
         if (stored) {
-          sessionId = stored;
+          sessionId = stored
         } else {
           // Generate new session ID
-          sessionId = `session_${generateId()}_${Date.now()}`;
-          sessionStorage.setItem(SESSION_ID_KEY, sessionId);
-          isNew = true;
+          sessionId = `session_${generateId()}_${Date.now()}`
+          sessionStorage.setItem(SESSION_ID_KEY, sessionId)
+          isNew = true
         }
       } else {
-        sessionId = `server_session_${generateId()}`;
+        sessionId = `server_session_${generateId()}`
       }
 
-      return sessionId;
+      return sessionId
     },
 
     /**
      * Check if this is a new session (first visit in this browser tab)
      */
     isNewSession: () => {
-      return isNew;
+      return isNew
     },
 
     /**
@@ -68,14 +68,14 @@ function createSessionManager(): SessionManager {
       if (typeof window !== 'undefined') {
         // Clear new keys
         SESSION_KEYS_TO_CLEAR.forEach((key) => {
-          sessionStorage.removeItem(key);
-          localStorage.removeItem(key);
-        });
+          sessionStorage.removeItem(key)
+          localStorage.removeItem(key)
+        })
         // Clear legacy keys
         LEGACY_KEYS_TO_CLEAR.forEach((key) => {
-          sessionStorage.removeItem(key);
-          localStorage.removeItem(key);
-        });
+          sessionStorage.removeItem(key)
+          localStorage.removeItem(key)
+        })
       }
     },
 
@@ -88,24 +88,24 @@ function createSessionManager(): SessionManager {
         // Clear any old localStorage data from previous implementation
         // This ensures fresh start for users migrating from localStorage
         SESSION_KEYS_TO_CLEAR.forEach((key) => {
-          localStorage.removeItem(key);
-        });
+          localStorage.removeItem(key)
+        })
         LEGACY_KEYS_TO_CLEAR.forEach((key) => {
-          localStorage.removeItem(key);
-        });
+          localStorage.removeItem(key)
+        })
       }
 
-      return createSessionManager().getSessionId();
+      return createSessionManager().getSessionId()
     },
-  };
+  }
 }
 
 // Singleton instance
-export const sessionManager = createSessionManager();
+export const sessionManager = createSessionManager()
 
 // Initialize session immediately on module load (client-side only)
 if (typeof window !== 'undefined') {
-  sessionManager.initializeSession();
+  sessionManager.initializeSession()
 }
 
 // React hook for accessing session info
@@ -114,5 +114,5 @@ export function useSession() {
     sessionId: sessionManager.getSessionId(),
     isNewSession: sessionManager.isNewSession(),
     clearSessionData: sessionManager.clearSessionData,
-  };
+  }
 }

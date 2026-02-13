@@ -1,22 +1,22 @@
+import { Calendar, CheckCircle2, CreditCard, Hash } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { CheckCircle2, Calendar, CreditCard, Hash } from "lucide-react";
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 interface PaymentSuccessModalProps {
-  isOpen: boolean;
-  transactionId: string;
-  amount: number;
-  paidAt: string;
-  paymentMethod: string;
-  cardType?: string;
-  last4?: string;
-  onBackToOrder: () => void;
+  isOpen: boolean
+  transactionId: string
+  amount: number
+  paidAt: string
+  paymentMethod: string
+  cardType?: string
+  last4?: string
+  onBackToOrder: () => void
 }
 
 export function PaymentSuccessModal({
@@ -30,7 +30,7 @@ export function PaymentSuccessModal({
   onBackToOrder,
 }: PaymentSuccessModalProps) {
   const formatDateTime = (isoString: string) => {
-    const date = new Date(isoString);
+    const date = new Date(isoString)
     return date.toLocaleString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -39,8 +39,8 @@ export function PaymentSuccessModal({
       minute: '2-digit',
       second: '2-digit',
       hour12: true,
-    });
-  };
+    })
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
@@ -54,7 +54,13 @@ export function PaymentSuccessModal({
               Payment Successful!
             </DialogTitle>
             <DialogDescription className="text-center">
-              Your {paymentMethod === 'bkash' ? 'bKash' : paymentMethod === 'card' ? 'card' : paymentMethod} payment has been processed successfully
+              Your{' '}
+              {paymentMethod === 'bkash'
+                ? 'bKash'
+                : paymentMethod === 'card'
+                  ? 'card'
+                  : paymentMethod}{' '}
+              payment has been processed successfully
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -120,7 +126,8 @@ export function PaymentSuccessModal({
           {/* Success Message */}
           <div className="rounded-lg bg-green-50 dark:bg-green-950/20 p-3 text-sm text-center border border-green-200 dark:border-green-800">
             <p className="text-green-700 dark:text-green-300">
-              A confirmation email has been sent to your registered email address
+              A confirmation email has been sent to your registered email
+              address
             </p>
           </div>
         </div>
@@ -131,5 +138,5 @@ export function PaymentSuccessModal({
         </Button>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

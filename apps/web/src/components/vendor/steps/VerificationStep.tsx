@@ -1,15 +1,22 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import type { VendorFormData } from '@/types/vendor';
-import { Upload, FileText, X, AlertCircle, CheckCircle2, Shield } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileText,
+  Shield,
+  Upload,
+  X,
+} from 'lucide-react'
+import type { VendorFormData } from '@/types/vendor'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 interface VerificationStepProps {
-  formData: VendorFormData;
-  onFormChange: (field: keyof VendorFormData, value: any) => void;
-  onSubmit: () => void;
-  onBack: () => void;
+  formData: VendorFormData
+  onFormChange: (field: keyof VendorFormData, value: any) => void
+  onSubmit: () => void
+  onBack: () => void
 }
 
 export function VerificationStep({
@@ -18,33 +25,39 @@ export function VerificationStep({
   onSubmit,
   onBack,
 }: VerificationStepProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleFileUpload = (field: keyof VendorFormData, file: File | undefined) => {
-    onFormChange(field, file);
+  const handleFileUpload = (
+    field: keyof VendorFormData,
+    file: File | undefined,
+  ) => {
+    onFormChange(field, file)
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
+      setErrors((prev) => ({ ...prev, [field]: '' }))
     }
-  };
+  }
 
   const handleSubmitForm = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    e.preventDefault()
+    const newErrors: Record<string, string> = {}
 
-    if (!formData.tradeLicense) newErrors.tradeLicense = 'Trade license is required';
-    if (!formData.identification) newErrors.identification = 'ID document is required';
-    if (!formData.bankDetails) newErrors.bankDetails = 'Bank details are required';
+    if (!formData.tradeLicense)
+      newErrors.tradeLicense = 'Trade license is required'
+    if (!formData.identification)
+      newErrors.identification = 'ID document is required'
+    if (!formData.bankDetails)
+      newErrors.bankDetails = 'Bank details are required'
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      setIsSubmitting(true);
+      setIsSubmitting(true)
       // Simulate submission delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      onSubmit();
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      onSubmit()
     }
-  };
+  }
 
   const FileUploadBox = ({
     field,
@@ -52,10 +65,10 @@ export function VerificationStep({
     description,
     file,
   }: {
-    field: keyof VendorFormData;
-    label: string;
-    description: string;
-    file?: File;
+    field: keyof VendorFormData
+    label: string
+    description: string
+    file?: File
   }) => (
     <div className="space-y-2">
       <Label className="text-sm font-semibold">
@@ -64,9 +77,7 @@ export function VerificationStep({
       <div
         className={cn(
           'rounded-lg border-2 border-dashed p-4',
-          errors[field]
-            ? 'border-red-500'
-            : 'border-[hsl(var(--border))]'
+          errors[field] ? 'border-red-500' : 'border-[hsl(var(--border))]',
         )}
       >
         {file ? (
@@ -91,7 +102,10 @@ export function VerificationStep({
             </Button>
           </div>
         ) : (
-          <label htmlFor={field} className="flex flex-col items-center cursor-pointer">
+          <label
+            htmlFor={field}
+            className="flex flex-col items-center cursor-pointer"
+          >
             <Upload className="h-8 w-8 text-[hsl(var(--muted-foreground))] mb-2" />
             <span className="text-sm text-[hsl(var(--muted-foreground))] text-center">
               Click to upload {label}
@@ -117,7 +131,7 @@ export function VerificationStep({
         </div>
       )}
     </div>
-  );
+  )
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
@@ -146,7 +160,8 @@ export function VerificationStep({
                 <li>Bank Account Details (statement or cheque)</li>
               </ul>
               <p className="mt-2 text-xs">
-                All documents will be reviewed by our team within 2-3 business days.
+                All documents will be reviewed by our team within 2-3 business
+                days.
               </p>
             </div>
           </div>
@@ -181,7 +196,8 @@ export function VerificationStep({
           <div className="flex items-start gap-2 text-sm text-green-700 dark:text-green-300">
             <Shield className="h-4 w-4 shrink-0 mt-0.5" />
             <p>
-              Your documents are encrypted and securely stored. We only use them for verification purposes.
+              Your documents are encrypted and securely stored. We only use them
+              for verification purposes.
             </p>
           </div>
         </div>
@@ -215,5 +231,5 @@ export function VerificationStep({
         </div>
       </form>
     </div>
-  );
+  )
 }

@@ -1,19 +1,19 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef } from 'react';
-import { Link } from '@tanstack/react-router';
-import { ProductCard } from './ProductCard';
-import type { Product } from '@/types';
-import { ProductCardSkeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useRef } from 'react'
+import { Link } from '@tanstack/react-router'
+import { ProductCard } from './ProductCard'
+import type { Product } from '@/types'
+import { ProductCardSkeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 interface ProductSectionProps {
-  title: string;
-  subtitle?: string;
-  icon?: React.ReactNode;
-  products: Array<Product>;
-  isLoading?: boolean;
-  viewAllLink?: string;
-  className?: string;
+  title: string
+  subtitle?: string
+  icon?: React.ReactNode
+  products: Array<Product>
+  isLoading?: boolean
+  viewAllLink?: string
+  className?: string
 }
 
 export function ProductSection({
@@ -25,17 +25,17 @@ export function ProductSection({
   viewAllLink,
   className,
 }: ProductSectionProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 300;
+      const scrollAmount = 300
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
-      });
+      })
     }
-  };
+  }
 
   return (
     <section className={cn('py-5 sm:py-6 md:py-8', className)}>
@@ -93,12 +93,18 @@ export function ProductSection({
           >
             {isLoading
               ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-[145px] shrink-0 sm:w-[170px] md:w-[190px] lg:w-[200px]">
+                  <div
+                    key={i}
+                    className="w-[145px] shrink-0 sm:w-[170px] md:w-[190px] lg:w-[200px]"
+                  >
                     <ProductCardSkeleton />
                   </div>
                 ))
               : products.map((product) => (
-                  <div key={product.id} className="w-[145px] shrink-0 sm:w-[170px] md:w-[190px] lg:w-[200px]">
+                  <div
+                    key={product.id}
+                    className="w-[145px] shrink-0 sm:w-[170px] md:w-[190px] lg:w-[200px]"
+                  >
                     <ProductCard product={product} />
                   </div>
                 ))}
@@ -106,7 +112,7 @@ export function ProductSection({
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-export default ProductSection;
+export default ProductSection

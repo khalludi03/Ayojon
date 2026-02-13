@@ -1,4 +1,7 @@
-import type { OrderStatus, PaymentMethod } from "@my-better-t-app/db/schema/orders";
+import type {
+  OrderStatus,
+  PaymentMethod,
+} from '@my-better-t-app/db/schema/orders'
 
 /**
  * Order State Machine
@@ -25,59 +28,34 @@ import type { OrderStatus, PaymentMethod } from "@my-better-t-app/db/schema/orde
 /**
  * Valid state transitions for prepaid orders (bKash)
  */
-const PREPAID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  // Initial state for prepaid orders
-  awaiting_payment: ["payment_submitted", "cancelled"],
-
-  // Customer submitted transaction ID, waiting for admin verification
-  payment_submitted: ["payment_received", "payment_rejected", "awaiting_payment", "cancelled"],
-
-  // Payment verified by admin, ready for vendor to ship
-  payment_received: ["shipped", "cancelled"],
-
-  // Payment rejected by admin
-  payment_rejected: ["payment_submitted", "cancelled"],
-
-  // Vendor marked as shipped
-  shipped: ["delivered", "cancelled"],
-
-  // Order delivered to customer
-  delivered: ["vendor_paid"],
-
-  // Final state: vendor has been paid
+const PREPAID_TRANSITIONS: Record<OrderStatus, Array<OrderStatus>> = {
+  awaiting_payment: ['payment_submitted', 'cancelled'],
+  payment_submitted: [
+    'payment_received',
+    'payment_rejected',
+    'awaiting_payment',
+    'cancelled',
+  ],
+  payment_received: ['shipped', 'cancelled'],
+  payment_rejected: ['payment_submitted', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  delivered: ['vendor_paid'],
   vendor_paid: [],
-
-  // Terminal states and states not used in prepaid flow
   placed: [],
+  confirmed: [],
   cash_collected: [],
   settlement_ready: [],
   vendor_settled: [],
   cancelled: [],
-};
+}
 
-/**
- * Valid state transitions for COD orders
- */
-const COD_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  // Initial state for COD orders
-  placed: ["confirmed", "cancelled"],
-
-  // Vendor/Admin confirmed the order
-  confirmed: ["shipped", "cancelled"],
-
-  // Vendor marked as shipped
-  shipped: ["delivered", "cancelled"],
-
-  // Courier delivered product and collected cash
-  delivered: ["settlement_ready"],
-
-  // Ready for admin to pay vendor
-  settlement_ready: ["vendor_settled"],
-
-  // Final state: vendor has been paid
+const COD_TRANSITIONS: Record<OrderStatus, Array<OrderStatus>> = {
+  placed: ['confirmed', 'cancelled'],
+  confirmed: ['shipped', 'cancelled'],
+  shipped: ['delivered', 'cancelled'],
+  delivered: ['settlement_ready'],
+  settlement_ready: ['vendor_settled'],
   vendor_settled: [],
-
-  // Terminal states and states not used in COD flow
   awaiting_payment: [],
   payment_submitted: [],
   payment_received: [],
@@ -85,19 +63,18 @@ const COD_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   cash_collected: [],
   vendor_paid: [],
   cancelled: [],
-};
+}
 
 /**
  * Get valid transitions for an order based on payment method
  */
 function getValidTransitions(
   currentStatus: OrderStatus,
-  paymentMethod: PaymentMethod
-): OrderStatus[] {
-  const transitions = (paymentMethod === "bkash") 
-    ? PREPAID_TRANSITIONS 
-    : COD_TRANSITIONS;
-  return transitions[currentStatus] || [];
+  paymentMethod: PaymentMethod,
+): Array<OrderStatus> {
+  const transitions =
+    paymentMethod === 'bkash' ? PREPAID_TRANSITIONS : COD_TRANSITIONS
+  return transitions[currentStatus]
 }
 
 /**
@@ -111,23 +88,23 @@ function getValidTransitions(
 export function validateStatusTransition(
   currentStatus: OrderStatus,
   newStatus: OrderStatus,
-  paymentMethod: PaymentMethod
+  paymentMethod: PaymentMethod,
 ): { valid: boolean; error?: string } {
   // Same status is always valid (idempotent)
   if (currentStatus === newStatus) {
-    return { valid: true };
+    return { valid: true }
   }
 
-  const validTransitions = getValidTransitions(currentStatus, paymentMethod);
+  const validTransitions = getValidTransitions(currentStatus, paymentMethod)
 
   if (!validTransitions.includes(newStatus)) {
     return {
       valid: false,
-      error: `Invalid status transition: Cannot move from "${currentStatus}" to "${newStatus}" for ${paymentMethod} orders. Valid transitions: ${validTransitions.join(", ") || "none"}`,
-    };
+      error: `Invalid status transition: Cannot move from "${currentStatus}" to "${newStatus}" for ${paymentMethod} orders. Valid transitions: ${validTransitions.join(', ') || 'none'}`,
+    }
   }
 
-  return { valid: true };
+  return { valid: true }
 }
 
 /**
@@ -136,10 +113,10 @@ export function validateStatusTransition(
  * @param paymentMethod - Payment method (bkash or cod)
  * @returns Initial order status
  */
-export function getInitialOrderStatus(paymentMethod: PaymentMethod): OrderStatus {
-  return (paymentMethod === "bkash") 
-    ? "awaiting_payment" 
-    : "placed";
+export function getInitialOrderStatus(
+  paymentMethod: PaymentMethod,
+): OrderStatus {
+  return paymentMethod === 'bkash' ? 'awaiting_payment' : 'placed'
 }
 
 /**
@@ -151,10 +128,10 @@ export function getInitialOrderStatus(paymentMethod: PaymentMethod): OrderStatus
  */
 export function isTerminalStatus(
   status: OrderStatus,
-  paymentMethod: PaymentMethod
+  paymentMethod: PaymentMethod,
 ): boolean {
-  const validTransitions = getValidTransitions(status, paymentMethod);
-  return validTransitions.length === 0;
+  const validTransitions = getValidTransitions(status, paymentMethod)
+  return validTransitions.length === 0
 }
 
 /**
@@ -166,9 +143,9 @@ export function isTerminalStatus(
  */
 export function getNextStatuses(
   currentStatus: OrderStatus,
-  paymentMethod: PaymentMethod
-): OrderStatus[] {
-  return getValidTransitions(currentStatus, paymentMethod);
+  paymentMethod: PaymentMethod,
+): Array<OrderStatus> {
+  return getValidTransitions(currentStatus, paymentMethod)
 }
 
 /**
@@ -178,50 +155,67 @@ export const OrderActions = {
   /**
    * Can customer submit payment proof? (bKash only)
    */
-  canSubmitPayment: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return (paymentMethod === "bkash") && 
-      (status === "awaiting_payment" || status === "payment_rejected");
+  canSubmitPayment: (
+    status: OrderStatus,
+    paymentMethod: PaymentMethod,
+  ): boolean => {
+    return (
+      paymentMethod === 'bkash' &&
+      (status === 'awaiting_payment' || status === 'payment_rejected')
+    )
   },
 
   /**
    * Can admin verify payment? (bKash only)
    */
-  canVerifyPayment: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return (paymentMethod === "bkash") && status === "payment_submitted";
+  canVerifyPayment: (
+    status: OrderStatus,
+    paymentMethod: PaymentMethod,
+  ): boolean => {
+    return paymentMethod === 'bkash' && status === 'payment_submitted'
   },
 
   /**
    * Can vendor/admin confirm order? (COD only)
    */
-  canConfirmOrder: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return paymentMethod === "cod" && status === "placed";
+  canConfirmOrder: (
+    status: OrderStatus,
+    paymentMethod: PaymentMethod,
+  ): boolean => {
+    return paymentMethod === 'cod' && status === 'placed'
   },
 
   /**
    * Can vendor mark as shipped?
    */
-  canMarkShipped: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    if (paymentMethod === "bkash") {
-      return status === "payment_received";
+  canMarkShipped: (
+    status: OrderStatus,
+    paymentMethod: PaymentMethod,
+  ): boolean => {
+    if (paymentMethod === 'bkash') {
+      return status === 'payment_received'
     }
-    return status === "confirmed";
+    return status === 'confirmed'
   },
 
   /**
    * Can mark as delivered?
    */
-  canMarkDelivered: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    return status === "shipped";
+  canMarkDelivered: (status: OrderStatus): boolean => {
+    return status === 'shipped'
   },
 
   /**
    * Can admin process vendor payout?
    */
-  canProcessPayout: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
-    if (paymentMethod === "bkash") {
-      return status === "delivered";
+  canProcessPayout: (
+    status: OrderStatus,
+    paymentMethod: PaymentMethod,
+  ): boolean => {
+    if (paymentMethod === 'bkash') {
+      return status === 'delivered'
     }
-    return status === "settlement_ready";
+    return status === 'settlement_ready'
   },
 
   /**
@@ -229,18 +223,25 @@ export const OrderActions = {
    */
   canCancel: (status: OrderStatus, paymentMethod: PaymentMethod): boolean => {
     // Cannot cancel if already in final states
-    const finalStates: OrderStatus[] = ["vendor_paid", "vendor_settled", "cancelled"];
+    const finalStates: Array<OrderStatus> = [
+      'vendor_paid',
+      'vendor_settled',
+      'cancelled',
+    ]
     if (finalStates.includes(status)) {
-      return false;
+      return false
     }
     // For bKash, can't cancel after delivery
-    if ((paymentMethod === "bkash") && status === "delivered") {
-      return false;
+    if (paymentMethod === 'bkash' && status === 'delivered') {
+      return false
     }
     // For COD, can't cancel after delivery
-    if (paymentMethod === "cod" && (status === "delivered" || status === "settlement_ready")) {
-      return false;
+    if (
+      paymentMethod === 'cod' &&
+      (status === 'delivered' || status === 'settlement_ready')
+    ) {
+      return false
     }
-    return true;
+    return true
   },
-};
+}

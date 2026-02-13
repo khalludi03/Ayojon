@@ -1,122 +1,122 @@
-export type ProductType = 'purchase' | 'rental' | 'both';
-export type ProductStatus = 'draft' | 'active' | 'out_of_stock' | 'archived';
+export type ProductType = 'purchase' | 'rental' | 'both'
+export type ProductStatus = 'draft' | 'active' | 'out_of_stock' | 'archived'
 
 export interface ProductSpecification {
-  key: string;
-  value: string;
+  key: string
+  value: string
 }
 
 export interface ProductImage {
-  id: string;
-  url: string;
-  file?: File;
-  isPrimary: boolean;
-  order: number;
+  id: string
+  url: string
+  file?: File
+  isPrimary: boolean
+  order: number
 }
 
 export interface PurchaseDetails {
-  regularPrice: number;
-  salePrice?: number;
-  quantity: number;
+  regularPrice: number
+  salePrice?: number
+  quantity: number
 }
 
 export interface RentalDetails {
-  dailyRate: number;
-  weeklyRate?: number;
-  monthlyRate?: number;
-  securityDeposit: number;
-  minimumRentalDuration: number;
-  quantityAvailable: number;
+  dailyRate: number
+  weeklyRate?: number
+  monthlyRate?: number
+  securityDeposit: number
+  minimumRentalDuration: number
+  quantityAvailable: number
 }
 
 export interface ShippingDetails {
-  weight: number;
+  weight: number
   dimensions: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  isFragile: boolean;
-  requiresSetup: boolean;
+    length: number
+    width: number
+    height: number
+  }
+  isFragile: boolean
+  requiresSetup: boolean
 }
 
 export interface VendorProduct {
-  id: string;
-  vendorId: string;
+  id: string
+  vendorId: string
 
   // Basic Info
-  name: string;
-  brand: string;
-  sku: string;
+  name: string
+  brand: string
+  sku: string
 
   // Description
-  description: string;
-  shortDescription: string;
+  description: string
+  shortDescription: string
 
   // Category
-  category: string;
-  subcategory: string;
-  eventTypes: string[];
+  category: string
+  subcategory: string
+  eventTypes: Array<string>
 
   // Pricing
-  productType: ProductType;
-  purchaseDetails?: PurchaseDetails;
-  rentalDetails?: RentalDetails;
+  productType: ProductType
+  purchaseDetails?: PurchaseDetails
+  rentalDetails?: RentalDetails
 
   // Images
-  images: ProductImage[];
+  images: Array<ProductImage>
 
   // Specifications
-  specifications: ProductSpecification[];
+  specifications: Array<ProductSpecification>
 
   // Shipping
-  shipping?: ShippingDetails;
+  shipping?: ShippingDetails
 
   // Metadata
-  status: ProductStatus;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt?: string;
+  status: ProductStatus
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
 }
 
 export interface ProductFormData {
   // Basic Info
-  name: string;
-  brand: string;
-  sku: string;
-  skuMode: 'auto' | 'custom';
+  name: string
+  brand: string
+  sku: string
+  skuMode: 'auto' | 'custom'
 
   // Description
-  description: string;
-  shortDescription: string;
+  description: string
+  shortDescription: string
 
   // Category
-  category: string;
-  subcategory: string;
-  eventTypes: string[];
+  category: string
+  subcategory: string
+  eventTypes: Array<string>
 
   // Pricing
-  productType: ProductType;
+  productType: ProductType
 
   // Purchase Details
-  regularPrice: string;
-  salePrice: string;
-  quantity: string;
+  regularPrice: string
+  salePrice: string
+  quantity: string
 
   // Rental Details
-  dailyRate: string;
-  weeklyRate: string;
-  monthlyRate: string;
-  securityDeposit: string;
-  minimumRentalDuration: string;
-  quantityAvailable: string;
+  dailyRate: string
+  weeklyRate: string
+  monthlyRate: string
+  securityDeposit: string
+  minimumRentalDuration: string
+  quantityAvailable: string
 
   // Images
-  images: ProductImage[];
+  images: Array<ProductImage>
 
   // Specifications
-  specifications: ProductSpecification[];
+  specifications: Array<ProductSpecification>
 
   // Key Features (Highlights)
-  keyFeatures: string[];
+  keyFeatures: Array<string>
 }

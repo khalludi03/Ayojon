@@ -1,25 +1,25 @@
-import { useState } from 'react';
-import { useNavigate, Link, useLocation } from '@tanstack/react-router';
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   LayoutDashboard,
-  Users,
-  Store,
-  Package,
-  ShoppingBag,
-  Settings,
-  Menu,
   LogOut,
+  Menu,
+  Package,
+  Settings,
   ShieldCheck,
-  UserCog
-} from 'lucide-react';
-import { Logo } from './Logo';
-import { NotificationBell } from './NotificationBell';
-import { ThemeToggle } from './ThemeToggle';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { authClient } from '@/lib/auth-client';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+  ShoppingBag,
+  Store,
+  UserCog,
+  Users,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
+import { Logo } from './Logo'
+import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from './ThemeToggle'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
 
 // Top-level navigation sections
 const sections = [
@@ -28,7 +28,7 @@ const sections = [
     label: 'Dashboard',
     icon: LayoutDashboard,
     path: '/admin/dashboard',
-    subTabs: null
+    subTabs: null,
   },
   {
     id: 'people',
@@ -36,8 +36,12 @@ const sections = [
     icon: UserCog,
     subTabs: [
       { label: 'Users', path: '/admin/users', icon: Users },
-      { label: 'Applications', path: '/admin/vendor-applications', icon: ShieldCheck }
-    ]
+      {
+        label: 'Applications',
+        path: '/admin/vendor-applications',
+        icon: ShieldCheck,
+      },
+    ],
   },
   {
     id: 'business',
@@ -45,57 +49,62 @@ const sections = [
     icon: Store,
     subTabs: [
       { label: 'Vendors', path: '/admin/vendors', icon: Store },
-      { label: 'Products', path: '/admin/products', icon: Package }
-    ]
+      { label: 'Products', path: '/admin/products', icon: Package },
+    ],
   },
   {
     id: 'orders',
     label: 'Orders',
     icon: ShoppingBag,
     path: '/admin/orders',
-    subTabs: null
+    subTabs: null,
   },
   {
     id: 'settings',
     label: 'Settings',
     icon: Settings,
     path: '/admin/settings',
-    subTabs: null
-  }
-];
+    subTabs: null,
+  },
+]
 
 export function AdminHeader() {
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const queryClient = useQueryClient();
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const queryClient = useQueryClient()
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
           // Clear all cached queries on logout
-          queryClient.clear();
-          toast.success('Signed out successfully');
-          navigate({ to: '/login' });
-        }
-      }
-    });
-  };
+          queryClient.clear()
+          toast.success('Signed out successfully')
+          navigate({ to: '/login' })
+        },
+      },
+    })
+  }
 
   // Determine active section based on current path
   const getActiveSection = () => {
-    const path = location.pathname;
-    if (path === '/admin/dashboard') return 'dashboard';
-    if (path.includes('/admin/user') || path.includes('/admin/vendor-application')) return 'people';
-    if (path.includes('/admin/vendor') || path.includes('/admin/product')) return 'business';
-    if (path.includes('/admin/order')) return 'orders';
-    if (path.includes('/admin/setting')) return 'settings';
-    return 'dashboard';
-  };
+    const path = location.pathname
+    if (path === '/admin/dashboard') return 'dashboard'
+    if (
+      path.includes('/admin/user') ||
+      path.includes('/admin/vendor-application')
+    )
+      return 'people'
+    if (path.includes('/admin/vendor') || path.includes('/admin/product'))
+      return 'business'
+    if (path.includes('/admin/order')) return 'orders'
+    if (path.includes('/admin/setting')) return 'settings'
+    return 'dashboard'
+  }
 
-  const activeSection = getActiveSection();
-  const activeSectionData = sections.find(s => s.id === activeSection);
+  const activeSection = getActiveSection()
+  const activeSectionData = sections.find((s) => s.id === activeSection)
 
   return (
     <header className="sticky top-0 z-40 w-full bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 shadow-sm">
@@ -110,7 +119,9 @@ export function AdminHeader() {
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600">
                   <ShieldCheck className="h-4 w-4 text-white" />
                 </div>
-                <span className="font-black text-sm hidden lg:inline-block text-slate-900 dark:text-white">Admin Panel</span>
+                <span className="font-black text-sm hidden lg:inline-block text-slate-900 dark:text-white">
+                  Admin Panel
+                </span>
               </div>
             </div>
 
@@ -160,24 +171,24 @@ export function AdminHeader() {
         <div className="mx-auto max-w-7xl px-4">
           <nav className="flex items-center gap-1 py-2">
             {sections.map((section) => {
-              const isActive = activeSection === section.id;
-              const SectionIcon = section.icon;
+              const isActive = activeSection === section.id
+              const SectionIcon = section.icon
 
               return (
                 <Link
                   key={section.id}
-                  to={(section.path || (section.subTabs?.[0]?.path)) as any}
+                  to={(section.path || section.subTabs?.[0]?.path) as any}
                   className={cn(
-                    "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all",
+                    'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all',
                     isActive
-                      ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30"
-                      : "text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white',
                   )}
                 >
                   <SectionIcon className="h-4 w-4" />
                   <span>{section.label}</span>
                 </Link>
-              );
+              )
             })}
           </nav>
         </div>
@@ -189,24 +200,24 @@ export function AdminHeader() {
           <div className="mx-auto max-w-7xl px-4">
             <nav className="flex items-center gap-1 py-2">
               {activeSectionData.subTabs.map((tab) => {
-                const isActiveTab = location.pathname === tab.path;
-                const TabIcon = tab.icon;
+                const isActiveTab = location.pathname === tab.path
+                const TabIcon = tab.icon
 
                 return (
                   <Link
                     key={tab.path}
                     to={tab.path as any}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all",
+                      'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all',
                       isActiveTab
-                        ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600"
-                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-900"
+                        ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600'
+                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-900',
                     )}
                   >
                     <TabIcon className="h-4 w-4" />
                     <span>{tab.label}</span>
                   </Link>
-                );
+                )
               })}
             </nav>
           </div>
@@ -218,7 +229,7 @@ export function AdminHeader() {
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 animate-in slide-in-from-top duration-200">
           <nav className="space-y-1">
             {sections.map((section) => {
-              const SectionIcon = section.icon;
+              const SectionIcon = section.icon
 
               if (!section.subTabs) {
                 return (
@@ -226,17 +237,17 @@ export function AdminHeader() {
                     key={section.id}
                     to={section.path as any}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all",
+                      'flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all',
                       activeSection === section.id
-                        ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
-                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900"
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900',
                     )}
                     onClick={() => setIsMobileNavOpen(false)}
                   >
                     <SectionIcon className="h-5 w-5" />
                     <span>{section.label}</span>
                   </Link>
-                );
+                )
               }
 
               return (
@@ -246,30 +257,30 @@ export function AdminHeader() {
                     <span>{section.label}</span>
                   </div>
                   {section.subTabs.map((tab) => {
-                    const TabIcon = tab.icon;
+                    const TabIcon = tab.icon
                     return (
                       <Link
                         key={tab.path}
                         to={tab.path as any}
                         className={cn(
-                          "flex items-center gap-3 px-4 py-2.5 ml-8 rounded-lg text-sm font-semibold transition-all",
+                          'flex items-center gap-3 px-4 py-2.5 ml-8 rounded-lg text-sm font-semibold transition-all',
                           location.pathname === tab.path
-                            ? "bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400"
-                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+                            ? 'bg-indigo-50 dark:bg-indigo-950/30 text-indigo-600 dark:text-indigo-400'
+                            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900',
                         )}
                         onClick={() => setIsMobileNavOpen(false)}
                       >
                         <TabIcon className="h-4 w-4" />
                         <span>{tab.label}</span>
                       </Link>
-                    );
+                    )
                   })}
                 </div>
-              );
+              )
             })}
           </nav>
         </div>
       )}
     </header>
-  );
+  )
 }

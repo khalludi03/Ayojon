@@ -1,120 +1,127 @@
-import { relations } from "drizzle-orm";
-import { pgTable, text, timestamp, boolean, index, integer } from "drizzle-orm/pg-core";
-import { wishlist, cart } from "./products";
+import { relations } from 'drizzle-orm'
+import {
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from 'drizzle-orm/pg-core'
+import { cart, wishlist } from './products'
 
-export const user = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
-  image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
+export const user = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('email_verified').default(false).notNull(),
+  image: text('image'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  isDeactivated: boolean("is_deactivated").default(false).notNull(),
-  deactivatedAt: timestamp("deactivated_at"),
-  retentionUntil: timestamp("retention_until"),
-  deactivationReason: text("deactivation_reason"),
-  deactivationFeedback: text("deactivation_feedback"),
-  role: text("role", { enum: ["customer", "vendor", "admin"] })
-    .default("customer")
+  isDeactivated: boolean('is_deactivated').default(false).notNull(),
+  deactivatedAt: timestamp('deactivated_at'),
+  retentionUntil: timestamp('retention_until'),
+  deactivationReason: text('deactivation_reason'),
+  deactivationFeedback: text('deactivation_feedback'),
+  role: text('role', { enum: ['customer', 'vendor', 'admin'] })
+    .default('customer')
     .notNull(),
-  vendorStatus: text("vendor_status", {
-    enum: ["none", "pending", "approved", "rejected", "suspended"],
+  vendorStatus: text('vendor_status', {
+    enum: ['none', 'pending', 'approved', 'rejected', 'suspended'],
   })
-    .default("none")
+    .default('none')
     .notNull(),
-});
+})
 
 export const session = pgTable(
-  "session",
+  'session',
   {
-    id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
+    id: text('id').primaryKey(),
+    expiresAt: timestamp('expires_at').notNull(),
+    token: text('token').notNull().unique(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
-    ipAddress: text("ip_address"),
-    userAgent: text("user_agent"),
-    userId: text("user_id")
+    ipAddress: text('ip_address'),
+    userAgent: text('user_agent'),
+    userId: text('user_id')
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: 'cascade' }),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
-);
+  (table) => [index('session_userId_idx').on(table.userId)],
+)
 
 export const account = pgTable(
-  "account",
+  'account',
   {
-    id: text("id").primaryKey(),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    userId: text("user_id")
+    id: text('id').primaryKey(),
+    accountId: text('account_id').notNull(),
+    providerId: text('provider_id').notNull(),
+    userId: text('user_id')
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
-    accessTokenExpiresAt: timestamp("access_token_expires_at"),
-    refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
-    scope: text("scope"),
-    password: text("password"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
+      .references(() => user.id, { onDelete: 'cascade' }),
+    accessToken: text('access_token'),
+    refreshToken: text('refresh_token'),
+    idToken: text('id_token'),
+    accessTokenExpiresAt: timestamp('access_token_expires_at'),
+    refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
+    scope: text('scope'),
+    password: text('password'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
-);
+  (table) => [index('account_userId_idx').on(table.userId)],
+)
 
 export const verification = pgTable(
-  "verification",
+  'verification',
   {
-    id: text("id").primaryKey(),
-    identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
+    id: text('id').primaryKey(),
+    identifier: text('identifier').notNull(),
+    value: text('value').notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at')
       .defaultNow()
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
-);
+  (table) => [index('verification_identifier_idx').on(table.identifier)],
+)
 
 export const rateLimit = pgTable(
-  "rate_limit",
+  'rate_limit',
   {
-    key: text("key").primaryKey(), // Combined key like "login:user@example.com" or "ip:1.2.3.4"
-    count: integer("count").notNull().default(0),
-    lastAttempt: timestamp("last_attempt").defaultNow().notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
+    key: text('key').primaryKey(), // Combined key like "login:user@example.com" or "ip:1.2.3.4"
+    count: integer('count').notNull().default(0),
+    lastAttempt: timestamp('last_attempt').defaultNow().notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
   },
-  (table) => [index("rate_limit_expiresAt_idx").on(table.expiresAt)],
-);
+  (table) => [index('rate_limit_expiresAt_idx').on(table.expiresAt)],
+)
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
   wishlist: many(wishlist),
   cart: many(cart),
-}));
+}))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
     fields: [session.userId],
     references: [user.id],
   }),
-}));
+}))
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
   }),
-}));
+}))

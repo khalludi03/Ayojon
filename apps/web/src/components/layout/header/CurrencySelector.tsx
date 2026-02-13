@@ -1,18 +1,21 @@
-import type { CurrencyCode } from '@/types';
+import type { CurrencyCode } from '@/types'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useCurrency } from '@/stores/currency-store';
+} from '@/components/ui/select'
+import { useCurrency } from '@/stores/currency-store'
 
 export function CurrencySelector() {
-  const { currency, setCurrency, availableCurrencies } = useCurrency();
+  const { currency, setCurrency, availableCurrencies } = useCurrency()
 
   return (
-    <Select value={currency} onValueChange={(value) => setCurrency(value as CurrencyCode)}>
+    <Select
+      value={currency}
+      onValueChange={(value) => setCurrency(value as CurrencyCode)}
+    >
       <SelectTrigger className="w-24 border-none bg-transparent focus:ring-0 focus:ring-offset-0">
         <SelectValue />
       </SelectTrigger>
@@ -27,5 +30,5 @@ export function CurrencySelector() {
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }

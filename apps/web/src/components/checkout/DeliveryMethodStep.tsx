@@ -1,62 +1,62 @@
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Truck, Zap, Clock, Package, Calendar, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useCart } from "@/stores/cart-store";
+import { Calendar, Clock, Info, Package, Truck, Zap } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
+import { useCart } from '@/stores/cart-store'
 
 interface DeliveryMethodStepProps {
-  onNext: () => void;
-  onBack: () => void;
+  onNext: () => void
+  onBack: () => void
   formData: {
-    deliveryMethod: string;
-  };
-  onFormChange: (field: string, value: string) => void;
+    deliveryMethod: string
+  }
+  onFormChange: (field: string, value: string) => void
 }
 
 type DeliveryMethod = {
-  id: string;
-  name: string;
-  duration: string;
-  description: string;
-  cost: number;
-  freeThreshold?: number;
-  icon: typeof Truck;
-  iconColor: string;
-  timeRestriction?: string;
-  estimatedDays: { min: number; max: number };
-};
+  id: string
+  name: string
+  duration: string
+  description: string
+  cost: number
+  freeThreshold?: number
+  icon: typeof Truck
+  iconColor: string
+  timeRestriction?: string
+  estimatedDays: { min: number; max: number }
+}
 
-export function DeliveryMethodStep({ 
-  onNext, 
-  onBack, 
-  formData, 
-  onFormChange 
+export function DeliveryMethodStep({
+  onNext,
+  onBack,
+  formData,
+  onFormChange,
 }: DeliveryMethodStepProps) {
-  const { getSubtotal } = useCart();
-  const subtotal = getSubtotal();
+  const { getSubtotal } = useCart()
+  const subtotal = getSubtotal()
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (formData.deliveryMethod) {
-      onNext();
+      onNext()
     }
-  };
+  }
 
   // Calculate estimated delivery date
   const getEstimatedDate = (method: DeliveryMethod) => {
-    const today = new Date();
-    const minDate = new Date(today);
-    const maxDate = new Date(today);
-    
-    minDate.setDate(today.getDate() + method.estimatedDays.min);
-    maxDate.setDate(today.getDate() + method.estimatedDays.max);
+    const today = new Date()
+    const minDate = new Date(today)
+    const maxDate = new Date(today)
+
+    minDate.setDate(today.getDate() + method.estimatedDays.min)
+    maxDate.setDate(today.getDate() + method.estimatedDays.max)
 
     if (method.estimatedDays.min === method.estimatedDays.max) {
       return minDate.toLocaleDateString('en-US', {
         weekday: 'short',
         month: 'short',
         day: 'numeric',
-      });
+      })
     }
 
     return `${minDate.toLocaleDateString('en-US', {
@@ -65,16 +65,16 @@ export function DeliveryMethodStep({
     })} - ${maxDate.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-    })}`;
-  };
+    })}`
+  }
 
   // Check if same-day delivery is available (before 12 PM)
   const isSameDayAvailable = () => {
-    const now = new Date();
-    return now.getHours() < 12;
-  };
+    const now = new Date()
+    return now.getHours() < 12
+  }
 
-  const deliveryMethods: DeliveryMethod[] = [
+  const deliveryMethods: Array<DeliveryMethod> = [
     {
       id: 'standard',
       name: 'Standard Delivery',
@@ -107,21 +107,25 @@ export function DeliveryMethodStep({
       timeRestriction: 'Order before 12 PM',
       estimatedDays: { min: 0, max: 0 },
     },
-  ];
+  ]
 
   const getCost = (method: DeliveryMethod) => {
-    if (method.id === 'standard' && method.freeThreshold && subtotal >= method.freeThreshold) {
-      return 0;
+    if (
+      method.id === 'standard' &&
+      method.freeThreshold &&
+      subtotal >= method.freeThreshold
+    ) {
+      return 0
     }
-    return method.cost;
-  };
+    return method.cost
+  }
 
   const isMethodAvailable = (method: DeliveryMethod) => {
     if (method.id === 'same-day') {
-      return isSameDayAvailable();
+      return isSameDayAvailable()
     }
-    return true;
-  };
+    return true
+  }
 
   return (
     <div className="space-y-6">
@@ -149,25 +153,25 @@ export function DeliveryMethodStep({
             <Label className="text-base font-semibold">
               Select Delivery Method <span className="text-red-500">*</span>
             </Label>
-            
+
             <div className="grid gap-4">
               {deliveryMethods.map((method) => {
-                const cost = getCost(method);
-                const isAvailable = isMethodAvailable(method);
-                const isSelected = formData.deliveryMethod === method.id;
-                const Icon = method.icon;
+                const cost = getCost(method)
+                const isAvailable = isMethodAvailable(method)
+                const isSelected = formData.deliveryMethod === method.id
+                const Icon = method.icon
 
                 return (
                   <label
                     key={method.id}
                     className={cn(
-                      "group relative flex cursor-pointer flex-col rounded-xl border-2 p-5 transition-all duration-200",
-                      !isAvailable && "cursor-not-allowed opacity-60",
+                      'group relative flex cursor-pointer flex-col rounded-xl border-2 p-5 transition-all duration-200',
+                      !isAvailable && 'cursor-not-allowed opacity-60',
                       isSelected && isAvailable
                         ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-md scale-[1.01]'
                         : isAvailable
-                        ? 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
-                        : 'border-[hsl(var(--border))]'
+                          ? 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
+                          : 'border-[hsl(var(--border))]',
                     )}
                   >
                     <input
@@ -175,19 +179,26 @@ export function DeliveryMethodStep({
                       name="deliveryMethod"
                       value={method.id}
                       checked={isSelected}
-                      onChange={(e) => onFormChange('deliveryMethod', e.target.value)}
+                      onChange={(e) =>
+                        onFormChange('deliveryMethod', e.target.value)
+                      }
                       className="sr-only"
                       required
                       disabled={!isAvailable}
                     />
-                    
+
                     <div className="flex items-start gap-4">
                       {/* Icon */}
-                      <div className={cn(
-                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-md",
-                        method.iconColor
-                      )}>
-                        <Icon className="h-6 w-6 text-white" strokeWidth={2.5} />
+                      <div
+                        className={cn(
+                          'flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-md',
+                          method.iconColor,
+                        )}
+                      >
+                        <Icon
+                          className="h-6 w-6 text-white"
+                          strokeWidth={2.5}
+                        />
                       </div>
 
                       {/* Content */}
@@ -201,23 +212,27 @@ export function DeliveryMethodStep({
                               {method.duration}
                             </p>
                           </div>
-                          
+
                           {/* Cost Badge */}
                           <div className="text-right">
                             {cost === 0 ? (
                               <div className="rounded-full bg-green-100 px-3 py-1 dark:bg-green-950">
-                                <span className="text-sm font-bold text-green-700 dark:text-green-300">FREE</span>
+                                <span className="text-sm font-bold text-green-700 dark:text-green-300">
+                                  FREE
+                                </span>
                               </div>
                             ) : (
                               <p className="text-lg font-bold text-[hsl(var(--foreground))]">
                                 ৳{cost}
                               </p>
                             )}
-                            {method.id === 'standard' && method.freeThreshold && subtotal < method.freeThreshold && (
-                              <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                                Free over ৳{method.freeThreshold}
-                              </p>
-                            )}
+                            {method.id === 'standard' &&
+                              method.freeThreshold &&
+                              subtotal < method.freeThreshold && (
+                                <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                                  Free over ৳{method.freeThreshold}
+                                </p>
+                              )}
                           </div>
                         </div>
 
@@ -249,14 +264,22 @@ export function DeliveryMethodStep({
                       {/* Selected Indicator */}
                       {isSelected && isAvailable && (
                         <div className="absolute right-4 top-4 rounded-full bg-[hsl(var(--primary))] p-1.5">
-                          <svg className="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          <svg
+                            className="h-4 w-4 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </div>
                       )}
                     </div>
                   </label>
-                );
+                )
               })}
             </div>
           </div>
@@ -283,16 +306,12 @@ export function DeliveryMethodStep({
             <Button type="button" variant="outline" size="lg" onClick={onBack}>
               ← Back
             </Button>
-            <Button 
-              type="submit" 
-              size="lg"
-              disabled={!formData.deliveryMethod}
-            >
+            <Button type="submit" size="lg" disabled={!formData.deliveryMethod}>
               Continue to Payment →
             </Button>
           </div>
         </form>
       </div>
     </div>
-  );
+  )
 }

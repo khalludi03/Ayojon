@@ -1,38 +1,38 @@
-import { useForm } from "@tanstack/react-form";
-import { Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { toast } from "sonner";
-import z from "zod";
-import { Eye, EyeOff } from "lucide-react";
+import { useForm } from '@tanstack/react-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import z from 'zod'
+import { Eye, EyeOff } from 'lucide-react'
 
-import { authClient } from "@/lib/auth-client";
-import { cn } from "@/lib/utils";
 
-import { buttonVariants, Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { Button, buttonVariants } from './ui/button'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
 
 function PasswordStrength({ password }: { password: string }) {
-  const strength = calculateStrength(password);
-  
+  const strength = calculateStrength(password)
+
   function calculateStrength(pass: string) {
-    let score = 0;
-    if (!pass) return 0;
-    if (pass.length > 8) score += 1;
-    if (/[a-z]/.test(pass)) score += 1;
-    if (/[A-Z]/.test(pass)) score += 1;
-    if (/[0-9]/.test(pass)) score += 1;
-    if (/[^a-zA-Z0-9]/.test(pass)) score += 1;
-    return score;
+    let score = 0
+    if (!pass) return 0
+    if (pass.length > 8) score += 1
+    if (/[a-z]/.test(pass)) score += 1
+    if (/[A-Z]/.test(pass)) score += 1
+    if (/[0-9]/.test(pass)) score += 1
+    if (/[^a-zA-Z0-9]/.test(pass)) score += 1
+    return score
   }
 
   const getStrengthColor = (score: number) => {
-    if (score <= 2) return "bg-red-500";
-    if (score <= 3) return "bg-yellow-500";
-    return "bg-green-500";
-  };
+    if (score <= 2) return 'bg-red-500'
+    if (score <= 3) return 'bg-yellow-500'
+    return 'bg-green-500'
+  }
 
-  const score = calculateStrength(password);
+  const score = calculateStrength(password)
 
   return (
     <div className="mt-2 space-y-1">
@@ -41,56 +41,72 @@ function PasswordStrength({ password }: { password: string }) {
           <div
             key={level}
             className={cn(
-              "h-full flex-1 rounded-full transition-colors",
-              score >= level ? getStrengthColor(score) : "bg-gray-200"
+              'h-full flex-1 rounded-full transition-colors',
+              score >= level ? getStrengthColor(score) : 'bg-gray-200',
             )}
           />
         ))}
       </div>
       <p className="text-xs text-muted-foreground text-right">
-        {score <= 2 ? "Weak" : score <= 3 ? "Medium" : "Strong"}
+        {score <= 2 ? 'Weak' : score <= 3 ? 'Medium' : 'Strong'}
       </p>
     </div>
-  );
+  )
 }
 
-export default function ResetPasswordForm({ token, error: tokenError }: { token?: string; error?: string }) {
-  const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
-  if (tokenError === "invalid_token") {
-     return (
+export default function ResetPasswordForm({
+  token,
+  error: tokenError,
+}: {
+  token?: string
+  error?: string
+}) {
+  const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  if (tokenError === 'invalid_token') {
+    return (
       <div className="mx-auto w-full mt-10 max-w-md p-6 text-center">
-        <h1 className="mb-6 text-3xl font-bold text-red-600">Invalid or Expired Link</h1>
+        <h1 className="mb-6 text-3xl font-bold text-red-600">
+          Invalid or Expired Link
+        </h1>
         <p className="text-muted-foreground mb-6">
-          This password reset link is invalid or has expired. Please request a new one.
+          This password reset link is invalid or has expired. Please request a
+          new one.
         </p>
-        <Link to="/forgot-password" className={cn(buttonVariants({ variant: "default" }), "w-full")}>
+        <Link
+          to="/forgot-password"
+          className={cn(buttonVariants({ variant: 'default' }), 'w-full')}
+        >
           Request New Link
         </Link>
       </div>
-    );
+    )
   }
 
   if (!token) {
     return (
-       <div className="mx-auto w-full mt-10 max-w-md p-6 text-center">
+      <div className="mx-auto w-full mt-10 max-w-md p-6 text-center">
         <h1 className="mb-6 text-3xl font-bold text-red-600">Missing Token</h1>
         <p className="text-muted-foreground mb-6">
-          The password reset link is missing the token. Please check the link and try again.
+          The password reset link is missing the token. Please check the link
+          and try again.
         </p>
-        <Link to="/login" className={cn(buttonVariants({ variant: "default" }), "w-full")}>
+        <Link
+          to="/login"
+          className={cn(buttonVariants({ variant: 'default' }), 'w-full')}
+        >
           Return to Login
         </Link>
       </div>
-    );
+    )
   }
 
   const form = useForm({
     defaultValues: {
-      password: "",
-      confirmPassword: "",
+      password: '',
+      confirmPassword: '',
     },
     onSubmit: async ({ value }) => {
       await authClient.resetPassword(
@@ -100,34 +116,36 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
         },
         {
           onSuccess: () => {
-            toast.success("Password set successfully!");
-            toast.info("Please sign in with your email and new password (not via Google)");
-            navigate({ to: "/login" });
+            toast.success('Password set successfully!')
+            toast.info(
+              'Please sign in with your email and new password (not via Google)',
+            )
+            navigate({ to: '/login' })
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            toast.error(error.error.message || error.error.statusText)
           },
         },
-      );
+      )
     },
     validators: {
       onSubmit: z
         .object({
           password: z
             .string()
-            .min(8, "Password must be at least 8 characters")
-            .regex(/[a-z]/, "Password must contain a lowercase letter")
-            .regex(/[A-Z]/, "Password must contain an uppercase letter")
-            .regex(/[0-9]/, "Password must contain a number")
-            .regex(/[^a-zA-Z0-9]/, "Password must contain a special character"),
+            .min(8, 'Password must be at least 8 characters')
+            .regex(/[a-z]/, 'Password must contain a lowercase letter')
+            .regex(/[A-Z]/, 'Password must contain an uppercase letter')
+            .regex(/[0-9]/, 'Password must contain a number')
+            .regex(/[^a-zA-Z0-9]/, 'Password must contain a special character'),
           confirmPassword: z.string(),
         })
         .refine((data) => data.password === data.confirmPassword, {
-          message: "Passwords do not match",
-          path: ["confirmPassword"],
+          message: 'Passwords do not match',
+          path: ['confirmPassword'],
         }),
     },
-  });
+  })
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -138,9 +156,9 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
 
       <form
         onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
         }}
         className="space-y-4"
       >
@@ -153,7 +171,7 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
                   <Input
                     id={field.name}
                     name={field.name}
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -163,7 +181,9 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
                     tabIndex={-1}
                     onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? 'Hide password' : 'Show password'
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -192,7 +212,7 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
                   <Input
                     id={field.name}
                     name={field.name}
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -202,7 +222,9 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
                     tabIndex={-1}
                     onClick={() => setShowConfirmPassword((v) => !v)}
-                    aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showConfirmPassword ? 'Hide password' : 'Show password'
+                    }
                   >
                     {showConfirmPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -228,11 +250,11 @@ export default function ResetPasswordForm({ token, error: tokenError }: { token?
               className="w-full"
               disabled={!state.canSubmit || state.isSubmitting}
             >
-              {state.isSubmitting ? "Resetting..." : "Reset Password"}
+              {state.isSubmitting ? 'Resetting...' : 'Reset Password'}
             </Button>
           )}
         </form.Subscribe>
       </form>
     </div>
-  );
+  )
 }

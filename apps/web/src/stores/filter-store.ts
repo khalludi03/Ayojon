@@ -1,20 +1,23 @@
 // Filter Store - Based on PRD Section 4.5.4
 
-import { useCallback, useSyncExternalStore } from 'react';
-import type { ProductFilters, SortOption } from '@/types';
+import { useCallback, useSyncExternalStore } from 'react'
+import type { ProductFilters, SortOption } from '@/types'
 
 interface FilterState extends ProductFilters {
-  activeFilterCount: number;
+  activeFilterCount: number
 }
 
 interface FilterStore {
-  getState: () => FilterState;
-  setFilter: <TKey extends keyof ProductFilters>(key: TKey, value: ProductFilters[TKey]) => void;
-  setFilters: (filters: Partial<ProductFilters>) => void;
-  clearFilter: (key: keyof ProductFilters) => void;
-  clearAllFilters: () => void;
-  getActiveFilterCount: () => number;
-  subscribe: (callback: () => void) => () => void;
+  getState: () => FilterState
+  setFilter: <TKey extends keyof ProductFilters>(
+    key: TKey,
+    value: ProductFilters[TKey],
+  ) => void
+  setFilters: (filters: Partial<ProductFilters>) => void
+  clearFilter: (key: keyof ProductFilters) => void
+  clearAllFilters: () => void
+  getActiveFilterCount: () => number
+  subscribe: (callback: () => void) => () => void
 }
 
 const DEFAULT_FILTERS: FilterState = {
@@ -38,89 +41,96 @@ const DEFAULT_FILTERS: FilterState = {
   vendorLocation: undefined,
   deliveryOption: undefined,
   activeFilterCount: 0,
-};
+}
 
 function calculateActiveFilterCount(filters: ProductFilters): number {
-  let count = 0;
-  if (filters.category) count++;
-  if (filters.categoryIds && filters.categoryIds.length > 0) count++;
-  if (filters.subcategory) count++;
-  if (filters.minPrice !== undefined) count++;
-  if (filters.maxPrice !== undefined) count++;
-  if (filters.minRating !== undefined) count++;
-  if (filters.freeShipping) count++;
-  if (filters.onSale) count++;
-  if (filters.inStock) count++;
-  if (filters.vendorIds && filters.vendorIds.length > 0) count++;
-  if (filters.search) count++;
-  if (filters.eventTypes && filters.eventTypes.length > 0) count++;
-  if (filters.availability) count++;
-  if (filters.productCondition) count++;
-  if (filters.vendorLocation && filters.vendorLocation !== 'all') count++;
-  if (filters.deliveryOption) count++;
-  return count;
+  let count = 0
+  if (filters.category) count++
+  if (filters.categoryIds && filters.categoryIds.length > 0) count++
+  if (filters.subcategory) count++
+  if (filters.minPrice !== undefined) count++
+  if (filters.maxPrice !== undefined) count++
+  if (filters.minRating !== undefined) count++
+  if (filters.freeShipping) count++
+  if (filters.onSale) count++
+  if (filters.inStock) count++
+  if (filters.vendorIds && filters.vendorIds.length > 0) count++
+  if (filters.search) count++
+  if (filters.eventTypes && filters.eventTypes.length > 0) count++
+  if (filters.availability) count++
+  if (filters.productCondition) count++
+  if (filters.vendorLocation && filters.vendorLocation !== 'all') count++
+  if (filters.deliveryOption) count++
+  return count
 }
 
 function createFilterStore(): FilterStore {
-  let state: FilterState = { ...DEFAULT_FILTERS };
-  const listeners = new Set<() => void>();
+  let state: FilterState = { ...DEFAULT_FILTERS }
+  const listeners = new Set<() => void>()
 
   const notify = () => {
-    listeners.forEach((listener) => listener());
-  };
+    listeners.forEach((listener) => listener())
+  }
 
   const updateActiveFilterCount = () => {
-    state.activeFilterCount = calculateActiveFilterCount(state);
-  };
+    state.activeFilterCount = calculateActiveFilterCount(state)
+  }
 
   return {
     getState: () => state,
 
-    setFilter: <TKey extends keyof ProductFilters>(key: TKey, value: ProductFilters[TKey]) => {
-      state = { ...state, [key]: value, page: key === 'page' ? (value as number) : 1 };
-      updateActiveFilterCount();
-      notify();
+    setFilter: <TKey extends keyof ProductFilters>(
+      key: TKey,
+      value: ProductFilters[TKey],
+    ) => {
+      state = {
+        ...state,
+        [key]: value,
+        page: key === 'page' ? (value as number) : 1,
+      }
+      updateActiveFilterCount()
+      notify()
     },
 
     setFilters: (filters: Partial<ProductFilters>) => {
-      state = { ...state, ...filters, page: 1 };
-      updateActiveFilterCount();
-      notify();
+      state = { ...state, ...filters, page: 1 }
+      updateActiveFilterCount()
+      notify()
     },
 
     clearFilter: (key: keyof ProductFilters) => {
-      state = { ...state, [key]: DEFAULT_FILTERS[key], page: 1 };
-      updateActiveFilterCount();
-      notify();
+      state = { ...state, [key]: DEFAULT_FILTERS[key], page: 1 }
+      updateActiveFilterCount()
+      notify()
     },
 
     clearAllFilters: () => {
-      state = { ...DEFAULT_FILTERS };
-      notify();
+      state = { ...DEFAULT_FILTERS }
+      notify()
     },
 
     getActiveFilterCount: () => {
-      return state.activeFilterCount;
+      return state.activeFilterCount
     },
 
     subscribe: (callback: () => void) => {
-      listeners.add(callback);
-      return () => listeners.delete(callback);
+      listeners.add(callback)
+      return () => listeners.delete(callback)
     },
-  };
+  }
 }
 
 // Singleton instance
-export const filterStore = createFilterStore();
+export const filterStore = createFilterStore()
 
 // Stable callbacks for useSyncExternalStore
-const subscribe = (callback: () => void) => filterStore.subscribe(callback);
-const getSnapshot = () => filterStore.getState();
-const getServerSnapshot = () => DEFAULT_FILTERS;
+const subscribe = (callback: () => void) => filterStore.subscribe(callback)
+const getSnapshot = () => filterStore.getState()
+const getServerSnapshot = () => DEFAULT_FILTERS
 
 // React hook
 export function useFilters() {
-  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   return {
     filters: state,
@@ -129,75 +139,75 @@ export function useFilters() {
     setFilters: filterStore.setFilters,
     clearFilter: filterStore.clearFilter,
     clearAllFilters: filterStore.clearAllFilters,
-  };
+  }
 }
 
 // Helper hook for price range
 export function usePriceRange() {
-  const { filters, setFilters } = useFilters();
+  const { filters, setFilters } = useFilters()
 
   const setPriceRange = useCallback(
     (min: number | undefined, max: number | undefined) => {
-      setFilters({ minPrice: min, maxPrice: max });
+      setFilters({ minPrice: min, maxPrice: max })
     },
-    [setFilters]
-  );
+    [setFilters],
+  )
 
   return {
     minPrice: filters.minPrice,
     maxPrice: filters.maxPrice,
     setPriceRange,
-  };
+  }
 }
 
 // Helper hook for sort
 export function useSort() {
-  const { filters, setFilter } = useFilters();
+  const { filters, setFilter } = useFilters()
 
   const setSort = useCallback(
     (sort: SortOption) => {
-      setFilter('sort', sort);
+      setFilter('sort', sort)
     },
-    [setFilter]
-  );
+    [setFilter],
+  )
 
   return {
     sort: filters.sort || 'relevance',
     setSort,
-  };
+  }
 }
 
 // Helper hook for subcategory management
 export function useSubcategory() {
-  const { filters, setFilter, clearFilter } = useFilters();
+  const { filters, setFilter, clearFilter } = useFilters()
 
   const setSubcategory = useCallback(
     (subcategory: string | undefined) => {
       if (subcategory) {
-        setFilter('subcategory', subcategory);
+        setFilter('subcategory', subcategory)
       } else {
-        clearFilter('subcategory');
+        clearFilter('subcategory')
       }
     },
-    [setFilter, clearFilter]
-  );
+    [setFilter, clearFilter],
+  )
 
   return {
     subcategory: filters.subcategory,
     setSubcategory,
-  };
+  }
 }
 
 // Helper hook for category page context
 export function useCategoryFilters(categoryId: string) {
-  const { filters, setFilter, setFilters, clearFilter } = useFilters();
+  const { filters, setFilter, setFilters, clearFilter } = useFilters()
 
   // Set the category filter when the component mounts or category changes
   const initializeCategoryFilter = useCallback(() => {
     if (filters.category !== categoryId) {
-      setFilter('category', categoryId);
+      setFilter('category', categoryId)
     }
-  }, [categoryId, filters.category, setFilter]);
+  }, [categoryId, filters.category, setFilter])
 
   return {
     filters,
@@ -205,5 +215,5 @@ export function useCategoryFilters(categoryId: string) {
     setFilters,
     clearFilter,
     initializeCategoryFilter,
-  };
+  }
 }

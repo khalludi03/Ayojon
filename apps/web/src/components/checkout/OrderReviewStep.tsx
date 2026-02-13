@@ -1,6 +1,16 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useState } from 'react'
+import {
+  CreditCard,
+  Loader2,
+  Mail,
+  MapPin,
+  Package,
+  Phone,
+  User,
+} from 'lucide-react'
+import type { CartItem } from '@/stores/cart-store'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Dialog,
   DialogClose,
@@ -9,27 +19,26 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { useCart, type CartItem } from "@/stores/cart-store";
-import { formatPrice } from "@/lib/utils";
-import { CreditCard, Mail, MapPin, Package, Phone, User, Loader2 } from "lucide-react";
+} from '@/components/ui/dialog'
+import { useCart } from '@/stores/cart-store'
+import { formatPrice } from '@/lib/utils'
 
 interface OrderReviewStepProps {
-  onBack: () => void;
-  onPlaceOrder: () => void;
-  onEditStep: (step: number) => void;
-  isSubmitting?: boolean;
+  onBack: () => void
+  onPlaceOrder: () => void
+  onEditStep: (step: number) => void
+  isSubmitting?: boolean
   formData: {
-    fullName: string;
-    email: string;
-    phone: string;
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    division: string;
-    postalCode: string;
-    paymentMethod: string;
-  };
+    fullName: string
+    email: string
+    phone: string
+    addressLine1: string
+    addressLine2: string
+    city: string
+    division: string
+    postalCode: string
+    paymentMethod: string
+  }
 }
 
 export function OrderReviewStep({
@@ -39,23 +48,23 @@ export function OrderReviewStep({
   isSubmitting = false,
   formData,
 }: OrderReviewStepProps) {
-  const { items, getSubtotal, getShipping, getTax, getTotal } = useCart();
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const { items, getSubtotal, getShipping, getTax, getTotal } = useCart()
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
-      case "card":
-        return "Credit/Debit Card";
-      case "bkash":
-        return "bKash";
-      case "nagad":
-        return "Nagad";
-      case "cod":
-        return "Cash on Delivery";
+      case 'card':
+        return 'Credit/Debit Card'
+      case 'bkash':
+        return 'bKash'
+      case 'nagad':
+        return 'Nagad'
+      case 'cod':
+        return 'Cash on Delivery'
       default:
-        return "Payment method not selected";
+        return 'Payment method not selected'
     }
-  };
+  }
 
   return (
     <div className="space-y-6">
@@ -96,11 +105,14 @@ export function OrderReviewStep({
             </div>
             <div className="space-y-3">
               {items.map((item: CartItem) => (
-                <div key={item.id} className="flex items-center justify-between">
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center gap-3">
                     <img
-                      src={item.product.images?.[0]?.url || '/placeholder.png'}
-                      alt={item.product.images?.[0]?.alt || item.product.title}
+                      src={item.product.images[0]?.url || '/placeholder.png'}
+                      alt={item.product.images[0]?.alt || item.product.title}
                       className="h-12 w-12 rounded-md border border-[hsl(var(--border))] object-cover"
                     />
                     <div>
@@ -113,7 +125,9 @@ export function OrderReviewStep({
                     </div>
                   </div>
                   <p className="text-sm font-semibold text-[hsl(var(--foreground))]">
-                    {formatPrice(item.product.pricing.currentPrice * item.quantity)}
+                    {formatPrice(
+                      item.product.pricing.currentPrice * item.quantity,
+                    )}
                   </p>
                 </div>
               ))}
@@ -146,7 +160,7 @@ export function OrderReviewStep({
               {formData.addressLine2 && <p>{formData.addressLine2}</p>}
               <p>
                 {formData.city}, {formData.division}
-                {formData.postalCode ? ` - ${formData.postalCode}` : ""}
+                {formData.postalCode ? ` - ${formData.postalCode}` : ''}
               </p>
             </div>
           </div>
@@ -188,13 +202,17 @@ export function OrderReviewStep({
           </div>
           <div className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-[hsl(var(--muted-foreground))]">Subtotal</span>
+              <span className="text-[hsl(var(--muted-foreground))]">
+                Subtotal
+              </span>
               <span className="font-medium text-[hsl(var(--foreground))]">
                 {formatPrice(getSubtotal())}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-[hsl(var(--muted-foreground))]">Delivery</span>
+              <span className="text-[hsl(var(--muted-foreground))]">
+                Delivery
+              </span>
               <span className="font-medium text-[hsl(var(--foreground))]">
                 {formatPrice(getShipping())}
               </span>
@@ -219,7 +237,10 @@ export function OrderReviewStep({
               onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
               id="agree-terms"
             />
-            <label htmlFor="agree-terms" className="text-sm text-[hsl(var(--foreground))]">
+            <label
+              htmlFor="agree-terms"
+              className="text-sm text-[hsl(var(--foreground))]"
+            >
               I agree to the Terms & Conditions
             </label>
           </div>
@@ -241,5 +262,5 @@ export function OrderReviewStep({
         </div>
       </div>
     </div>
-  );
+  )
 }

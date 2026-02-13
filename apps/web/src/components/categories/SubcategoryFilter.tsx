@@ -1,11 +1,11 @@
-import { cn } from '@/lib/utils';
-import type { Subcategory } from '@/types';
+import type { Subcategory } from '@/types'
+import { cn } from '@/lib/utils'
 
 interface SubcategoryFilterProps {
-  subcategories: Subcategory[];
-  activeSubcategoryId?: string;
-  onSubcategoryChange: (subcategoryId: string | undefined) => void;
-  className?: string;
+  subcategories: Array<Subcategory>
+  activeSubcategoryId?: string
+  onSubcategoryChange: (subcategoryId: string | undefined) => void
+  className?: string
 }
 
 export function SubcategoryFilter({
@@ -14,7 +14,7 @@ export function SubcategoryFilter({
   onSubcategoryChange,
   className,
 }: SubcategoryFilterProps) {
-  if (!subcategories || subcategories.length === 0) return null;
+  if (subcategories.length === 0) return null
 
   return (
     <div className={cn('w-full', className)}>
@@ -27,7 +27,7 @@ export function SubcategoryFilter({
             'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
             !activeSubcategoryId
               ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-accent'
+              : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-accent',
           )}
           type="button"
         >
@@ -43,7 +43,7 @@ export function SubcategoryFilter({
               'flex-shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
               activeSubcategoryId === subcategory.id
                 ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-accent'
+                : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-accent',
             )}
             type="button"
           >
@@ -52,5 +52,5 @@ export function SubcategoryFilter({
         ))}
       </div>
     </div>
-  );
+  )
 }

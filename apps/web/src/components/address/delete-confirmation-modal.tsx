@@ -1,3 +1,4 @@
+import { AlertTriangle } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -5,16 +6,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 
 interface DeleteConfirmationModalProps {
-  open: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  isLoading?: boolean;
-  addressName?: string;
+  open: boolean
+  onClose: () => void
+  onConfirm: () => void
+  isLoading?: boolean
+  addressName?: string
 }
 
 export function DeleteConfirmationModal({
@@ -33,19 +33,24 @@ export function DeleteConfirmationModal({
             <DialogTitle>Delete Address</DialogTitle>
           </div>
           <DialogDescription>
-            Are you sure you want to delete {addressName ? `"${addressName}"` : 'this address'}?
-            This action cannot be undone.
+            Are you sure you want to delete{' '}
+            {addressName ? `"${addressName}"` : 'this address'}? This action
+            cannot be undone.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isLoading}>
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isLoading}
+          >
             {isLoading ? 'Deleting...' : 'Delete Address'}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

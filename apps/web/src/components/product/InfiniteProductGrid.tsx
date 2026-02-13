@@ -1,43 +1,39 @@
-import { Loader2 } from 'lucide-react';
-import { ProductGrid } from './ProductGrid';
-import { useInfiniteProducts } from '@/hooks/use-products';
-import { useFilters } from '@/stores/filter-store';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react'
+import { ProductGrid } from './ProductGrid'
+import { useInfiniteProducts } from '@/hooks/use-products'
+import { useFilters } from '@/stores/filter-store'
+import { Button } from '@/components/ui/button'
 
 export function InfiniteProductGrid() {
-  const { filters } = useFilters();
+  const { filters } = useFilters()
 
-  const {
-    data,
-    isLoading,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  } = useInfiniteProducts({
-    category: filters.category,
-    minPrice: filters.minPrice,
-    maxPrice: filters.maxPrice,
-    minRating: filters.minRating,
-    freeShipping: filters.freeShipping,
-    onSale: filters.onSale,
-    inStock: filters.inStock,
-    search: filters.search,
-    sort: filters.sort,
-    limit: 20, // Fixed limit of 20 per page
-  });
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useInfiniteProducts({
+      category: filters.category,
+      minPrice: filters.minPrice,
+      maxPrice: filters.maxPrice,
+      minRating: filters.minRating,
+      freeShipping: filters.freeShipping,
+      onSale: filters.onSale,
+      inStock: filters.inStock,
+      search: filters.search,
+      sort: filters.sort,
+      limit: 20, // Fixed limit of 20 per page
+    })
 
   // Flatten all pages of products
-  const allProducts = data?.pages.flatMap((page) => page.data) || [];
-  const totalCount = data?.pages[0]?.total || 0;
-  const currentPage = data?.pages.length || 1;
-  const totalPages = data?.pages[0]?.totalPages || 1;
+  const allProducts = data?.pages.flatMap((page) => page.data) || []
+  const totalCount = data?.pages[0]?.total || 0
+  const currentPage = data?.pages.length || 1
+  const totalPages = data?.pages[0]?.totalPages || 1
 
   return (
     <div>
       {/* Results Count */}
       {!isLoading && (
         <p className="mb-4 text-sm text-[hsl(var(--muted-foreground))]">
-          Showing {allProducts.length} of {totalCount} products (Page {currentPage} of {totalPages})
+          Showing {allProducts.length} of {totalCount} products (Page{' '}
+          {currentPage} of {totalPages})
         </p>
       )}
 
@@ -75,7 +71,7 @@ export function InfiniteProductGrid() {
         )}
       </div>
     </div>
-  );
+  )
 }
 
-export default InfiniteProductGrid;
+export default InfiniteProductGrid

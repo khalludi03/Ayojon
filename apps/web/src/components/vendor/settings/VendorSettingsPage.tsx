@@ -1,21 +1,13 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Save,
-  Upload,
-  X,
-  Store,
-  Phone,
-  ImageIcon,
-  Loader2,
-} from 'lucide-react';
-import { orpcClient } from '@/utils/orpc';
-import { uploadFile } from '@/lib/storage-utils';
-import { toast } from 'sonner';
-import { ChangePasswordForm } from '@/components/account/change-password-form';
+import { useEffect, useState } from 'react'
+import { ImageIcon, Loader2, Phone, Save, Store, Upload, X } from 'lucide-react'
+import { toast } from 'sonner'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { orpcClient } from '@/utils/orpc'
+import { uploadFile } from '@/lib/storage-utils'
+import { ChangePasswordForm } from '@/components/account/change-password-form'
 
 export function VendorSettingsPage() {
   const [formData, setFormData] = useState({
@@ -26,28 +18,28 @@ export function VendorSettingsPage() {
     email: '',
     logoUrl: '',
     bannerUrl: '',
-  });
+  })
 
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string>('');
-  const [bannerPreview, setBannerPreview] = useState<string>('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [bannerFile, setBannerFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>('')
+  const [bannerPreview, setBannerPreview] = useState<string>('')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [hasChanges, setHasChanges] = useState(false)
 
   useEffect(() => {
-    loadVendorProfile();
-  }, []);
+    loadVendorProfile()
+  }, [])
 
   const loadVendorProfile = async () => {
     try {
-      setIsLoading(true);
-      const response = await orpcClient.vendor.getVendorProfile();
-      
+      setIsLoading(true)
+      const response = await orpcClient.vendor.getVendorProfile()
+
       if (response.vendor) {
-        const v = response.vendor;
+        const v = response.vendor
         setFormData({
           name: v.name || '',
           description: v.description || '',
@@ -56,149 +48,159 @@ export function VendorSettingsPage() {
           email: v.email || '',
           logoUrl: v.logoUrl || '',
           bannerUrl: v.bannerUrl || '',
-        });
-        setLogoPreview(v.logoUrl || '');
-        setBannerPreview(v.bannerUrl || '');
+        })
+        setLogoPreview(v.logoUrl || '')
+        setBannerPreview(v.bannerUrl || '')
       }
     } catch (err) {
-      console.error('Failed to load vendor profile:', err);
-      toast.error('Failed to load store settings');
+      console.error('Failed to load vendor profile:', err)
+      toast.error('Failed to load store settings')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    setHasChanges(true);
+    setFormData((prev) => ({ ...prev, [field]: value }))
+    setHasChanges(true)
     if (errors[field]) {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
     }
-  };
+  }
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setLogoFile(file);
-      const url = URL.createObjectURL(file);
-      setLogoPreview(url);
-      setHasChanges(true);
+      setLogoFile(file)
+      const url = URL.createObjectURL(file)
+      setLogoPreview(url)
+      setHasChanges(true)
     }
-  };
+  }
 
   const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
-      setBannerFile(file);
-      const url = URL.createObjectURL(file);
-      setBannerPreview(url);
-      setHasChanges(true);
+      setBannerFile(file)
+      const url = URL.createObjectURL(file)
+      setBannerPreview(url)
+      setHasChanges(true)
     }
-  };
+  }
 
   const handleRemoveLogo = () => {
-    setLogoPreview('');
-    setLogoFile(null);
-    setFormData(prev => ({ ...prev, logoUrl: null as any }));
-    setHasChanges(true);
-  };
+    setLogoPreview('')
+    setLogoFile(null)
+    setFormData((prev) => ({ ...prev, logoUrl: null as any }))
+    setHasChanges(true)
+  }
 
   const handleRemoveBanner = () => {
-    setBannerPreview('');
-    setBannerFile(null);
-    setFormData(prev => ({ ...prev, bannerUrl: null as any }));
-    setHasChanges(true);
-  };
+    setBannerPreview('')
+    setBannerFile(null)
+    setFormData((prev) => ({ ...prev, bannerUrl: null as any }))
+    setHasChanges(true)
+  }
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Store name is required';
+      newErrors.name = 'Store name is required'
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = 'Store description is required';
+      newErrors.description = 'Store description is required'
     }
 
     if (formData.phone && !/^\d{11}$/.test(formData.phone)) {
-      newErrors.phone = 'Mobile number must be exactly 11 digits';
+      newErrors.phone = 'Mobile number must be exactly 11 digits'
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSave = async () => {
     if (!validate()) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
     }
 
-    setIsSaving(true);
-    const saveToastId = toast.loading('Saving changes...');
+    setIsSaving(true)
+    const saveToastId = toast.loading('Saving changes...')
 
     try {
-      let currentLogoUrl = formData.logoUrl;
-      let currentBannerUrl = formData.bannerUrl;
+      let currentLogoUrl = formData.logoUrl
+      let currentBannerUrl = formData.bannerUrl
 
       // 1. Upload new files if selected
       if (logoFile) {
-        console.log('[VendorSettings] Uploading new logo...');
-        currentLogoUrl = await uploadFile(logoFile, 'vendor/logos', logoFile.type);
+        console.log('[VendorSettings] Uploading new logo...')
+        currentLogoUrl = await uploadFile(
+          logoFile,
+          'vendor/logos',
+          logoFile.type,
+        )
       }
       if (bannerFile) {
-        console.log('[VendorSettings] Uploading new banner...');
-        currentBannerUrl = await uploadFile(bannerFile, 'vendor/banners', bannerFile.type);
+        console.log('[VendorSettings] Uploading new banner...')
+        currentBannerUrl = await uploadFile(
+          bannerFile,
+          'vendor/banners',
+          bannerFile.type,
+        )
       }
 
       // 2. Save to backend (old images will be automatically deleted)
       console.log('[VendorSettings] Saving profile with:', {
         hasLogo: !!currentLogoUrl,
         hasBanner: !!currentBannerUrl,
-      });
+      })
 
       const result = await orpcClient.vendor.updateVendorProfile({
         name: formData.name,
         description: formData.description,
         address: formData.address,
         phone: formData.phone,
-        logoUrl: currentLogoUrl === null ? null : (currentLogoUrl || undefined),
-        bannerUrl: currentBannerUrl === null ? null : (currentBannerUrl || undefined),
-      });
+        logoUrl: currentLogoUrl || undefined,
+        bannerUrl: currentBannerUrl || undefined,
+      })
 
       if (result.deletedFiles && result.deletedFiles.length > 0) {
-        console.log('[VendorSettings] Deleted old files:', result.deletedFiles);
+        console.log('[VendorSettings] Deleted old files:', result.deletedFiles)
       }
 
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         logoUrl: currentLogoUrl,
-        bannerUrl: currentBannerUrl
-      }));
+        bannerUrl: currentBannerUrl,
+      }))
 
-      setLogoFile(null);
-      setBannerFile(null);
-      setHasChanges(false);
-      toast.success('Store settings updated successfully!', { id: saveToastId });
+      setLogoFile(null)
+      setBannerFile(null)
+      setHasChanges(false)
+      toast.success('Store settings updated successfully!', { id: saveToastId })
     } catch (err) {
-      console.error('Failed to save vendor profile:', err);
-      toast.error('Failed to save changes. Please try again.', { id: saveToastId });
+      console.error('Failed to save vendor profile:', err)
+      toast.error('Failed to save changes. Please try again.', {
+        id: saveToastId,
+      })
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   if (isLoading) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--primary))]" />
       </div>
-    );
+    )
   }
 
   return (
@@ -206,7 +208,9 @@ export function VendorSettingsPage() {
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2">Store Settings</h1>
+          <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2">
+            Store Settings
+          </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             Customize your store appearance and information
           </p>
@@ -225,7 +229,12 @@ export function VendorSettingsPage() {
 
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Store Name *</Label>
+                <Label
+                  htmlFor="name"
+                  className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]"
+                >
+                  Store Name *
+                </Label>
                 <Input
                   id="name"
                   value={formData.name}
@@ -239,7 +248,12 @@ export function VendorSettingsPage() {
               </div>
 
               <div>
-                <Label htmlFor="description" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Store Description *</Label>
+                <Label
+                  htmlFor="description"
+                  className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]"
+                >
+                  Store Description *
+                </Label>
                 <Textarea
                   id="description"
                   value={formData.description}
@@ -249,7 +263,9 @@ export function VendorSettingsPage() {
                   className={errors.description ? 'border-red-500' : ''}
                 />
                 {errors.description && (
-                  <p className="text-sm text-red-500 mt-1">{errors.description}</p>
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.description}
+                  </p>
                 )}
               </div>
             </div>
@@ -259,13 +275,17 @@ export function VendorSettingsPage() {
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6">
             <div className="flex items-center gap-2 mb-4">
               <ImageIcon className="h-5 w-5 text-[hsl(var(--primary))]" />
-              <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">Branding</h2>
+              <h2 className="text-xl font-semibold text-[hsl(var(--foreground))]">
+                Branding
+              </h2>
             </div>
 
             <div className="space-y-6">
               {/* Logo */}
               <div>
-                <Label className="text-base font-semibold text-[hsl(var(--foreground))]">Store Logo</Label>
+                <Label className="text-base font-semibold text-[hsl(var(--foreground))]">
+                  Store Logo
+                </Label>
                 <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
                   Recommended size: 200x200px
                 </p>
@@ -301,7 +321,9 @@ export function VendorSettingsPage() {
 
               {/* Banner */}
               <div>
-                <Label className="text-base font-semibold text-[hsl(var(--foreground))]">Store Banner</Label>
+                <Label className="text-base font-semibold text-[hsl(var(--foreground))]">
+                  Store Banner
+                </Label>
                 <p className="text-xs text-[hsl(var(--muted-foreground))] mb-2">
                   Recommended size: 1200x400px
                 </p>
@@ -349,13 +371,20 @@ export function VendorSettingsPage() {
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="phone" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Business Phone</Label>
+                  <Label
+                    htmlFor="phone"
+                    className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]"
+                  >
+                    Business Phone
+                  </Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => {
-                      const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 11);
-                      handleChange('phone', digitsOnly);
+                      const digitsOnly = e.target.value
+                        .replace(/\D/g, '')
+                        .slice(0, 11)
+                      handleChange('phone', digitsOnly)
                     }}
                     placeholder="01XXXXXXXXX"
                     inputMode="numeric"
@@ -369,7 +398,12 @@ export function VendorSettingsPage() {
                 </div>
 
                 <div>
-                  <Label htmlFor="address" className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]">Business Address</Label>
+                  <Label
+                    htmlFor="address"
+                    className="mb-2 block text-base font-semibold text-[hsl(var(--foreground))]"
+                  >
+                    Business Address
+                  </Label>
                   <Input
                     id="address"
                     value={formData.address}
@@ -408,5 +442,5 @@ export function VendorSettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,25 +1,24 @@
-import * as LucideIcons from 'lucide-react';
-import type { Category } from '@/types';
-import { cn } from '@/lib/utils';
+import * as LucideIcons from 'lucide-react'
+import type { Category } from '@/types'
+import { cn } from '@/lib/utils'
 
 interface CategoryBannerProps {
-  category: Category;
-  className?: string;
+  category: Category
+  className?: string
 }
 
 export function CategoryBanner({ category, className }: CategoryBannerProps) {
-  const Icon = category.icon ? LucideIcons[category.icon] : null;
-  const hasImage = !!category.imageUrl;
+  const Icon = (LucideIcons as any)[category.icon]
 
   return (
     <div
       className={cn(
         'relative overflow-hidden rounded-lg bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10',
-        className
+        className,
       )}
     >
       {/* Background Image */}
-      {hasImage && (
+      {category.imageUrl && (
         <div className="absolute inset-0">
           <img
             src={category.imageUrl}
@@ -35,7 +34,10 @@ export function CategoryBanner({ category, className }: CategoryBannerProps) {
         {/* Icon */}
         {Icon && (
           <div className="flex-shrink-0 rounded-full bg-primary/10 p-4 lg:p-6">
-            <Icon className="h-12 w-12 text-primary lg:h-16 lg:w-16" strokeWidth={1.5} />
+            <Icon
+              className="h-12 w-12 text-primary lg:h-16 lg:w-16"
+              strokeWidth={1.5}
+            />
           </div>
         )}
 
@@ -47,11 +49,12 @@ export function CategoryBanner({ category, className }: CategoryBannerProps) {
 
           {category.productCount !== undefined && (
             <p className="text-sm text-muted-foreground lg:text-base">
-              {category.productCount.toLocaleString()} {category.productCount === 1 ? 'item' : 'items'} available
+              {category.productCount.toLocaleString()}{' '}
+              {category.productCount === 1 ? 'item' : 'items'} available
             </p>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

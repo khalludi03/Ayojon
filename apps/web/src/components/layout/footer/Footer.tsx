@@ -1,8 +1,8 @@
-import { NewsletterForm } from './NewsletterForm';
-import { TrustBadges } from './TrustBadges';
-import { FooterLinks } from './FooterLinks';
-import { SocialIcons } from './SocialIcons';
-import { PaymentIcons } from './PaymentIcons';
+import { NewsletterForm } from './NewsletterForm'
+import { TrustBadges } from './TrustBadges'
+import { FooterLinks } from './FooterLinks'
+import { SocialIcons } from './SocialIcons'
+import { PaymentIcons } from './PaymentIcons'
 
 export function Footer() {
   return (
@@ -33,7 +33,9 @@ export function Footer() {
         <div className="mx-auto max-w-7xl px-4 py-4 sm:py-6">
           <div className="flex flex-col items-center justify-between gap-3 sm:gap-4 md:flex-row">
             <div className="text-center md:text-left">
-              <p className="text-sm font-medium text-[hsl(var(--foreground))] sm:text-base">Contact Us</p>
+              <p className="text-sm font-medium text-[hsl(var(--foreground))] sm:text-base">
+                Contact Us
+              </p>
               <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
                 Customer Hotline: 16XXX (9 AM - 8 PM, Sat-Thu)
               </p>
@@ -58,7 +60,7 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }
 
-export default Footer;
+export default Footer

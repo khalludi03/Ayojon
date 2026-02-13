@@ -1,17 +1,17 @@
 // Product Hooks - Based on PRD Section 7.8
 
-import {  useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import type {UseQueryOptions} from '@tanstack/react-query';
-import type { Product, ProductFilters } from '@/types';
-import { orpc, orpcClient } from '@/utils/orpc';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import type { UseQueryOptions } from '@tanstack/react-query'
+import type { Product, ProductFilters } from '@/types'
+import { orpc, orpcClient } from '@/utils/orpc'
 
 interface PaginatedResult<T> {
-  data: Array<T>;
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-  hasMore: boolean;
+  data: Array<T>
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+  hasMore: boolean
 }
 
 // Query keys factory
@@ -19,22 +19,27 @@ export const productKeys = {
   all: ['products'] as const,
   lists: () => [...productKeys.all, 'list'] as const,
   list: (filters: ProductFilters) => [...productKeys.lists(), filters] as const,
-  infinite: (filters: ProductFilters) => [...productKeys.all, 'infinite', filters] as const,
+  infinite: (filters: ProductFilters) =>
+    [...productKeys.all, 'infinite', filters] as const,
   details: () => [...productKeys.all, 'detail'] as const,
   detail: (id: string) => [...productKeys.details(), id] as const,
   slug: (slug: string) => [...productKeys.all, 'slug', slug] as const,
-  related: (productId: string) => [...productKeys.all, 'related', productId] as const,
+  related: (productId: string) =>
+    [...productKeys.all, 'related', productId] as const,
   newArrivals: () => [...productKeys.all, 'new-arrivals'] as const,
   topRated: () => [...productKeys.all, 'top-rated'] as const,
   bestSellers: () => [...productKeys.all, 'best-sellers'] as const,
-};
+}
 
 /**
  * Fetch paginated products with filters
  */
 export function useProducts(
   filters: ProductFilters = {},
-  options?: Omit<UseQueryOptions<PaginatedResult<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<PaginatedResult<Product>>,
+    'queryKey' | 'queryFn'
+  >,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
@@ -52,15 +57,17 @@ export function useProducts(
         dealType: filters.dealType,
         eventType: filters.eventTypes?.[0],
       },
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
  * Fetch products with infinite scroll pagination
  */
-export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) {
+export function useInfiniteProducts(
+  filters: Omit<ProductFilters, 'page'> = {},
+) {
   return useInfiniteQuery({
     queryKey: ['products', 'infinite', filters],
     queryFn: ({ pageParam = 1 }) =>
@@ -81,11 +88,11 @@ export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) 
     initialPageParam: 1,
     getNextPageParam: (lastPage: any) => {
       if (lastPage?.hasMore) {
-        return lastPage.page + 1;
+        return lastPage.page + 1
       }
-      return undefined;
+      return undefined
     },
-  });
+  })
 }
 
 /**
@@ -94,10 +101,10 @@ export function useInfiniteProducts(filters: Omit<ProductFilters, 'page'> = {}) 
  */
 export function useProduct(
   id: string,
-  options?: Omit<UseQueryOptions<Product | undefined>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Product | undefined>, 'queryKey' | 'queryFn'>,
 ) {
   // If id is a slug (common in this app), use slug hook. Otherwise, we might need a getProductById on backend.
-  return useProductBySlug(id, options);
+  return useProductBySlug(id, options)
 }
 
 /**
@@ -105,15 +112,15 @@ export function useProduct(
  */
 export function useProductBySlug(
   slug: string,
-  options?: Omit<UseQueryOptions<Product | undefined>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Product | undefined>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProductBySlug.queryOptions({
       input: { slug },
       enabled: !!slug,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -122,7 +129,7 @@ export function useProductBySlug(
 export function useRelatedProducts(
   productId: string,
   limit: number = 6,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   // Simplification: Fetch products in same category (or first one)
   return useQuery(
@@ -130,9 +137,9 @@ export function useRelatedProducts(
       input: { limit },
       enabled: !!productId,
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -140,15 +147,15 @@ export function useRelatedProducts(
  */
 export function useNewArrivals(
   limit: number = 12,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, sort: 'newest' },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -156,15 +163,15 @@ export function useNewArrivals(
  */
 export function useTopRated(
   limit: number = 12,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, sort: 'rating_desc' },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -172,16 +179,16 @@ export function useTopRated(
  */
 export function useBestSellers(
   limit: number = 12,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   // Using rating_desc as proxy for popularity if sales_desc is not implemented
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, sort: 'rating_desc' },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -189,15 +196,15 @@ export function useBestSellers(
  */
 export function useFlashSale(
   limit: number = 12,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, dealType: 'flash' },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -205,15 +212,15 @@ export function useFlashSale(
  */
 export function useHotDeals(
   limit: number = 12,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, dealType: 'hot' },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -221,15 +228,15 @@ export function useHotDeals(
  */
 export function useForYou(
   limit: number = 12,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, featured: true },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -237,15 +244,15 @@ export function useForYou(
  */
 export function useFeaturedProducts(
   limit: number = 20,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { limit, featured: true },
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -255,16 +262,16 @@ export function useFeaturedProducts(
 export function useProductsByCategory(
   categoryId: string,
   limit: number = 8,
-  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Product>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getProducts.queryOptions({
       input: { category: categoryId, limit },
       enabled: !!categoryId,
       select: (result: any) => result.data,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -273,7 +280,10 @@ export function useProductsByCategory(
 export function useCategoryProducts(
   categorySlug: string,
   filters: Omit<ProductFilters, 'category'> = {},
-  options?: Omit<UseQueryOptions<PaginatedResult<Product>>, 'queryKey' | 'queryFn'>
+  options?: Omit<
+    UseQueryOptions<PaginatedResult<Product>>,
+    'queryKey' | 'queryFn'
+  >,
 ) {
-  return useProducts({ ...filters, category: categorySlug }, options);
+  return useProducts({ ...filters, category: categorySlug }, options)
 }

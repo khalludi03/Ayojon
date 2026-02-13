@@ -1,27 +1,30 @@
-import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { useNavigate, Link } from "@tanstack/react-router";
-import { toast } from "sonner";
-import z from "zod";
-import { Eye, EyeOff } from "lucide-react";
-import { authClient } from "@/lib/auth-client";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+import { useState } from 'react'
+import { useForm } from '@tanstack/react-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
+import z from 'zod'
+import { Eye, EyeOff } from 'lucide-react'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import { authClient } from '@/lib/auth-client'
 
-export default function SignInForm({ onSwitchToSignUp, onSuccess }: { 
+export default function SignInForm({
+  onSwitchToSignUp,
+  onSuccess,
+}: {
   onSwitchToSignUp: () => void
   onSuccess?: () => void
 }) {
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate({
-    from: "/",
-  });
+    from: '/',
+  })
 
   const form = useForm({
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
     onSubmit: async ({ value }) => {
       await authClient.signIn.email(
@@ -33,42 +36,45 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
           onSuccess: (ctx) => {
             if (onSuccess) {
               // If custom onSuccess is provided, use it instead of navigation
-              onSuccess();
-              toast.success("Sign in successful");
+              onSuccess()
+              toast.success('Sign in successful')
             } else {
               // Default navigation behavior
-              const user = ctx.data?.user as any;
-              let redirectPath = '/';
+              const user = ctx.data?.user
+              let redirectPath = '/'
 
               if (user?.role === 'admin') {
-                redirectPath = '/admin/dashboard';
-              } else if (user?.role === 'vendor' && user?.vendorStatus === 'approved') {
-                redirectPath = '/vendor/dashboard';
+                redirectPath = '/admin/dashboard'
+              } else if (
+                user?.role === 'vendor' &&
+                user?.vendorStatus === 'approved'
+              ) {
+                redirectPath = '/vendor/dashboard'
               } else if (user?.vendorStatus === 'pending') {
-                redirectPath = '/vendor/application-pending';
+                redirectPath = '/vendor/application-pending'
               } else if (user?.vendorStatus === 'rejected') {
-                redirectPath = '/vendor/application-rejected';
+                redirectPath = '/vendor/application-rejected'
               }
 
               navigate({
                 to: redirectPath,
-              });
-              toast.success("Sign in successful");
+              })
+              toast.success('Sign in successful')
             }
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+            toast.error(error.error.message || error.error.statusText)
           },
         },
-      );
+      )
     },
     validators: {
       onSubmit: z.object({
-        email: z.string().email("Invalid email address"),
-        password: z.string().min(8, "Password must be at least 8 characters"),
+        email: z.string().email('Invalid email address'),
+        password: z.string().min(8, 'Password must be at least 8 characters'),
       }),
     },
-  });
+  })
 
   return (
     <div className="mx-auto w-full mt-10 max-w-md p-6">
@@ -76,9 +82,9 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
 
       <form
         onSubmit={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          form.handleSubmit();
+          e.preventDefault()
+          e.stopPropagation()
+          form.handleSubmit()
         }}
         className="space-y-4"
       >
@@ -122,7 +128,7 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
                   <Input
                     id={field.name}
                     name={field.name}
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     value={field.state.value}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
@@ -132,7 +138,9 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
                     tabIndex={-1}
                     onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-label={
+                      showPassword ? 'Hide password' : 'Show password'
+                    }
                   >
                     {showPassword ? (
                       <EyeOff className="h-5 w-5" />
@@ -158,7 +166,7 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
               className="w-full"
               disabled={!state.canSubmit || state.isSubmitting}
             >
-              {state.isSubmitting ? "Submitting..." : "Sign In"}
+              {state.isSubmitting ? 'Submitting...' : 'Sign In'}
             </Button>
           )}
         </form.Subscribe>
@@ -169,7 +177,9 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">
+            Or continue with
+          </span>
         </div>
       </div>
 
@@ -180,14 +190,14 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
         onClick={async () => {
           await authClient.signIn.social(
             {
-              provider: "google",
-              callbackURL: window.location.origin + "/",
+              provider: 'google',
+              callbackURL: window.location.origin + '/',
             },
             {
               // Force Google to show account picker
-              prompt: "select_account",
-            }
-          );
+              prompt: 'select_account',
+            },
+          )
         }}
       >
         <svg
@@ -218,5 +228,5 @@ export default function SignInForm({ onSwitchToSignUp, onSuccess }: {
         </Button>
       </div>
     </div>
-  );
+  )
 }

@@ -1,78 +1,97 @@
-import { useState, useEffect, useRef } from 'react';
-import { Star, ThumbsUp, ThumbsDown, BadgeCheck, Check, X as XIcon, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { Review } from '@/types/product';
-import { cn } from '@/lib/utils';
-import { orpcClient } from '@/utils/orpc';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { authClient } from '@/lib/auth-client';
+import { useEffect, useRef, useState } from 'react'
+import {
+  BadgeCheck,
+  Check,
+  Loader2,
+  Star,
+  ThumbsDown,
+  ThumbsUp,
+  X as XIcon,
+} from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import type { Review } from '@/types/product'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
+import { orpcClient } from '@/utils/orpc'
+import { authClient } from '@/lib/auth-client'
 
 interface ReviewCardProps {
-  review: Review;
+  review: Review
 }
 
 export function ReviewCard({ review }: ReviewCardProps) {
-  const [showAllImages, setShowAllImages] = useState(false);
-  const queryClient = useQueryClient();
-  const { data: session } = authClient.useSession();
+  const [showAllImages, setShowAllImages] = useState(false)
+  const queryClient = useQueryClient()
+  const { data: session } = authClient.useSession()
 
   // Local state for optimistic updates
-  const [helpfulVoted, setHelpfulVoted] = useState<'helpful' | 'not_helpful' | null>(
-    (review as any).myVote || null
-  );
-  const [helpfulCount, setHelpfulCount] = useState(review.helpfulVotes);
-  const [notHelpfulCount, setNotHelpfulCount] = useState(review.notHelpfulVotes || 0);
+  const [helpfulVoted, setHelpfulVoted] = useState<
+    'helpful' | 'not_helpful' | null
+  >((review as any).myVote || null)
+  const [helpfulCount, setHelpfulCount] = useState(review.helpfulVotes)
+  const [notHelpfulCount, setNotHelpfulCount] = useState(
+    review.notHelpfulVotes || 0,
+  )
 
   // Ref to store rollback context
   const rollbackContextRef = useRef<{
-    previousVote: 'helpful' | 'not_helpful' | null;
-    previousHelpfulCount: number;
-    previousNotHelpfulCount: number;
-  } | null>(null);
+    previousVote: 'helpful' | 'not_helpful' | null
+    previousHelpfulCount: number
+    previousNotHelpfulCount: number
+  } | null>(null)
 
   // Sync local state when review prop changes
   useEffect(() => {
-    setHelpfulVoted((review as any).myVote || null);
-    setHelpfulCount(review.helpfulVotes);
-    setNotHelpfulCount(review.notHelpfulVotes || 0);
-  }, [review.id, review.helpfulVotes, review.notHelpfulVotes, (review as any).myVote]);
+    setHelpfulVoted((review as any).myVote || null)
+    setHelpfulCount(review.helpfulVotes)
+    setNotHelpfulCount(review.notHelpfulVotes || 0)
+  }, [
+    review.id,
+    review.helpfulVotes,
+    review.notHelpfulVotes,
+    (review as any).myVote,
+  ])
 
   // Mutation for voting
   const voteMutation = useMutation({
-    mutationFn: (vars: { reviewId: string; voteType: 'helpful' | 'not_helpful' }) => 
-      orpcClient.review.voteReview(vars),
+    mutationFn: (vars: {
+      reviewId: string
+      voteType: 'helpful' | 'not_helpful'
+    }) => orpcClient.review.voteReview(vars),
     onSuccess: () => {
       // Invalidate both product reviews and my reviews
-      queryClient.invalidateQueries({ queryKey: ['review'] });
-      rollbackContextRef.current = null;
+      queryClient.invalidateQueries({ queryKey: ['review'] })
+      rollbackContextRef.current = null
     },
     onError: (error: any) => {
       // Revert optimistic update on error
       if (rollbackContextRef.current) {
-        setHelpfulVoted(rollbackContextRef.current.previousVote);
-        setHelpfulCount(rollbackContextRef.current.previousHelpfulCount);
-        setNotHelpfulCount(rollbackContextRef.current.previousNotHelpfulCount);
-        rollbackContextRef.current = null;
+        setHelpfulVoted(rollbackContextRef.current.previousVote)
+        setHelpfulCount(rollbackContextRef.current.previousHelpfulCount)
+        setNotHelpfulCount(rollbackContextRef.current.previousNotHelpfulCount)
+        rollbackContextRef.current = null
       }
-      toast.error(error?.message || "Failed to process vote. Please login to vote.");
-    }
-  });
+      toast.error(
+        error?.message || 'Failed to process vote. Please login to vote.',
+      )
+    },
+  })
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
 
   const handleHelpfulVote = (voteType: 'helpful' | 'not_helpful') => {
     if (!session) {
-      toast.error("Please sign in to vote on reviews");
-      return;
+      toast.error('Please sign in to vote on reviews')
+      return
     }
 
     // Store previous state for rollback
@@ -80,38 +99,40 @@ export function ReviewCard({ review }: ReviewCardProps) {
       previousVote: helpfulVoted,
       previousHelpfulCount: helpfulCount,
       previousNotHelpfulCount: notHelpfulCount,
-    };
+    }
 
     // Optimistic update
     if (helpfulVoted === voteType) {
       // User is removing their vote
-      setHelpfulVoted(null);
+      setHelpfulVoted(null)
       if (voteType === 'helpful') {
-        setHelpfulCount(prev => Math.max(0, prev - 1));
+        setHelpfulCount((prev) => Math.max(0, prev - 1))
       } else {
-        setNotHelpfulCount(prev => Math.max(0, prev - 1));
+        setNotHelpfulCount((prev) => Math.max(0, prev - 1))
       }
     } else {
       // User is changing or adding their vote
-      setHelpfulVoted(voteType);
-      
+      setHelpfulVoted(voteType)
+
       if (rollbackContextRef.current.previousVote === 'helpful') {
-        setHelpfulCount(prev => Math.max(0, prev - 1));
+        setHelpfulCount((prev) => Math.max(0, prev - 1))
       } else if (rollbackContextRef.current.previousVote === 'not_helpful') {
-        setNotHelpfulCount(prev => Math.max(0, prev - 1));
+        setNotHelpfulCount((prev) => Math.max(0, prev - 1))
       }
-      
+
       if (voteType === 'helpful') {
-        setHelpfulCount(prev => prev + 1);
+        setHelpfulCount((prev) => prev + 1)
       } else {
-        setNotHelpfulCount(prev => prev + 1);
+        setNotHelpfulCount((prev) => prev + 1)
       }
     }
 
-    voteMutation.mutate({ reviewId: review.id, voteType });
-  };
+    voteMutation.mutate({ reviewId: review.id, voteType })
+  }
 
-  const displayImages = showAllImages ? review.images : review.images.slice(0, 3);
+  const displayImages = showAllImages
+    ? review.images
+    : review.images.slice(0, 3)
 
   return (
     <div className="border-b border-[hsl(var(--border))] pb-6 last:border-b-0">
@@ -127,7 +148,9 @@ export function ReviewCard({ review }: ReviewCardProps) {
             />
           ) : (
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--muted))] text-sm font-semibold text-[hsl(var(--muted-foreground))]">
-              {review.user.isAnonymous ? 'A' : review.user.name.charAt(0).toUpperCase()}
+              {review.user.isAnonymous
+                ? 'A'
+                : review.user.name.charAt(0).toUpperCase()}
             </div>
           )}
         </div>
@@ -139,20 +162,29 @@ export function ReviewCard({ review }: ReviewCardProps) {
               {review.user.name}
             </span>
             {review.isVerifiedPurchase && (
-              <Badge variant="verified" className="gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800">
+              <Badge
+                variant="verified"
+                className="gap-1 bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-400 dark:border-blue-800"
+              >
                 <BadgeCheck className="h-3 w-3" />
                 Verified Purchase
               </Badge>
             )}
-            {review.recommend !== undefined && (
-              <div className={cn(
-                "flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border",
-                review.recommend 
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800" 
-                  : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800"
-              )}>
-                {review.recommend ? <Check className="h-2.5 w-2.5" /> : <XIcon className="h-2.5 w-2.5" />}
-                {review.recommend ? "Recommended" : "Not Recommended"}
+            {'recommend' in review && (
+              <div
+                className={cn(
+                  'flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                  review.recommend
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:border-emerald-800'
+                    : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-800',
+                )}
+              >
+                {review.recommend ? (
+                  <Check className="h-2.5 w-2.5" />
+                ) : (
+                  <XIcon className="h-2.5 w-2.5" />
+                )}
+                {review.recommend ? 'Recommended' : 'Not Recommended'}
               </div>
             )}
           </div>
@@ -167,7 +199,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
                     'h-4 w-4',
                     i < review.rating
                       ? 'fill-yellow-400 text-yellow-400'
-                      : 'fill-gray-200 text-gray-200'
+                      : 'fill-gray-200 text-gray-200',
                   )}
                 />
               ))}
@@ -206,7 +238,8 @@ export function ReviewCard({ review }: ReviewCardProps) {
                   onClick={() => setShowAllImages(true)}
                   className="mt-2 text-sm font-medium text-[hsl(var(--primary))] hover:underline"
                 >
-                  + {review.images.length - 3} more {review.images.length - 3 === 1 ? 'photo' : 'photos'}
+                  + {review.images.length - 3} more{' '}
+                  {review.images.length - 3 === 1 ? 'photo' : 'photos'}
                 </button>
               )}
             </div>
@@ -225,15 +258,19 @@ export function ReviewCard({ review }: ReviewCardProps) {
                 onClick={() => handleHelpfulVote('helpful')}
                 disabled={voteMutation.isPending}
               >
-                {voteMutation.isPending && voteMutation.variables?.voteType === 'helpful' ? (
+                {voteMutation.isPending &&
+                voteMutation.variables.voteType === 'helpful' ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <ThumbsUp className={cn("h-3.5 w-3.5", helpfulVoted === 'helpful' && "fill-current")} />
+                  <ThumbsUp
+                    className={cn(
+                      'h-3.5 w-3.5',
+                      helpfulVoted === 'helpful' && 'fill-current',
+                    )}
+                  />
                 )}
                 <span>Yes</span>
-                <span className="ml-0.5">
-                  ({helpfulCount})
-                </span>
+                <span className="ml-0.5">({helpfulCount})</span>
               </Button>
               <Button
                 variant={helpfulVoted === 'not_helpful' ? 'primary' : 'outline'}
@@ -242,20 +279,24 @@ export function ReviewCard({ review }: ReviewCardProps) {
                 onClick={() => handleHelpfulVote('not_helpful')}
                 disabled={voteMutation.isPending}
               >
-                {voteMutation.isPending && voteMutation.variables?.voteType === 'not_helpful' ? (
+                {voteMutation.isPending &&
+                voteMutation.variables.voteType === 'not_helpful' ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <ThumbsDown className={cn("h-3.5 w-3.5", helpfulVoted === 'not_helpful' && "fill-current")} />
+                  <ThumbsDown
+                    className={cn(
+                      'h-3.5 w-3.5',
+                      helpfulVoted === 'not_helpful' && 'fill-current',
+                    )}
+                  />
                 )}
                 <span>No</span>
-                <span className="ml-0.5">
-                  ({notHelpfulCount})
-                </span>
+                <span className="ml-0.5">({notHelpfulCount})</span>
               </Button>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

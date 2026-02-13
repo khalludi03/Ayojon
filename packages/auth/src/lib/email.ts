@@ -1,6 +1,6 @@
-import { env } from "@my-better-t-app/env/server";
-import { randomInt } from "crypto";
-import nodemailer from "nodemailer";
+import { randomInt } from 'node:crypto'
+import { env } from '@my-better-t-app/env/server'
+import nodemailer from 'nodemailer'
 
 const transporter = nodemailer.createTransport({
   host: env.EMAIL_HOST,
@@ -10,35 +10,31 @@ const transporter = nodemailer.createTransport({
     user: env.EMAIL_USER,
     pass: env.EMAIL_PASSWORD,
   },
-});
+})
 
 interface SendPasswordResetEmailParams {
-  to: string;
-  userName: string;
-  resetUrl: string;
+  to: string
+  userName: string
+  resetUrl: string
 }
 
 interface SendOTPEmailParams {
-  to: string;
-  otp: string;
-  type: "sign-in" | "email-verification" | "forget-password";
+  to: string
+  otp: string
+  type: 'sign-in' | 'email-verification' | 'forget-password'
 }
 
 // Generate a random 6-digit OTP
 export function generateOTP(): string {
-  return randomInt(100000, 1000000).toString();
+  return randomInt(100000, 1000000).toString()
 }
 
-export async function sendOTPEmail({
-  to,
-  otp,
-  type,
-}: SendOTPEmailParams) {
+export async function sendOTPEmail({ to, otp, type }: SendOTPEmailParams) {
   const typeText = {
-    "sign-in": "Sign In",
-    "email-verification": "Email Verification",
-    "forget-password": "Password Reset",
-  }[type];
+    'sign-in': 'Sign In',
+    'email-verification': 'Email Verification',
+    'forget-password': 'Password Reset',
+  }[type]
 
   try {
     const info = await transporter.sendMail({
@@ -109,12 +105,12 @@ export async function sendOTPEmail({
           </body>
         </html>
       `,
-    });
+    })
 
-    return { success: true, data: info };
+    return { success: true, data: info }
   } catch (error) {
-    console.error("Error sending OTP email:", error);
-    throw error;
+    console.error('Error sending OTP email:', error)
+    throw error
   }
 }
 
@@ -127,7 +123,7 @@ export async function sendPasswordResetEmail({
     const info = await transporter.sendMail({
       from: `"My Better T App" <${env.EMAIL_USER}>`,
       to,
-      subject: "Reset your password",
+      subject: 'Reset your password',
       html: `
         <!DOCTYPE html>
         <html>
@@ -147,7 +143,7 @@ export async function sendPasswordResetEmail({
                           Reset Your Password
                         </h1>
                         <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.5; color: #52525b;">
-                          Hi ${userName || "there"},
+                          Hi ${userName || 'there'},
                         </p>
                         <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.5; color: #52525b;">
                           We received a request to reset your password. Click the button below to create a new password:
@@ -200,11 +196,11 @@ export async function sendPasswordResetEmail({
           </body>
         </html>
       `,
-    });
+    })
 
-    return { success: true, data: info };
+    return { success: true, data: info }
   } catch (error) {
-    console.error("Error sending password reset email:", error);
-    throw error;
+    console.error('Error sending password reset email:', error)
+    throw error
   }
 }

@@ -1,17 +1,17 @@
-import { z } from "zod";
-import { protectedProcedure, publicProcedure, os } from "../index";
-import { storageRouter } from "./storage";
-import { vendorRouter } from "./vendor";
-import { productRouter } from "./product";
-import { adminRouter } from "./admin";
-import { orderRouter } from "./order";
-import { addressRouter } from "./address";
-import { wishlistRouter } from "./wishlist";
-import { cartRouter } from "./cart";
-import { notificationRouter } from "./notification";
-import { reviewRouter } from "./review";
-import { homepageRouter } from "./homepage";
-import { couponRouter } from "./coupon";
+import { z } from 'zod'
+import { os, protectedProcedure, publicProcedure } from '../index'
+import { storageRouter } from './storage'
+import { vendorRouter } from './vendor'
+import { productRouter } from './product'
+import { adminRouter } from './admin'
+import { orderRouter } from './order'
+import { addressRouter } from './address'
+import { wishlistRouter } from './wishlist'
+import { cartRouter } from './cart'
+import { notificationRouter } from './notification'
+import { reviewRouter } from './review'
+import { homepageRouter } from './homepage'
+import { couponRouter } from './coupon'
 
 export const appRouter = os.router({
   storage: storageRouter,
@@ -30,32 +30,33 @@ export const appRouter = os.router({
   coupon: couponRouter,
   healthCheck: publicProcedure
     .route({
-      method: "GET",
-      path: "/health",
-      operationId: "healthCheck",
-      summary: "Health Check",
-      description: "Check if the API server is running and responding to requests",
-      tags: ["System"],
+      method: 'GET',
+      path: '/health',
+      operationId: 'healthCheck',
+      summary: 'Health Check',
+      description:
+        'Check if the API server is running and responding to requests',
+      tags: ['System'],
       successStatus: 200,
     })
-    .output(z.string().describe("Health status message"))
-    .handler(async () => {
-      return "OK";
+    .output(z.string().describe('Health status message'))
+    .handler(() => {
+      return 'OK'
     }),
   privateData: protectedProcedure
     .route({
-      method: "GET",
-      path: "/private",
-      operationId: "getPrivateData",
-      summary: "Get Private User Data",
+      method: 'GET',
+      path: '/private',
+      operationId: 'getPrivateData',
+      summary: 'Get Private User Data',
       description:
-        "Fetch private user data for the authenticated user. Requires a valid session cookie.",
-      tags: ["User", "Authentication"],
+        'Fetch private user data for the authenticated user. Requires a valid session cookie.',
+      tags: ['User', 'Authentication'],
       successStatus: 200,
     })
     .output(
       z.object({
-        message: z.string().describe("A private message for the user"),
+        message: z.string().describe('A private message for the user'),
         user: z
           .object({
             id: z.string(),
@@ -65,12 +66,12 @@ export const appRouter = os.router({
           .describe("The authenticated user's information"),
       }),
     )
-    .handler(async ({ context }) => {
+    .handler(({ context }) => {
       return {
-        message: "This is private",
+        message: 'This is private',
         user: context.session.user,
-      };
+      }
     }),
-}) as any;
+}) as any
 
-export type AppRouter = typeof appRouter;
+export type AppRouter = typeof appRouter

@@ -1,25 +1,25 @@
-import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react';
-import { useRef } from 'react';
-import { Link } from '@tanstack/react-router';
-import { ProductCard } from '../product/ProductCard';
-import { useTodayDeals } from '@/hooks/use-deals';
-import { useDailyCountdown } from '@/hooks/use-countdown';
-import { ProductCardSkeleton } from '@/components/ui/skeleton';
+import { ChevronLeft, ChevronRight, Clock, Zap } from 'lucide-react'
+import { useRef } from 'react'
+import { Link } from '@tanstack/react-router'
+import { ProductCard } from '../product/ProductCard'
+import { useTodayDeals } from '@/hooks/use-deals'
+import { useDailyCountdown } from '@/hooks/use-countdown'
+import { ProductCardSkeleton } from '@/components/ui/skeleton'
 
 export function DealsSection() {
-  const { data: deals, isLoading } = useTodayDeals(12);
-  const countdown = useDailyCountdown();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: deals, isLoading } = useTodayDeals(12)
+  const countdown = useDailyCountdown()
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 300;
+      const scrollAmount = 300
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth',
-      });
+      })
     }
-  };
+  }
 
   return (
     <section className="bg-[radial-gradient(70%_40%_at_50%_0%,hsla(40,95%,55%,0.12)_0%,transparent_70%)] py-5 sm:py-6 md:py-8">
@@ -44,17 +44,31 @@ export function DealsSection() {
               {/* Countdown Timer */}
               <div className="flex items-center gap-1.5 text-[hsl(var(--accent))] sm:gap-2">
                 <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden text-sm font-medium sm:inline">Ends in:</span>
-                <div className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg" suppressHydrationWarning>
-                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                <span className="hidden text-sm font-medium sm:inline">
+                  Ends in:
+                </span>
+                <div
+                  className="flex items-center gap-0.5 font-mono text-sm font-bold sm:gap-1 sm:text-base lg:text-lg"
+                  suppressHydrationWarning
+                >
+                  <span
+                    className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1"
+                    suppressHydrationWarning
+                  >
                     {countdown.hours}
                   </span>
                   <span className="text-xs sm:text-base">:</span>
-                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                  <span
+                    className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1"
+                    suppressHydrationWarning
+                  >
                     {countdown.minutes}
                   </span>
                   <span className="text-xs sm:text-base">:</span>
-                  <span className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1" suppressHydrationWarning>
+                  <span
+                    className="rounded bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--primary))] px-1.5 py-0.5 text-white sm:px-2 sm:py-1"
+                    suppressHydrationWarning
+                  >
                     {countdown.seconds}
                   </span>
                 </div>
@@ -87,28 +101,34 @@ export function DealsSection() {
             ref={scrollRef}
             className="scrollbar-hide -mx-2 flex gap-2 overflow-x-auto px-2 pb-2 sm:-mx-4 sm:gap-3 sm:px-4 md:gap-4"
           >
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                    <ProductCardSkeleton />
-                  </div>
-                ))
-              : deals && deals.length > 0 ? (
-                  deals.map((deal) => (
-                    <div key={deal.id} className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]">
-                      <ProductCard product={deal} />
-                    </div>
-                  ))
-                ) : (
-                  <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
-                    No deals available at the moment
-                  </div>
-                )}
+            {isLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]"
+                >
+                  <ProductCardSkeleton />
+                </div>
+              ))
+            ) : deals && deals.length > 0 ? (
+              deals.map((deal) => (
+                <div
+                  key={deal.id}
+                  className="w-[165px] shrink-0 sm:w-[175px] md:w-[185px] lg:w-[190px]"
+                >
+                  <ProductCard product={deal} />
+                </div>
+              ))
+            ) : (
+              <div className="w-full py-12 text-center text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
+                No deals available at the moment
+              </div>
+            )}
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }
 
-export default DealsSection;
+export default DealsSection
