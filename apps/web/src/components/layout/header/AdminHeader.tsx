@@ -177,7 +177,7 @@ export function AdminHeader() {
               return (
                 <Link
                   key={section.id}
-                  to={(section.path || section.subTabs?.[0]?.path) as any}
+                  to={(section.path || section.subTabs?.[0]?.path) ?? ''}
                   className={cn(
                     'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all',
                     isActive
@@ -206,7 +206,7 @@ export function AdminHeader() {
                 return (
                   <Link
                     key={tab.path}
-                    to={tab.path as any}
+                    to={tab.path}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all',
                       isActiveTab
@@ -235,7 +235,7 @@ export function AdminHeader() {
                 return (
                   <Link
                     key={section.id}
-                    to={section.path as any}
+                    to={section.path}
                     className={cn(
                       'flex items-center gap-3 px-4 py-3 rounded-xl text-base font-bold transition-all',
                       activeSection === section.id
@@ -261,7 +261,7 @@ export function AdminHeader() {
                     return (
                       <Link
                         key={tab.path}
-                        to={tab.path as any}
+                        to={tab.path}
                         className={cn(
                           'flex items-center gap-3 px-4 py-2.5 ml-8 rounded-lg text-sm font-semibold transition-all',
                           location.pathname === tab.path

@@ -120,7 +120,7 @@ export const couponRouter = os.router({
         coupon: {
           id: c.id,
           code: c.code,
-          type: c.type as 'percentage' | 'fixed' | 'free_shipping',
+          type: c.type,
           value,
           discountAmount: Math.round(discountAmount * 100) / 100,
           message:

@@ -213,7 +213,7 @@ export function createVariants(categoryId: string): Array<ProductVariant> {
     colors.forEach((color) => {
       variants.push({
         id: faker.string.uuid(),
-        type: 'color' as VariantType,
+        type: 'color',
         value: color,
         priceModifier: 0,
         stock: faker.number.int({ min: 0, max: 50 }),
@@ -226,7 +226,7 @@ export function createVariants(categoryId: string): Array<ProductVariant> {
     sizes.forEach((size) => {
       variants.push({
         id: faker.string.uuid(),
-        type: 'size' as VariantType,
+        type: 'size',
         value: size,
         priceModifier: size === 'XXL' ? 100 : 0,
         stock: faker.number.int({ min: 0, max: 30 }),
@@ -242,7 +242,7 @@ export function createVariants(categoryId: string): Array<ProductVariant> {
       .forEach((storage) => {
         variants.push({
           id: faker.string.uuid(),
-          type: 'material' as VariantType, // Using material for storage
+          type: 'material', // Using material for storage
           value: storage,
           priceModifier: storageOptions.indexOf(storage) * 2000,
           stock: faker.number.int({ min: 0, max: 20 }),

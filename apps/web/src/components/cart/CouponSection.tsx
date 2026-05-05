@@ -12,7 +12,7 @@ import {
 import { toast } from 'sonner'
 import { useCart } from '@/stores/cart-store'
 import { Button } from '@/components/ui/button'
-import { cn, formatPrice  } from '@/lib/utils'
+import { cn, formatPrice } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 
 export function CouponSection() {

@@ -7,7 +7,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'decorations',
     name: 'Decorations & Balloons',
     slug: 'decorations-balloons',
-    icon: 'Sparkles' as CategoryIconName,
+    icon: 'Sparkles',
     description:
       'Transform your venue with stunning decorations, balloon arrangements, LED lights, and themed decor. From elegant balloon arches to eye-catching neon signs, create the perfect ambiance for any celebration.',
     imageUrl:
@@ -55,7 +55,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'sound-lighting',
     name: 'Sound & Lighting',
     slug: 'sound-lighting',
-    icon: 'Mic' as CategoryIconName,
+    icon: 'Mic',
     description:
       'Professional audio and lighting equipment to set the mood and energize your event. From powerful PA systems to stunning stage effects, deliver an unforgettable sensory experience for your guests.',
     imageUrl:
@@ -103,7 +103,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'furniture-tents',
     name: 'Furniture & Tents',
     slug: 'furniture-tents',
-    icon: 'Home' as CategoryIconName,
+    icon: 'Home',
     description:
       'Quality event furniture and tents for comfortable seating and weather protection. Choose from elegant chiavari chairs, spacious tents, stylish lounge furniture, and more to create the perfect event setup.',
     imageUrl:
@@ -151,7 +151,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'catering-equipment',
     name: 'Catering Equipment',
     slug: 'catering-equipment',
-    icon: 'UtensilsCrossed' as CategoryIconName,
+    icon: 'UtensilsCrossed',
     description:
       'Professional catering equipment and supplies for seamless food and beverage service. From elegant serving platters to modern bar equipment, ensure your guests enjoy a premium dining experience.',
     imageUrl:
@@ -199,7 +199,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'photography-video',
     name: 'Photography & Video',
     slug: 'photography-video',
-    icon: 'Camera' as CategoryIconName,
+    icon: 'Camera',
     description:
       'Capture every precious moment with professional photography and videography equipment. From interactive photo booths to cutting-edge cameras and drones, preserve memories that last a lifetime.',
     imageUrl:
@@ -247,7 +247,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'party-supplies',
     name: 'Party Supplies',
     slug: 'party-supplies',
-    icon: 'PartyPopper' as CategoryIconName,
+    icon: 'PartyPopper',
     description:
       'Complete party essentials and supplies to add fun and flair to any celebration. From festive tableware to exciting party favors, make every moment special with our curated selection.',
     imageUrl:
@@ -295,7 +295,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'event-clothing',
     name: 'Event Clothing & Costumes',
     slug: 'event-clothing-costumes',
-    icon: 'Shirt' as CategoryIconName,
+    icon: 'Shirt',
     description:
       'Look your best with our collection of formal wear, traditional attire, and creative costumes. From elegant wedding outfits to fun character costumes, dress to impress for any occasion.',
     imageUrl:
@@ -343,7 +343,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'stage-backdrops',
     name: 'Stage & Backdrops',
     slug: 'stage-backdrops',
-    icon: 'LayoutPanelTop' as CategoryIconName,
+    icon: 'LayoutPanelTop',
     description:
       'Create the perfect focal point with professional stage setups and beautiful backdrops. From elegant floral walls to versatile pipe and drape systems, frame your special moments in style.',
     imageUrl:
@@ -391,7 +391,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'floral-arrangements',
     name: 'Floral Arrangements',
     slug: 'floral-arrangements',
-    icon: 'Flower' as CategoryIconName,
+    icon: 'Flower',
     description:
       'Add natural beauty and elegance with fresh and artificial floral arrangements. From romantic bouquets to stunning centerpieces, bring color and fragrance to your special day.',
     imageUrl:
@@ -439,7 +439,7 @@ export const CATEGORIES: Array<Category> = [
     id: 'entertainment',
     name: 'Entertainment & Activities',
     slug: 'entertainment-activities',
-    icon: 'Gamepad2' as CategoryIconName,
+    icon: 'Gamepad2',
     description:
       'Keep your guests entertained with interactive games, inflatables, and performance equipment. From bounce houses for kids to arcade games for all ages, create fun-filled memories.',
     imageUrl:

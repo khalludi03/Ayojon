@@ -1,115 +1,121 @@
 // Simple in-memory OTP store
 // In production, replace with a shared store (Redis or database)
 
-import { logger } from './logger';
+import { logger } from './logger'
 
 interface OTPData {
-  otp: string;
-  email: string;
-  createdAt: number;
-  attempts: number;
+  otp: string
+  email: string
+  createdAt: number
+  attempts: number
 }
 
-const otpStore = new Map<string, OTPData>();
+const otpStore = new Map<string, OTPData>()
 
 // Note: These mirror the better-auth emailOTP plugin defaults used for sign-in,
 // but this store is for the custom email-change flow which bypasses the plugin.
-const OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
-const MAX_ATTEMPTS = 3;
+const OTP_EXPIRY_MS = 5 * 60 * 1000 // 5 minutes
+const MAX_ATTEMPTS = 3
 
 const assertNotProduction = () => {
-  if (process.env.NODE_ENV === "production") {
+  if (process.env.NODE_ENV === 'production') {
     throw new Error(
-      "In-memory OTP storage is not allowed in production. Configure a shared store (Redis or database)."
-    );
+      'In-memory OTP storage is not allowed in production. Configure a shared store (Redis or database).',
+    )
   }
-};
+}
 
 export function storeOTP(
   email: string,
   otp: string,
 ): {
-  success: boolean;
+  success: boolean
 } {
-  assertNotProduction();
-  logger.debug(`[OTP STORE] Storing OTP for ${email}`);
+  assertNotProduction()
+  logger.debug(`[OTP STORE] Storing OTP for ${email}`)
 
   otpStore.set(email.toLowerCase(), {
     otp,
     email,
     createdAt: Date.now(),
     attempts: 0,
-  });
+  })
 
-  return { success: true };
+  return { success: true }
 }
 
-export function verifyOTP(email: string, providedOTP: string): {
-  valid: boolean;
-  error?: string;
+export function verifyOTP(
+  email: string,
+  providedOTP: string,
+): {
+  valid: boolean
+  error?: string
 } {
-  assertNotProduction();
-  const normalizedEmail = email.toLowerCase();
-  const data = otpStore.get(normalizedEmail);
+  assertNotProduction()
+  const normalizedEmail = email.toLowerCase()
+  const data = otpStore.get(normalizedEmail)
 
-  logger.debug(`[OTP STORE] Verifying OTP for ${email}`);
+  logger.debug(`[OTP STORE] Verifying OTP for ${email}`)
 
   if (!data) {
-    logger.warn(`[OTP STORE] No OTP found for ${email}`);
-    return { valid: false, error: "No OTP found. Please request a new code." };
+    logger.warn(`[OTP STORE] No OTP found for ${email}`)
+    return { valid: false, error: 'No OTP found. Please request a new code.' }
   }
 
   // Check expiry
-  const now = Date.now();
+  const now = Date.now()
   if (now - data.createdAt > OTP_EXPIRY_MS) {
-    logger.warn(`[OTP STORE] OTP expired for ${email}`);
-    otpStore.delete(normalizedEmail);
-    return { valid: false, error: "OTP has expired. Please request a new code." };
+    logger.warn(`[OTP STORE] OTP expired for ${email}`)
+    otpStore.delete(normalizedEmail)
+    return {
+      valid: false,
+      error: 'OTP has expired. Please request a new code.',
+    }
   }
 
   // Check attempts
   if (data.attempts >= MAX_ATTEMPTS) {
-    logger.warn(`[OTP STORE] Too many attempts for ${email}`);
-    otpStore.delete(normalizedEmail);
+    logger.warn(`[OTP STORE] Too many attempts for ${email}`)
+    otpStore.delete(normalizedEmail)
     return {
       valid: false,
-      error: "Too many failed attempts. Please request a new code.",
-    };
+      error: 'Too many failed attempts. Please request a new code.',
+    }
   }
 
   // Verify OTP
   if (data.otp !== providedOTP) {
-    data.attempts++;
+    data.attempts++
     logger.warn(
-      `[OTP STORE] Invalid OTP for ${email}. Attempts: ${data.attempts}/${MAX_ATTEMPTS}`
-    );
+      `[OTP STORE] Invalid OTP for ${email}. Attempts: ${data.attempts}/${MAX_ATTEMPTS}`,
+    )
 
     if (data.attempts >= MAX_ATTEMPTS) {
-      logger.warn(`[OTP STORE] Too many attempts for ${email}`);
-      otpStore.delete(normalizedEmail);
+      logger.warn(`[OTP STORE] Too many attempts for ${email}`)
+      otpStore.delete(normalizedEmail)
       return {
         valid: false,
-        error: "Too many failed attempts. Please request a new code.",
-      };
+        error: 'Too many failed attempts. Please request a new code.',
+      }
     }
 
     return {
       valid: false,
       error: `Invalid code. ${MAX_ATTEMPTS - data.attempts} attempts remaining.`,
-    };
+    }
   }
 
   // Success - remove from store
-  logger.info(`[OTP STORE] OTP verified successfully for ${email}`);
-  otpStore.delete(normalizedEmail);
-  return { valid: true };
+  logger.info(`[OTP STORE] OTP verified successfully for ${email}`)
+  otpStore.delete(normalizedEmail)
+  return { valid: true }
 }
 
 export function cleanupExpiredOTPs(): void {
-  const now = Date.now();
+  const now = Date.now()
   for (const [email, data] of otpStore.entries()) {
     if (now - data.createdAt > OTP_EXPIRY_MS) {
-      otpStore.delete(email);
+      otpStore.delete(email)
     }
   }
 }

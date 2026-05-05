@@ -309,7 +309,7 @@ function AdminVendorsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link
-                                to={`/vendors/${vendor.slug}` as any}
+                                to={`/vendors/${vendor.slug}`}
                                 target="_blank"
                               >
                                 <ExternalLink className="mr-2 h-4 w-4" /> Visit
@@ -318,8 +318,8 @@ function AdminVendorsPage() {
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                               <Link
-                                to={`/admin/products` as any}
-                                search={{ vendorId: vendor.id } as any}
+                                to={`/admin/products`}
+                                search={{ vendorId: vendor.id }}
                               >
                                 <Package className="mr-2 h-4 w-4" /> View
                                 Products
