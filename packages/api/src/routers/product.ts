@@ -1,21 +1,21 @@
 import { z } from "zod";
-import { protectedProcedure, publicProcedure, os } from "../index";
-import { db } from "@my-better-t-app/db";
-import { logger } from "../lib/logger";
-import { 
-  products, 
-  productImages, 
-  productVariants, 
-  productSpecifications,
-  productEventTypes,
-  vendors,
-  categories,
-  subcategories,
-  eventTypes
-} from "@my-better-t-app/db/schema/index";
 import { eq, and, desc, sql, asc, gte, lte, inArray } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import { ORPCError } from "@orpc/server";
+import { nanoid } from "nanoid";
+import { db } from "@my-better-t-app/db";
+import {
+  categories,
+  eventTypes,
+  productEventTypes,
+  productImages,
+  productSpecifications,
+  productVariants,
+  products,
+  subcategories,
+  vendors
+} from "@my-better-t-app/db/schema/index";
+import { protectedProcedure, publicProcedure, os } from "../index";
+import { logger } from "../lib/logger";
 import * as notificationService from "../services/notification-service";
 
 // =============================================================================
@@ -257,7 +257,7 @@ export const productRouter = os.router({
 
       if (category) {
         const categoryIds = Array.isArray(category) ? category : [category];
-        const actualIds: string[] = [];
+        const actualIds: Array<string> = [];
         
         for (const catId of categoryIds) {
           const cat = await db.query.categories.findFirst({
@@ -275,7 +275,7 @@ export const productRouter = os.router({
 
       if (subcategory) {
         const subcategoryIds = Array.isArray(subcategory) ? subcategory : [subcategory];
-        const actualIds: string[] = [];
+        const actualIds: Array<string> = [];
         
         for (const subId of subcategoryIds) {
           const sub = await db.query.subcategories.findFirst({
@@ -293,7 +293,7 @@ export const productRouter = os.router({
 
       if (vendor) {
         const vendorIds = Array.isArray(vendor) ? vendor : [vendor];
-        const actualIds: string[] = [];
+        const actualIds: Array<string> = [];
         
         for (const vId of vendorIds) {
           const v = await db.query.vendors.findFirst({
@@ -801,7 +801,7 @@ export const productRouter = os.router({
           .where(eq(productImages.productId, input.id));
 
         // Collect S3 files to delete
-        const filesToDelete: string[] = [];
+        const filesToDelete: Array<string> = [];
         for (const img of images) {
           const key = extractS3Key(img.url);
           if (key) filesToDelete.push(key);

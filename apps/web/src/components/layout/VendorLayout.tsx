@@ -113,7 +113,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path as any}
+                    to={item.path}
                     className={cn(
                       'flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors relative',
                       isActive
@@ -161,7 +161,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
                 return (
                   <Link
                     key={item.path}
-                    to={item.path as any}
+                    to={item.path}
                     className={cn(
                       'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                       isActive

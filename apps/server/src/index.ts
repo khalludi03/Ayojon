@@ -8,8 +8,7 @@ import { auth } from "@my-better-t-app/auth";
 import { generateOTP, sendOTPEmail } from "@my-better-t-app/auth/lib/email";
 import { storeOTP, verifyOTP } from "@my-better-t-app/auth/lib/otp-store";
 import { db } from "@my-better-t-app/db";
-import { user as userTable, account as accountTable } from "@my-better-t-app/db/schema/auth";
-import { session as sessionTable } from "@my-better-t-app/db/schema/auth";
+import { account as accountTable, session as sessionTable, user as userTable } from "@my-better-t-app/db/schema/auth";
 import { orders } from "@my-better-t-app/db/schema/orders";
 import { products } from "@my-better-t-app/db/schema/products";
 import { categories, vendors } from "@my-better-t-app/db/schema/catalog";
@@ -18,10 +17,10 @@ import { and, eq, ne, notInArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { z } from "zod";
+import * as Sentry from "@sentry/node";
 import { rateLimiter, getClientIp } from "./middleware/rate-limit";
 import { customLogger } from "./middleware/logger";
 import { logger } from "./lib/logger";
-import * as Sentry from "@sentry/node";
 
 // Initialize Sentry
 if (env.SENTRY_DSN) {
@@ -231,7 +230,7 @@ app.post("/api/account/deactivate", async (c) => {
       headers: c.req.raw.headers,
     });
 
-    if (!session?.user?.id) {
+    if (!session.user.id) {
       return c.json({ error: "Authentication required" }, 401);
     }
 
@@ -298,7 +297,7 @@ app.post("/api/email-change/verify-otp", async (c) => {
       headers: c.req.raw.headers,
     });
 
-    if (!session?.user?.id) {
+    if (!session.user.id) {
       return c.json({ error: "Authentication required" }, 401);
     }
 

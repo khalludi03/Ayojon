@@ -436,7 +436,7 @@ function AdminProductsPage() {
                           <DropdownMenuContent align="end" className="w-48">
                             <DropdownMenuItem asChild>
                               <Link
-                                to={`/product/${product.slug}` as any}
+                                to={`/product/${product.slug}`}
                                 target="_blank"
                               >
                                 <ExternalLink className="mr-2 h-4 w-4" /> View

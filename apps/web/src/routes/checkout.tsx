@@ -208,7 +208,7 @@ function CheckoutPage() {
           addressType: formData.addressType,
         },
         payment: {
-          method: formData.paymentMethod as any,
+          method: formData.paymentMethod,
           last4: formData.mobileNumber?.slice(-4),
           provider: formData.paymentMethod === 'bkash' ? 'bKash' : undefined,
           transactionId: formData.bkashTransactionId,

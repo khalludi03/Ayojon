@@ -1,10 +1,8 @@
 import { z } from "zod";
-import { adminProcedure, os } from "../index";
+import { count, eq, gte, sql, or, ilike, and, desc, notInArray, asc } from "drizzle-orm";
+import { ORPCError } from "@orpc/server";
+import { nanoid } from "nanoid";
 import { db } from "@my-better-t-app/db";
-import * as paymentService from "../services/payment-service";
-import * as payoutService from "../services/payout-service";
-import { notifyVendorApproved, notifyVendorRejected, notifyOrderStatusUpdate } from "../services/notification-service";
-import * as orderService from "../services/order-service";
 import {
   user,
   vendors,
@@ -18,10 +16,12 @@ import {
   homeBanners,
   homePromoCards
 } from "@my-better-t-app/db/schema/index";
-import { count, eq, gte, sql, or, ilike, and, desc, notInArray , asc} from "drizzle-orm";
-import { ORPCError } from "@orpc/server";
-import { nanoid } from "nanoid";
+import { adminProcedure, os } from "../index";
 import { logger } from "../lib/logger";
+import * as orderService from "../services/order-service";
+import * as paymentService from "../services/payment-service";
+import * as payoutService from "../services/payout-service";
+import { notifyOrderStatusUpdate, notifyVendorApproved, notifyVendorRejected } from "../services/notification-service";
 
 export const adminRouter = os.router({
   listUsers: adminProcedure
@@ -507,13 +507,13 @@ export const adminRouter = os.router({
         // Send notifications AFTER transaction is committed
         if (result.notificationType === 'approved') {
           try {
-            await notifyVendorApproved(result.userId!, result.appId!, result.storeName!);
+            await notifyVendorApproved(result.userId, result.appId, result.storeName);
           } catch (error) {
             logger.error("Failed to send vendor approval notification:", error);
           }
         } else if (result.notificationType === 'rejected') {
           try {
-            await notifyVendorRejected(result.userId!, result.appId!, result.storeName!, result.reason);
+            await notifyVendorRejected(result.userId, result.appId, result.storeName, result.reason);
           } catch (error) {
             logger.error("Failed to send vendor rejection notification:", error);
           }
@@ -614,7 +614,7 @@ export const adminRouter = os.router({
 
       // Parse JSON fields
       let businessAddress = {};
-      let productCategories: string[] = [];
+        let productCategories: Array<string> = [];
 
       try {
         businessAddress = JSON.parse(application.businessAddress);
@@ -697,7 +697,7 @@ export const adminRouter = os.router({
         const vendor = vendorRecord[0]!;
 
         // Collect S3 files to delete
-        const filesToDelete: string[] = [];
+        const filesToDelete: Array<string> = [];
         const logoKey = extractS3Key(vendor.logoUrl);
         const bannerKey = extractS3Key(vendor.bannerUrl);
 
@@ -705,7 +705,7 @@ export const adminRouter = os.router({
         if (bannerKey) filesToDelete.push(bannerKey);
 
         // Delete files from S3
-        const deletedFiles: string[] = [];
+        const deletedFiles: Array<string> = [];
         for (const fileKey of filesToDelete) {
           try {
             await context.storage.deleteFile(fileKey);
@@ -902,14 +902,14 @@ export const adminRouter = os.router({
           .where(eq(productImages.productId, input.id));
 
         // Collect S3 files to delete
-        const filesToDelete: string[] = [];
+        const filesToDelete: Array<string> = [];
         for (const img of images) {
           const key = extractS3Key(img.url);
           if (key) filesToDelete.push(key);
         }
 
         // Delete files from S3
-        const deletedFiles: string[] = [];
+        const deletedFiles: Array<string> = [];
         for (const fileKey of filesToDelete) {
           try {
             await context.storage.deleteFile(fileKey);

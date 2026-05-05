@@ -407,5 +407,5 @@ export async function recordCashCollection(
   }
 
   const payment = await getOrderPayment(orderId)
-  return { success: true, payment: payment as any }
+  return { success: true, payment }
 }

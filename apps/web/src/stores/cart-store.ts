@@ -88,7 +88,7 @@ function createCartStore(): CartStore {
 
   const syncFromSession = (keepCurrentOnNull: boolean = false) => {
     authClient.getSession().then((session) => {
-      const sessionUserId = session.data?.user?.id || null;
+      const sessionUserId = session.data.user.id || null;
       const resolvedUserId = sessionUserId ?? (keepCurrentOnNull ? currentUserId : null);
 
       if (resolvedUserId !== currentUserId) {
@@ -227,12 +227,10 @@ function createCartStore(): CartStore {
     syncFromSession();
 
     // Subscribe to auth session changes
-    const sessionSignal = authClient.$store?.atoms?.$sessionSignal;
-    if (sessionSignal) {
-      sessionSignal.subscribe(() => {
-        syncFromSession(true);
-      });
-    }
+    const sessionSignal = authClient.$store.atoms.$sessionSignal;
+    sessionSignal.subscribe(() => {
+      syncFromSession(true);
+    });
 
     // Reload cart when tab becomes visible (handles multi-tab sync)
     document.addEventListener('visibilitychange', () => {
@@ -384,12 +382,12 @@ function createCartStore(): CartStore {
     },
 
     saveForLater: (itemId: string) => {
-      const item = state.items.find((item) => item.id === itemId);
-      if (item) {
+      const foundItem = state.items.find((item) => item.id === itemId);
+      if (foundItem) {
         state = {
           ...state,
           items: state.items.filter((item) => item.id !== itemId),
-          savedForLater: [...state.savedForLater, item],
+          savedForLater: [...state.savedForLater, foundItem],
         };
         persist();
         notify();
@@ -397,12 +395,12 @@ function createCartStore(): CartStore {
     },
 
     moveToCart: (itemId: string) => {
-      const item = state.savedForLater.find((item) => item.id === itemId);
-      if (item) {
+      const foundItem = state.savedForLater.find((item) => item.id === itemId);
+      if (foundItem) {
         state = {
           ...state,
           savedForLater: state.savedForLater.filter((item) => item.id !== itemId),
-          items: [...state.items, item],
+          items: [...state.items, foundItem],
         };
         persist();
         notify();
@@ -431,7 +429,7 @@ function createCartStore(): CartStore {
       }
       
       // Don't allow discount to exceed subtotal + shipping (simplified)
-      discountAmount = Math.min(discountAmount, subtotal + (type === 'free_shipping' ? discountAmount : cartStore.getShipping()));
+      discountAmount = Math.min(discountAmount, subtotal + (type === 'free_shipping' ? 0 : cartStore.getShipping()));
       
       state = {
         ...state,
@@ -472,8 +470,7 @@ function createCartStore(): CartStore {
       } else if (state.discount.type === 'fixed') {
         discountAmount = state.discount.value;
       } else if (state.discount.type === 'free_shipping') {
-        // We handle free shipping by returning the shipping cost as discount
-        // but it's better to explicitly check it in getShipping
+        // Free shipping discount - return 0 to make shipping free
         return 0; 
       }
       
@@ -589,10 +586,10 @@ export function useCart() {
   // Sync cart when session changes
   useEffect(() => {
     if (!isPending) {
-      const userId = session?.user?.id || null;
+      const userId = session.user.id || null;
       cartStore.loadUserCart(userId);
     }
-  }, [session?.user?.id, isPending]);
+  }, [session.user.id, isPending]);
 
   // Derive values from subscribed state for reactive updates
   const itemCount = state.items.reduce((total, item) => total + item.quantity, 0);

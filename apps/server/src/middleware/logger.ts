@@ -1,5 +1,5 @@
-import type { Context, Next } from "hono";
 import { logger } from "../lib/logger";
+import type { Context, Next } from "hono";
 
 export const customLogger = async (c: Context, next: Next) => {
   const { method, url } = c.req;

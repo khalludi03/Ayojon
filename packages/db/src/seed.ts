@@ -690,10 +690,10 @@ async function seedEventTypes() {
   console.log(`  ✓ Upserted ${EVENT_TYPES_DATA.length} event types`);
 }
 
-async function seedVendors(userIds: string[]) {
+async function seedVendors(userIds: Array<string>) {
   console.log("Seeding vendors (idempotent upsert)...");
 
-  const vendorIds: string[] = [];
+  const vendorIds: Array<string> = [];
 
   // Only create as many vendors as we have users
   const vendorsToCreate = VENDORS_DATA.slice(0, userIds.length);
@@ -745,7 +745,7 @@ async function seedVendors(userIds: string[]) {
   return vendorIds;
 }
 
-async function seedProducts(vendorIds: string[]) {
+async function seedProducts(vendorIds: Array<string>) {
   console.log("Seeding products (idempotent upsert)...");
 
   let upserted = 0;
@@ -949,7 +949,7 @@ async function seedSampleUsers() {
   return userIds;
 }
 
-async function seedReviews(userIds: string[]) {
+async function seedReviews(userIds: Array<string>) {
   console.log("Seeding reviews (idempotent)...");
 
   // Get products that need reviews
