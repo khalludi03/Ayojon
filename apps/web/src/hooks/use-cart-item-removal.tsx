@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import type {CartItem} from '@/stores/cart-store';
+import type { CartItem } from '@/stores/cart-store'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {  useCart } from '@/stores/cart-store'
+import { useCart } from '@/stores/cart-store'
 
 export function useCartItemRemoval() {
   const { removeItem, restoreItem } = useCart()

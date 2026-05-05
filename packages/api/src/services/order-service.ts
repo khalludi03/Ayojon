@@ -1,11 +1,9 @@
 import { db } from '@my-better-t-app/db'
 import {
-  
-  
   orderItems,
   orders,
   payments,
-  vendorPayouts
+  vendorPayouts,
 } from '@my-better-t-app/db/schema/orders'
 import { vendors } from '@my-better-t-app/db/schema/index'
 import { and, desc, eq } from 'drizzle-orm'
@@ -20,7 +18,10 @@ import {
   notifyVendorNewOrder,
 } from './notification-service'
 import { updateVendorScore } from './vendor-service'
-import type {OrderStatus, PaymentMethod} from '@my-better-t-app/db/schema/orders';
+import type {
+  OrderStatus,
+  PaymentMethod,
+} from '@my-better-t-app/db/schema/orders'
 
 /**
  * Order Service

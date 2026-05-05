@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { Link } from '@tanstack/react-router'
-import { Baby, BookOpen,
+import {
+  Baby,
+  BookOpen,
   Camera,
   Car,
   ChevronRight,
@@ -17,7 +19,8 @@ import { Baby, BookOpen,
   ShoppingBasket,
   Smartphone,
   Sparkles,
-  UtensilsCrossed } from 'lucide-react'
+  UtensilsCrossed,
+} from 'lucide-react'
 import type { CategoryIconName } from '@/types'
 import {
   DropdownMenu,

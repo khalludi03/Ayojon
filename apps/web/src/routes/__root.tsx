@@ -2,13 +2,13 @@ import {
   HeadContent,
   Outlet,
   Scripts,
-  createRootRouteWithContext, useLocation 
+  createRootRouteWithContext,
+  useLocation,
 } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import * as Sentry from '@sentry/react'
 import appCss from '../index.css?url'
 import type { QueryClient } from '@tanstack/react-query'
-
 
 import type { orpc } from '@/utils/orpc'
 import { Toaster } from '@/components/ui/sonner'
@@ -20,7 +20,6 @@ import { ToastProvider } from '@/components/ui/toast'
 import { AppBreadcrumb } from '@/components/layout/AppBreadcrumb'
 import { ProductModal } from '@/components/product/ProductModal'
 import { useTheme } from '@/stores/theme-store'
-
 
 export interface RouterAppContext {
   orpc: typeof orpc

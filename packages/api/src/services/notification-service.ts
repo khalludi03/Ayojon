@@ -1,11 +1,8 @@
 import { db } from '@my-better-t-app/db'
-import {
-  
-  notifications
-} from '@my-better-t-app/db/schema/index'
+import { notifications } from '@my-better-t-app/db/schema/index'
 import { and, desc, eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import type {NotificationType} from '@my-better-t-app/db/schema/index';
+import type { NotificationType } from '@my-better-t-app/db/schema/index'
 
 interface CreateNotificationInput {
   userId: string

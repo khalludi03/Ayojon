@@ -1,18 +1,17 @@
 import { db } from '@my-better-t-app/db'
 import {
-  
   orderItems,
   orders,
   platformSettings,
   vendorPayouts,
-  vendors
+  vendors,
 } from '@my-better-t-app/db/schema/index'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { calculateVendorPayout } from './order-service'
 import { OrderActions } from './order-state-machine'
 import * as notificationService from './notification-service'
-import type {PayoutStatus} from '@my-better-t-app/db/schema/index';
+import type { PayoutStatus } from '@my-better-t-app/db/schema/index'
 
 /**
  * Payout Service

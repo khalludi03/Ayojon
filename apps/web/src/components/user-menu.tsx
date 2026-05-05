@@ -15,7 +15,6 @@ import {
 import { authClient } from '@/lib/auth-client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
-
 export default function UserMenu() {
   const navigate = useNavigate()
   const { data: session, isPending } = authClient.useSession()

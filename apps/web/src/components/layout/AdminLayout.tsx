@@ -82,7 +82,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             return (
               <Link
                 key={item.path}
-                      to={item.path}
+                to={item.path}
                 className={cn(
                   'group relative flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition-all',
                   isActive
@@ -206,7 +206,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   return (
                     <Link
                       key={item.path}
-                to={item.path}
+                      to={item.path}
                       className={cn(
                         'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                         isActive

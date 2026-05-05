@@ -11,9 +11,9 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import type {CartItem} from '@/stores/cart-store';
+import type { CartItem } from '@/stores/cart-store'
 import { Badge } from '@/components/ui/badge'
-import {  useCart } from '@/stores/cart-store'
+import { useCart } from '@/stores/cart-store'
 import { formatPrice } from '@/lib/utils'
 
 export function CheckoutOrderSummary() {
