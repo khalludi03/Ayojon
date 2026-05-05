@@ -470,6 +470,7 @@ function createCartStore(): CartStore {
         discountAmount = (subtotal * state.discount.value) / 100;
       } else if (state.discount.type === 'fixed') {
         discountAmount = state.discount.value;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       } else if (state.discount.type === 'free_shipping') {
         // Free shipping discount - return 0 to make shipping free
         return 0; 
