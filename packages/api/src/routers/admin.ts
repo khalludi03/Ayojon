@@ -1,20 +1,20 @@
 import { z } from "zod";
-import { count, eq, gte, sql, or, ilike, and, desc, notInArray, asc } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, notInArray, or, sql, asc } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
 import { db } from "@my-better-t-app/db";
 import {
-  user,
-  vendors,
-  products,
+  categories,
+  homeBanners,
+  homePromoCards,
   orders,
   payments,
   platformSettings,
   productImages,
-  categories,
+  products,
+  user,
   vendorApplications,
-  homeBanners,
-  homePromoCards
+  vendors
 } from "@my-better-t-app/db/schema/index";
 import { adminProcedure, os } from "../index";
 import { logger } from "../lib/logger";
@@ -1270,10 +1270,10 @@ export const adminRouter = os.router({
       })
     )
     .handler(async ({ input }) => {
-      const payments = await paymentService.getPendingPayments(input.limit, input.offset);
+      const pendingPayments = await paymentService.getPendingPayments(input.limit, input.offset);
       return {
-        payments,
-        total: payments.length,
+        payments: pendingPayments,
+        total: pendingPayments.length,
       };
     }),
 

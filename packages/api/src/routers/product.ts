@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { eq, and, desc, sql, asc, gte, lte, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
 import { db } from "@my-better-t-app/db";
@@ -14,7 +14,7 @@ import {
   subcategories,
   vendors
 } from "@my-better-t-app/db/schema/index";
-import { protectedProcedure, publicProcedure, os } from "../index";
+import { os, protectedProcedure, publicProcedure } from "../index";
 import { logger } from "../lib/logger";
 import * as notificationService from "../services/notification-service";
 
@@ -825,7 +825,7 @@ export const productRouter = os.router({
         }
 
         // Delete files from S3
-        const deletedFiles: string[] = [];
+        const deletedFiles: Array<string> = [];
         for (const fileKey of filesToDelete) {
           try {
             await context.storage.deleteFile(fileKey);

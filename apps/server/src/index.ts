@@ -18,7 +18,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { z } from "zod";
 import * as Sentry from "@sentry/node";
-import { rateLimiter, getClientIp } from "./middleware/rate-limit";
+import { getClientIp, rateLimiter } from "./middleware/rate-limit";
 import { customLogger } from "./middleware/logger";
 import { logger } from "./lib/logger";
 

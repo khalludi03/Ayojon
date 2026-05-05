@@ -424,12 +424,13 @@ function createCartStore(): CartStore {
         discountAmount = (subtotal * value) / 100;
       } else if (type === 'fixed') {
         discountAmount = value;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       } else if (type === 'free_shipping') {
-        discountAmount = cartStore.getShipping();
+        discountAmount = 0; // Shipping handled separately in getShipping()
       }
       
       // Don't allow discount to exceed subtotal + shipping (simplified)
-      discountAmount = Math.min(discountAmount, subtotal + (type === 'free_shipping' ? 0 : cartStore.getShipping()));
+      discountAmount = Math.min(discountAmount, subtotal + cartStore.getShipping());
       
       state = {
         ...state,
