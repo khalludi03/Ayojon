@@ -1,9 +1,9 @@
-import { CategoryCard } from './CategoryCard';
-import { useCategories } from '@/hooks/use-categories';
-import { CategoryCardSkeleton } from '@/components/ui/skeleton';
+import { CategoryCard } from './CategoryCard'
+import { useCategories } from '@/hooks/use-categories'
+import { CategoryCardSkeleton } from '@/components/ui/skeleton'
 
 export function CategoriesSection() {
-  const { data: categories, isLoading } = useCategories();
+  const { data: categories, isLoading } = useCategories()
 
   return (
     <section className="py-8">
@@ -38,7 +38,7 @@ export function CategoriesSection() {
         )}
       </div>
     </section>
-  );
+  )
 }
 
-export default CategoriesSection;
+export default CategoriesSection

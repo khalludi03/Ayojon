@@ -1,53 +1,63 @@
-import { createFileRoute, useNavigate, notFound } from '@tanstack/react-router';
-import { useEffect } from 'react';
-import { CategoryBanner } from '@/components/categories/CategoryBanner';
-import { CategoryDescription } from '@/components/categories/CategoryDescription';
-import { SubcategoryFilter } from '@/components/categories/SubcategoryFilter';
-import { RelatedCategories } from '@/components/categories/RelatedCategories';
-import { FilterSidebar } from '@/components/product/FilterSidebar';
-import { SortDropdown } from '@/components/product/SortDropdown';
-import { ActiveFilters } from '@/components/product/ActiveFilters';
-import { ProductGrid } from '@/components/product/ProductGrid';
-import { Pagination } from '@/components/product/Pagination';
-import { NoResults } from '@/components/product/NoResults';
-import { useCategoryBySlug } from '@/hooks/use-categories';
-import { useProducts } from '@/hooks/use-products';
-import { useFilters, filterStore } from '@/stores/filter-store';
-import { orpcClient } from '@/utils/orpc';
-import z from 'zod';
+import { createFileRoute, notFound, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import z from 'zod'
+import { CategoryBanner } from '@/components/categories/CategoryBanner'
+import { CategoryDescription } from '@/components/categories/CategoryDescription'
+import { SubcategoryFilter } from '@/components/categories/SubcategoryFilter'
+import { RelatedCategories } from '@/components/categories/RelatedCategories'
+import { FilterSidebar } from '@/components/product/FilterSidebar'
+import { SortDropdown } from '@/components/product/SortDropdown'
+import { ActiveFilters } from '@/components/product/ActiveFilters'
+import { ProductGrid } from '@/components/product/ProductGrid'
+import { Pagination } from '@/components/product/Pagination'
+import { NoResults } from '@/components/product/NoResults'
+import { useCategoryBySlug } from '@/hooks/use-categories'
+import { useProducts } from '@/hooks/use-products'
+import { filterStore, useFilters } from '@/stores/filter-store'
+import { orpcClient } from '@/utils/orpc'
 
 const searchParamsSchema = z.object({
   page: z.coerce.number().optional().default(1),
   subcategory: z.string().optional(),
-});
+})
 
 export const Route = createFileRoute('/category/$categorySlug')({
   component: CategoryPage,
   validateSearch: searchParamsSchema,
   loader: async ({ params }) => {
-    const category = await orpcClient.product.getCategoryBySlug({ slug: params.categorySlug });
-    return { category };
+    const category = await orpcClient.product.getCategoryBySlug({
+      slug: params.categorySlug,
+    })
+    return { category }
   },
   head: ({ loaderData, params }) => {
-    const category = loaderData?.category;
+    const category = loaderData?.category
     if (!category) {
       return {
         meta: [
           { title: 'Category Not Found - Ayojon' },
-          { name: 'description', content: 'The category you are looking for could not be found.' },
+          {
+            name: 'description',
+            content: 'The category you are looking for could not be found.',
+          },
         ],
-      };
+      }
     }
 
-    const title = `${category.name} - Event Rentals | Ayojon`;
-    const description = category.description || `Browse ${category.name} for your next event. Quality rentals available at Ayojon marketplace.`;
-    const url = `https://ayojon.com/category/${params.categorySlug}`;
+    const title = `${category.name} - Event Rentals | Ayojon`
+    const description =
+      category.description ||
+      `Browse ${category.name} for your next event. Quality rentals available at Ayojon marketplace.`
+    const url = `https://ayojon.com/category/${params.categorySlug}`
 
     return {
       meta: [
         { title },
         { name: 'description', content: description },
-        { name: 'keywords', content: `${category.name}, event rental, ${category.name} rental, Ayojon` },
+        {
+          name: 'keywords',
+          content: `${category.name}, event rental, ${category.name} rental, Ayojon`,
+        },
         { property: 'og:title', content: title },
         { property: 'og:description', content: description },
         { property: 'og:url', content: url },
@@ -57,55 +67,63 @@ export const Route = createFileRoute('/category/$categorySlug')({
         { name: 'twitter:title', content: title },
         { name: 'twitter:description', content: description },
       ],
-      links: [
-        { rel: 'canonical', href: url },
-      ],
-    };
+      links: [{ rel: 'canonical', href: url }],
+    }
   },
-});
+})
 
 function CategoryPage() {
-  const navigate = useNavigate();
-  const { categorySlug } = Route.useParams();
-  const searchParams = Route.useSearch();
-  const { filters } = useFilters();
+  const navigate = useNavigate()
+  const { categorySlug } = Route.useParams()
+  const searchParams = Route.useSearch()
+  const { filters } = useFilters()
 
   // Fetch category data
-  const { data: category, isLoading: isCategoryLoading } = useCategoryBySlug(categorySlug);
+  const { data: category, isLoading: isCategoryLoading } =
+    useCategoryBySlug(categorySlug)
 
   // Handle 404 if category not found
   useEffect(() => {
     if (!isCategoryLoading && !category) {
-      throw notFound();
+      throw notFound()
     }
-  }, [category, isCategoryLoading]);
+  }, [category, isCategoryLoading])
 
-  const currentPage = searchParams.page || 1;
-  const activeSubcategoryId = searchParams.subcategory || filters.subcategory;
+  const currentPage = searchParams.page || 1
+  const activeSubcategoryId = searchParams.subcategory || filters.subcategory
 
-  const activeSubcategory = category?.subcategories?.find(s => s.id === activeSubcategoryId);
+  const activeSubcategory = category?.subcategories?.find(
+    (s) => s.id === activeSubcategoryId,
+  )
 
-  const displayCategory = category ? (activeSubcategory ? {
-    ...category,
-    name: activeSubcategory.name,
-    description: `Explore our extensive collection of ${activeSubcategory.name}. Part of our ${category.name} selection.`,
-  } : category) : null;
+  const displayCategory = category
+    ? activeSubcategory
+      ? {
+          ...category,
+          name: activeSubcategory.name,
+          description: `Explore our extensive collection of ${activeSubcategory.name}. Part of our ${category.name} selection.`,
+        }
+      : category
+    : null
 
   // Update filter store with category ID when component mounts or category changes
   useEffect(() => {
     if (category && filters.category !== category.id) {
-      filterStore.setFilter('category', category.id);
+      filterStore.setFilter('category', category.id)
     }
-  }, [category, filters.category]);
+  }, [category, filters.category])
 
   // Update subcategory filter from URL
   useEffect(() => {
-    if (searchParams.subcategory && searchParams.subcategory !== filters.subcategory) {
-      filterStore.setFilter('subcategory', searchParams.subcategory);
+    if (
+      searchParams.subcategory &&
+      searchParams.subcategory !== filters.subcategory
+    ) {
+      filterStore.setFilter('subcategory', searchParams.subcategory)
     } else if (!searchParams.subcategory && filters.subcategory) {
-      filterStore.clearFilter('subcategory');
+      filterStore.clearFilter('subcategory')
     }
-  }, [searchParams.subcategory, filters.subcategory]);
+  }, [searchParams.subcategory, filters.subcategory])
 
   // Fetch products with pagination and filters
   const { data, isLoading: isProductsLoading } = useProducts({
@@ -120,11 +138,11 @@ function CategoryPage() {
     sort: filters.sort,
     page: currentPage,
     limit: 20,
-  });
+  })
 
-  const products = data?.data || [];
-  const totalCount = data?.total || 0;
-  const totalPages = data?.totalPages || 1;
+  const products = data?.data || []
+  const totalCount = data?.total || 0
+  const totalPages = data?.totalPages || 1
 
   // Debug logging
   useEffect(() => {
@@ -132,9 +150,9 @@ function CategoryPage() {
       console.log(`[CategoryPage] Active subcategory: ${activeSubcategoryId}`, {
         categoryId: category?.id,
         productsCount: products.length,
-      });
+      })
     }
-  }, [activeSubcategoryId, category?.id, products.length]);
+  }, [activeSubcategoryId, category?.id, products.length])
 
   // Handle page change
   const handlePageChange = (page: number) => {
@@ -145,13 +163,13 @@ function CategoryPage() {
         ...searchParams,
         page,
       },
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
   // Handle subcategory change
   const handleSubcategoryChange = (subcategoryId: string | undefined) => {
-    filterStore.setFilter('subcategory', subcategoryId);
+    filterStore.setFilter('subcategory', subcategoryId)
     navigate({
       to: '/category/$categorySlug',
       params: { categorySlug },
@@ -160,19 +178,19 @@ function CategoryPage() {
         subcategory: subcategoryId,
         page: 1, // Reset to first page when changing subcategory
       },
-    });
-  };
+    })
+  }
 
   // Handle clear all filters
   const handleClearFilters = () => {
     // Keep category and subcategory, clear other filters
-    const categoryId = category?.id;
-    filterStore.clearAllFilters();
+    const categoryId = category?.id
+    filterStore.clearAllFilters()
     if (categoryId) {
-      filterStore.setFilter('category', categoryId);
+      filterStore.setFilter('category', categoryId)
     }
     if (activeSubcategoryId) {
-      filterStore.setFilter('subcategory', activeSubcategoryId);
+      filterStore.setFilter('subcategory', activeSubcategoryId)
     }
     navigate({
       to: '/category/$categorySlug',
@@ -181,8 +199,8 @@ function CategoryPage() {
         subcategory: activeSubcategoryId,
         page: 1,
       },
-    });
-  };
+    })
+  }
 
   // Check if there are active filters (excluding category and subcategory)
   const hasActiveFilters =
@@ -191,7 +209,7 @@ function CategoryPage() {
     filters.minRating ||
     filters.freeShipping ||
     filters.onSale ||
-    filters.inStock;
+    filters.inStock
 
   // Show loading state
   if (isCategoryLoading) {
@@ -201,12 +219,12 @@ function CategoryPage() {
           <div className="h-32 animate-pulse rounded-lg bg-muted" />
         </div>
       </div>
-    );
+    )
   }
 
   // Category not found
   if (!category || !displayCategory) {
-    return null; // notFound will be thrown in useEffect
+    return null // notFound will be thrown in useEffect
   }
 
   return (
@@ -260,8 +278,10 @@ function CategoryPage() {
                   <span>Loading...</span>
                 ) : (
                   <span>
-                    Showing {products.length > 0 ? ((currentPage - 1) * 20) + 1 : 0}-
-                    {Math.min(currentPage * 20, totalCount)} of {totalCount} results
+                    Showing{' '}
+                    {products.length > 0 ? (currentPage - 1) * 20 + 1 : 0}-
+                    {Math.min(currentPage * 20, totalCount)} of {totalCount}{' '}
+                    results
                   </span>
                 )}
               </div>
@@ -309,5 +329,5 @@ function CategoryPage() {
         </div>
       </section>
     </div>
-  );
+  )
 }

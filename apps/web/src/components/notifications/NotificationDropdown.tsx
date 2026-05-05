@@ -1,23 +1,25 @@
-import { Button } from "@/components/ui/button";
-import { NotificationList } from "./NotificationList";
-import { orpc } from "@/utils/orpc";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { NotificationList } from './NotificationList'
+import { Button } from '@/components/ui/button'
+import { orpc } from '@/utils/orpc'
 
 export function NotificationDropdown() {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
 
   const markAllReadMutation = useMutation({
     ...orpc.notifications.markAllRead.mutationOptions(),
     onSuccess: () => {
       // Invalidate both list and count queries
-      queryClient.invalidateQueries({ queryKey: orpc.notifications.list.key() });
-      queryClient.invalidateQueries({ queryKey: orpc.notifications.unreadCount.key() });
+      queryClient.invalidateQueries({ queryKey: orpc.notifications.list.key() })
+      queryClient.invalidateQueries({
+        queryKey: orpc.notifications.unreadCount.key(),
+      })
     },
-  });
+  })
 
   const handleMarkAllRead = () => {
-    markAllReadMutation.mutate({});
-  };
+    markAllReadMutation.mutate({})
+  }
 
   return (
     <div className="flex flex-col">
@@ -40,5 +42,5 @@ export function NotificationDropdown() {
         <NotificationList />
       </div>
     </div>
-  );
+  )
 }

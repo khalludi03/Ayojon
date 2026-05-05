@@ -1,16 +1,16 @@
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Check } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CheckoutProgressProps {
-  currentStep: number;
+  currentStep: number
 }
 
 const steps = [
-  { number: 1, label: "Shipping", description: "Delivery address" },
-  { number: 2, label: "Review", description: "Review order" },
-  { number: 3, label: "Payment", description: "Payment method" },
-  { number: 4, label: "Confirmation", description: "Order complete" },
-];
+  { number: 1, label: 'Shipping', description: 'Delivery address' },
+  { number: 2, label: 'Review', description: 'Review order' },
+  { number: 3, label: 'Payment', description: 'Payment method' },
+  { number: 4, label: 'Confirmation', description: 'Order complete' },
+]
 
 export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
   return (
@@ -24,12 +24,12 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
               <div className="flex flex-col items-center gap-2">
                 <div
                   className={cn(
-                    "relative flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-300",
+                    'relative flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-300',
                     currentStep > step.number
-                      ? "border-green-500 bg-green-500 shadow-lg shadow-green-500/30"
+                      ? 'border-green-500 bg-green-500 shadow-lg shadow-green-500/30'
                       : currentStep === step.number
-                        ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))] shadow-lg shadow-[hsl(var(--primary))]/30 scale-110"
-                        : "border-[hsl(var(--border))] bg-[hsl(var(--background))]"
+                        ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] shadow-lg shadow-[hsl(var(--primary))]/30 scale-110'
+                        : 'border-[hsl(var(--border))] bg-[hsl(var(--background))]',
                   )}
                 >
                   {currentStep > step.number ? (
@@ -37,10 +37,10 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
                   ) : (
                     <span
                       className={cn(
-                        "text-base font-bold",
+                        'text-base font-bold',
                         currentStep === step.number
-                          ? "text-white"
-                          : "text-[hsl(var(--muted-foreground))]"
+                          ? 'text-white'
+                          : 'text-[hsl(var(--muted-foreground))]',
                       )}
                     >
                       {step.number}
@@ -54,10 +54,10 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
                 <div className="text-center">
                   <p
                     className={cn(
-                      "text-sm font-semibold transition-colors",
+                      'text-sm font-semibold transition-colors',
                       currentStep >= step.number
-                        ? "text-[hsl(var(--foreground))]"
-                        : "text-[hsl(var(--muted-foreground))]"
+                        ? 'text-[hsl(var(--foreground))]'
+                        : 'text-[hsl(var(--muted-foreground))]',
                     )}
                   >
                     {step.label}
@@ -74,12 +74,12 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
                   <div className="absolute inset-0 bg-[hsl(var(--border))]" />
                   <div
                     className={cn(
-                      "absolute inset-0 bg-gradient-to-r transition-all duration-500",
+                      'absolute inset-0 bg-gradient-to-r transition-all duration-500',
                       currentStep > step.number
-                        ? "from-green-500 to-green-500 w-full"
+                        ? 'from-green-500 to-green-500 w-full'
                         : currentStep === step.number
-                          ? "from-[hsl(var(--primary))] to-[hsl(var(--primary))] w-1/2"
-                          : "w-0"
+                          ? 'from-[hsl(var(--primary))] to-[hsl(var(--primary))] w-1/2'
+                          : 'w-0',
                     )}
                   />
                 </div>
@@ -96,7 +96,8 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
                 Step {currentStep} of {steps.length}
               </p>
               <p className="text-sm text-[hsl(var(--muted-foreground))]">
-                {steps[currentStep - 1]?.label} - {steps[currentStep - 1]?.description}
+                {steps[currentStep - 1]?.label} -{' '}
+                {steps[currentStep - 1]?.description}
               </p>
             </div>
             <div className="flex -space-x-1">
@@ -104,12 +105,12 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
                 <div
                   key={step.number}
                   className={cn(
-                    "h-2 w-2 rounded-full border-2 border-[hsl(var(--background))] transition-all duration-300",
+                    'h-2 w-2 rounded-full border-2 border-[hsl(var(--background))] transition-all duration-300',
                     currentStep > step.number
-                      ? "bg-green-500"
+                      ? 'bg-green-500'
                       : currentStep === step.number
-                        ? "bg-[hsl(var(--primary))] scale-125"
-                        : "bg-[hsl(var(--muted))]"
+                        ? 'bg-[hsl(var(--primary))] scale-125'
+                        : 'bg-[hsl(var(--muted))]',
                   )}
                 />
               ))}
@@ -125,5 +126,5 @@ export function CheckoutProgress({ currentStep }: CheckoutProgressProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

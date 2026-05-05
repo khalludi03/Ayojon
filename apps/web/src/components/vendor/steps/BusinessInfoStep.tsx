@@ -1,23 +1,30 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState } from 'react'
+import {
+  AlertCircle,
+  Building2,
+  Calendar,
+  Hash,
+  MapPin,
+  Phone,
+} from 'lucide-react'
+import type { VendorFormData } from '@/types/vendor'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import type { VendorFormData } from '@/types/vendor';
-import { Building2, Phone, MapPin, Hash, Calendar, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 
 interface BusinessInfoStepProps {
-  formData: VendorFormData;
-  onFormChange: (field: keyof VendorFormData, value: string) => void;
-  onNext: () => void;
-  onBack: () => void;
+  formData: VendorFormData
+  onFormChange: (field: keyof VendorFormData, value: string) => void
+  onNext: () => void
+  onBack: () => void
 }
 
 const DIVISIONS = [
@@ -29,7 +36,7 @@ const DIVISIONS = [
   'Sylhet',
   'Rangpur',
   'Mymensingh',
-];
+]
 
 export function BusinessInfoStep({
   formData,
@@ -37,40 +44,46 @@ export function BusinessInfoStep({
   onNext,
   onBack,
 }: BusinessInfoStepProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   const validatePhone = (phone: string): boolean => {
-    const phoneRegex = /^01[3-9]\d{8}$/;
-    return phoneRegex.test(phone) && phone.length === 11;
-  };
+    const phoneRegex = /^01[3-9]\d{8}$/
+    return phoneRegex.test(phone) && phone.length === 11
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    e.preventDefault()
+    const newErrors: Record<string, string> = {}
 
-    if (!formData.businessName.trim()) newErrors.businessName = 'Business name is required';
-    if (!formData.businessType) newErrors.businessType = 'Business type is required';
-    if (!formData.taxId.trim()) newErrors.taxId = 'Tax ID / Trade License is required';
+    if (!formData.businessName.trim())
+      newErrors.businessName = 'Business name is required'
+    if (!formData.businessType)
+      newErrors.businessType = 'Business type is required'
+    if (!formData.taxId.trim())
+      newErrors.taxId = 'Tax ID / Trade License is required'
     if (!formData.businessPhone.trim()) {
-      newErrors.businessPhone = 'Business phone is required';
+      newErrors.businessPhone = 'Business phone is required'
     } else if (!validatePhone(formData.businessPhone)) {
-      newErrors.businessPhone = 'Invalid phone number (use format: 01XXXXXXXXX)';
+      newErrors.businessPhone = 'Invalid phone number (use format: 01XXXXXXXXX)'
     }
-    if (!formData.businessStreet.trim()) newErrors.businessStreet = 'Street address is required';
-    if (!formData.businessCity.trim()) newErrors.businessCity = 'City is required';
-    if (!formData.businessDivision) newErrors.businessDivision = 'Division is required';
+    if (!formData.businessStreet.trim())
+      newErrors.businessStreet = 'Street address is required'
+    if (!formData.businessCity.trim())
+      newErrors.businessCity = 'City is required'
+    if (!formData.businessDivision)
+      newErrors.businessDivision = 'Division is required'
     if (!formData.yearsInBusiness.trim()) {
-      newErrors.yearsInBusiness = 'Years in business is required';
+      newErrors.yearsInBusiness = 'Years in business is required'
     } else if (parseInt(formData.yearsInBusiness) < 0) {
-      newErrors.yearsInBusiness = 'Invalid number';
+      newErrors.yearsInBusiness = 'Invalid number'
     }
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      onNext();
+      onNext()
     }
-  };
+  }
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
@@ -95,13 +108,15 @@ export function BusinessInfoStep({
               id="businessName"
               value={formData.businessName}
               onChange={(e) => {
-                onFormChange('businessName', e.target.value);
-                if (errors.businessName) setErrors((prev) => ({ ...prev, businessName: '' }));
+                onFormChange('businessName', e.target.value)
+                if (errors.businessName)
+                  setErrors((prev) => ({ ...prev, businessName: '' }))
               }}
               placeholder="Your Business Name"
               className={cn(
                 'pl-10',
-                errors.businessName && 'border-red-500 focus-visible:ring-red-500'
+                errors.businessName &&
+                  'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
@@ -121,8 +136,9 @@ export function BusinessInfoStep({
           <Select
             value={formData.businessType}
             onValueChange={(value) => {
-              onFormChange('businessType', value);
-              if (errors.businessType) setErrors((prev) => ({ ...prev, businessType: '' }));
+              onFormChange('businessType', value)
+              if (errors.businessType)
+                setErrors((prev) => ({ ...prev, businessType: '' }))
             }}
           >
             <SelectTrigger
@@ -131,9 +147,13 @@ export function BusinessInfoStep({
               <SelectValue placeholder="Select business type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="individual">Individual / Sole Proprietor</SelectItem>
+              <SelectItem value="individual">
+                Individual / Sole Proprietor
+              </SelectItem>
               <SelectItem value="company">Private Limited Company</SelectItem>
-              <SelectItem value="enterprise">Enterprise / Corporation</SelectItem>
+              <SelectItem value="enterprise">
+                Enterprise / Corporation
+              </SelectItem>
             </SelectContent>
           </Select>
           {errors.businessType && (
@@ -147,7 +167,8 @@ export function BusinessInfoStep({
         {/* Tax ID / Trade License */}
         <div className="space-y-2">
           <Label htmlFor="taxId" className="text-sm font-semibold">
-            Tax ID / Trade License Number <span className="text-red-500">*</span>
+            Tax ID / Trade License Number{' '}
+            <span className="text-red-500">*</span>
           </Label>
           <div className="relative">
             <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[hsl(var(--muted-foreground))]" />
@@ -155,13 +176,13 @@ export function BusinessInfoStep({
               id="taxId"
               value={formData.taxId}
               onChange={(e) => {
-                onFormChange('taxId', e.target.value);
-                if (errors.taxId) setErrors((prev) => ({ ...prev, taxId: '' }));
+                onFormChange('taxId', e.target.value)
+                if (errors.taxId) setErrors((prev) => ({ ...prev, taxId: '' }))
               }}
               placeholder="Enter Tax ID or Trade License Number"
               className={cn(
                 'pl-10',
-                errors.taxId && 'border-red-500 focus-visible:ring-red-500'
+                errors.taxId && 'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
@@ -185,10 +206,11 @@ export function BusinessInfoStep({
               type="tel"
               value={formData.businessPhone}
               onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                const value = e.target.value.replace(/\D/g, '') // Only allow digits
                 if (value.length <= 11) {
-                  onFormChange('businessPhone', value);
-                  if (errors.businessPhone) setErrors((prev) => ({ ...prev, businessPhone: '' }));
+                  onFormChange('businessPhone', value)
+                  if (errors.businessPhone)
+                    setErrors((prev) => ({ ...prev, businessPhone: '' }))
                 }
               }}
               placeholder="01712345678"
@@ -197,12 +219,14 @@ export function BusinessInfoStep({
               maxLength={11}
               className={cn(
                 'pl-10',
-                errors.businessPhone && 'border-red-500 focus-visible:ring-red-500'
+                errors.businessPhone &&
+                  'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
           <p className="text-xs text-muted-foreground">
-            Enter 11-digit mobile number {formData.businessPhone && `(${formData.businessPhone.length}/11)`}
+            Enter 11-digit mobile number{' '}
+            {formData.businessPhone && `(${formData.businessPhone.length}/11)`}
           </p>
           {errors.businessPhone && (
             <div className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400">
@@ -220,7 +244,10 @@ export function BusinessInfoStep({
 
           {/* Street */}
           <div className="space-y-2">
-            <Label htmlFor="businessStreet" className="text-xs text-[hsl(var(--muted-foreground))]">
+            <Label
+              htmlFor="businessStreet"
+              className="text-xs text-[hsl(var(--muted-foreground))]"
+            >
               Street Address
             </Label>
             <div className="relative">
@@ -229,13 +256,15 @@ export function BusinessInfoStep({
                 id="businessStreet"
                 value={formData.businessStreet}
                 onChange={(e) => {
-                  onFormChange('businessStreet', e.target.value);
-                  if (errors.businessStreet) setErrors((prev) => ({ ...prev, businessStreet: '' }));
+                  onFormChange('businessStreet', e.target.value)
+                  if (errors.businessStreet)
+                    setErrors((prev) => ({ ...prev, businessStreet: '' }))
                 }}
                 placeholder="House/Building, Road, Area"
                 className={cn(
                   'pl-10',
-                  errors.businessStreet && 'border-red-500 focus-visible:ring-red-500'
+                  errors.businessStreet &&
+                    'border-red-500 focus-visible:ring-red-500',
                 )}
               />
             </div>
@@ -250,19 +279,24 @@ export function BusinessInfoStep({
           {/* City and Postal Code */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="businessCity" className="text-xs text-[hsl(var(--muted-foreground))]">
+              <Label
+                htmlFor="businessCity"
+                className="text-xs text-[hsl(var(--muted-foreground))]"
+              >
                 City
               </Label>
               <Input
                 id="businessCity"
                 value={formData.businessCity}
                 onChange={(e) => {
-                  onFormChange('businessCity', e.target.value);
-                  if (errors.businessCity) setErrors((prev) => ({ ...prev, businessCity: '' }));
+                  onFormChange('businessCity', e.target.value)
+                  if (errors.businessCity)
+                    setErrors((prev) => ({ ...prev, businessCity: '' }))
                 }}
                 placeholder="City"
                 className={cn(
-                  errors.businessCity && 'border-red-500 focus-visible:ring-red-500'
+                  errors.businessCity &&
+                    'border-red-500 focus-visible:ring-red-500',
                 )}
               />
               {errors.businessCity && (
@@ -274,13 +308,18 @@ export function BusinessInfoStep({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="businessPostalCode" className="text-xs text-[hsl(var(--muted-foreground))]">
+              <Label
+                htmlFor="businessPostalCode"
+                className="text-xs text-[hsl(var(--muted-foreground))]"
+              >
                 Postal Code (optional)
               </Label>
               <Input
                 id="businessPostalCode"
                 value={formData.businessPostalCode}
-                onChange={(e) => onFormChange('businessPostalCode', e.target.value)}
+                onChange={(e) =>
+                  onFormChange('businessPostalCode', e.target.value)
+                }
                 placeholder="1234"
               />
             </div>
@@ -288,14 +327,18 @@ export function BusinessInfoStep({
 
           {/* Division */}
           <div className="space-y-2">
-            <Label htmlFor="businessDivision" className="text-xs text-[hsl(var(--muted-foreground))]">
+            <Label
+              htmlFor="businessDivision"
+              className="text-xs text-[hsl(var(--muted-foreground))]"
+            >
               Division
             </Label>
             <Select
               value={formData.businessDivision}
               onValueChange={(value) => {
-                onFormChange('businessDivision', value);
-                if (errors.businessDivision) setErrors((prev) => ({ ...prev, businessDivision: '' }));
+                onFormChange('businessDivision', value)
+                if (errors.businessDivision)
+                  setErrors((prev) => ({ ...prev, businessDivision: '' }))
               }}
             >
               <SelectTrigger
@@ -333,13 +376,15 @@ export function BusinessInfoStep({
               min="0"
               value={formData.yearsInBusiness}
               onChange={(e) => {
-                onFormChange('yearsInBusiness', e.target.value);
-                if (errors.yearsInBusiness) setErrors((prev) => ({ ...prev, yearsInBusiness: '' }));
+                onFormChange('yearsInBusiness', e.target.value)
+                if (errors.yearsInBusiness)
+                  setErrors((prev) => ({ ...prev, yearsInBusiness: '' }))
               }}
               placeholder="0"
               className={cn(
                 'pl-10',
-                errors.yearsInBusiness && 'border-red-500 focus-visible:ring-red-500'
+                errors.yearsInBusiness &&
+                  'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
@@ -356,23 +401,14 @@ export function BusinessInfoStep({
 
         {/* Navigation Buttons */}
         <div className="flex justify-between pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={onBack}
-          >
+          <Button type="button" variant="outline" size="lg" onClick={onBack}>
             ← Previous
           </Button>
-          <Button
-            type="submit"
-            size="lg"
-            className="min-w-[120px]"
-          >
+          <Button type="submit" size="lg" className="min-w-[120px]">
             Next →
           </Button>
         </div>
       </form>
     </div>
-  );
+  )
 }

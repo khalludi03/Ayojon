@@ -1,14 +1,17 @@
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils'
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 function Skeleton({ className, ...props }: SkeletonProps) {
   return (
     <div
-      className={cn('animate-skeleton rounded-md bg-[hsl(var(--muted))]', className)}
+      className={cn(
+        'animate-skeleton rounded-md bg-[hsl(var(--muted))]',
+        className,
+      )}
       {...props}
     />
-  );
+  )
 }
 
 // Product Card Skeleton
@@ -17,7 +20,7 @@ function ProductCardSkeleton({ className }: { className?: string }) {
     <div
       className={cn(
         'flex h-full flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3',
-        className
+        className,
       )}
     >
       {/* Image - Fixed aspect ratio */}
@@ -53,7 +56,7 @@ function ProductCardSkeleton({ className }: { className?: string }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Deal Card Skeleton
@@ -62,7 +65,7 @@ function DealCardSkeleton({ className }: { className?: string }) {
     <div
       className={cn(
         'flex h-[340px] w-44 shrink-0 flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3',
-        className
+        className,
       )}
     >
       {/* Image - Fixed aspect ratio */}
@@ -92,7 +95,7 @@ function DealCardSkeleton({ className }: { className?: string }) {
         <Skeleton className="mt-2 h-8 w-full rounded-md" />
       </div>
     </div>
-  );
+  )
 }
 
 // Category Card Skeleton
@@ -102,7 +105,7 @@ function CategoryCardSkeleton({ className }: { className?: string }) {
       <Skeleton className="h-20 w-20 rounded-full" />
       <Skeleton className="mt-2 h-4 w-16" />
     </div>
-  );
+  )
 }
 
 // Carousel Skeleton
@@ -116,7 +119,7 @@ function CarouselSkeleton({ className }: { className?: string }) {
         ))}
       </div>
     </div>
-  );
+  )
 }
 
 // Product Grid Skeleton
@@ -124,21 +127,21 @@ function ProductGridSkeleton({
   count = 10,
   className,
 }: {
-  count?: number;
-  className?: string;
+  count?: number
+  className?: string
 }) {
   return (
     <div
       className={cn(
         'grid auto-rows-fr grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5',
-        className
+        className,
       )}
     >
       {Array.from({ length: count }).map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}
     </div>
-  );
+  )
 }
 
 // Search Results Skeleton
@@ -155,7 +158,7 @@ function SearchResultsSkeleton({ count = 5 }: { count?: number }) {
         </div>
       ))}
     </div>
-  );
+  )
 }
 
 export {
@@ -166,4 +169,4 @@ export {
   CarouselSkeleton,
   ProductGridSkeleton,
   SearchResultsSkeleton,
-};
+}

@@ -1,4 +1,4 @@
-import { DashboardOverview } from './DashboardOverview';
+import { DashboardOverview } from './DashboardOverview'
 
 export function VendorDashboard() {
   return (
@@ -7,5 +7,5 @@ export function VendorDashboard() {
         <DashboardOverview />
       </div>
     </div>
-  );
+  )
 }

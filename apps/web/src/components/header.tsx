@@ -1,21 +1,21 @@
-import { Link } from "@tanstack/react-router";
-import { Heart, ShoppingCart } from "lucide-react";
+import { Link } from '@tanstack/react-router'
+import { Heart, ShoppingCart } from 'lucide-react'
 
-import UserMenu from "./user-menu";
-import { MegaMenu } from "./categories/MegaMenu";
-import { useWishlist } from "@/stores/wishlist-store";
-import { useCart } from "@/stores/cart-store";
-import { Button } from "./ui/button";
+import UserMenu from './user-menu'
+import { MegaMenu } from './categories/MegaMenu'
+import { Button } from './ui/button'
+import { useWishlist } from '@/stores/wishlist-store'
+import { useCart } from '@/stores/cart-store'
 
 export default function Header() {
   const links = [
-    { to: "/", label: "Home" },
-    { to: "/dashboard", label: "Dashboard" },
-  ] as const;
+    { to: '/', label: 'Home' },
+    { to: '/dashboard', label: 'Dashboard' },
+  ] as const
 
   // Get wishlist and cart counts
-  const { itemCount: wishlistCount } = useWishlist();
-  const { itemCount: cartCount } = useCart();
+  const { itemCount: wishlistCount } = useWishlist()
+  const { itemCount: cartCount } = useCart()
 
   return (
     <div>
@@ -28,7 +28,7 @@ export default function Header() {
                 <Link key={to} to={to}>
                   {label}
                 </Link>
-              );
+              )
             })}
           </nav>
         </div>
@@ -39,7 +39,7 @@ export default function Header() {
               <Heart className="h-5 w-5" />
               {wishlistCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white">
-                  {wishlistCount > 9 ? "9+" : wishlistCount}
+                  {wishlistCount > 9 ? '9+' : wishlistCount}
                 </span>
               )}
             </Link>
@@ -51,7 +51,7 @@ export default function Header() {
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                  {cartCount > 9 ? "9+" : cartCount}
+                  {cartCount > 9 ? '9+' : cartCount}
                 </span>
               )}
             </Link>
@@ -62,5 +62,5 @@ export default function Header() {
       </div>
       <hr />
     </div>
-  );
+  )
 }

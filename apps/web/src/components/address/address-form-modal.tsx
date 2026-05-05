@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react'
+import type { Address, AddressFormData } from '@/types/address'
 import {
   Dialog,
   DialogContent,
@@ -6,26 +7,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import type { Address, AddressFormData } from '@/types/address';
+} from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface AddressFormModalProps {
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (data: AddressFormData & { isDefault?: boolean }) => void;
-  address?: Address | null;
-  isLoading?: boolean;
+  open: boolean
+  onClose: () => void
+  onSubmit: (data: AddressFormData & { isDefault?: boolean }) => void
+  address?: Address | null
+  isLoading?: boolean
 }
 
 export function AddressFormModal({
@@ -35,7 +35,9 @@ export function AddressFormModal({
   address,
   isLoading,
 }: AddressFormModalProps) {
-  const [formData, setFormData] = useState<AddressFormData & { isDefault?: boolean }>({
+  const [formData, setFormData] = useState<
+    AddressFormData & { isDefault?: boolean }
+  >({
     name: '',
     phone: '',
     addressLine1: '',
@@ -46,9 +48,11 @@ export function AddressFormModal({
     country: 'USA',
     type: 'home',
     isDefault: false,
-  });
+  })
 
-  const [errors, setErrors] = useState<Partial<Record<keyof AddressFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof AddressFormData, string>>
+  >({})
 
   useEffect(() => {
     if (address) {
@@ -63,7 +67,7 @@ export function AddressFormModal({
         country: address.country,
         type: address.type,
         isDefault: address.isDefault,
-      });
+      })
     } else {
       setFormData({
         name: '',
@@ -76,46 +80,50 @@ export function AddressFormModal({
         country: 'USA',
         type: 'home',
         isDefault: false,
-      });
+      })
     }
-    setErrors({});
-  }, [address, open]);
+    setErrors({})
+  }, [address, open])
 
   const handleChange = (field: keyof AddressFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }))
     }
-  };
+  }
 
   const validate = (): boolean => {
-    const newErrors: Partial<Record<keyof AddressFormData, string>> = {};
+    const newErrors: Partial<Record<keyof AddressFormData, string>> = {}
 
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone is required';
-    if (!formData.addressLine1.trim()) newErrors.addressLine1 = 'Address line 1 is required';
-    if (!formData.city.trim()) newErrors.city = 'City is required';
-    if (!formData.state.trim()) newErrors.state = 'State is required';
-    if (!formData.postalCode.trim()) newErrors.postalCode = 'Postal code is required';
-    if (!formData.country.trim()) newErrors.country = 'Country is required';
+    if (!formData.name.trim()) newErrors.name = 'Name is required'
+    if (!formData.phone.trim()) newErrors.phone = 'Phone is required'
+    if (!formData.addressLine1.trim())
+      newErrors.addressLine1 = 'Address line 1 is required'
+    if (!formData.city.trim()) newErrors.city = 'City is required'
+    if (!formData.state.trim()) newErrors.state = 'State is required'
+    if (!formData.postalCode.trim())
+      newErrors.postalCode = 'Postal code is required'
+    if (!formData.country.trim()) newErrors.country = 'Country is required'
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (validate()) {
-      onSubmit(formData);
+      onSubmit(formData)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{address ? 'Edit Address' : 'Add New Address'}</DialogTitle>
+          <DialogTitle>
+            {address ? 'Edit Address' : 'Add New Address'}
+          </DialogTitle>
           <DialogDescription>
             {address
               ? 'Update your delivery address information'
@@ -132,7 +140,9 @@ export function AddressFormModal({
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Enter full name"
             />
-            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -143,7 +153,9 @@ export function AddressFormModal({
               onChange={(e) => handleChange('phone', e.target.value)}
               placeholder="Enter phone number"
             />
-            {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+            {errors.phone && (
+              <p className="text-sm text-destructive">{errors.phone}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -178,7 +190,9 @@ export function AddressFormModal({
                 onChange={(e) => handleChange('city', e.target.value)}
                 placeholder="City"
               />
-              {errors.city && <p className="text-sm text-destructive">{errors.city}</p>}
+              {errors.city && (
+                <p className="text-sm text-destructive">{errors.city}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -189,7 +203,9 @@ export function AddressFormModal({
                 onChange={(e) => handleChange('state', e.target.value)}
                 placeholder="State"
               />
-              {errors.state && <p className="text-sm text-destructive">{errors.state}</p>}
+              {errors.state && (
+                <p className="text-sm text-destructive">{errors.state}</p>
+              )}
             </div>
           </div>
 
@@ -215,7 +231,9 @@ export function AddressFormModal({
                 onChange={(e) => handleChange('country', e.target.value)}
                 placeholder="Country"
               />
-              {errors.country && <p className="text-sm text-destructive">{errors.country}</p>}
+              {errors.country && (
+                <p className="text-sm text-destructive">{errors.country}</p>
+              )}
             </div>
           </div>
 
@@ -242,7 +260,10 @@ export function AddressFormModal({
               id="isDefault"
               checked={formData.isDefault}
               onCheckedChange={(checked) =>
-                setFormData((prev) => ({ ...prev, isDefault: checked as boolean }))
+                setFormData((prev) => ({
+                  ...prev,
+                  isDefault: checked,
+                }))
               }
             />
             <label
@@ -254,15 +275,24 @@ export function AddressFormModal({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Saving...' : address ? 'Update Address' : 'Add Address'}
+              {isLoading
+                ? 'Saving...'
+                : address
+                  ? 'Update Address'
+                  : 'Add Address'}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

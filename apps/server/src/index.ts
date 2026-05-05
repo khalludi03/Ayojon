@@ -20,6 +20,7 @@ import { cors } from "hono/cors";
 import { z } from "zod";
 import { rateLimiter, getClientIp } from "./middleware/rate-limit";
 import { customLogger } from "./middleware/logger";
+import { logger } from "./lib/logger";
 import * as Sentry from "@sentry/node";
 
 // Initialize Sentry
@@ -66,7 +67,7 @@ app.onError((err, c) => {
   }
 
   // Always log full error details server-side for debugging
-  console.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
+  logger.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err);
 
   // In production, return generic error to avoid leaking internal details
   // (SQL errors, stack traces, file paths, etc.)
@@ -139,8 +140,8 @@ app.post("/api/email-change/send-otp", otpLimiter, async (c) => {
       // Only include OTP in development for testing
       ...(process.env.NODE_ENV !== 'production' && { otp })
     });
-  } catch (error) {
-    console.error("Error sending OTP:", error);
+    } catch (error) {
+      logger.error("Error sending OTP:", error);
     return c.json(
       { error: "Failed to send verification code" },
       500
@@ -192,8 +193,8 @@ app.post("/api/signup/send-otp", otpLimiter, async (c) => {
       // Only include OTP in development for testing
       ...(process.env.NODE_ENV !== 'production' && { otp })
     });
-  } catch (error) {
-    console.error("Error sending signup OTP:", error);
+    } catch (error) {
+      logger.error("Error sending signup OTP:", error);
     return c.json(
       { error: "Failed to send verification code" },
       500
@@ -218,7 +219,7 @@ app.post("/api/signup/verify-otp", async (c) => {
 
     return c.json({ success: true });
   } catch (error) {
-    console.error("Error verifying signup OTP:", error);
+    logger.error("Error verifying signup OTP:", error);
     return c.json({ error: "Failed to verify code" }, 500);
   }
 });
@@ -286,7 +287,7 @@ app.post("/api/account/deactivate", async (c) => {
 
     return c.json({ success: true, message: "Account deactivated successfully" });
   } catch (error) {
-    console.error("Error deactivating account:", error);
+    logger.error("Error deactivating account:", error);
     return c.json({ error: "Failed to deactivate account" }, 500);
   }
 });
@@ -367,7 +368,7 @@ app.post("/api/email-change/verify-otp", async (c) => {
           )
         );
     } catch (updateError) {
-      console.error("Error updating email:", updateError);
+      logger.error("Error updating email:", updateError);
       // Since the OTP has already been consumed by verifyOTP,
       // issue a new OTP so the user can retry the email change.
       try {
@@ -392,14 +393,14 @@ app.post("/api/email-change/verify-otp", async (c) => {
           500,
         );
       } catch (resendError) {
-        console.error("Error sending replacement OTP after email update failure:", resendError);
+        logger.error("Error sending replacement OTP after email update failure:", resendError);
         return c.json({ error: "Failed to update email" }, 500);
       }
     }
 
     return c.json({ success: true });
   } catch (error) {
-    console.error("Error verifying OTP:", error);
+    logger.error("Error verifying OTP:", error);
     return c.json({ error: "Failed to verify code" }, 500);
   }
 });
@@ -424,21 +425,12 @@ const rpcHandler = new RPCHandler(appRouter);
 
 // oRPC endpoints
 app.use("/api/*", async (c, next) => {
-  // Debug logging only in development to avoid log volume and sensitive URL exposure
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`[oRPC Debug] Incoming: ${c.req.method} ${c.req.url}`);
-  }
-
   const context = await createContext({ context: c });
 
   const { matched, response } = await rpcHandler.handle(c.req.raw, {
     prefix: "/api",
     context,
   });
-
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`[oRPC Debug] Matched: ${matched}, Status: ${response?.status}`);
-  }
 
   if (matched) {
     return response;
@@ -574,7 +566,7 @@ app.get("/sitemap.xml", async (c) => {
       },
     });
   } catch (error) {
-    console.error("Error generating sitemap:", error);
+    logger.error("Error generating sitemap:", error);
     return c.text("Error generating sitemap", 500);
   }
 });

@@ -1,24 +1,37 @@
-import { X } from 'lucide-react';
-import { useFilters } from '@/stores/filter-store';
-import { useCategories } from '@/hooks/use-categories';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { formatPrice } from '@/lib/utils';
-import { EVENT_TYPES, DIVISIONS, PRODUCT_CONDITIONS, DELIVERY_OPTIONS } from '@/types';
+import { X } from 'lucide-react'
+import { useFilters } from '@/stores/filter-store'
+import { useCategories } from '@/hooks/use-categories'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { formatPrice } from '@/lib/utils'
+import {
+  DELIVERY_OPTIONS,
+  DIVISIONS,
+  EVENT_TYPES,
+  PRODUCT_CONDITIONS,
+} from '@/types'
 
 export function ActiveFilters() {
-  const { filters, setFilter, clearFilter, clearAllFilters, activeFilterCount } = useFilters();
-  const { data: categories } = useCategories();
+  const {
+    filters,
+    setFilter,
+    clearFilter,
+    clearAllFilters,
+    activeFilterCount,
+  } = useFilters()
+  const { data: categories } = useCategories()
 
-  if (activeFilterCount === 0) return null;
+  if (activeFilterCount === 0) return null
 
   const getCategoryName = (id: string) => {
-    return categories?.find((c) => c.id === id)?.name || id;
-  };
+    return categories?.find((c) => c.id === id)?.name || id
+  }
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <span className="text-sm text-[hsl(var(--muted-foreground))]">Active filters:</span>
+      <span className="text-sm text-[hsl(var(--muted-foreground))]">
+        Active filters:
+      </span>
 
       {filters.category && (
         <Badge variant="outline" className="gap-1 pr-1">
@@ -32,28 +45,34 @@ export function ActiveFilters() {
         </Badge>
       )}
 
-      {filters.categoryIds && filters.categoryIds.length > 0 && filters.categoryIds.map(id => (
-        <Badge key={id} variant="outline" className="gap-1 pr-1">
-          Category: {getCategoryName(id)}
-          <button
-            onClick={() => {
-              const updated = filters.categoryIds?.filter(cid => cid !== id);
-              setFilter('categoryIds', updated && updated.length > 0 ? updated : undefined);
-            }}
-            className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        </Badge>
-      ))}
+      {filters.categoryIds &&
+        filters.categoryIds.length > 0 &&
+        filters.categoryIds.map((id) => (
+          <Badge key={id} variant="outline" className="gap-1 pr-1">
+            Category: {getCategoryName(id)}
+            <button
+              onClick={() => {
+                const updated = filters.categoryIds?.filter((cid) => cid !== id)
+                setFilter(
+                  'categoryIds',
+                  updated && updated.length > 0 ? updated : undefined,
+                )
+              }}
+              className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </Badge>
+        ))}
 
       {(filters.minPrice !== undefined || filters.maxPrice !== undefined) && (
         <Badge variant="outline" className="gap-1 pr-1">
-          Price: {formatPrice(filters.minPrice || 0)} - {formatPrice(filters.maxPrice || 50000)}
+          Price: {formatPrice(filters.minPrice || 0)} -{' '}
+          {formatPrice(filters.maxPrice || 50000)}
           <button
             onClick={() => {
-              clearFilter('minPrice');
-              clearFilter('maxPrice');
+              clearFilter('minPrice')
+              clearFilter('maxPrice')
             }}
             className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
           >
@@ -136,7 +155,10 @@ export function ActiveFilters() {
 
       {filters.eventTypes && filters.eventTypes.length > 0 && (
         <Badge variant="outline" className="gap-1 pr-1">
-          Events: {filters.eventTypes.map(et => EVENT_TYPES.find(e => e.value === et)?.label).join(', ')}
+          Events:{' '}
+          {filters.eventTypes
+            .map((et) => EVENT_TYPES.find((e) => e.value === et)?.label)
+            .join(', ')}
           <button
             onClick={() => clearFilter('eventTypes')}
             className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
@@ -148,7 +170,11 @@ export function ActiveFilters() {
 
       {filters.productCondition && (
         <Badge variant="outline" className="gap-1 pr-1">
-          Condition: {PRODUCT_CONDITIONS.find(c => c.value === filters.productCondition)?.label}
+          Condition:{' '}
+          {
+            PRODUCT_CONDITIONS.find((c) => c.value === filters.productCondition)
+              ?.label
+          }
           <button
             onClick={() => clearFilter('productCondition')}
             className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
@@ -160,7 +186,8 @@ export function ActiveFilters() {
 
       {filters.vendorLocation && filters.vendorLocation !== 'all' && (
         <Badge variant="outline" className="gap-1 pr-1">
-          Location: {DIVISIONS.find(d => d.value === filters.vendorLocation)?.label}
+          Location:{' '}
+          {DIVISIONS.find((d) => d.value === filters.vendorLocation)?.label}
           <button
             onClick={() => clearFilter('vendorLocation')}
             className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
@@ -172,7 +199,11 @@ export function ActiveFilters() {
 
       {filters.deliveryOption && (
         <Badge variant="outline" className="gap-1 pr-1">
-          Delivery: {DELIVERY_OPTIONS.find(d => d.value === filters.deliveryOption)?.label}
+          Delivery:{' '}
+          {
+            DELIVERY_OPTIONS.find((d) => d.value === filters.deliveryOption)
+              ?.label
+          }
           <button
             onClick={() => clearFilter('deliveryOption')}
             className="ml-1 rounded-full p-0.5 hover:bg-[hsl(var(--muted))]"
@@ -186,7 +217,7 @@ export function ActiveFilters() {
         Clear all
       </Button>
     </div>
-  );
+  )
 }
 
-export default ActiveFilters;
+export default ActiveFilters

@@ -1,13 +1,13 @@
-import { ProductCard } from './ProductCard';
-import type { Product } from '@/types';
-import { ProductCardSkeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { ProductCard } from './ProductCard'
+import type { Product } from '@/types'
+import { ProductCardSkeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 interface ProductGridProps {
-  products: Array<Product>;
-  isLoading?: boolean;
-  skeletonCount?: number;
-  className?: string;
+  products: Array<Product>
+  isLoading?: boolean
+  skeletonCount?: number
+  className?: string
 }
 
 export function ProductGrid({
@@ -21,14 +21,14 @@ export function ProductGrid({
       <div
         className={cn(
           'grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-5',
-          className
+          className,
         )}
       >
         {Array.from({ length: skeletonCount }).map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}
       </div>
-    );
+    )
   }
 
   if (products.length === 0) {
@@ -41,21 +41,21 @@ export function ProductGrid({
           Try adjusting your filters or search terms
         </p>
       </div>
-    );
+    )
   }
 
   return (
     <div
       className={cn(
         'grid auto-rows-fr grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 md:gap-5',
-        className
+        className,
       )}
     >
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>
-  );
+  )
 }
 
-export default ProductGrid;
+export default ProductGrid

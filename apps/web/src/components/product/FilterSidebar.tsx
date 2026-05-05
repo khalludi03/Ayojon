@@ -1,29 +1,35 @@
-import { SlidersHorizontal } from 'lucide-react';
-import { useCategories } from '@/hooks/use-categories';
-import { useFilters, usePriceRange } from '@/stores/filter-store';
-import { RangeSlider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { PRICE_PRESETS, EVENT_TYPES, PRODUCT_CONDITIONS } from '@/types';
-import type { ProductCondition } from '@/types';
-import { cn, formatPrice } from '@/lib/utils';
+import { SlidersHorizontal } from 'lucide-react'
+import type { ProductCondition } from '@/types'
+import { useCategories } from '@/hooks/use-categories'
+import { useFilters, usePriceRange } from '@/stores/filter-store'
+import { RangeSlider } from '@/components/ui/slider'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { EVENT_TYPES, PRICE_PRESETS, PRODUCT_CONDITIONS } from '@/types'
+import { cn, formatPrice } from '@/lib/utils'
 
 interface FilterSidebarProps {
-  className?: string;
+  className?: string
 }
 
 export function FilterSidebar({ className }: FilterSidebarProps) {
-  const { data: categories } = useCategories();
-  const { filters, setFilter, clearFilter, clearAllFilters, activeFilterCount } = useFilters();
-  const { minPrice, maxPrice, setPriceRange } = usePriceRange();
+  const { data: categories } = useCategories()
+  const {
+    filters,
+    setFilter,
+    clearFilter,
+    clearAllFilters,
+    activeFilterCount,
+  } = useFilters()
+  const { minPrice, maxPrice, setPriceRange } = usePriceRange()
 
   const toggleEventType = (eventType: string) => {
-    const current = filters.eventTypes || [];
+    const current = filters.eventTypes || []
     const updated = current.includes(eventType)
       ? current.filter((t) => t !== eventType)
-      : [...current, eventType];
-    setFilter('eventTypes', updated.length > 0 ? updated : undefined);
-  };
+      : [...current, eventType]
+    setFilter('eventTypes', updated.length > 0 ? updated : undefined)
+  }
 
   return (
     <aside className={cn('w-64 shrink-0 space-y-6', className)}>
@@ -88,7 +94,9 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
           max={50000}
           step={100}
           value={[minPrice || 0, maxPrice || 50000]}
-          onChange={([min, max]) => setPriceRange(min || undefined, max === 50000 ? undefined : max)}
+          onChange={([min, max]) =>
+            setPriceRange(min || undefined, max === 50000 ? undefined : max)
+          }
           formatLabel={(value) => formatPrice(value)}
         />
 
@@ -102,7 +110,7 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
                 'rounded-full border border-[hsl(var(--border))] px-3 py-1 text-xs transition-colors',
                 minPrice === preset.min && maxPrice === preset.max
                   ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white'
-                  : 'hover:border-[hsl(var(--primary))]'
+                  : 'hover:border-[hsl(var(--primary))]',
               )}
             >
               {preset.label}
@@ -155,7 +163,12 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
                 type="radio"
                 name="condition"
                 checked={filters.productCondition === condition.value}
-                onChange={() => setFilter('productCondition', condition.value as ProductCondition)}
+                onChange={() =>
+                  setFilter(
+                    'productCondition',
+                    condition.value as ProductCondition,
+                  )
+                }
                 className="h-4 w-4 border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
               />
               <span className="text-sm">{condition.label}</span>
@@ -214,7 +227,9 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
             <input
               type="checkbox"
               checked={filters.freeShipping || false}
-              onChange={(e) => setFilter('freeShipping', e.target.checked || undefined)}
+              onChange={(e) =>
+                setFilter('freeShipping', e.target.checked || undefined)
+              }
               className="h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
             />
             <span className="text-sm">Free Shipping</span>
@@ -223,7 +238,9 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
             <input
               type="checkbox"
               checked={filters.onSale || false}
-              onChange={(e) => setFilter('onSale', e.target.checked || undefined)}
+              onChange={(e) =>
+                setFilter('onSale', e.target.checked || undefined)
+              }
               className="h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
             />
             <span className="text-sm">On Sale</span>
@@ -232,7 +249,9 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
             <input
               type="checkbox"
               checked={filters.inStock || false}
-              onChange={(e) => setFilter('inStock', e.target.checked || undefined)}
+              onChange={(e) =>
+                setFilter('inStock', e.target.checked || undefined)
+              }
               className="h-4 w-4 rounded border-[hsl(var(--border))] text-[hsl(var(--primary))] focus:ring-[hsl(var(--primary))]"
             />
             <span className="text-sm">In Stock Only</span>
@@ -240,7 +259,7 @@ export function FilterSidebar({ className }: FilterSidebarProps) {
         </div>
       </div>
     </aside>
-  );
+  )
 }
 
-export default FilterSidebar;
+export default FilterSidebar

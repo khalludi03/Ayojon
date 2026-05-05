@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { XCircle, ArrowLeft, Mail, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Link, createFileRoute } from '@tanstack/react-router'
+import { ArrowLeft, Mail, RefreshCw, XCircle } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/vendor/application-rejected' as any)({
   component: ApplicationRejectedPage,
-});
+})
 
 function ApplicationRejectedPage() {
   return (
@@ -12,14 +12,15 @@ function ApplicationRejectedPage() {
       <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 text-red-600">
         <XCircle className="h-10 w-10" />
       </div>
-      
+
       <h1 className="mb-2 text-3xl font-bold text-[hsl(var(--foreground))]">
         Application Declined
       </h1>
-      
+
       <p className="mb-8 max-w-md text-[hsl(var(--muted-foreground))]">
-        We regret to inform you that your vendor application has been declined at this time. 
-        Please check your email for more details regarding this decision.
+        We regret to inform you that your vendor application has been declined
+        at this time. Please check your email for more details regarding this
+        decision.
       </p>
 
       <div className="mb-8 w-full max-w-sm rounded-lg border border-red-100 bg-red-50 p-6 text-left">
@@ -45,10 +46,13 @@ function ApplicationRejectedPage() {
           </Link>
         </Button>
       </div>
-      
+
       <p className="mt-8 text-sm text-[hsl(var(--muted-foreground))]">
-        Have questions? <button className="font-medium text-[hsl(var(--primary))] hover:underline">Contact our support team</button>
+        Have questions?{' '}
+        <button className="font-medium text-[hsl(var(--primary))] hover:underline">
+          Contact our support team
+        </button>
       </p>
     </div>
-  );
+  )
 }

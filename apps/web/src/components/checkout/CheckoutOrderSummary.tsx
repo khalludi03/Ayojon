@@ -1,37 +1,53 @@
-import { Link } from "@tanstack/react-router";
-import { Badge } from "@/components/ui/badge";
-import { useCart, type CartItem } from "@/stores/cart-store";
-import { formatPrice } from "@/lib/utils";
-import { Check, Clock, Package, X, Zap, ShoppingBag, Truck, Shield, RotateCcw, Tag } from "lucide-react";
+import { Link } from '@tanstack/react-router'
+import {
+  Check,
+  Clock,
+  Package,
+  RotateCcw,
+  Shield,
+  ShoppingBag,
+  Tag,
+  Truck,
+  X,
+  Zap,
+} from 'lucide-react'
+import type {CartItem} from '@/stores/cart-store';
+import { Badge } from '@/components/ui/badge'
+import {  useCart } from '@/stores/cart-store'
+import { formatPrice } from '@/lib/utils'
 
 export function CheckoutOrderSummary() {
-  const { 
-    items, 
+  const {
+    items,
     itemCount,
     deliveryMethod,
-    getSubtotal, 
-    getShipping, 
-    getTax, 
+    getSubtotal,
+    getShipping,
+    getTax,
     getTotal,
     getDiscount,
     discount,
-    removeCoupon
-  } = useCart();
+    removeCoupon,
+  } = useCart()
 
   const getDeliveryMethodDisplay = () => {
-    if (!deliveryMethod) return null;
-    
+    if (!deliveryMethod) return null
+
     switch (deliveryMethod) {
       case 'standard':
-        return { name: 'Standard Delivery', icon: Package, duration: '3-5 days' };
+        return {
+          name: 'Standard Delivery',
+          icon: Package,
+          duration: '3-5 days',
+        }
       case 'express':
-        return { name: 'Express Delivery', icon: Zap, duration: '1-2 days' };
+        return { name: 'Express Delivery', icon: Zap, duration: '1-2 days' }
       case 'same-day':
-        return { name: 'Same-Day Delivery', icon: Clock, duration: 'Today' };
+        return { name: 'Same-Day Delivery', icon: Clock, duration: 'Today' }
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
     <div className="sticky top-4 overflow-hidden rounded-xl border-2 border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg">
@@ -54,7 +70,6 @@ export function CheckoutOrderSummary() {
       </div>
 
       <div className="p-4 sm:p-6">
-
         {/* Items List */}
         <div className="space-y-4 border-b-2 border-[hsl(var(--border))] pb-6">
           <div className="flex items-center gap-2">
@@ -92,7 +107,9 @@ export function CheckoutOrderSummary() {
                     </div>
                   </div>
                   <p className="text-base font-bold text-[hsl(var(--foreground))] sm:text-lg">
-                    {formatPrice(item.product.pricing.currentPrice * item.quantity)}
+                    {formatPrice(
+                      item.product.pricing.currentPrice * item.quantity,
+                    )}
                   </p>
                 </div>
               </div>
@@ -143,12 +160,16 @@ export function CheckoutOrderSummary() {
               <div className="flex items-center gap-2">
                 <Truck className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                 <span className="font-medium text-[hsl(var(--muted-foreground))]">
-                  {getDeliveryMethodDisplay() ? getDeliveryMethodDisplay()!.name : 'Delivery Fee'}
+                  {getDeliveryMethodDisplay()
+                    ? getDeliveryMethodDisplay()!.name
+                    : 'Delivery Fee'}
                 </span>
               </div>
               <span className="font-bold text-[hsl(var(--foreground))]">
                 {getShipping() === 0 ? (
-                  <Badge variant="freeShipping" className="font-bold shadow-sm">🚚 FREE</Badge>
+                  <Badge variant="freeShipping" className="font-bold shadow-sm">
+                    🚚 FREE
+                  </Badge>
                 ) : (
                   formatPrice(getShipping())
                 )}
@@ -157,17 +178,21 @@ export function CheckoutOrderSummary() {
             {deliveryMethod && getDeliveryMethodDisplay() && (
               <div className="flex items-center gap-2 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 px-3 py-2 text-xs font-medium text-[hsl(var(--foreground))]">
                 {(() => {
-                  const Icon = getDeliveryMethodDisplay()!.icon;
-                  return <Icon className="h-3.5 w-3.5" />;
+                  const Icon = getDeliveryMethodDisplay()!.icon
+                  return <Icon className="h-3.5 w-3.5" />
                 })()}
-                <span>Estimated delivery: {getDeliveryMethodDisplay()!.duration}</span>
+                <span>
+                  Estimated delivery: {getDeliveryMethodDisplay()!.duration}
+                </span>
               </div>
             )}
           </div>
 
           {/* Tax */}
           <div className="flex justify-between items-center text-sm sm:text-base">
-            <span className="font-medium text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
+            <span className="font-medium text-[hsl(var(--muted-foreground))]">
+              Tax (5%)
+            </span>
             <span className="font-bold text-[hsl(var(--foreground))]">
               {formatPrice(getTax())}
             </span>
@@ -250,5 +275,5 @@ export function CheckoutOrderSummary() {
         </div>
       </div>
     </div>
-  );
+  )
 }

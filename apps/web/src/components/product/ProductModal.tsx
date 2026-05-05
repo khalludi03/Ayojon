@@ -1,100 +1,124 @@
-import { useState, useEffect } from 'react';
-import { AlertTriangle, ChevronLeft, ChevronRight, Heart, Minus, Plus, RotateCcw, ShoppingCart, Star, Truck, ExternalLink } from 'lucide-react';
-import { useNavigate, Link } from '@tanstack/react-router';
-import type { Product, ProductVariant } from '@/types';
-import { useCart } from '@/stores/cart-store';
-import { useWishlist } from '@/stores/wishlist-store';
-import { useQuickView } from '@/stores/quick-view-store';
+import { useEffect, useState } from 'react'
+import {
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Heart,
+  Minus,
+  Plus,
+  RotateCcw,
+  ShoppingCart,
+  Star,
+  Truck,
+} from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import type { Product, ProductVariant } from '@/types'
+import { useCart } from '@/stores/cart-store'
+import { useWishlist } from '@/stores/wishlist-store'
+import { useQuickView } from '@/stores/quick-view-store'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge, DiscountBadge, StockBadge } from '@/components/ui/badge';
-import { cn, formatPrice } from '@/lib/utils';
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Badge, DiscountBadge, StockBadge } from '@/components/ui/badge'
+import { cn, formatPrice } from '@/lib/utils'
 
 interface ProductModalProps {
-  product?: Product | null;
-  isOpen?: boolean;
-  onClose?: () => void;
+  product?: Product | null
+  isOpen?: boolean
+  onClose?: () => void
 }
 
-export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose: propOnClose }: ProductModalProps) {
-  const navigate = useNavigate();
-  const { product: storeProduct, isOpen: storeIsOpen, closeQuickView } = useQuickView();
+export function ProductModal({
+  product: propProduct,
+  isOpen: propIsOpen,
+  onClose: propOnClose,
+}: ProductModalProps) {
+  const navigate = useNavigate()
+  const {
+    product: storeProduct,
+    isOpen: storeIsOpen,
+    closeQuickView,
+  } = useQuickView()
 
-  const product = propProduct ?? storeProduct;
-  const isOpen = propIsOpen ?? storeIsOpen;
-  const onClose = propOnClose ?? closeQuickView;
+  const product = propProduct ?? storeProduct
+  const isOpen = propIsOpen ?? storeIsOpen
+  const onClose = propOnClose ?? closeQuickView
 
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, ProductVariant>>({});
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [quantity, setQuantity] = useState(1)
+  const [selectedVariants, setSelectedVariants] = useState<
+    Record<string, ProductVariant>
+  >({})
 
-  const { addItem } = useCart();
-  const { toggleItem, isInWishlist } = useWishlist();
+  const { addItem } = useCart()
+  const { toggleItem, isInWishlist } = useWishlist()
 
   // Reset state when product changes
   useEffect(() => {
     if (isOpen && product) {
-      setSelectedImageIndex(0);
-      setQuantity(1);
-      setSelectedVariants({});
+      setSelectedImageIndex(0)
+      setQuantity(1)
+      setSelectedVariants({})
     }
-  }, [isOpen, product]);
+  }, [isOpen, product])
 
-  if (!product) return null;
+  if (!product) return null
 
-  const inWishlist = isInWishlist(product.id);
-  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.stock === 0;
+  const inWishlist = isInWishlist(product.id)
+  const isOutOfStock =
+    product.stockStatus === 'out_of_stock' || product.stock === 0
 
   // Group variants by type
   const variantsByType = product.variants.reduce(
     (acc, variant) => {
       // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (!acc[variant.type]) acc[variant.type] = [];
-      acc[variant.type].push(variant);
-      return acc;
+      if (!acc[variant.type]) acc[variant.type] = []
+      acc[variant.type].push(variant)
+      return acc
     },
-    {} as Record<string, Array<ProductVariant>>
-  );
+    {} as Record<string, Array<ProductVariant>>,
+  )
 
   const handleAddToCart = () => {
-    const selectedVariant = Object.values(selectedVariants)[0]; // Use first selected variant
-    addItem(product, quantity, selectedVariant);
-    onClose();
-  };
+    const selectedVariant = Object.values(selectedVariants)[0] // Use first selected variant
+    addItem(product, quantity, selectedVariant)
+    onClose()
+  }
 
   const handleBuyNow = () => {
-    handleAddToCart();
-    navigate({ to: '/checkout' });
-  };
+    handleAddToCart()
+    navigate({ to: '/checkout' })
+  }
 
-  const incrementQuantity = () => setQuantity((q) => Math.min(q + 1, product.stock));
-  const decrementQuantity = () => setQuantity((q) => Math.max(q - 1, 1));
+  const incrementQuantity = () =>
+    setQuantity((q) => Math.min(q + 1, product.stock))
+  const decrementQuantity = () => setQuantity((q) => Math.max(q - 1, 1))
 
   const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    const value = e.target.value
     if (value === '') {
-      setQuantity(1);
-      return;
+      setQuantity(1)
+      return
     }
-    const numValue = parseInt(value, 10);
+    const numValue = parseInt(value, 10)
     if (!isNaN(numValue) && numValue >= 1) {
-      setQuantity(Math.min(numValue, product.stock));
+      setQuantity(Math.min(numValue, product.stock))
     }
-  };
+  }
 
   const goToPreviousImage = () =>
-    setSelectedImageIndex((i) => (i === 0 ? product.images.length - 1 : i - 1));
+    setSelectedImageIndex((i) => (i === 0 ? product.images.length - 1 : i - 1))
   const goToNextImage = () =>
-    setSelectedImageIndex((i) => (i === product.images.length - 1 ? 0 : i + 1));
+    setSelectedImageIndex((i) => (i === product.images.length - 1 ? 0 : i + 1))
 
   // Calculate rating stars
-  const fullStars = Math.floor(product.rating.average);
-  const hasHalfStar = product.rating.average % 1 >= 0.5;
+  const fullStars = Math.floor(product.rating.average)
+  const hasHalfStar = product.rating.average % 1 >= 0.5
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -131,7 +155,9 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
               {/* Discount Badge */}
               {product.pricing.discountPercentage > 0 && (
                 <div className="absolute left-3 top-3">
-                  <DiscountBadge percentage={product.pricing.discountPercentage} />
+                  <DiscountBadge
+                    percentage={product.pricing.discountPercentage}
+                  />
                 </div>
               )}
             </div>
@@ -147,7 +173,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                       'h-16 w-16 shrink-0 overflow-hidden rounded-md border-2 bg-white/80',
                       selectedImageIndex === index
                         ? 'border-[hsl(var(--primary))]'
-                        : 'border-transparent'
+                        : 'border-transparent',
                     )}
                   >
                     <img
@@ -167,23 +193,25 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
               <span className="text-xs font-semibold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
                 Quick View
               </span>
-              <DialogTitle className="text-2xl leading-tight">{product.title}</DialogTitle>
+              <DialogTitle className="text-2xl leading-tight">
+                {product.title}
+              </DialogTitle>
               <a
-                  href={`/product/${product.slug}`}
-                  className="mt-1 flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline"
-                  target="_blank"
-                  rel="noreferrer"
+                href={`/product/${product.slug}`}
+                className="mt-1 flex items-center gap-1 text-xs font-medium text-[hsl(var(--primary))] hover:underline"
+                target="_blank"
+                rel="noreferrer"
               >
-                  View Full Details
-                  <ExternalLink className="h-3 w-3" />
+                View Full Details
+                <ExternalLink className="h-3 w-3" />
               </a>
             </DialogHeader>
 
             {/* Vendor */}
             <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">
               Sold by:{' '}
-              <Link 
-                to="/vendor/$vendorId" 
+              <Link
+                to="/vendor/$vendorId"
                 params={{ vendorId: product.vendor.slug || product.vendor.id }}
                 className="font-medium text-[hsl(var(--foreground))] hover:underline hover:text-primary transition-colors"
                 onClick={onClose}
@@ -209,20 +237,24 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                         ? 'fill-yellow-400 text-yellow-400'
                         : i === fullStars && hasHalfStar
                           ? 'fill-yellow-400/50 text-yellow-400'
-                          : 'fill-gray-200 text-gray-200'
+                          : 'fill-gray-200 text-gray-200',
                     )}
                   />
                 ))}
               </div>
-              <span className="text-sm font-semibold text-foreground">{product.rating.average}</span>
-              <span className="text-sm text-muted-foreground">({product.rating.count} reviews)</span>
+              <span className="text-sm font-semibold text-foreground">
+                {product.rating.average}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                ({product.rating.count} reviews)
+              </span>
             </div>
-            
+
             {/* Short Description */}
             {product.descriptionShort && (
-                <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))] line-clamp-3">
-                    {product.descriptionShort}
-                </p>
+              <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))] line-clamp-3">
+                {product.descriptionShort}
+              </p>
             )}
 
             {/* Price */}
@@ -231,20 +263,33 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                 <span className="text-3xl font-bold text-foreground">
                   {formatPrice(product.pricing.currentPrice)}
                 </span>
-                {product.pricing.originalPrice > product.pricing.currentPrice && (
+                {product.pricing.originalPrice >
+                  product.pricing.currentPrice && (
                   <>
                     <span className="text-lg text-muted-foreground line-through">
                       {formatPrice(product.pricing.originalPrice)}
                     </span>
                     <Badge variant="destructive" className="mb-1">
-                      -{product.pricing.discountPercentage || Math.round(((product.pricing.originalPrice - product.pricing.currentPrice) / product.pricing.originalPrice) * 100)}% OFF
+                      -
+                      {product.pricing.discountPercentage ||
+                        Math.round(
+                          ((product.pricing.originalPrice -
+                            product.pricing.currentPrice) /
+                            product.pricing.originalPrice) *
+                            100,
+                        )}
+                      % OFF
                     </Badge>
                   </>
                 )}
               </div>
               {product.pricing.originalPrice > product.pricing.currentPrice && (
                 <div className="mt-2 text-sm font-medium text-green-600">
-                  You save {formatPrice(product.pricing.originalPrice - product.pricing.currentPrice)}
+                  You save{' '}
+                  {formatPrice(
+                    product.pricing.originalPrice -
+                      product.pricing.currentPrice,
+                  )}
                 </div>
               )}
             </div>
@@ -260,7 +305,10 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                     <button
                       key={variant.id}
                       onClick={() =>
-                        setSelectedVariants((prev) => ({ ...prev, [type]: variant }))
+                        setSelectedVariants((prev) => ({
+                          ...prev,
+                          [type]: variant,
+                        }))
                       }
                       className={cn(
                         'rounded-md border px-3 py-1.5 text-sm transition',
@@ -268,7 +316,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                         selectedVariants[type]?.id === variant.id
                           ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-white'
                           : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]',
-                        variant.stock === 0 && 'cursor-not-allowed opacity-50'
+                        variant.stock === 0 && 'cursor-not-allowed opacity-50',
                       )}
                       disabled={variant.stock === 0}
                     >
@@ -306,7 +354,10 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                   <Plus className="h-4 w-4" />
                 </button>
                 {!isOutOfStock && (
-                  <StockBadge status={product.stockStatus} quantity={product.stock} />
+                  <StockBadge
+                    status={product.stockStatus}
+                    quantity={product.stock}
+                  />
                 )}
               </div>
             </div>
@@ -321,7 +372,9 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                     onClick={() => toggleItem(product)}
                     className={cn(inWishlist && 'text-red-500')}
                   >
-                    <Heart className={cn('h-5 w-5', inWishlist && 'fill-current')} />
+                    <Heart
+                      className={cn('h-5 w-5', inWishlist && 'fill-current')}
+                    />
                   </Button>
                   <Button
                     variant="destructive"
@@ -344,9 +397,15 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
                   onClick={() => toggleItem(product)}
                   className={cn(inWishlist && 'text-red-500')}
                 >
-                  <Heart className={cn('h-5 w-5', inWishlist && 'fill-current')} />
+                  <Heart
+                    className={cn('h-5 w-5', inWishlist && 'fill-current')}
+                  />
                 </Button>
-                <Button variant="outline" className="flex-1" onClick={handleBuyNow}>
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleBuyNow}
+                >
                   Buy Now
                 </Button>
                 <Button className="flex-1 gap-2" onClick={handleAddToCart}>
@@ -361,7 +420,9 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
               <div className="flex items-center gap-2 text-sm">
                 <Truck className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                 {product.shipping.freeShipping ? (
-                  <span className="text-[hsl(var(--success))]">Free Shipping</span>
+                  <span className="text-[hsl(var(--success))]">
+                    Free Shipping
+                  </span>
                 ) : (
                   <span>Shipping: {formatPrice(product.shipping.cost)}</span>
                 )}
@@ -396,7 +457,7 @@ export function ProductModal({ product: propProduct, isOpen: propIsOpen, onClose
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
-export default ProductModal;
+export default ProductModal

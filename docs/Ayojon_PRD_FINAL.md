@@ -2,7 +2,6 @@
 
 ## Product Requirements Document (PRD) - MVP Edition
 
-
 ---
 
 ## Table of Contents
@@ -46,6 +45,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **Vision:** Deliver a production-ready multi-vendor e-commerce platform with comprehensive vendor management, admin tooling, and a polished customer shopping experience for event products.
 
 **Primary Goals:**
+
 - Build secure authentication flows for both users and vendors (email/password + Google + Facebook OAuth)
 - Build a fully functional e-commerce UI with product-centric browsing
 - Implement comprehensive product filtering and sorting
@@ -59,78 +59,82 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ## Technology Stack
 
 ### Frontend
-| Technology | Purpose |
-|-----------|---------|
-| **React 19** | UI framework |
-| **TanStack Router** | File-based routing with type-safe loaders |
-| **TanStack Query** | Server state management & caching |
-| **Vite** | Build tool & dev server |
-| **Tailwind CSS v4** | Utility-first styling |
-| **shadcn/ui** | Component library (dialog, dropdown, tabs, etc.) |
-| **Zustand** | Client-side state (cart, filters, theme, etc.) |
-| **Sentry** | Error tracking |
+
+| Technology          | Purpose                                          |
+| ------------------- | ------------------------------------------------ |
+| **React 19**        | UI framework                                     |
+| **TanStack Router** | File-based routing with type-safe loaders        |
+| **TanStack Query**  | Server state management & caching                |
+| **Vite**            | Build tool & dev server                          |
+| **Tailwind CSS v4** | Utility-first styling                            |
+| **shadcn/ui**       | Component library (dialog, dropdown, tabs, etc.) |
+| **Zustand**         | Client-side state (cart, filters, theme, etc.)   |
+| **Sentry**          | Error tracking                                   |
 
 ### Backend
-| Technology | Purpose |
-|-----------|---------|
-| **Hono** | HTTP framework (running on Bun runtime) |
-| **oRPC** | Type-safe RPC layer with OpenAPI generation |
+
+| Technology      | Purpose                                                                  |
+| --------------- | ------------------------------------------------------------------------ |
+| **Hono**        | HTTP framework (running on Bun runtime)                                  |
+| **oRPC**        | Type-safe RPC layer with OpenAPI generation                              |
 | **better-auth** | Authentication (email/password, Google OAuth, Facebook OAuth, Email OTP) |
-| **Drizzle ORM** | Type-safe database access |
-| **Nodemailer** | Transactional emails (OTP, password reset) |
-| **Scalar** | Interactive API documentation |
-| **Sentry** | Error monitoring |
+| **Drizzle ORM** | Type-safe database access                                                |
+| **Nodemailer**  | Transactional emails (OTP, password reset)                               |
+| **Scalar**      | Interactive API documentation                                            |
+| **Sentry**      | Error monitoring                                                         |
 
 ### Infrastructure
-| Technology | Purpose |
-|-----------|---------|
-| **PostgreSQL (Supabase)** | Primary database |
-| **Amazon S3** | File/image storage (presigned uploads) |
-| **Bun** | JavaScript runtime |
+
+| Technology                | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| **PostgreSQL (Supabase)** | Primary database                       |
+| **Amazon S3**             | File/image storage (presigned uploads) |
+| **Bun**                   | JavaScript runtime                     |
 
 ### Monorepo Packages
-| Package | Purpose |
-|---------|---------|
-| `apps/web` | Customer, vendor, and admin frontend |
-| `apps/server` | API server |
-| `packages/api` | Routers, services, and business logic |
-| `packages/auth` | Authentication configuration |
-| `packages/db` | Database schema (Drizzle) and migrations |
-| `packages/config` | Shared configuration |
-| `packages/env` | Environment variable validation |
-| `packages/storage` | S3 storage utilities |
+
+| Package            | Purpose                                  |
+| ------------------ | ---------------------------------------- |
+| `apps/web`         | Customer, vendor, and admin frontend     |
+| `apps/server`      | API server                               |
+| `packages/api`     | Routers, services, and business logic    |
+| `packages/auth`    | Authentication configuration             |
+| `packages/db`      | Database schema (Drizzle) and migrations |
+| `packages/config`  | Shared configuration                     |
+| `packages/env`     | Environment variable validation          |
+| `packages/storage` | S3 storage utilities                     |
 
 ---
 
 ## Story Point Reference
 
-| Points | Complexity | Typical Effort |
-|--------|-----------|----------------|
-| 1 | Trivial | < 2 hours |
-| 2 | Simple | 2-4 hours |
-| 3 | Moderate | 4-8 hours |
-| 5 | Complex | 1-2 days |
-| 8 | Very Complex | 2-3 days |
-| 13 | Large | 3-5 days |
+| Points | Complexity   | Typical Effort |
+| ------ | ------------ | -------------- |
+| 1      | Trivial      | < 2 hours      |
+| 2      | Simple       | 2-4 hours      |
+| 3      | Moderate     | 4-8 hours      |
+| 5      | Complex      | 1-2 days       |
+| 8      | Very Complex | 2-3 days       |
+| 13     | Large        | 3-5 days       |
 
 ---
 
 ## Epic Overview
 
-| # | Epic Name | Description | Total Points |
-|---|-----------|-------------|--------------|
-| 1 | User Registration & Authentication | Complete user sign-up, login, and session management | 32 |
-| 2 | Homepage & Core Navigation | Landing page with featured products and navigation | 50 |
-| 3 | Product Browsing & Search | Product discovery with filters and search | 47 |
-| 4 | Product Details | Comprehensive product pages with specifications | 40 |
-| 5 | Shopping Cart Management | Cart operations with quantity management and persistence | 37 |
-| 6 | Checkout & Payment Flow | Complete checkout with local payment methods | 53 |
-| 7 | User Account & Profile | User dashboard and profile management | 38 |
-| 8 | Order Tracking & History | Order management and tracking | 27 |
-| 9 | Vendor Dashboard & Management | Vendor portal for products and orders | 47 |
-| 10 | Reviews & Ratings System | Product and vendor review capabilities | 18 |
-| 11 | Admin Dashboard & Platform Management | Admin panel for platform operations | 68 |
-| **TOTAL** | | | **457** |
+| #         | Epic Name                             | Description                                              | Total Points |
+| --------- | ------------------------------------- | -------------------------------------------------------- | ------------ |
+| 1         | User Registration & Authentication    | Complete user sign-up, login, and session management     | 32           |
+| 2         | Homepage & Core Navigation            | Landing page with featured products and navigation       | 50           |
+| 3         | Product Browsing & Search             | Product discovery with filters and search                | 47           |
+| 4         | Product Details                       | Comprehensive product pages with specifications          | 40           |
+| 5         | Shopping Cart Management              | Cart operations with quantity management and persistence | 37           |
+| 6         | Checkout & Payment Flow               | Complete checkout with local payment methods             | 53           |
+| 7         | User Account & Profile                | User dashboard and profile management                    | 38           |
+| 8         | Order Tracking & History              | Order management and tracking                            | 27           |
+| 9         | Vendor Dashboard & Management         | Vendor portal for products and orders                    | 47           |
+| 10        | Reviews & Ratings System              | Product and vendor review capabilities                   | 18           |
+| 11        | Admin Dashboard & Platform Management | Admin panel for platform operations                      | 68           |
+| **TOTAL** |                                       |                                                          | **457**      |
 
 ---
 
@@ -145,6 +149,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.1: User Registration with Email
+
 **`5 points`**
 
 **As a** visitor  
@@ -152,6 +157,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can create an account and start shopping
 
 **Acceptance Criteria:**
+
 - Sign up form with: Full Name, Email, Password, Confirm Password
 - Password requirements enforced
 - Email format validation with real-time feedback
@@ -164,6 +170,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.2: User Login
+
 **`3 points`**
 
 **As a** registered user  
@@ -171,6 +178,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can access my account and orders
 
 **Acceptance Criteria:**
+
 - Login form with: Email, Password fields
 - "Forgot password?" link prominently displayed
 - "Sign In" button
@@ -185,6 +193,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.3: Google Social Login
+
 **`5 points`**
 
 **As a** user  
@@ -192,6 +201,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can quickly access without creating a new password
 
 **Acceptance Criteria:**
+
 - "Continue with Google" button on login and register pages
 - OAuth flow with Google authentication
 - Auto-create account on first Google sign-in
@@ -203,6 +213,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.4: Facebook Social Login
+
 **`5 points`**
 
 **As a** user  
@@ -210,6 +221,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I have multiple convenient login options
 
 **Acceptance Criteria:**
+
 - "Continue with Facebook" button on login and register pages
 - OAuth flow with Facebook authentication
 - Auto-create account on first Facebook sign-in
@@ -221,6 +233,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.5: Password Reset Flow
+
 **`5 points`**
 
 **As a** user  
@@ -228,6 +241,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can regain access if I forget my credentials
 
 **Acceptance Criteria:**
+
 - "Forgot Password" page with email input field
 - Reset email sent with link via Nodemailer
 - Reset password page accessible via unique token
@@ -240,6 +254,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.6: User Logout
+
 **`2 points`**
 
 **As a** logged-in user  
@@ -247,6 +262,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can end my session securely
 
 **Acceptance Criteria:**
+
 - "Sign Out" option in user menu dropdown
 - Clear all session data on sign-out
 - Redirect to homepage
@@ -255,6 +271,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-1.7: Session Management
+
 **`3 points`**
 
 **As a** logged-in user  
@@ -262,15 +279,13 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I don't have to re-login constantly
 
 **Acceptance Criteria:**
+
 - Persist authentication state via secure HTTP-only cookies (server-side sessions)
 - Auto-restore session on page load via `getSession()` API call
 - Display user name/avatar in header when logged in
 - Protected routes redirect to login if not authenticated
 - Session expiry handler component for client-side session monitoring
 - Auth middleware in TanStack Router server functions
-
-
-
 
 ## Epic 2: Homepage & Core Navigation
 
@@ -283,6 +298,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.1: Header with Navigation
+
 **`8 points`**
 
 **As a** visitor  
@@ -290,6 +306,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can easily navigate the platform
 
 **Acceptance Criteria:**
+
 - Fixed header with platform logo (links to homepage)
 - Search bar in header (desktop: prominent, mobile: icon → mobile search modal)
 - Category mega menu dropdown
@@ -305,6 +322,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.2: Hero Section with Promotions
+
 **`5 points`**
 
 **As a** visitor  
@@ -312,6 +330,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I'm aware of current deals and events
 
 **Acceptance Criteria:**
+
 - Large hero banner with auto-rotating carousel
 - Each slide: Image, Headline, Subtext, CTA button
 - Navigation controls
@@ -323,6 +342,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.3: Event Type Quick Categories
+
 **`3 points`**
 
 **As a** visitor  
@@ -330,6 +350,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can quickly find items for my specific occasion
 
 **Acceptance Criteria:**
+
 - Grid of event type cards (Wedding, Birthday, Corporate, Religious, Anniversary, Baby Shower, etc.)
 - Each card: Icon, Event name
 - Clicking card navigates to filtered product results
@@ -339,6 +360,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.4: Flash Deals Section
+
 **`5 points`**
 
 **As a** shopper  
@@ -346,6 +368,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can take advantage of special offers
 
 **Acceptance Criteria:**
+
 - "Flash Deals" section with countdown timer
 - Product carousel with deal products
 - Each product card: Image, Name, Original price, Deal price, Discount %
@@ -357,6 +380,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.5: Featured Products Grid
+
 **`8 points`**
 
 **As a** shopper  
@@ -364,6 +388,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can discover trending items
 
 **Acceptance Criteria:**
+
 - "Featured Products" section on homepage
 - Grid layout: responsive columns
 - Product card components: Image, Name, Price, Rating, "Add to Cart" button, Wishlist heart icon
@@ -374,6 +399,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.6: Category Showcase Sections
+
 **`5 points`**
 
 **As a** visitor  
@@ -381,6 +407,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can browse organized product collections
 
 **Acceptance Criteria:**
+
 - Multiple category sections on homepage: "Decorations", "Sound & Lighting", "Furniture", "Catering Equipment"
 - Each section: Title, "View All" link, Product carousel
 - Product cards (same as featured)
@@ -389,6 +416,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.7: Footer with Information
+
 **`3 points`**
 
 **As a** visitor  
@@ -396,6 +424,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can learn about the platform and policies
 
 **Acceptance Criteria:**
+
 - Footer sections with links (About, Contact, FAQ, Terms, Privacy, etc.)
 - Display accepted payment icons
 - Social media icons
@@ -406,6 +435,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.8: Breadcrumb Navigation
+
 **`3 points`**
 
 **As a** user  
@@ -413,6 +443,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can easily navigate back
 
 **Acceptance Criteria:**
+
 - Breadcrumb trail on non-homepage pages
 - Format: Home > Category > Subcategory > Product
 - Each crumb is clickable link
@@ -421,6 +452,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.9: Theme Toggle (Dark/Light Mode)
+
 **`5 points`**
 
 **As a** user  
@@ -428,6 +460,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can choose my preferred visual style
 
 **Acceptance Criteria:**
+
 - Theme toggle button in header (sun/moon icon)
 - Persist theme preference in local storage
 - Apply theme immediately across all components
@@ -437,6 +470,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-2.10: Mobile Bottom Navigation
+
 **`5 points`**
 
 **As a** mobile user  
@@ -444,6 +478,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can navigate efficiently on mobile
 
 **Acceptance Criteria:**
+
 - Fixed bottom navigation bar (mobile only)
 - Tabs: Home, Categories, Cart, Account (4 icons)
 - Active tab highlighted (color + icon fill)
@@ -465,6 +500,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.1: Search Bar with Autocomplete
+
 **`8 points`**
 
 **As a** shopper  
@@ -472,6 +508,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can quickly find specific items
 
 **Acceptance Criteria:**
+
 - Search bar in header (always visible)
 - Autocomplete/search suggestions via `searchProducts` API (ILIKE query)
 - Mobile: full screen search overlay
@@ -482,6 +519,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.2: Search Results Page
+
 **`8 points`**
 
 **As a** shopper  
@@ -489,6 +527,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can review all matching products
 
 **Acceptance Criteria:**
+
 - Search results on `/products` page with query param
 - Product grid with cards
 - Sorting options: Price Low→High, Price High→Low, Rating, Newest, Most Popular
@@ -500,6 +539,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.3: Category Pages
+
 **`5 points`**
 
 **As a** shopper  
@@ -507,6 +547,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can see all available options
 
 **Acceptance Criteria:**
+
 - Category page at `/category/$categorySlug`
 - Category banner, description, product count
 - Subcategory filter
@@ -517,6 +558,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.4: Advanced Filters Sidebar
+
 **`13 points`**
 
 **As a** shopper  
@@ -524,6 +566,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can narrow down to exactly what I need
 
 **Acceptance Criteria:**
+
 - Filter sidebar (desktop: left side, mobile: drawer/modal)
 - Filter by: Price range, Category, Subcategory, Vendor, Event type
 - Rating filter (star-based)
@@ -537,6 +580,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.5: Sorting Options
+
 **`3 points`**
 
 **As a** shopper  
@@ -544,6 +588,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can view items in my preferred order
 
 **Acceptance Criteria:**
+
 - Sorting dropdown on product listing pages
 - Options: Price Low→High, Price High→Low, Rating, Newest, Most Popular
 - Sort persists across pagination via URL params
@@ -552,6 +597,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.6: Product Quick View
+
 **`5 points`**
 
 **As a** shopper  
@@ -559,6 +605,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can quickly evaluate multiple products
 
 **Acceptance Criteria:**
+
 - Quick view modal triggered from product cards
 - Product image, name, price, rating, short description
 - "Add to Cart" button
@@ -568,6 +615,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.7: Wishlist from Product Grid
+
 **`3 points`**
 
 **As a** shopper  
@@ -575,6 +623,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can save items for later
 
 **Acceptance Criteria:**
+
 - Heart icon on product cards
 - Click to add/remove from wishlist (toggle)
 - Wishlist persists via database (`wishlist` table with composite PK)
@@ -585,6 +634,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-3.8: "Compare Products" Feature
+
 **`2 points`**
 
 **As a** shopper  
@@ -592,6 +642,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can make informed purchase decisions
 
 **Acceptance Criteria:**
+
 - "Compare" checkbox on product cards
 - Select up to 3 products to compare
 - "Compare (X)" button appears when products selected
@@ -613,6 +664,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.1: Product Image Gallery
+
 **`5 points`**
 
 **As a** shopper  
@@ -620,6 +672,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can see the product clearly before buying
 
 **Acceptance Criteria:**
+
 - Large primary image display
 - Thumbnail navigation
 - Image gallery component
@@ -629,6 +682,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.2: Product Information Section
+
 **`5 points`**
 
 **As a** shopper  
@@ -636,6 +690,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I know exactly what I'm getting
 
 **Acceptance Criteria:**
+
 - Product title, category, description
 - Rating display (stars + review count)
 - Availability status (in stock / low stock / out of stock)
@@ -646,6 +701,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.3: Pricing and Purchase Options
+
 **`5 points`**
 
 **As a** shopper  
@@ -653,6 +709,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I understand the total cost
 
 **Acceptance Criteria:**
+
 - Price display with currency (৳) — currency selector supports BDT, INR, PKR, USD
 - Original price (struck through if on sale)
 - Discount percentage badge
@@ -662,6 +719,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.4: Add to Cart Actions
+
 **`5 points`**
 
 **As a** shopper  
@@ -669,6 +727,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can proceed to checkout
 
 **Acceptance Criteria:**
+
 - "Add to Cart" button
 - Loading state on button click
 - Success toast notification
@@ -680,6 +739,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.5: Product Specifications Tab
+
 **`3 points`**
 
 **As a** shopper  
@@ -687,6 +747,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can verify it meets my requirements
 
 **Acceptance Criteria:**
+
 - Tabbed interface for product details
 - Key-value specification pairs stored in `product_specifications` table
 - Specifications loaded with product detail API
@@ -694,6 +755,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.6: Product Description Tab
+
 **`3 points`**
 
 **As a** shopper  
@@ -701,6 +763,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I understand what's included
 
 **Acceptance Criteria:**
+
 - Full product description display
 - Key features stored as JSONB array in `keyFeatures` column
 - Formatted rich text content
@@ -708,6 +771,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.7: Customer Reviews Display
+
 **`8 points`**
 
 **As a** shopper  
@@ -715,6 +779,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can learn from others' experiences
 
 **Acceptance Criteria:**
+
 - Reviews section with overall rating summary
 - Individual review cards with user name, star rating, date, review text
 - Review images (stored in `review_images` table with S3)
@@ -727,6 +792,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.8: Vendor Information Card
+
 **`3 points`**
 
 **As a** shopper  
@@ -734,6 +800,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I know who I'm buying from
 
 **Acceptance Criteria:**
+
 - Vendor name with link to storefront (`/vendor/$vendorId`)
 - Vendor profile info (logo, description, rating, product count)
 - Verification badge
@@ -742,6 +809,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-4.9: Related Products Section
+
 **`3 points`**
 
 **As a** shopper  
@@ -749,6 +817,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can explore alternatives
 
 **Acceptance Criteria:**
+
 - "You May Also Like" section at page bottom
 - Related products loaded from same category
 - Product cards displayed below product detail
@@ -766,6 +835,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.1: Cart Drawer (Quick View)
+
 **`5 points`**
 
 **As a** shopper  
@@ -773,6 +843,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can quickly review items
 
 **Acceptance Criteria:**
+
 - Cart icon in header with item count badge
 - Click cart icon to open slide-out drawer from right
 - Cart drawer displays: Cart items, Subtotal, "View Cart" / "Checkout" buttons
@@ -781,6 +852,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.2: Full Cart Page
+
 **`8 points`**
 
 **As a** shopper  
@@ -788,6 +860,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can finalize my order before checkout
 
 **Acceptance Criteria:**
+
 - Dedicated cart page (`/cart`)
 - Product image, name, vendor link, price, quantity selector, subtotal, remove button
 - "Continue Shopping" button
@@ -799,6 +872,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.3: Quantity Management
+
 **`5 points`**
 
 **As a** shopper  
@@ -806,6 +880,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can order the right amount
 
 **Acceptance Criteria:**
+
 - Quantity selector: minus/plus buttons with number display
 - Min/max quantity enforcement
 - Auto-update subtotal and total
@@ -814,6 +889,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.4: Remove Cart Items
+
 **`3 points`**
 
 **As a** shopper  
@@ -821,6 +897,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can delete items I no longer want
 
 **Acceptance Criteria:**
+
 - Remove button on each cart item
 - Confirmation dialog
 - Recalculate totals after removal
@@ -829,6 +906,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.5: Save for Later
+
 **`3 points`**
 
 **As a** shopper  
@@ -836,6 +914,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can purchase them another time
 
 **Acceptance Criteria:**
+
 - "Save for Later" functionality in cart page
 - Separate section for saved items
 - "Move to Cart" button on saved items
@@ -843,6 +922,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.6: Cart Price Breakdown
+
 **`5 points`**
 
 **As a** shopper  
@@ -850,6 +930,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I understand all charges
 
 **Acceptance Criteria:**
+
 - Order summary: Items subtotal, shipping cost, discount, total
 - Breakdown updates on quantity change
 - Shipping fee calculation (configurable per platform settings: Dhaka rate vs outside Dhaka rate)
@@ -857,6 +938,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.7: Apply Discount Coupon
+
 **`5 points`**
 
 **As a** shopper  
@@ -864,6 +946,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can save money
 
 **Acceptance Criteria:**
+
 - Coupon input field in cart
 - Apply button with validation
 - Discount reflected in price breakdown
@@ -873,6 +956,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-5.8: Cart Persistence
+
 **`3 points`**
 
 **As a** shopper  
@@ -880,6 +964,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I don't lose items if I close the browser
 
 **Acceptance Criteria:**
+
 - Client-side persistence via Zustand store (local storage)
 - Database-backed cart for logged-in users (`cart` table with composite PK on userId + productId + variantId)
 - `syncCart` API procedure merges local cart to database on login
@@ -897,6 +982,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.1: Checkout Page Layout
+
 **`5 points`**
 
 **As a** shopper  
@@ -904,6 +990,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I know what steps to complete
 
 **Acceptance Criteria:**
+
 - Multi-step checkout: Shipping → Payment → Review → Confirmation
 - Progress indicator
 - Order summary visible throughout
@@ -912,6 +999,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.2: Shipping Address Form
+
 **`8 points`**
 
 **As a** shopper  
@@ -919,6 +1007,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** my order arrives at the right place
 
 **Acceptance Criteria:**
+
 - Full address form: Name, Phone, Address Line 1 & 2, City, Division (Dhaka, Chittagong, Sylhet, Rajshahi, Khulna), Postal Code, Address Type (Home/Office)
 - "Save this address" option
 - Select from saved addresses (max 5 per user)
@@ -928,6 +1017,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.3: Delivery Options Selection
+
 **`5 points`**
 
 **As a** shopper  
@@ -935,6 +1025,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can get my order when needed
 
 **Acceptance Criteria:**
+
 - Delivery method options with pricing
 - Delivery cost updates in order summary
 - Configurable shipping rates in platform settings (Dhaka rate vs outside Dhaka rate)
@@ -942,6 +1033,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.4: Payment Method Selection
+
 **`8 points`**
 
 **As a** shopper  
@@ -949,6 +1041,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can complete my purchase conveniently
 
 **Acceptance Criteria:**
+
 - bKash payment option
 - Cash on Delivery (COD) option
 - Nagad payment option
@@ -959,6 +1052,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.5: bKash Payment Flow
+
 **`8 points`**
 
 **As a** shopper  
@@ -966,6 +1060,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can use my mobile wallet
 
 **Acceptance Criteria:**
+
 - bKash payment form
 - Customer submits bKash Transaction ID + sender mobile number as proof of payment
 - Order placed with status `awaiting_payment`
@@ -977,6 +1072,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.6: Nagad Payment Flow
+
 **`8 points`**
 
 **As a** shopper  
@@ -984,6 +1080,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I have another mobile payment option
 
 **Acceptance Criteria:**
+
 - Nagad payment form with mobile number input (11 digits) and PIN
 - "Pay Now" button
 - Loading state during payment processing
@@ -993,6 +1090,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.7: Card Payment Form
+
 **`8 points`**
 
 **As a** shopper  
@@ -1000,6 +1098,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can use international payment methods
 
 **Acceptance Criteria:**
+
 - Card payment form: Card number (16 digits), Cardholder name, Expiry date (MM/YY), CVV
 - Card type detection: Visa, Mastercard icon
 - Field validation: Luhn algorithm for card number, valid expiry, CVV length
@@ -1010,6 +1109,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-6.8: Order Review Before Payment
+
 **`3 points`**
 
 **As a** shopper  
@@ -1017,6 +1117,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can confirm everything is correct
 
 **Acceptance Criteria:**
+
 - Order review step in checkout showing all items, address, payment method, total
 - "Place Order" button
 - Order placed via `order.placeOrder` API
@@ -1034,6 +1135,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.1: Account Dashboard
+
 **`5 points`**
 
 **As a** logged-in user  
@@ -1041,6 +1143,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can access my account features
 
 **Acceptance Criteria:**
+
 - Account page at `/account`
 - Sidebar navigation (desktop) and mobile navigation
 - Overview section with user stats, recent orders, wishlist count
@@ -1049,6 +1152,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.2: Edit Profile Information
+
 **`5 points`**
 
 **As a** user  
@@ -1056,6 +1160,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** my information is current
 
 **Acceptance Criteria:**
+
 - Profile edit page at `/account/profile`
 - Profile fields: Name, Email (with verification status)
 - Email change requires OTP verification
@@ -1064,6 +1169,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.3: Manage Saved Addresses
+
 **`8 points`**
 
 **As a** user  
@@ -1071,6 +1177,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can quickly select them at checkout
 
 **Acceptance Criteria:**
+
 - Saved addresses page at `/account/addresses`
 - Also accessible at standalone `/addresses` route
 - Display all saved addresses as cards
@@ -1084,6 +1191,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.4: Wishlist Management
+
 **`5 points`**
 
 **As a** user  
@@ -1091,6 +1199,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can keep track of items I like
 
 **Acceptance Criteria:**
+
 - Wishlist page at `/wishlist` (standalone) and `/account/wishlist` (in account)
 - Grid of wishlisted products
 - Remove from wishlist
@@ -1102,6 +1211,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.5: Change Password
+
 **`3 points`**
 
 **As a** user  
@@ -1109,6 +1219,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can keep my account secure
 
 **Acceptance Criteria:**
+
 - Password change form in account settings
 - Current password, New password, Confirm new password
 - Validation and error handling
@@ -1117,6 +1228,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.6: Notification Preferences
+
 **`3 points`**
 
 **As a** user  
@@ -1124,6 +1236,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I only get relevant updates
 
 **Acceptance Criteria:**
+
 - Notification settings page
 - Categories with toggle switches:
   - Order Updates: Order status, Delivery updates
@@ -1136,6 +1249,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.7: Deactivate Account
+
 **`3 points`**
 
 **As a** user  
@@ -1143,6 +1257,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can stop using the platform temporarily
 
 **Acceptance Criteria:**
+
 - Account deactivation option in settings
 - Prevents deactivation if pending orders exist
 - Soft deactivation (90-day data retention)
@@ -1152,6 +1267,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.8: Account Activity Log
+
 **`3 points`**
 
 **As a** user  
@@ -1159,6 +1275,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can monitor for suspicious actions
 
 **Acceptance Criteria:**
+
 - Activity log page in Settings
 - List of recent activities (last 30 days): Login attempts, Password changes, Profile edits
 - Each entry: Action, Date/Time, Device info
@@ -1168,6 +1285,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-7.9: Contact Preferences
+
 **`3 points`**
 
 **As a** user  
@@ -1175,6 +1293,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I receive updates via my preferred channel
 
 **Acceptance Criteria:**
+
 - Contact preference section in Settings
 - Preferred contact method: Email, SMS, In-App, WhatsApp (checkboxes)
 - Preferred language: English, Bangla (future)
@@ -1194,6 +1313,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-8.1: Order History List
+
 **`5 points`**
 
 **As a** user  
@@ -1201,6 +1321,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can track my purchase history
 
 **Acceptance Criteria:**
+
 - Orders page at `/account/orders`
 - List of orders sorted by date
 - Each order: order number (format: `AYJ-XXXXXXXX`), date, total, status badge, item thumbnails
@@ -1210,6 +1331,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-8.2: Order Details Page
+
 **`8 points`**
 
 **As a** user  
@@ -1217,6 +1339,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I know exactly what I ordered
 
 **Acceptance Criteria:**
+
 - Order details page at `/account/orders/$orderId`
 - Order info: number, date, status, payment method, payment status
 - Items list with images, names, quantities, prices
@@ -1232,6 +1355,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-8.3: Order Tracking
+
 **`8 points`**
 
 **As a** user  
@@ -1239,6 +1363,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I know when it will arrive
 
 **Acceptance Criteria:**
+
 - Public tracking page at `/track/$orderNumber` (no auth required)
 - Status timeline: Placed → Confirmed → Shipped → Out for Delivery → Delivered
 - Estimated delivery date
@@ -1250,6 +1375,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-8.4: Cancel Order
+
 **`3 points`**
 
 **As a** user  
@@ -1257,6 +1383,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can stop an unwanted purchase
 
 **Acceptance Criteria:**
+
 - "Cancel Order" button on order details (only for cancellable statuses)
 - Cancellation reason selection
 - Order status updates to "Cancelled"
@@ -1266,6 +1393,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-8.5: Invoice Download
+
 **`3 points`**
 
 **As a** user  
@@ -1273,6 +1401,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I have records for my purchases
 
 **Acceptance Criteria:**
+
 - "Download Invoice" button on order details page
 - PDF generation with order details
 - Invoice includes: header, billing/delivery address, items table, payment method, grand total
@@ -1290,6 +1419,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.1: Vendor Registration & Onboarding
+
 **`13 points`**
 
 **As a** business owner  
@@ -1297,6 +1427,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can sell products on the platform
 
 **Acceptance Criteria:**
+
 - "Become a Vendor" page at `/become-vendor`
 - Multi-step registration wizard:
   - **Step 1 - Account:** Account setup
@@ -1314,6 +1445,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.2: Vendor Dashboard Overview
+
 **`5 points`**
 
 **As an** approved vendor  
@@ -1321,6 +1453,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can track my business metrics
 
 **Acceptance Criteria:**
+
 - Vendor dashboard at `/vendor/dashboard`
 - KPI cards: Revenue (after commission), Monthly orders, Pending orders, Store rating, Vendor score
 - Revenue chart: 30-day daily revenue line graph (commission deducted)
@@ -1331,6 +1464,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.3: Add New Product
+
 **`8 points`**
 
 **As a** vendor  
@@ -1338,6 +1472,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can sell them to customers
 
 **Acceptance Criteria:**
+
 - "Add Product" functionality on products page
 - Product form: Name, Brand, SKU, Description, Category, Subcategory, Event types
 - Pricing: Price, Compare-at price, Sale percentage
@@ -1353,6 +1488,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.4: Manage Products List
+
 **`5 points`**
 
 **As a** vendor  
@@ -1360,6 +1496,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can keep my inventory organized
 
 **Acceptance Criteria:**
+
 - Products page at `/vendor/products`
 - Products table with image, name, SKU, category, price, stock, status
 - Search, filter, sort functionality
@@ -1368,6 +1505,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.5: Edit Product Details
+
 **`5 points`**
 
 **As a** vendor  
@@ -1375,6 +1513,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can keep listings accurate
 
 **Acceptance Criteria:**
+
 - Same form as Add Product, pre-filled with existing data
 - All fields editable
 - "Update Product" saves changes
@@ -1384,6 +1523,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.6: Manage Vendor Orders
+
 **`8 points`**
 
 **As a** vendor  
@@ -1391,6 +1531,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can fulfill purchases
 
 **Acceptance Criteria:**
+
 - Orders page at `/vendor/orders`
 - Orders table: Order ID, Customer, Items, Total, Date, Status, Actions
 - Status badges for all order statuses
@@ -1405,6 +1546,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-9.7: Store Settings & Branding
+
 **`3 points`**
 
 **As a** vendor  
@@ -1412,6 +1554,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** my brand stands out
 
 **Acceptance Criteria:**
+
 - Store settings page at `/vendor/settings`
 - Editable: Store name, Description, Logo, Banner, Contact info
 - S3 upload for logo and banner (old files cleaned up on replacement)
@@ -1429,6 +1572,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-10.1: Write Product Review
+
 **`8 points`**
 
 **As a** customer who purchased a product  
@@ -1436,6 +1580,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can share my experience with others
 
 **Acceptance Criteria:**
+
 - Review only available after order delivered (verified via `review.canReview` API)
 - "Write a Review" button on order details page
 - Star rating (1-5, required)
@@ -1450,6 +1595,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-10.2: Rate Vendor Service
+
 **`5 points`**
 
 **As a** customer  
@@ -1457,6 +1603,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** others know about their reliability
 
 **Acceptance Criteria:**
+
 - Multi-dimensional vendor rating stored in `vendor_ratings` table
 - Rating categories: Product Quality, Shipping Speed, Communication, Overall
 - Contributes to vendor's overall rating
@@ -1465,6 +1612,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-10.3: Review Management (Customer)
+
 **`3 points`**
 
 **As a** customer  
@@ -1472,6 +1620,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can edit or delete them if needed
 
 **Acceptance Criteria:**
+
 - "My Reviews" page at `/account/reviews`
 - List of all submitted reviews
 - Edit review (within 30 days, images replaced in S3)
@@ -1481,6 +1630,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-10.4: Vendor Response to Reviews
+
 **`2 points`**
 
 **As a** vendor  
@@ -1488,6 +1638,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can address concerns and thank customers
 
 **Acceptance Criteria:**
+
 - "Reviews" tab in vendor dashboard
 - List of all reviews for vendor's products
 - "Reply" button on each review
@@ -1508,6 +1659,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.1: Admin Dashboard Overview
+
 **`5 points`**
 
 **As an** admin  
@@ -1515,6 +1667,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can monitor overall business health
 
 **Acceptance Criteria:**
+
 - Admin dashboard at `/admin/dashboard`
 - KPI cards: Total users, Total vendors, Total products, Monthly orders, Monthly revenue
 - Order status distribution overview
@@ -1523,6 +1676,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.2: User Management
+
 **`8 points`**
 
 **As an** admin  
@@ -1530,6 +1684,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can maintain platform integrity
 
 **Acceptance Criteria:**
+
 - Users page at `/admin/users`
 - Search, pagination, filter by role and vendor status
 - User detail view with order count stats
@@ -1540,6 +1695,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.3: Vendor Management
+
 **`8 points`**
 
 **As an** admin  
@@ -1547,6 +1703,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can ensure vendor quality
 
 **Acceptance Criteria:**
+
 - Vendors page at `/admin/vendors`
 - Search, pagination, status filtering
 - Vendor detail view with product count and owner info
@@ -1556,6 +1713,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.4: Vendor Application Review
+
 **`8 points`**
 
 **As an** admin  
@@ -1563,6 +1721,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can approve quality vendors
 
 **Acceptance Criteria:**
+
 - Applications page at `/admin/vendor-applications`
 - Search and status filter (pending/approved/rejected)
 - Full application detail view including uploaded documents (trade license, NID, bank details)
@@ -1573,6 +1732,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.5: Product Moderation
+
 **`5 points`**
 
 **As an** admin  
@@ -1580,6 +1740,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can maintain marketplace quality
 
 **Acceptance Criteria:**
+
 - Products page at `/admin/products`
 - Search, vendor/category filter, pagination
 - Remove product listings (deletes S3 images)
@@ -1589,6 +1750,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.6: Order Management
+
 **`8 points`**
 
 **As an** admin  
@@ -1596,6 +1758,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can resolve issues and track fulfillment
 
 **Acceptance Criteria:**
+
 - Orders page at `/admin/orders`
 - Full order lifecycle management across both payment flows
 - Search by order number, filter by status, pagination
@@ -1605,6 +1768,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.7: bKash Payment Verification
+
 **`5 points`**
 
 **As an** admin  
@@ -1612,6 +1776,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can confirm customer payments and release orders
 
 **Acceptance Criteria:**
+
 - View pending bKash payments awaiting verification
 - Verify payment (transition order to `payment_received`)
 - Reject payment with reason (transition to `payment_rejected`)
@@ -1620,6 +1785,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.8: Vendor Payout Management
+
 **`8 points`**
 
 **As an** admin  
@@ -1627,6 +1793,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** vendors receive their earnings
 
 **Acceptance Criteria:**
+
 - View pending vendor payouts
 - Payout details with order, items, vendor, and amount info
 - Process payout (record payment method and reference number)
@@ -1638,6 +1805,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.9: Platform Settings
+
 **`5 points`**
 
 **As an** admin  
@@ -1645,6 +1813,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can control business rules without code changes
 
 **Acceptance Criteria:**
+
 - Settings page at `/admin/settings`
 - Configurable platform settings:
   - Platform name, contact email, support phone, currency
@@ -1658,6 +1827,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.10: Homepage Banner Management
+
 **`5 points`**
 
 **As an** admin  
@@ -1665,6 +1835,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can control promotional content
 
 **Acceptance Criteria:**
+
 - Banners page at `/admin/homepage-banners`
 - Create, edit, delete banners
 - S3 image upload for banner images
@@ -1675,6 +1846,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ---
 
 ### US-11.11: Homepage Promo Card Management
+
 **`3 points`**
 
 **As an** admin  
@@ -1682,6 +1854,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 **So that** I can highlight key offerings
 
 **Acceptance Criteria:**
+
 - Promo cards page at `/admin/homepage-promo-cards`
 - 4 fixed slots for promo cards
 - Edit/create promo card per slot
@@ -1693,6 +1866,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 ## Non-Functional Requirements
 
 ### Performance
+
 - Lighthouse Performance score > 90
 - Server-side data loading via TanStack Router loaders
 - Optimized database queries with indexes on products table
@@ -1700,6 +1874,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 - TanStack Query caching for API responses
 
 ### Security
+
 - Server-side session management (HTTP-only cookies, not client-side JWT)
 - Rate limiting on auth endpoints (20 req/15min) and OTP endpoints (5 req/15min)
 - S3 file operations authorized by user ID prefix
@@ -1709,12 +1884,14 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 - Sentry error monitoring
 
 ### Accessibility
+
 - shadcn/ui components provide ARIA attributes
 - Full WCAG AA compliance
 - Color contrast ratio ≥ 4.5:1
 - Keyboard navigation support
 
 ### Browser Support
+
 - Chrome 90+
 - Firefox 88+
 - Safari 14+
@@ -1723,11 +1900,13 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 - Chrome Android 90+
 
 ### Responsiveness
+
 - Mobile-first design with Tailwind breakpoints
 - Three layout variants (customer, vendor, admin) each responsive
 - Mobile-specific components (MobileNav, MobileSearchModal, AccountMobileNav)
 
 ### Data Management
+
 - PostgreSQL database via Supabase with Drizzle ORM
 - S3 file storage for all uploads
 - Email delivery via Nodemailer SMTP
@@ -1737,6 +1916,7 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 - Denormalized counters for performance (product counts, review counts, ratings)
 
 ### API Documentation
+
 - Auto-generated OpenAPI specification at `/doc`
 - Interactive Scalar API documentation at `/scalar`
 
@@ -1744,19 +1924,19 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 
 ## Success Metrics
 
-| Metric | Target |
-|--------|--------|
-| Lighthouse Performance | > 90 |
-| Lighthouse Accessibility | > 95 |
-| Component Coverage | 100% of PRD |
-| Theme Consistency | Pass both modes |
-| Filter Functionality | All filters work correctly |
-| Task Completion Rate | > 90% |
-| Checkout Flow Completion | > 80% |
-| Mobile Responsiveness | No horizontal scroll |
-| Authentication Success Rate | > 95% |
-| Admin Coverage | Full platform management |
-| Vendor Self-Service | Full CRUD operations |
+| Metric                      | Target                     |
+| --------------------------- | -------------------------- |
+| Lighthouse Performance      | > 90                       |
+| Lighthouse Accessibility    | > 95                       |
+| Component Coverage          | 100% of PRD                |
+| Theme Consistency           | Pass both modes            |
+| Filter Functionality        | All filters work correctly |
+| Task Completion Rate        | > 90%                      |
+| Checkout Flow Completion    | > 80%                      |
+| Mobile Responsiveness       | No horizontal scroll       |
+| Authentication Success Rate | > 95%                      |
+| Admin Coverage              | Full platform management   |
+| Vendor Self-Service         | Full CRUD operations       |
 
 ---
 
@@ -1766,4 +1946,4 @@ Ayojon is a **full-stack** multi-vendor e-commerce platform specializing in even
 
 ---
 
-*End of Document*
+_End of Document_

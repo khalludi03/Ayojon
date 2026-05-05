@@ -1,50 +1,51 @@
-import React, { useEffect } from "react";
-import { Link, useLocation, useMatches } from "@tanstack/react-router";
+import React, { useEffect } from 'react'
+import { Link, useLocation, useMatches } from '@tanstack/react-router'
 import {
   Breadcrumb,
-  BreadcrumbList,
+  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
+  BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-  BreadcrumbEllipsis,
-} from "@/components/ui/breadcrumb";
-import { useCategories } from "@/hooks/use-categories";
+} from '@/components/ui/breadcrumb'
+import { useCategories } from '@/hooks/use-categories'
 
 export function AppBreadcrumb() {
-  const location = useLocation();
-  const pathname = location.pathname;
-  const matches = useMatches();
-  const { data: categories, error } = useCategories();
-
-  // Log error if categories fail to load (for debugging)
-  useEffect(() => {
-    if (error) {
-      console.error('[Breadcrumb] Failed to load categories:', error);
-    }
-  }, [error]);
+  const location = useLocation()
+  const pathname = location.pathname
+  const matches = useMatches()
+  const { data: categories } = useCategories()
 
   // Do not render breadcrumbs on the homepage, vendor routes, or admin routes
-  if (pathname === "/" || pathname.startsWith("/vendor") || pathname.startsWith("/admin")) {
-    return null;
+  if (
+    pathname === '/' ||
+    pathname.startsWith('/vendor') ||
+    pathname.startsWith('/admin')
+  ) {
+    return null
   }
 
   // Check if we're on a product page
-  const productMatch = matches.find((match) => match.routeId === "/product/$productSlug");
-  const productData = productMatch?.loaderData as any;
-  const paths = pathname.split("/").filter((path) => path);
-  const isCategoryPage = paths[0] === "category" && paths.length === 2;
+  const productMatch = matches.find(
+    (match) => match.routeId === '/product/$productSlug',
+  )
+  const productData = productMatch?.loaderData as any
+  const paths = pathname.split('/').filter((path) => path)
+  const isCategoryPage = paths[0] === 'category' && paths.length === 2
 
   const formatSegment = (segment: string) => {
     return segment
-      .replace(/-/g, " ")
-      .replace(/\b\w/g, (char) => char.toUpperCase());
-  };
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+  }
 
   // If on product page and have product data, show custom breadcrumb
   if (productData?.product) {
-    const product = productData.product;
-    const category = categories?.find((cat: any) => cat.id === product.categoryId);
+    const product = productData.product
+    const category = categories?.find(
+      (cat: any) => cat.id === product.categoryId,
+    )
 
     return (
       <div className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 py-3 sm:py-4">
@@ -54,7 +55,10 @@ export function AppBreadcrumb() {
               {/* Home */}
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/" className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                  <Link
+                    to="/"
+                    className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]"
+                  >
                     Home
                   </Link>
                 </BreadcrumbLink>
@@ -66,7 +70,10 @@ export function AppBreadcrumb() {
                 <>
                   <BreadcrumbItem>
                     <BreadcrumbLink asChild>
-                      <Link to={`/category/${category.slug}`} className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                      <Link
+                        to={`/category/${category.slug}`}
+                        className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]"
+                      >
                         {category.name}
                       </Link>
                     </BreadcrumbLink>
@@ -85,19 +92,21 @@ export function AppBreadcrumb() {
           </Breadcrumb>
         </div>
       </div>
-    );
+    )
   }
 
   // Default breadcrumb for other pages
-  const categorySlug = isCategoryPage ? paths[1] : null;
-  const currentCategory = categorySlug && categories 
-    ? categories.find((cat: any) => cat.slug === categorySlug) 
-    : null;
+  const categorySlug = isCategoryPage ? paths[1] : null
+  const currentCategory =
+    categorySlug && categories
+      ? categories.find((cat: any) => cat.slug === categorySlug)
+      : null
 
   // For category pages, show only: Home > Category Name (skip the "category" segment)
   if (isCategoryPage) {
-    const displayName = currentCategory?.name || formatSegment(categorySlug || '');
-    
+    const displayName =
+      currentCategory?.name || formatSegment(categorySlug || '')
+
     return (
       <div className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 py-3 sm:py-4">
         <div className="mx-auto max-w-7xl px-2 sm:px-4">
@@ -106,7 +115,10 @@ export function AppBreadcrumb() {
               {/* Home */}
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/" className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                  <Link
+                    to="/"
+                    className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]"
+                  >
                     Home
                   </Link>
                 </BreadcrumbLink>
@@ -123,14 +135,14 @@ export function AppBreadcrumb() {
           </Breadcrumb>
         </div>
       </div>
-    );
+    )
   }
 
   // Determine if we need to condense for mobile (more than 2 levels deep)
   // Example: Home > Level 1 > Level 2 > Level 3 (Current)
   // We want mobile to show: Home > ... > Level 2 > Level 3
   // paths would be ['level-1', 'level-2', 'level-3'] (length 3)
-  const shouldCondense = paths.length > 2;
+  const shouldCondense = paths.length > 2
 
   return (
     <div className="border-b border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 py-3 sm:py-4">
@@ -140,7 +152,10 @@ export function AppBreadcrumb() {
             {/* Home is always the first item */}
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/" className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                <Link
+                  to="/"
+                  className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]"
+                >
                   Home
                 </Link>
               </BreadcrumbLink>
@@ -158,29 +173,32 @@ export function AppBreadcrumb() {
             )}
 
             {paths.map((path, index) => {
-              const isLast = index === paths.length - 1;
-              const href = `/${paths.slice(0, index + 1).join("/")}`;
+              const isLast = index === paths.length - 1
+              const href = `/${paths.slice(0, index + 1).join('/')}`
 
               // Hide intermediate items on mobile if we are condensing
               // Keep the last 2 items visible always
-              const isHiddenOnMobile = shouldCondense && index < paths.length - 2;
+              const isHiddenOnMobile =
+                shouldCondense && index < paths.length - 2
 
               // For category pages, use the actual category name instead of formatted slug
-              let displayName = formatSegment(path);
-              if (isCategoryPage && index === 1 && currentCategory) {
-                displayName = currentCategory.name;
-              }
+              const displayName = formatSegment(path)
 
               return (
                 <React.Fragment key={path}>
-                  <BreadcrumbItem className={isHiddenOnMobile ? "hidden md:inline-flex" : ""}>
+                  <BreadcrumbItem
+                    className={isHiddenOnMobile ? 'hidden md:inline-flex' : ''}
+                  >
                     {isLast ? (
                       <BreadcrumbPage className="text-xs sm:text-sm font-semibold text-[hsl(var(--foreground))]">
                         {displayName}
                       </BreadcrumbPage>
                     ) : (
                       <BreadcrumbLink asChild>
-                        <Link to={href} className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]">
+                        <Link
+                          to={href}
+                          className="text-xs sm:text-sm transition-colors hover:text-[hsl(var(--primary))]"
+                        >
                           {displayName}
                         </Link>
                       </BreadcrumbLink>
@@ -189,15 +207,19 @@ export function AppBreadcrumb() {
 
                   {!isLast && (
                     <BreadcrumbSeparator
-                      className={isHiddenOnMobile ? "hidden md:list-item text-[hsl(var(--muted-foreground))]" : "text-[hsl(var(--muted-foreground))]"}
+                      className={
+                        isHiddenOnMobile
+                          ? 'hidden md:list-item text-[hsl(var(--muted-foreground))]'
+                          : 'text-[hsl(var(--muted-foreground))]'
+                      }
                     />
                   )}
                 </React.Fragment>
-              );
+              )
             })}
           </BreadcrumbList>
         </Breadcrumb>
       </div>
     </div>
-  );
+  )
 }

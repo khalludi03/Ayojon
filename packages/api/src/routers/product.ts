@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, publicProcedure, os } from "../index";
 import { db } from "@my-better-t-app/db";
+import { logger } from "../lib/logger";
 import { 
   products, 
   productImages, 
@@ -398,7 +399,7 @@ export const productRouter = os.router({
     })
     .input(z.object({ slug: z.string() }))
     .handler(async ({ input }) => {
-      console.log(`[getProductBySlug] Searching for slug: "${input.slug}"`);
+      logger.debug(`[getProductBySlug] Searching for slug: "${input.slug}"`);
       
       // Use direct select with joins for maximum reliability
       const results = await db
@@ -408,7 +409,7 @@ export const productRouter = os.router({
         .limit(1);
 
       if (!results[0]) {
-        console.warn(`[getProductBySlug] Product NOT FOUND in DB for slug: "${input.slug}"`);
+        logger.warn(`[getProductBySlug] Product NOT FOUND in DB for slug: "${input.slug}"`);
         return null;
       }
 
@@ -428,17 +429,17 @@ export const productRouter = os.router({
       });
 
       if (!fullProduct) {
-        console.warn(`[getProductBySlug] Full product data NOT FOUND for ID: ${p.id}`);
+        logger.warn(`[getProductBySlug] Full product data NOT FOUND for ID: ${p.id}`);
         return null;
       }
 
-      console.log(`[getProductBySlug] Transforming product: "${fullProduct.title}"`);
+      logger.debug(`[getProductBySlug] Transforming product: "${fullProduct.title}"`);
       try {
         const transformed = transformProduct(fullProduct);
-        console.log(`[getProductBySlug] Successfully transformed product: ${transformed?.id}`);
+        logger.debug(`[getProductBySlug] Successfully transformed product: ${transformed?.id}`);
         return transformed;
       } catch (err) {
-        console.error(`[getProductBySlug] TRANSFORMATION FAILED for product ${fullProduct.id}:`, err);
+        logger.error(`[getProductBySlug] TRANSFORMATION FAILED for product ${fullProduct.id}:`, err);
         throw err;
       }
     }),
@@ -599,7 +600,7 @@ export const productRouter = os.router({
         const result = schema.safeParse(input);
         if (!result.success) {
           const errorMsg = `Validation failed: ${JSON.stringify(result.error.format())}`;
-          console.error("[Create Product]", errorMsg);
+          logger.error("[Create Product]", errorMsg);
           throw new ORPCError("BAD_REQUEST", {
             message: errorMsg,
           });
@@ -651,7 +652,7 @@ export const productRouter = os.router({
 
         return { id: productId };
       } catch (error) {
-        console.error("[Create Product] ERROR:", error);
+        logger.error("[Create Product] ERROR:", error);
         if (error instanceof ORPCError) throw error;
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
           message: error instanceof Error ? error.message : "Unknown error",
@@ -829,9 +830,9 @@ export const productRouter = os.router({
           try {
             await context.storage.deleteFile(fileKey);
             deletedFiles.push(fileKey);
-            console.log(`[Vendor Delete Product] Deleted S3 file: ${fileKey}`);
+            logger.debug(`[Vendor Delete Product] Deleted S3 file: ${fileKey}`);
           } catch (error) {
-            console.error(`[Vendor Delete Product] Failed to delete file ${fileKey}:`, error);
+            logger.error(`[Vendor Delete Product] Failed to delete file ${fileKey}:`, error);
             // Continue even if deletion fails
           }
         }
@@ -845,7 +846,7 @@ export const productRouter = os.router({
           })
           .where(eq(vendors.id, vendorId));
 
-        console.log(`[Vendor Delete Product] Deleted product ${input.id}, removed ${deletedFiles.length} images from S3`);
+        logger.info(`[Vendor Delete Product] Deleted product ${input.id}, removed ${deletedFiles.length} images from S3`);
       });
 
       return { success: true };

@@ -1,15 +1,15 @@
-import { Link } from '@tanstack/react-router';
-import { ArrowRight } from 'lucide-react';
-import type { EventType } from '@/types';
-import { cn } from '@/lib/utils';
+import { Link } from '@tanstack/react-router'
+import { ArrowRight } from 'lucide-react'
+import type { EventType } from '@/types'
+import { cn } from '@/lib/utils'
 
 interface EventCardProps {
-  event: EventType;
-  className?: string;
+  event: EventType
+  className?: string
 }
 
 export function EventCard({ event, className }: EventCardProps) {
-  const Icon = event.icon;
+  const Icon = event.icon
 
   return (
     <Link
@@ -17,7 +17,7 @@ export function EventCard({ event, className }: EventCardProps) {
       search={{ eventType: event.slug }}
       className={cn(
         'group relative flex flex-col items-center gap-3 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 transition-all duration-300 hover:shadow-lg hover:border-[hsl(var(--primary))] hover:-translate-y-1 sm:gap-4 sm:p-6',
-        className
+        className,
       )}
     >
       {/* Icon Container */}
@@ -36,5 +36,5 @@ export function EventCard({ event, className }: EventCardProps) {
         <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1 sm:h-4 sm:w-4" />
       </div>
     </Link>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router'
 import {
   Baby,
   BookOpen,
@@ -17,11 +17,14 @@ import {
   Smartphone,
   Sparkles,
   UtensilsCrossed,
-} from 'lucide-react';
-import type { Category, CategoryIconName } from '@/types';
-import { cn } from '@/lib/utils';
+} from 'lucide-react'
+import type { Category, CategoryIconName } from '@/types'
+import { cn } from '@/lib/utils'
 
-const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<
+  CategoryIconName,
+  React.ComponentType<{ className?: string }>
+> = {
   Smartphone,
   Shirt,
   Home,
@@ -39,15 +42,15 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   LayoutPanelTop,
   Flower,
   Gamepad2,
-};
+}
 
 interface CategoryCardProps {
-  category: Category;
-  className?: string;
+  category: Category
+  className?: string
 }
 
 export function CategoryCard({ category, className }: CategoryCardProps) {
-  const Icon = iconMap[category.icon];
+  const Icon = iconMap[category.icon]
 
   return (
     <Link
@@ -55,7 +58,7 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
       params={{ categorySlug: category.slug }}
       className={cn(
         'group flex flex-col items-center gap-2 rounded-lg p-3 transition-colors hover:bg-[hsl(var(--muted))]',
-        className
+        className,
       )}
     >
       <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[hsl(var(--primary))]/10 transition-colors group-hover:bg-[hsl(var(--primary))]/20 md:h-20 md:w-20">
@@ -65,5 +68,5 @@ export function CategoryCard({ category, className }: CategoryCardProps) {
         {category.name}
       </span>
     </Link>
-  );
+  )
 }

@@ -1,21 +1,24 @@
-import { useState } from 'react';
-import { Sparkles, Loader2 } from 'lucide-react';
-import { ProductCard } from './ProductCard';
-import { ProductCardSkeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { useFeaturedProducts } from '@/hooks/use-products';
+import { useState } from 'react'
+import { Loader2, Sparkles } from 'lucide-react'
+import { ProductCard } from './ProductCard'
+import { ProductCardSkeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { useFeaturedProducts } from '@/hooks/use-products'
 
 export function FeaturedProductsSection() {
-  const [displayLimit, setDisplayLimit] = useState(20);
-  const { data: allFeaturedProducts, isLoading } = useFeaturedProducts(40); // Fetch more for load more functionality
+  const [displayLimit, setDisplayLimit] = useState(20)
+  const { data: allFeaturedProducts, isLoading } = useFeaturedProducts(40) // Fetch more for load more functionality
 
   // Get products to display based on current limit
-  const displayedProducts = allFeaturedProducts?.slice(0, displayLimit) || [];
-  const hasMore = allFeaturedProducts && allFeaturedProducts.length > displayLimit;
+  const displayedProducts = allFeaturedProducts?.slice(0, displayLimit) || []
+  const hasMore =
+    allFeaturedProducts && allFeaturedProducts.length > displayLimit
 
   const handleLoadMore = () => {
-    setDisplayLimit((prev) => Math.min(prev + 20, allFeaturedProducts?.length || 0));
-  };
+    setDisplayLimit((prev) =>
+      Math.min(prev + 20, allFeaturedProducts?.length || 0),
+    )
+  }
 
   return (
     <section className="bg-[radial-gradient(70%_40%_at_50%_0%,hsla(12,85%,55%,0.12)_0%,transparent_70%)] py-6 sm:py-8 md:py-10">
@@ -36,7 +39,7 @@ export function FeaturedProductsSection() {
             </div>
           </div>
 
-        {/* Product Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop, 5 cols xl */}
+          {/* Product Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop, 5 cols xl */}
           {isLoading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:gap-5 lg:grid-cols-4 lg:gap-6 xl:grid-cols-5">
               {Array.from({ length: 20 }).map((_, i) => (
@@ -68,12 +71,13 @@ export function FeaturedProductsSection() {
 
               {/* Results Info */}
               <p className="mt-4 text-center text-xs text-[hsl(var(--muted-foreground))] sm:mt-6 sm:text-sm">
-                Showing {displayedProducts.length} of {allFeaturedProducts?.length || 0} featured products
+                Showing {displayedProducts.length} of{' '}
+                {allFeaturedProducts?.length || 0} featured products
               </p>
             </>
           )}
         </div>
       </div>
     </section>
-  );
+  )
 }

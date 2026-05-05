@@ -16,13 +16,12 @@ import {
   categories,
   vendorApplications,
   homeBanners,
-  homePromoCards,
-  type VendorLocation,
-  type OrderStatus
+  homePromoCards
 } from "@my-better-t-app/db/schema/index";
 import { count, eq, gte, sql, or, ilike, and, desc, notInArray , asc} from "drizzle-orm";
 import { ORPCError } from "@orpc/server";
 import { nanoid } from "nanoid";
+import { logger } from "../lib/logger";
 
 export const adminRouter = os.router({
   listUsers: adminProcedure
@@ -326,7 +325,7 @@ export const adminRouter = os.router({
             })
             .where(eq(user.id, vendor.userId));
 
-          console.log(`[Admin Update Vendor] Synced user vendorStatus to "${newVendorStatus}" for vendor ${vendor.name}`);
+          logger.info(`[Admin Update Vendor] Synced user vendorStatus to "${newVendorStatus}" for vendor ${vendor.name}`);
         }
 
         return vendor;
@@ -350,7 +349,7 @@ export const adminRouter = os.router({
     )
     .handler(async ({ input }) => {
       try {
-        console.log(`[Admin Action] Processing vendor status update to ${input.vendorStatus} for user ${input.userId}`);
+        logger.info(`[Admin Action] Processing vendor status update to ${input.vendorStatus} for user ${input.userId}`);
         const result = await db.transaction(async (tx) => {
           // Update user vendor status and role
           const updatedUsers = await tx
@@ -364,13 +363,13 @@ export const adminRouter = os.router({
             .returning();
 
           if (updatedUsers.length === 0) {
-            console.error(`[Admin Action] User ${input.userId} not found during status update`);
+            logger.error(`[Admin Action] User ${input.userId} not found during status update`);
             throw new ORPCError("NOT_FOUND", { message: "User not found" });
           }
 
           // If approved, create/update vendor profile from application
           if (input.vendorStatus === "approved") {
-            console.log(`[Admin Action] Application approved, looking up application details for user ${input.userId}`);
+            logger.info(`[Admin Action] Application approved, looking up application details for user ${input.userId}`);
             // Get the latest application for this user
             const applications = await tx
               .select()
@@ -381,7 +380,7 @@ export const adminRouter = os.router({
 
             if (applications.length > 0) {
               const app = applications[0]!;
-              console.log(`[Admin Action] Found application ${app.id}, promoting to vendor`);
+              logger.info(`[Admin Action] Found application ${app.id}, promoting to vendor`);
               
               // Update application status
               await tx
@@ -414,7 +413,7 @@ export const adminRouter = os.router({
               }
 
               // Extract division from address for location field if possible
-              let location: VendorLocation = "Dhaka";
+              let location: any = "Dhaka";
               try {
                 if (app.businessAddress.startsWith("{")) {
                   const addr = JSON.parse(app.businessAddress);
@@ -428,7 +427,7 @@ export const adminRouter = os.router({
 
               // Insert into vendors table
               const vendorId = nanoid();
-              console.log(`[Admin Action] Inserting/Updating vendor record with slug ${vendorSlug}`);
+              logger.info(`[Admin Action] Inserting/Updating vendor record with slug ${vendorSlug}`);
               await tx
                 .insert(vendors)
                 .values({
@@ -468,7 +467,7 @@ export const adminRouter = os.router({
                 storeName: app.storeName
               };
             } else {
-              console.warn(`[Admin Action] No application found for user ${input.userId}, but status was set to approved.`);
+              logger.warn(`[Admin Action] No application found for user ${input.userId}, but status was set to approved.`);
               return { user: updatedUsers[0]!, notificationType: null };
             }
           } else if (input.vendorStatus === "rejected") {
@@ -510,23 +509,23 @@ export const adminRouter = os.router({
           try {
             await notifyVendorApproved(result.userId!, result.appId!, result.storeName!);
           } catch (error) {
-            console.error("Failed to send vendor approval notification:", error);
+            logger.error("Failed to send vendor approval notification:", error);
           }
         } else if (result.notificationType === 'rejected') {
           try {
             await notifyVendorRejected(result.userId!, result.appId!, result.storeName!, result.reason);
           } catch (error) {
-            console.error("Failed to send vendor rejection notification:", error);
+            logger.error("Failed to send vendor rejection notification:", error);
           }
         }
 
-        console.log(
+        logger.info(
           `[Admin Action] Successfully updated vendor status to ${input.vendorStatus} for user ${input.userId}`
         );
 
         return result.user;
       } catch (error) {
-        console.error(`[Admin Action] Error updating vendor status:`, error);
+        logger.error(`[Admin Action] Error updating vendor status:`, error);
         if (error instanceof ORPCError) throw error;
         throw new ORPCError("INTERNAL_SERVER_ERROR", { 
           message: error instanceof Error ? error.message : "Failed to update vendor application status" 
@@ -711,9 +710,9 @@ export const adminRouter = os.router({
           try {
             await context.storage.deleteFile(fileKey);
             deletedFiles.push(fileKey);
-            console.log(`[Admin Delete Vendor] Deleted S3 file: ${fileKey}`);
+            logger.debug(`[Admin Delete Vendor] Deleted S3 file: ${fileKey}`);
           } catch (error) {
-            console.error(`[Admin Delete Vendor] Failed to delete file ${fileKey}:`, error);
+            logger.error(`[Admin Delete Vendor] Failed to delete file ${fileKey}:`, error);
             // Continue even if deletion fails
           }
         }
@@ -723,8 +722,8 @@ export const adminRouter = os.router({
           .update(user)
           .set({
             role: "customer",
-            vendorStatus: "none" as const
-          })
+            vendorStatus: "none"
+          } as any)
           .where(eq(user.id, vendor.userId));
 
         // Delete vendor record
@@ -732,7 +731,7 @@ export const adminRouter = os.router({
           .delete(vendors)
           .where(eq(vendors.id, input.id));
 
-        console.log(`[Admin Delete Vendor] Deleted vendor ${vendor.name} (${input.id}), removed ${deletedFiles.length} files from S3`);
+        logger.info(`[Admin Delete Vendor] Deleted vendor ${vendor.name} (${input.id}), removed ${deletedFiles.length} files from S3`);
 
         return { success: true, deletedFiles };
       });
@@ -915,9 +914,9 @@ export const adminRouter = os.router({
           try {
             await context.storage.deleteFile(fileKey);
             deletedFiles.push(fileKey);
-            console.log(`[Admin Delete Product] Deleted S3 file: ${fileKey}`);
+            logger.debug(`[Admin Delete Product] Deleted S3 file: ${fileKey}`);
           } catch (error) {
-            console.error(`[Admin Delete Product] Failed to delete file ${fileKey}:`, error);
+            logger.error(`[Admin Delete Product] Failed to delete file ${fileKey}:`, error);
             // Continue even if deletion fails
           }
         }
@@ -943,7 +942,7 @@ export const adminRouter = os.router({
           })
           .where(eq(vendors.id, deletedProduct.vendorId));
 
-        console.log(`[Admin Notice] Product ${input.id} removed. Reason: ${input.reason}. Deleted ${deletedFiles.length} images from S3.`);
+        logger.info(`[Admin Notice] Product ${input.id} removed. Reason: ${input.reason}. Deleted ${deletedFiles.length} images from S3.`);
 
         return { success: true, deletedFiles };
       });
@@ -1049,7 +1048,7 @@ export const adminRouter = os.router({
     )
     .handler(async ({ input }) => {
       const conditions = [];
-      if (input.status) conditions.push(eq(orders.status, input.status as OrderStatus));
+      if (input.status) conditions.push(eq(orders.status, input.status));
       if (input.search) {
         conditions.push(or(
           ilike(user.name, `%${input.search}%`),
@@ -1152,7 +1151,7 @@ export const adminRouter = os.router({
         );
       } catch (error) {
         // Log error but don't fail the status update
-        console.error("Failed to send order status notification:", error);
+        logger.error("Failed to send order status notification:", error);
       }
 
       return updatedOrder;
@@ -1616,7 +1615,7 @@ export const adminRouter = os.router({
           await context.storage.deleteFile(imageKey);
         }
       } catch (error) {
-        console.error("Failed to delete banner image from storage:", error);
+        logger.error("Failed to delete banner image from storage:", error);
         // Continue even if deletion fails
       }
 

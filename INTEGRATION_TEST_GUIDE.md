@@ -1,4 +1,5 @@
 # Integration Test Guide: Vendor & Applications
+
 ## Complete Database Integration Verification
 
 This guide tests the complete flow from frontend → backend → database.
@@ -25,11 +26,13 @@ bun scripts/create-test-application.ts
 ```
 
 **Expected Result:**
+
 - Creates user: testvendor@example.com
 - Creates pending application
 - Database should have 1 application
 
 **Verify in Database:**
+
 ```bash
 bun -e "
 import { db } from './packages/db/src/index.js';
@@ -42,12 +45,14 @@ console.log('Applications:', apps.length);
 ### Test 2.2: Admin Panel Shows Application
 
 **Action:**
+
 1. Restart dev server: `bun run dev:server`
 2. Clear browser cache: `Ctrl+Shift+R`
 3. Open: `http://localhost:3001/admin/vendor-applications`
 4. Login as admin@test.com
 
 **Expected Result:**
+
 - Stats show: **1 in "Pending Review"**
 - Application list shows: **Test Vendor Application (testvendor@example.com)**
 - Status shows "Pending Review"
@@ -58,15 +63,18 @@ console.log('Applications:', apps.length);
 ### Test 2.3: Approve Application
 
 **Action:**
+
 1. Click "Approve" button on the test application
 2. Confirm approval
 
 **Expected Result:**
+
 - Success toast message appears
 - Application moves to "Approved" section
 - Database creates vendor profile
 
 **Verify in Database:**
+
 ```bash
 bun -e "
 import { db } from './packages/db/src/index.js';
@@ -81,6 +89,7 @@ console.log('User vendorStatus:', testUser[0]?.vendorStatus);
 ```
 
 **Expected Database State:**
+
 - Vendors: 1
 - User role: "vendor"
 - User vendorStatus: "approved"
@@ -91,13 +100,15 @@ console.log('User vendorStatus:', testUser[0]?.vendorStatus);
 
 ### Test 3.1: Check Vendor Panel (KNOWN ISSUE)
 
-**Current State:** ⚠️  Vendor products page uses localStorage (NOT database)
+**Current State:** ⚠️ Vendor products page uses localStorage (NOT database)
 
 **Files to fix:**
+
 - `apps/web/src/components/vendor/products/VendorProductsPage.tsx`
 - `apps/web/src/components/vendor/products/AddProductForm.tsx`
 
 **What needs to change:**
+
 - Remove: `getVendorProducts()` from localStorage
 - Add: `useQuery(orpc.product.listVendorProducts())`
 - Remove: `addVendorProduct()` to localStorage
@@ -106,17 +117,20 @@ console.log('User vendorStatus:', testUser[0]?.vendorStatus);
 ### Test 3.2: Vendor Settings (Logo/Banner Upload)
 
 **Action:**
+
 1. Login as testvendor@example.com
 2. Go to vendor settings
 3. Upload a logo and banner
 4. Click "Save"
 
 **Expected Result:**
+
 - Files upload to S3
 - Vendor profile updates in database
 - Changes persist after refresh
 
 **Verify in Database:**
+
 ```bash
 bun -e "
 import { db } from './packages/db/src/index.js';
@@ -134,10 +148,12 @@ console.log('Banner URL:', vendorsList[0]?.bannerUrl);
 ### Test 4.1: Admin Vendors List
 
 **Action:**
+
 1. Go to `http://localhost:3001/admin/vendors`
 2. Check if testvendor appears
 
 **Expected Result:**
+
 - Shows 1 vendor
 - Shows "Test Store" (or created vendor name)
 - Shows testvendor@example.com
@@ -145,11 +161,13 @@ console.log('Banner URL:', vendorsList[0]?.bannerUrl);
 ### Test 4.2: Admin Update Vendor
 
 **Action:**
+
 1. In admin vendors page
 2. Toggle "Active" or "Verified" status
 3. Check database
 
 **Verify Status Sync:**
+
 ```bash
 bun -e "
 import { db } from './packages/db/src/index.js';
@@ -164,10 +182,12 @@ console.log('User vendorStatus:', u[0]?.vendorStatus);
 ### Test 4.3: Admin Delete Vendor
 
 **Action:**
+
 1. Delete the test vendor from admin panel
 2. Check database
 
 **Expected Result:**
+
 - Vendor removed from vendors table
 - User reverted to customer role
 - Logo/banner deleted from S3
@@ -185,6 +205,7 @@ bun scripts/verify-database-connections.ts
 ### Expected State After All Tests:
 
 If all tests passed:
+
 ```
 ✅ Admin applications page shows real database data
 ✅ Approving creates vendor profiles
@@ -205,6 +226,7 @@ If all tests passed:
 **Issue:** Uses localStorage instead of real API
 
 **Fix Required:**
+
 1. Replace localStorage calls with oRPC calls
 2. Use real vendor ID from session
 3. Connect to backend product endpoints
@@ -233,4 +255,3 @@ If all tests passed:
 3. Fix the vendor products page (localStorage → API)
 4. Retest everything
 5. Deploy with confidence!
-

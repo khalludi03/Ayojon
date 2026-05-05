@@ -1,22 +1,27 @@
-import { z } from "zod";
-import { publicProcedure, os } from "../index";
-import { db } from "@my-better-t-app/db";
-import { homeBanners, homePromoCards, platformSettings } from "@my-better-t-app/db/schema/index";
-import { eq, asc } from "drizzle-orm";
+import { z } from 'zod'
+import { db } from '@my-better-t-app/db'
+import {
+  homeBanners,
+  homePromoCards,
+  platformSettings,
+} from '@my-better-t-app/db/schema/index'
+import { asc, eq } from 'drizzle-orm'
+import { os, publicProcedure } from '../index'
 
 export const homepageRouter = os.router({
   getPublicSettings: publicProcedure
     .route({
-      method: "GET",
-      operationId: "getPublicSettings",
-      summary: "Get Public Platform Settings",
-      description: "Returns public platform configuration like flash deal end times.",
-      tags: ["Homepage"],
+      method: 'GET',
+      operationId: 'getPublicSettings',
+      summary: 'Get Public Platform Settings',
+      description:
+        'Returns public platform configuration like flash deal end times.',
+      tags: ['Homepage'],
     })
     .output(
       z.object({
         flashDealEndsAt: z.date().nullable(),
-      })
+      }),
     )
     .handler(async () => {
       const settings = await db
@@ -24,21 +29,22 @@ export const homepageRouter = os.router({
           flashDealEndsAt: platformSettings.flashDealEndsAt,
         })
         .from(platformSettings)
-        .where(eq(platformSettings.id, "current"))
-        .limit(1);
+        .where(eq(platformSettings.id, 'current'))
+        .limit(1)
 
       return {
         flashDealEndsAt: settings[0]?.flashDealEndsAt ?? null,
-      };
+      }
     }),
 
   listBanners: publicProcedure
     .route({
-      method: "GET",
-      operationId: "listBanners",
-      summary: "List Homepage Banners",
-      description: "Returns all active homepage banner slides ordered by sort order.",
-      tags: ["Homepage"],
+      method: 'GET',
+      operationId: 'listBanners',
+      summary: 'List Homepage Banners',
+      description:
+        'Returns all active homepage banner slides ordered by sort order.',
+      tags: ['Homepage'],
     })
     .output(
       z.object({
@@ -51,9 +57,9 @@ export const homepageRouter = os.router({
             buttonText: z.string(),
             buttonLink: z.string(),
             sortOrder: z.number(),
-          })
+          }),
         ),
-      })
+      }),
     )
     .handler(async () => {
       const banners = await db
@@ -68,18 +74,19 @@ export const homepageRouter = os.router({
         })
         .from(homeBanners)
         .where(eq(homeBanners.isActive, true))
-        .orderBy(asc(homeBanners.sortOrder));
+        .orderBy(asc(homeBanners.sortOrder))
 
-      return { banners };
+      return { banners }
     }),
 
   listPromoCards: publicProcedure
     .route({
-      method: "GET",
-      operationId: "listPromoCards",
-      summary: "List Homepage Promo Cards",
-      description: "Returns all active homepage promotional cards ordered by slot number.",
-      tags: ["Homepage"],
+      method: 'GET',
+      operationId: 'listPromoCards',
+      summary: 'List Homepage Promo Cards',
+      description:
+        'Returns all active homepage promotional cards ordered by slot number.',
+      tags: ['Homepage'],
     })
     .output(
       z.object({
@@ -91,9 +98,9 @@ export const homepageRouter = os.router({
             label: z.string(),
             title: z.string(),
             link: z.string(),
-          })
+          }),
         ),
-      })
+      }),
     )
     .handler(async () => {
       const promoCards = await db
@@ -107,8 +114,8 @@ export const homepageRouter = os.router({
         })
         .from(homePromoCards)
         .where(eq(homePromoCards.isActive, true))
-        .orderBy(asc(homePromoCards.slotNumber));
+        .orderBy(asc(homePromoCards.slotNumber))
 
-      return { promoCards };
+      return { promoCards }
     }),
-});
+})

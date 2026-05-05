@@ -1,39 +1,44 @@
-import { createFileRoute, redirect, Outlet, useLocation } from "@tanstack/react-router";
-import { getUser } from "@/functions/get-user";
-import type { AccountSection } from "@/types";
-import { AccountSidebar } from "@/components/account/account-sidebar";
-import { AccountMobileNav } from "@/components/account/account-mobile-nav";
+import {
+  Outlet,
+  createFileRoute,
+  redirect,
+  useLocation,
+} from '@tanstack/react-router'
+import type { AccountSection } from '@/types'
+import { getUser } from '@/functions/get-user'
+import { AccountSidebar } from '@/components/account/account-sidebar'
+import { AccountMobileNav } from '@/components/account/account-mobile-nav'
 
-export const Route = createFileRoute("/account")({
+export const Route = createFileRoute('/account')({
   component: AccountLayout,
   beforeLoad: async () => {
-    const session = await getUser();
-    return { session };
+    const session = await getUser()
+    return { session }
   },
-  loader: async ({ context }) => {
+  loader: ({ context }) => {
     if (!context.session) {
       throw redirect({
-        to: "/login",
-      });
+        to: '/login',
+      })
     }
   },
-});
+})
 
 function AccountLayout() {
-  const { pathname } = useLocation();
-  
+  const { pathname } = useLocation()
+
   // Determine active section from pathname
   const getActiveSection = (): AccountSection => {
-    if (pathname.includes("/account/orders")) return "orders";
-    if (pathname.includes("/account/wishlist")) return "wishlist";
-    if (pathname.includes("/account/addresses")) return "addresses";
-    if (pathname.includes("/account/reviews")) return "reviews";
-    if (pathname.includes("/account/profile")) return "profile";
-    if (pathname.includes("/account/settings")) return "settings";
-    return "overview";
-  };
+    if (pathname.includes('/account/orders')) return 'orders'
+    if (pathname.includes('/account/wishlist')) return 'wishlist'
+    if (pathname.includes('/account/addresses')) return 'addresses'
+    if (pathname.includes('/account/reviews')) return 'reviews'
+    if (pathname.includes('/account/profile')) return 'profile'
+    if (pathname.includes('/account/settings')) return 'settings'
+    return 'overview'
+  }
 
-  const section = getActiveSection();
+  const section = getActiveSection()
 
   return (
     <div className="account-shell relative overflow-hidden">
@@ -45,7 +50,9 @@ function AccountLayout() {
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-6 rounded-2xl border border-[hsl(var(--border))] bg-[linear-gradient(135deg,rgba(244,78,55,0.08),rgba(51,163,153,0.08))] p-6 shadow-[var(--shadow-card)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">Account</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[hsl(var(--muted-foreground))]">
+            Account
+          </p>
           <h1 className="account-heading mt-2 text-2xl font-semibold text-[hsl(var(--foreground))] sm:text-3xl">
             Your account, at a glance
           </h1>
@@ -72,5 +79,5 @@ function AccountLayout() {
         </div>
       </div>
     </div>
-  );
+  )
 }

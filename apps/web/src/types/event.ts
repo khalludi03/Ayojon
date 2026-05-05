@@ -1,8 +1,8 @@
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react'
 
 export interface EventType {
-  id: string;
-  name: string;
-  slug: string;
-  icon: LucideIcon;
+  id: string
+  name: string
+  slug: string
+  icon: LucideIcon
 }

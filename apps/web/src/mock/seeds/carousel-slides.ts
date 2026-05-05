@@ -1,6 +1,6 @@
 // Carousel Slide Seed Data - Based on PRD Section 4.2
 
-import type { CarouselSlide } from '@/types';
+import type { CarouselSlide } from '@/types'
 
 export const CAROUSEL_SLIDES: Array<CarouselSlide> = [
   {
@@ -87,7 +87,7 @@ export const CAROUSEL_SLIDES: Array<CarouselSlide> = [
     priority: 6,
     targetAudience: ['BD'],
   },
-];
+]
 
 // Side banners for the hero section (4 banners in 2x2 grid)
 export const SIDE_BANNERS: Array<CarouselSlide> = [
@@ -147,22 +147,22 @@ export const SIDE_BANNERS: Array<CarouselSlide> = [
     priority: 4,
     targetAudience: ['BD', 'IN', 'PK'],
   },
-];
+]
 
 export function getActiveSlides(): Array<CarouselSlide> {
-  const now = new Date();
+  const now = new Date()
   return CAROUSEL_SLIDES.filter((slide) => {
-    const start = new Date(slide.startDate);
-    const end = new Date(slide.endDate);
-    return now >= start && now <= end;
-  }).sort((a, b) => a.priority - b.priority);
+    const start = new Date(slide.startDate)
+    const end = new Date(slide.endDate)
+    return now >= start && now <= end
+  }).sort((a, b) => a.priority - b.priority)
 }
 
 export function getSideBanners(): Array<CarouselSlide> {
-  const now = new Date();
+  const now = new Date()
   return SIDE_BANNERS.filter((slide) => {
-    const start = new Date(slide.startDate);
-    const end = new Date(slide.endDate);
-    return now >= start && now <= end;
-  }).sort((a, b) => a.priority - b.priority);
+    const start = new Date(slide.startDate)
+    const end = new Date(slide.endDate)
+    return now >= start && now <= end
+  }).sort((a, b) => a.priority - b.priority)
 }

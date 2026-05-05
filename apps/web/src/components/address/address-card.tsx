@@ -1,17 +1,17 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { MapPin, Phone, Edit, Trash2 } from 'lucide-react';
-import type { Address } from '@/types/address';
+import { Edit, MapPin, Phone, Trash2 } from 'lucide-react'
+import type { Address } from '@/types/address'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 
 interface AddressCardProps {
-  address: Address;
-  onEdit: (address: Address) => void;
-  onDelete: (addressId: string) => void;
-  onSetDefault: (addressId: string, isDefault: boolean) => void;
-  showUseButton?: boolean;
-  onUse?: (address: Address) => void;
+  address: Address
+  onEdit: (address: Address) => void
+  onDelete: (addressId: string) => void
+  onSetDefault: (addressId: string, isDefault: boolean) => void
+  showUseButton?: boolean
+  onUse?: (address: Address) => void
 }
 
 export function AddressCard({
@@ -31,7 +31,7 @@ export function AddressCard({
     address.country,
   ]
     .filter(Boolean)
-    .join(', ');
+    .join(', ')
 
   return (
     <Card
@@ -72,10 +72,7 @@ export function AddressCard({
 
           {/* Actions */}
           {showUseButton ? (
-            <Button
-              className="w-full"
-              onClick={() => onUse?.(address)}
-            >
+            <Button className="w-full" onClick={() => onUse?.(address)}>
               Use This Address
             </Button>
           ) : (
@@ -85,7 +82,7 @@ export function AddressCard({
                   id={`default-${address.id}`}
                   checked={address.isDefault}
                   onCheckedChange={(checked) =>
-                    onSetDefault(address.id, checked as boolean)
+                    onSetDefault(address.id, checked)
                   }
                 />
                 <label
@@ -119,5 +116,5 @@ export function AddressCard({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

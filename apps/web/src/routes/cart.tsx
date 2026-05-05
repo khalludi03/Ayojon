@@ -1,16 +1,29 @@
-import { useState, useEffect } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Minus, Plus, ShoppingBag, Trash2, ChevronDown, ChevronUp, X, Tag } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import {
+  ChevronDown,
+  ChevronUp,
+  Minus,
+  Plus,
+  ShoppingBag,
+  Tag,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { toast } from 'sonner'
-import { useCart, type CartItem } from '@/stores/cart-store'
-import { useCartItemRemoval, CartRemoveConfirmDialog } from '@/hooks/use-cart-item-removal'
+import type { Product } from '@/types'
+import type { CartItem } from '@/stores/cart-store'
+import { useCart } from '@/stores/cart-store'
+import {
+  CartRemoveConfirmDialog,
+  useCartItemRemoval,
+} from '@/hooks/use-cart-item-removal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatPrice } from '@/lib/utils'
 import { ProductCard } from '@/components/product/ProductCard'
 import { orpcClient } from '@/utils/orpc'
 import { CouponSection } from '@/components/cart/CouponSection'
-import type { Product } from '@/types'
 import { authClient } from '@/lib/auth-client'
 import {
   Dialog,
@@ -26,7 +39,12 @@ export const Route = createFileRoute('/cart')({
   component: CartPage,
 })
 
-function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
+function CartItemRow({
+  item,
+  updateQuantity,
+  onRemove,
+  onSaveForLater,
+}: {
   item: CartItem
   updateQuantity: (itemId: string, quantity: number) => void
   onRemove: (item: CartItem) => void
@@ -66,13 +84,19 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
     }
   }
 
-  const showUpdate = inputValue !== '' && parseInt(inputValue, 10) !== item.quantity && !isNaN(parseInt(inputValue, 10))
+  const showUpdate =
+    inputValue !== '' &&
+    parseInt(inputValue, 10) !== item.quantity &&
+    !isNaN(parseInt(inputValue, 10))
 
   return (
     <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 sm:p-4">
       <div className="flex gap-3 sm:gap-4">
         {/* Product Image — clickable to PDP */}
-        <Link to={`/product/${item.product.slug}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))] sm:h-24 sm:w-24">
+        <Link
+          to={`/product/${item.product.slug}`}
+          className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))] sm:h-24 sm:w-24"
+        >
           <img
             src={item.product.images[0]?.url}
             alt={item.product.title}
@@ -91,8 +115,9 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
                 </h3>
               </Link>
               <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                by <Link 
-                  to="/vendor/$vendorId" 
+                by{' '}
+                <Link
+                  to="/vendor/$vendorId"
                   params={{ vendorId: item.product.vendor.id }}
                   className="hover:text-primary hover:underline transition-colors"
                 >
@@ -116,7 +141,8 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
               <p className="text-base font-bold text-[hsl(var(--brand-orange))] sm:text-lg">
                 {formatPrice(item.product.pricing.currentPrice)}
               </p>
-              {item.product.pricing.originalPrice > item.product.pricing.currentPrice && (
+              {item.product.pricing.originalPrice >
+                item.product.pricing.currentPrice && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))] line-through sm:text-sm">
                   {formatPrice(item.product.pricing.originalPrice)}
                 </p>
@@ -130,7 +156,9 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
                   variant="outline"
                   size="icon"
                   className="h-7 w-7 sm:h-8 sm:w-8"
-                  onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                  onClick={() =>
+                    updateQuantity(item.id, Math.max(1, item.quantity - 1))
+                  }
                   disabled={item.quantity <= 1}
                 >
                   <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -155,7 +183,11 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
                 </Button>
               </div>
               {showUpdate && (
-                <Button size="sm" className="h-6 px-3 text-xs" onClick={handleUpdate}>
+                <Button
+                  size="sm"
+                  className="h-6 px-3 text-xs"
+                  onClick={handleUpdate}
+                >
                   Update
                 </Button>
               )}
@@ -179,7 +211,9 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
 
           {/* Subtotal for this item (mobile only) */}
           <div className="mt-2 flex items-center justify-between border-t border-[hsl(var(--border))] pt-2 sm:hidden">
-            <p className="text-xs text-[hsl(var(--muted-foreground))]">Subtotal:</p>
+            <p className="text-xs text-[hsl(var(--muted-foreground))]">
+              Subtotal:
+            </p>
             <p className="text-sm font-semibold text-[hsl(var(--foreground))]">
               {formatPrice(item.product.pricing.currentPrice * item.quantity)}
             </p>
@@ -188,7 +222,9 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
 
         {/* Item Subtotal (desktop only) */}
         <div className="hidden shrink-0 text-right sm:block">
-          <p className="text-xs text-[hsl(var(--muted-foreground))]">Subtotal</p>
+          <p className="text-xs text-[hsl(var(--muted-foreground))]">
+            Subtotal
+          </p>
           <p className="mt-1 text-lg font-bold text-[hsl(var(--foreground))]">
             {formatPrice(item.product.pricing.currentPrice * item.quantity)}
           </p>
@@ -198,7 +234,11 @@ function CartItemRow({ item, updateQuantity, onRemove, onSaveForLater }: {
   )
 }
 
-function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
+function SavedForLaterItemRow({
+  item,
+  onMoveToCart,
+  onRemove,
+}: {
   item: CartItem
   onMoveToCart: (itemId: string) => void
   onRemove: (itemId: string) => void
@@ -207,7 +247,10 @@ function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
     <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-3 sm:p-4">
       <div className="flex gap-3 sm:gap-4">
         {/* Product Image — clickable to PDP */}
-        <Link to={`/product/${item.product.slug}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))] sm:h-24 sm:w-24">
+        <Link
+          to={`/product/${item.product.slug}`}
+          className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))] sm:h-24 sm:w-24"
+        >
           <img
             src={item.product.images[0]?.url}
             alt={item.product.title}
@@ -226,8 +269,9 @@ function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
                 </h3>
               </Link>
               <p className="mt-1 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                by <Link 
-                  to="/vendor/$vendorId" 
+                by{' '}
+                <Link
+                  to="/vendor/$vendorId"
                   params={{ vendorId: item.product.vendor.id }}
                   className="hover:text-primary hover:underline transition-colors"
                 >
@@ -251,7 +295,8 @@ function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
               <p className="text-base font-bold text-[hsl(var(--brand-orange))] sm:text-lg">
                 {formatPrice(item.product.pricing.currentPrice)}
               </p>
-              {item.product.pricing.originalPrice > item.product.pricing.currentPrice && (
+              {item.product.pricing.originalPrice >
+                item.product.pricing.currentPrice && (
                 <p className="text-xs text-[hsl(var(--muted-foreground))] line-through sm:text-sm">
                   {formatPrice(item.product.pricing.originalPrice)}
                 </p>
@@ -275,26 +320,27 @@ function SavedForLaterItemRow({ item, onMoveToCart, onRemove }: {
 }
 
 function CartPage() {
-  const { 
-    items, 
-    savedForLater, 
-    discount, 
-    updateQuantity, 
-    saveForLater, 
-    moveToCart, 
-    removeSavedItem, 
-    clearCart, 
-    subtotal, 
-    tax, 
-    shipping, 
-    discountAmount, 
-    total 
+  const {
+    items,
+    savedForLater,
+    discount,
+    updateQuantity,
+    saveForLater,
+    moveToCart,
+    removeSavedItem,
+    clearCart,
+    subtotal,
+    tax,
+    shipping,
+    discountAmount,
+    total,
   } = useCart()
   const { data: session } = authClient.useSession()
   const navigate = useNavigate()
-  const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } = useCartItemRemoval()
+  const { pendingRemoveItem, setPendingRemoveItem, handleConfirmRemove } =
+    useCartItemRemoval()
   const [clearConfirm, setClearConfirm] = useState(false)
-  const [suggested, setSuggested] = useState<Product[]>([])
+  const [suggested, setSuggested] = useState<Array<Product>>([])
   const [mounted, setMounted] = useState(false)
   const [isSummaryOpen, setIsSummaryOpen] = useState(false)
   const [showLoginDialog, setShowLoginDialog] = useState(false)
@@ -322,7 +368,9 @@ function CartPage() {
 
   useEffect(() => {
     if (items.length === 0) {
-      orpcClient.product.getProducts({ featured: true, limit: 8 }).then((res: any) => setSuggested(res.data))
+      orpcClient.product
+        .getProducts({ featured: true, limit: 8 })
+        .then((res: any) => setSuggested(res.data))
     }
   }, [items.length])
 
@@ -379,7 +427,8 @@ function CartPage() {
               Shopping Cart
             </h1>
             <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
-              {items.length} {items.length === 1 ? 'item' : 'items'} in your cart
+              {items.length} {items.length === 1 ? 'item' : 'items'} in your
+              cart
             </p>
           </div>
           {!clearConfirm ? (
@@ -394,7 +443,9 @@ function CartPage() {
             </Button>
           ) : (
             <div className="flex items-center gap-2 self-start sm:self-auto">
-              <span className="text-sm text-[hsl(var(--foreground))]">Are you sure?</span>
+              <span className="text-sm text-[hsl(var(--foreground))]">
+                Are you sure?
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
@@ -422,15 +473,15 @@ function CartPage() {
           <div className="space-y-6">
             {items.length > 0 && (
               <div className="space-y-3 sm:space-y-4">
-                {items.map((item) => (
+                {items.map((cartItem) => (
                   <CartItemRow
-                    key={item.id}
-                    item={item}
+                    key={cartItem.id}
+                    item={cartItem}
                     updateQuantity={updateQuantity}
                     onRemove={(item) => setPendingRemoveItem(item)}
                     onSaveForLater={(itemId) => {
-                      saveForLater(itemId);
-                      toast.success('Item saved for later');
+                      saveForLater(itemId)
+                      toast.success('Item saved for later')
                     }}
                   />
                 ))}
@@ -461,7 +512,13 @@ function CartPage() {
 
             {/* Saved for Later Section */}
             {savedForLater.length > 0 && (
-              <div className={items.length > 0 ? "mt-8 border-t border-[hsl(var(--border))] pt-6" : ""}>
+              <div
+                className={
+                  items.length > 0
+                    ? 'mt-8 border-t border-[hsl(var(--border))] pt-6'
+                    : ''
+                }
+              >
                 <h2 className="mb-4 text-lg font-bold text-[hsl(var(--foreground))] sm:text-xl">
                   Saved for Later ({savedForLater.length})
                 </h2>
@@ -471,12 +528,12 @@ function CartPage() {
                       key={item.id}
                       item={item}
                       onMoveToCart={(itemId) => {
-                        moveToCart(itemId);
-                        toast.success('Item moved to cart');
+                        moveToCart(itemId)
+                        toast.success('Item moved to cart')
                       }}
                       onRemove={(itemId) => {
-                        removeSavedItem(itemId);
-                        toast.success('Item removed');
+                        removeSavedItem(itemId)
+                        toast.success('Item removed')
                       }}
                     />
                   ))}
@@ -496,96 +553,135 @@ function CartPage() {
                 {/* Coupon Section */}
                 <CouponSection />
 
-              <div className="mt-4 space-y-3 border-b border-[hsl(var(--border))] pb-4 sm:mt-6 sm:space-y-4">
-                {/* Items Subtotal */}
-                <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-[hsl(var(--muted-foreground))]">
-                    Items Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})
-                  </span>
-                  <span className="font-medium text-[hsl(var(--foreground))]">
-                    {formatPrice(subtotal)}
-                  </span>
-                </div>
-
-                {/* Discount */}
-                {discount && (
-                  <div className="flex items-center justify-between text-sm sm:text-base">
-                    <span className="text-green-600 dark:text-green-400">
-                      Discount ({discount.code})
+                <div className="mt-4 space-y-3 border-b border-[hsl(var(--border))] pb-4 sm:mt-6 sm:space-y-4">
+                  {/* Items Subtotal */}
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-[hsl(var(--muted-foreground))]">
+                      Items Subtotal ({items.length}{' '}
+                      {items.length === 1 ? 'item' : 'items'})
                     </span>
-                    <span className="font-medium text-green-600 dark:text-green-400">
-                      {discount.type === 'free_shipping' ? 'FREE Delivery' : `-${formatPrice(discountAmount)}`}
+                    <span className="font-medium text-[hsl(var(--foreground))]">
+                      {formatPrice(subtotal)}
                     </span>
                   </div>
-                )}
 
-                {/* Shipping */}
-                <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-[hsl(var(--muted-foreground))]">Delivery Fee</span>
-                  <span className="font-medium text-[hsl(var(--foreground))]">
-                    {shipping === 0 ? (
-                      <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
-                    ) : (
-                      formatPrice(shipping)
-                    )}
+                  {/* Discount */}
+                  {discount && (
+                    <div className="flex items-center justify-between text-sm sm:text-base">
+                      <span className="text-green-600 dark:text-green-400">
+                        Discount ({discount.code})
+                      </span>
+                      <span className="font-medium text-green-600 dark:text-green-400">
+                        {discount.type === 'free_shipping'
+                          ? 'FREE Delivery'
+                          : `-${formatPrice(discountAmount)}`}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Shipping */}
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-[hsl(var(--muted-foreground))]">
+                      Delivery Fee
+                    </span>
+                    <span className="font-medium text-[hsl(var(--foreground))]">
+                      {shipping === 0 ? (
+                        <Badge variant="freeShipping" className="font-semibold">
+                          FREE
+                        </Badge>
+                      ) : (
+                        formatPrice(shipping)
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Tax */}
+                  <div className="flex justify-between text-sm sm:text-base">
+                    <span className="text-[hsl(var(--muted-foreground))]">
+                      Tax (5%)
+                    </span>
+                    <span className="font-medium text-[hsl(var(--foreground))]">
+                      {formatPrice(tax)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex justify-between items-baseline">
+                  <span className="text-base font-bold text-[hsl(var(--foreground))] sm:text-lg">
+                    Grand Total
+                  </span>
+                  <span className="text-2xl font-bold text-[hsl(var(--brand-orange))] sm:text-3xl">
+                    {formatPrice(total)}
                   </span>
                 </div>
 
-                {/* Tax */}
-                <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
-                  <span className="font-medium text-[hsl(var(--foreground))]">
-                    {formatPrice(tax)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-4 flex justify-between items-baseline">
-                <span className="text-base font-bold text-[hsl(var(--foreground))] sm:text-lg">
-                  Grand Total
-                </span>
-                <span className="text-2xl font-bold text-[hsl(var(--brand-orange))] sm:text-3xl">
-                  {formatPrice(total)}
-                </span>
-              </div>
-
-              <Button 
-                className="mt-6 w-full" 
-                size="lg"
-                onClick={handleCheckout}
-              >
-                Proceed to Checkout
-              </Button>
-
-              <Link to="/">
-                <Button variant="outline" className="mt-3 w-full" size="lg">
-                  Continue Shopping
+                <Button
+                  className="mt-6 w-full"
+                  size="lg"
+                  onClick={handleCheckout}
+                >
+                  Proceed to Checkout
                 </Button>
-              </Link>
 
-              {/* Trust Badges */}
-              <div className="mt-6 space-y-3 border-t border-[hsl(var(--border))] pt-4 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Secure checkout guaranteed</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Free shipping on orders over ৳999</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4 shrink-0 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>Easy returns within 7 days</span>
+                <Link to="/">
+                  <Button variant="outline" className="mt-3 w-full" size="lg">
+                    Continue Shopping
+                  </Button>
+                </Link>
+
+                {/* Trust Badges */}
+                <div className="mt-6 space-y-3 border-t border-[hsl(var(--border))] pt-4 text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="h-4 w-4 shrink-0 text-green-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>Secure checkout guaranteed</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="h-4 w-4 shrink-0 text-green-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>Free shipping on orders over ৳999</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg
+                      className="h-4 w-4 shrink-0 text-green-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                    <span>Easy returns within 7 days</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
         </div>
       </div>
@@ -595,14 +691,16 @@ function CartPage() {
         <>
           {/* Collapsible Summary Overlay */}
           {isSummaryOpen && (
-            <div 
+            <div
               className="fixed inset-0 z-40 bg-black/50 lg:hidden"
               onClick={() => setIsSummaryOpen(false)}
             />
           )}
 
           {/* Summary Panel */}
-          <div className={`fixed bottom-0 left-0 right-0 z-50 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg transition-transform duration-300 lg:hidden ${isSummaryOpen ? 'translate-y-0' : ''}`}>
+          <div
+            className={`fixed bottom-0 left-0 right-0 z-50 border-t border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-lg transition-transform duration-300 lg:hidden ${isSummaryOpen ? 'translate-y-0' : ''}`}
+          >
             {/* Collapsible Details */}
             {isSummaryOpen && (
               <div className="max-h-[70vh] overflow-y-auto border-b border-[hsl(var(--border))] bg-[hsl(var(--background))]">
@@ -615,7 +713,8 @@ function CartPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-[hsl(var(--muted-foreground))]">
-                        Items Subtotal ({items.length} {items.length === 1 ? 'item' : 'items'})
+                        Items Subtotal ({items.length}{' '}
+                        {items.length === 1 ? 'item' : 'items'})
                       </span>
                       <span className="font-medium text-[hsl(var(--foreground))]">
                         {formatPrice(subtotal)}
@@ -628,16 +727,25 @@ function CartPage() {
                           Discount ({discount.code})
                         </span>
                         <span className="font-medium text-green-600 dark:text-green-400">
-                          {discount.type === 'free_shipping' ? 'FREE Delivery' : `-${formatPrice(discountAmount)}`}
+                          {discount.type === 'free_shipping'
+                            ? 'FREE Delivery'
+                            : `-${formatPrice(discountAmount)}`}
                         </span>
                       </div>
                     )}
 
                     <div className="flex justify-between text-sm">
-                      <span className="text-[hsl(var(--muted-foreground))]">Delivery Fee</span>
+                      <span className="text-[hsl(var(--muted-foreground))]">
+                        Delivery Fee
+                      </span>
                       <span className="font-medium text-[hsl(var(--foreground))]">
                         {shipping === 0 ? (
-                          <Badge variant="freeShipping" className="font-semibold">FREE</Badge>
+                          <Badge
+                            variant="freeShipping"
+                            className="font-semibold"
+                          >
+                            FREE
+                          </Badge>
                         ) : (
                           formatPrice(shipping)
                         )}
@@ -645,7 +753,9 @@ function CartPage() {
                     </div>
 
                     <div className="flex justify-between text-sm">
-                      <span className="text-[hsl(var(--muted-foreground))]">Tax (5%)</span>
+                      <span className="text-[hsl(var(--muted-foreground))]">
+                        Tax (5%)
+                      </span>
                       <span className="font-medium text-[hsl(var(--foreground))]">
                         {formatPrice(tax)}
                       </span>
@@ -680,8 +790,8 @@ function CartPage() {
                     {formatPrice(total)}
                   </span>
                 </div>
-                <Button 
-                  className="flex-1 max-w-xs w-full" 
+                <Button
+                  className="flex-1 max-w-xs w-full"
                   size="lg"
                   onClick={handleCheckout}
                 >
@@ -704,7 +814,9 @@ function CartPage() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-center">
-              {authView === 'signin' ? 'Sign In to Continue' : 'Create an Account'}
+              {authView === 'signin'
+                ? 'Sign In to Continue'
+                : 'Create an Account'}
             </DialogTitle>
             <DialogDescription className="text-center">
               Please sign in to proceed with checkout
@@ -712,12 +824,12 @@ function CartPage() {
           </DialogHeader>
           <div className="mt-4">
             {authView === 'signin' ? (
-              <SignInForm 
+              <SignInForm
                 onSwitchToSignUp={() => setAuthView('signup')}
                 onSuccess={handleAuthSuccess}
               />
             ) : (
-              <SignUpForm 
+              <SignUpForm
                 onSwitchToSignIn={() => setAuthView('signin')}
                 onSuccess={handleAuthSuccess}
               />

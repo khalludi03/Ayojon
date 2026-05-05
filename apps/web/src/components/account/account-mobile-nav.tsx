@@ -1,34 +1,34 @@
-import { useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
-import type { AccountSection } from "@/types";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
+import { useState } from 'react'
+import { Check, ChevronDown } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import type { AccountSection } from '@/types'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
 
 interface AccountMobileNavProps {
-  activeSection: AccountSection;
-  onSectionChange: (section: AccountSection) => void;
+  activeSection: AccountSection
+  onSectionChange: (section: AccountSection) => void
 }
 
 const navigationItems = [
-  { id: "overview" as AccountSection, label: "Overview" },
-  { id: "orders" as AccountSection, label: "Orders" },
-  { id: "wishlist" as AccountSection, label: "Wishlist" },
-  { id: "addresses" as AccountSection, label: "Addresses" },
-  { id: "reviews" as AccountSection, label: "My Reviews" },
-  { id: "profile" as AccountSection, label: "Profile" },
-  { id: "settings" as AccountSection, label: "Settings" },
-];
+  { id: 'overview' as AccountSection, label: 'Overview' },
+  { id: 'orders' as AccountSection, label: 'Orders' },
+  { id: 'wishlist' as AccountSection, label: 'Wishlist' },
+  { id: 'addresses' as AccountSection, label: 'Addresses' },
+  { id: 'reviews' as AccountSection, label: 'My Reviews' },
+  { id: 'profile' as AccountSection, label: 'Profile' },
+  { id: 'settings' as AccountSection, label: 'Settings' },
+]
 
 export function AccountMobileNav({ activeSection }: AccountMobileNavProps) {
-  const [open, setOpen] = useState(false);
-  const activeItem = navigationItems.find((item) => item.id === activeSection);
+  const [open, setOpen] = useState(false)
+  const activeItem = navigationItems.find((item) => item.id === activeSection)
 
   return (
     <div className="lg:hidden mb-6">
@@ -38,7 +38,7 @@ export function AccountMobileNav({ activeSection }: AccountMobileNavProps) {
             variant="outline"
             className="w-full justify-between border-[hsl(var(--border))] bg-[hsl(var(--card))]/90 shadow-sm"
           >
-            <span>{activeItem?.label || "Select Section"}</span>
+            <span>{activeItem?.label || 'Select Section'}</span>
             <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
@@ -48,24 +48,22 @@ export function AccountMobileNav({ activeSection }: AccountMobileNavProps) {
               key={item.id}
               asChild
               className={cn(
-                "cursor-pointer",
-                activeSection === item.id && "bg-accent"
+                'cursor-pointer',
+                activeSection === item.id && 'bg-accent',
               )}
             >
               <Link
-                to={item.id === "overview" ? "/account" : `/account/${item.id}`}
+                to={item.id === 'overview' ? '/account' : `/account/${item.id}`}
                 onClick={() => setOpen(false)}
                 className="flex w-full items-center"
               >
                 <span className="flex-1">{item.label}</span>
-                {activeSection === item.id && (
-                  <Check className="h-4 w-4" />
-                )}
+                {activeSection === item.id && <Check className="h-4 w-4" />}
               </Link>
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-  );
+  )
 }

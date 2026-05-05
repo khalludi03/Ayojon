@@ -1,10 +1,18 @@
-import { db } from "@my-better-t-app/db";
-import { orders, orderItems, vendorPayouts, platformSettings, vendors, type PayoutStatus } from "@my-better-t-app/db/schema/index";
-import { eq, and, desc, sql } from "drizzle-orm";
-import { nanoid } from "nanoid";
-import { calculateVendorPayout } from "./order-service";
-import { OrderActions } from "./order-state-machine";
-import * as notificationService from "./notification-service";
+import { db } from '@my-better-t-app/db'
+import {
+  
+  orderItems,
+  orders,
+  platformSettings,
+  vendorPayouts,
+  vendors
+} from '@my-better-t-app/db/schema/index'
+import { and, desc, eq, sql } from 'drizzle-orm'
+import { nanoid } from 'nanoid'
+import { calculateVendorPayout } from './order-service'
+import { OrderActions } from './order-state-machine'
+import * as notificationService from './notification-service'
+import type {PayoutStatus} from '@my-better-t-app/db/schema/index';
 
 /**
  * Payout Service
@@ -28,11 +36,11 @@ import * as notificationService from "./notification-service";
  */
 async function getPlatformCommissionRate(): Promise<number> {
   const settings = await db.query.platformSettings.findFirst({
-    where: eq(platformSettings.id, "current"),
-  });
+    where: eq(platformSettings.id, 'current'),
+  })
 
   // Default to 10% if not configured
-  return settings?.platformCommission ?? 10;
+  return settings?.platformCommission ?? 10
 }
 
 /**
@@ -47,29 +55,31 @@ async function getPlatformCommissionRate(): Promise<number> {
  * @param orderId - Order ID
  * @returns Array of created payout records
  */
-export async function createPayoutForOrder(
-  orderId: string
-): Promise<{ success: boolean; payouts?: typeof vendorPayouts.$inferSelect[]; error?: string }> {
+export async function createPayoutForOrder(orderId: string): Promise<{
+  success: boolean
+  payouts?: Array<typeof vendorPayouts.$inferSelect>
+  error?: string
+}> {
   return await db.transaction(async (tx) => {
     // 1. Get order details
     const [order] = await tx
       .select()
       .from(orders)
       .where(eq(orders.id, orderId))
-      .limit(1);
+      .limit(1)
 
     if (!order) {
-      return { success: false, error: "Order not found" };
+      return { success: false, error: 'Order not found' }
     }
 
     // 2. Check if payouts already exist
     const existingPayouts = await tx
       .select()
       .from(vendorPayouts)
-      .where(eq(vendorPayouts.orderId, orderId));
+      .where(eq(vendorPayouts.orderId, orderId))
 
     if (existingPayouts.length > 0) {
-      return { success: false, error: "Payouts already exist for this order" };
+      return { success: false, error: 'Payouts already exist for this order' }
     }
 
     // 3. Get order items grouped by vendor
@@ -80,23 +90,23 @@ export async function createPayoutForOrder(
       })
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId))
-      .groupBy(orderItems.vendorId);
+      .groupBy(orderItems.vendorId)
 
     if (items.length === 0) {
-      return { success: false, error: "No items found for order" };
+      return { success: false, error: 'No items found for order' }
     }
 
     // 4. Get commission rate
-    const commissionRate = await getPlatformCommissionRate();
+    const commissionRate = await getPlatformCommissionRate()
 
     // 5. Create payout record for each vendor
-    const createdPayouts = [];
+    const createdPayouts = []
     for (const item of items) {
-      const vendorTotal = parseFloat(item.totalAmount);
+      const vendorTotal = parseFloat(item.totalAmount)
       const { vendorAmount, commissionAmount } = calculateVendorPayout(
         vendorTotal,
-        commissionRate
-      );
+        commissionRate,
+      )
 
       const [payout] = await tx
         .insert(vendorPayouts)
@@ -106,28 +116,26 @@ export async function createPayoutForOrder(
           vendorId: item.vendorId,
           amount: vendorAmount.toString(),
           platformCommission: commissionAmount.toString(),
-          status: "pending",
+          status: 'pending',
         })
-        .returning();
+        .returning()
 
-      createdPayouts.push(payout!);
+      createdPayouts.push(payout!)
     }
 
     // 6. Update order status
     const newStatus =
-      order.paymentMethod === "bkash"
-        ? "delivered"
-        : "settlement_ready";
+      order.paymentMethod === 'bkash' ? 'delivered' : 'settlement_ready'
     await tx
       .update(orders)
       .set({
         status: newStatus,
         updatedAt: new Date(),
       })
-      .where(eq(orders.id, orderId));
+      .where(eq(orders.id, orderId))
 
-    return { success: true, payouts: createdPayouts };
-  });
+    return { success: true, payouts: createdPayouts }
+  })
 }
 
 /**
@@ -146,29 +154,33 @@ export async function processPayout(
   payoutId: string,
   adminId: string,
   paymentDetails: {
-    paymentMethod: string; // e.g., "bank_transfer", "bkash", "nagad"
-    paymentReference: string; // Transaction ID or reference
+    paymentMethod: string // e.g., "bank_transfer", "bkash", "nagad"
+    paymentReference: string // Transaction ID or reference
   },
-  notes?: string
-): Promise<{ success: boolean; payout?: typeof vendorPayouts.$inferSelect; error?: string }> {
+  notes?: string,
+): Promise<{
+  success: boolean
+  payout?: typeof vendorPayouts.$inferSelect
+  error?: string
+}> {
   const result = await db.transaction(async (tx) => {
     // 1. Get payout record
     const [payout] = await tx
       .select()
       .from(vendorPayouts)
       .where(eq(vendorPayouts.id, payoutId))
-      .limit(1);
+      .limit(1)
 
     if (!payout) {
-      return { success: false, error: "Payout not found" };
+      return { success: false, error: 'Payout not found' }
     }
 
     // 2. Verify payout is pending
-    if (payout.status !== "pending") {
+    if (payout.status !== 'pending') {
       return {
         success: false,
         error: `Payout is already ${payout.status}`,
-      };
+      }
     }
 
     // 3. Get order to check status
@@ -176,10 +188,10 @@ export async function processPayout(
       .select()
       .from(orders)
       .where(eq(orders.id, payout.orderId))
-      .limit(1);
+      .limit(1)
 
     if (!order) {
-      return { success: false, error: "Order not found" };
+      return { success: false, error: 'Order not found' }
     }
 
     // 4. Verify order is ready for payout
@@ -187,14 +199,14 @@ export async function processPayout(
       return {
         success: false,
         error: `Cannot process payout for order in status: ${order.status}`,
-      };
+      }
     }
 
     // 5. Update payout record
     const [updatedPayout] = await tx
       .update(vendorPayouts)
       .set({
-        status: "completed",
+        status: 'completed',
         paymentMethod: paymentDetails.paymentMethod,
         paymentReference: paymentDetails.paymentReference,
         processedBy: adminId,
@@ -203,31 +215,31 @@ export async function processPayout(
         updatedAt: new Date(),
       })
       .where(eq(vendorPayouts.id, payoutId))
-      .returning();
+      .returning()
 
     // 6. Check if all payouts for this order are completed
     const allPayouts = await tx
       .select()
       .from(vendorPayouts)
-      .where(eq(vendorPayouts.orderId, payout.orderId));
+      .where(eq(vendorPayouts.orderId, payout.orderId))
 
-    const allCompleted = allPayouts.every((p) => p.status === "completed");
+    const allCompleted = allPayouts.every((p) => p.status === 'completed')
 
     // 7. If all payouts completed, update order to final status
     if (allCompleted) {
-      const isPrepaid = order.paymentMethod === "bkash";
-      const finalStatus = isPrepaid ? "vendor_paid" : "vendor_settled";
+      const isPrepaid = order.paymentMethod === 'bkash'
+      const finalStatus = isPrepaid ? 'vendor_paid' : 'vendor_settled'
       await tx
         .update(orders)
         .set({
           status: finalStatus,
           updatedAt: new Date(),
         })
-        .where(eq(orders.id, payout.orderId));
+        .where(eq(orders.id, payout.orderId))
     }
 
-    return { success: true, payout: updatedPayout!, orderId: order.id };
-  });
+    return { success: true, payout: updatedPayout!, orderId: order.id }
+  })
 
   // Send notification after transaction commits successfully
   if (result.success && result.payout) {
@@ -237,23 +249,23 @@ export async function processPayout(
         .select({ userId: vendors.userId })
         .from(vendors)
         .where(eq(vendors.id, result.payout.vendorId))
-        .limit(1);
+        .limit(1)
 
       if (vendor) {
         await notificationService.notifyPayoutProcessed(
           vendor.userId,
           result.payout.id,
           parseFloat(result.payout.amount),
-          result.orderId as string
-        );
+          result.orderId,
+        )
       }
     } catch (error) {
       // Log error but don't fail the payout
-      console.error("Failed to send payout notification:", error);
+      console.error('Failed to send payout notification:', error)
     }
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -267,27 +279,31 @@ export async function processPayout(
 export async function markPayoutFailed(
   payoutId: string,
   adminId: string,
-  reason: string
-): Promise<{ success: boolean; payout?: typeof vendorPayouts.$inferSelect; error?: string }> {
+  reason: string,
+): Promise<{
+  success: boolean
+  payout?: typeof vendorPayouts.$inferSelect
+  error?: string
+}> {
   return await db.transaction(async (tx) => {
     const [updatedPayout] = await tx
       .update(vendorPayouts)
       .set({
-        status: "failed",
+        status: 'failed',
         failureReason: reason,
         processedBy: adminId,
         processedAt: new Date(),
         updatedAt: new Date(),
       })
       .where(eq(vendorPayouts.id, payoutId))
-      .returning();
+      .returning()
 
     if (!updatedPayout) {
-      return { success: false, error: "Payout not found" };
+      return { success: false, error: 'Payout not found' }
     }
 
-    return { success: true, payout: updatedPayout };
-  });
+    return { success: true, payout: updatedPayout }
+  })
 }
 
 /**
@@ -297,9 +313,12 @@ export async function markPayoutFailed(
  * @param offset - Pagination offset
  * @returns List of pending payouts with order and vendor details
  */
-export async function getPendingPayouts(limit: number = 50, offset: number = 0) {
+export async function getPendingPayouts(
+  limit: number = 50,
+  offset: number = 0,
+) {
   const pendingPayouts = await db.query.vendorPayouts.findMany({
-    where: eq(vendorPayouts.status, "pending"),
+    where: eq(vendorPayouts.status, 'pending'),
     with: {
       order: {
         with: {
@@ -324,9 +343,9 @@ export async function getPendingPayouts(limit: number = 50, offset: number = 0) 
     orderBy: [desc(vendorPayouts.createdAt)],
     limit,
     offset,
-  });
+  })
 
-  return pendingPayouts;
+  return pendingPayouts
 }
 
 /**
@@ -342,11 +361,14 @@ export async function getVendorPayouts(
   vendorId: string,
   statusFilter?: PayoutStatus,
   limit: number = 50,
-  offset: number = 0
+  offset: number = 0,
 ) {
   const conditions = statusFilter
-    ? and(eq(vendorPayouts.vendorId, vendorId), eq(vendorPayouts.status, statusFilter))
-    : eq(vendorPayouts.vendorId, vendorId);
+    ? and(
+        eq(vendorPayouts.vendorId, vendorId),
+        eq(vendorPayouts.status, statusFilter),
+      )
+    : eq(vendorPayouts.vendorId, vendorId)
 
   const payouts = await db.query.vendorPayouts.findMany({
     where: conditions,
@@ -370,9 +392,9 @@ export async function getVendorPayouts(
     orderBy: [desc(vendorPayouts.createdAt)],
     limit,
     offset,
-  });
+  })
 
-  return payouts;
+  return payouts
 }
 
 /**
@@ -386,18 +408,24 @@ export async function getVendorPayoutStats(vendorId: string) {
     .select({
       totalPending: sql<string>`sum(case when ${vendorPayouts.status} = 'pending' then ${vendorPayouts.amount} else 0 end)`,
       totalCompleted: sql<string>`sum(case when ${vendorPayouts.status} = 'completed' then ${vendorPayouts.amount} else 0 end)`,
-      countPending: sql<number>`count(case when ${vendorPayouts.status} = 'pending' then 1 end)`.mapWith(Number),
-      countCompleted: sql<number>`count(case when ${vendorPayouts.status} = 'completed' then 1 end)`.mapWith(Number),
+      countPending:
+        sql<number>`count(case when ${vendorPayouts.status} = 'pending' then 1 end)`.mapWith(
+          Number,
+        ),
+      countCompleted:
+        sql<number>`count(case when ${vendorPayouts.status} = 'completed' then 1 end)`.mapWith(
+          Number,
+        ),
     })
     .from(vendorPayouts)
-    .where(eq(vendorPayouts.vendorId, vendorId));
+    .where(eq(vendorPayouts.vendorId, vendorId))
 
   return {
-    totalPending: parseFloat(stats?.totalPending ?? "0"),
-    totalCompleted: parseFloat(stats?.totalCompleted ?? "0"),
+    totalPending: parseFloat(stats?.totalPending ?? '0'),
+    totalCompleted: parseFloat(stats?.totalCompleted ?? '0'),
     countPending: stats?.countPending ?? 0,
     countCompleted: stats?.countCompleted ?? 0,
-  };
+  }
 }
 
 /**
@@ -431,7 +459,7 @@ export async function getPayoutDetails(payoutId: string) {
         },
       },
     },
-  });
+  })
 
-  return payout;
+  return payout
 }

@@ -1,4 +1,5 @@
-import { Baby,
+import {
+  Baby,
   BookOpen,
   Camera,
   Car,
@@ -15,12 +16,16 @@ import { Baby,
   Smartphone,
   Sparkles,
   UtensilsCrossed,
-  X } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
-import type { CategoryIconName } from '@/types';
-import { useCategories } from '@/hooks/use-categories';
+  X,
+} from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import type { CategoryIconName } from '@/types'
+import { useCategories } from '@/hooks/use-categories'
 
-const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<
+  CategoryIconName,
+  React.ComponentType<{ className?: string }>
+> = {
   Smartphone,
   Shirt,
   Home,
@@ -38,17 +43,17 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   LayoutPanelTop,
   Flower,
   Gamepad2,
-};
+}
 
 interface MegaMenuProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
 export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
-  const { data: categories, isLoading } = useCategories();
+  const { data: categories, isLoading } = useCategories()
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <>
@@ -77,7 +82,10 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
             <div className="p-6">
               <div className="grid grid-cols-3 gap-4">
                 {Array.from({ length: 9 }).map((_, i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-lg bg-[hsl(var(--muted))]" />
+                  <div
+                    key={i}
+                    className="h-24 animate-pulse rounded-lg bg-[hsl(var(--muted))]"
+                  />
                 ))}
               </div>
             </div>
@@ -85,9 +93,12 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
             <div className="max-h-[70vh] overflow-y-auto p-6">
               <div className="grid grid-cols-3 gap-4">
                 {categories?.map((category) => {
-                  const Icon = iconMap[category.icon];
+                  const Icon = iconMap[category.icon]
                   return (
-                    <div key={category.id} className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 hover:shadow-md transition-shadow">
+                    <div
+                      key={category.id}
+                      className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--background))] p-4 hover:shadow-md transition-shadow"
+                    >
                       <Link
                         to="/category/$categorySlug"
                         params={{ categorySlug: category.slug }}
@@ -125,7 +136,7 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             </div>
@@ -133,5 +144,5 @@ export function MegaMenu({ isOpen, onClose }: MegaMenuProps) {
         </div>
       </div>
     </>
-  );
+  )
 }

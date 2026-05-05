@@ -17,22 +17,22 @@ export type CategoryIconName =
   | 'PartyPopper'
   | 'LayoutPanelTop'
   | 'Flower'
-  | 'Gamepad2';
+  | 'Gamepad2'
 
 export interface Subcategory {
-  id: string;
-  name: string;
-  slug: string;
-  parentId: string;
+  id: string
+  name: string
+  slug: string
+  parentId: string
 }
 
 export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  icon: CategoryIconName;
-  subcategories: Array<Subcategory>;
-  productCount?: number;
-  imageUrl?: string;
-  description?: string;
+  id: string
+  name: string
+  slug: string
+  icon: CategoryIconName
+  subcategories: Array<Subcategory>
+  productCount?: number
+  imageUrl?: string
+  description?: string
 }

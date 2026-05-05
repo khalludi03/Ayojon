@@ -1,14 +1,19 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Smartphone, Loader2, CheckCircle2 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState } from 'react'
+import { CheckCircle2, Loader2, Smartphone } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 interface BkashPaymentFormProps {
-  totalAmount: number;
-  onPaymentSuccess: (transactionId: string, mobileNumber: string, amount: number, paidAt: string) => void;
-  onCancel: () => void;
+  totalAmount: number
+  onPaymentSuccess: (
+    transactionId: string,
+    mobileNumber: string,
+    amount: number,
+    paidAt: string,
+  ) => void
+  onCancel: () => void
 }
 
 export function BkashPaymentForm({
@@ -16,82 +21,84 @@ export function BkashPaymentForm({
   onPaymentSuccess,
   onCancel,
 }: BkashPaymentFormProps) {
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState("");
+  const [mobileNumber, setMobileNumber] = useState('')
+  const [otp, setOtp] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState('')
 
   const validateMobileNumber = (number: string): boolean => {
     // Must be exactly 11 digits and only numeric
-    const cleaned = number.replace(/\D/g, "");
-    return cleaned.length === 11 && /^\d{11}$/.test(cleaned);
-  };
+    const cleaned = number.replace(/\D/g, '')
+    return cleaned.length === 11 && /^\d{11}$/.test(cleaned)
+  }
 
   const handleSendOtp = () => {
-    setError("");
+    setError('')
 
     // Validate mobile number
     if (!validateMobileNumber(mobileNumber)) {
-      setError("Invalid bKash number (must be 11 digits)");
-      return;
+      setError('Invalid bKash number (must be 11 digits)')
+      return
     }
 
     // Simulate OTP send (mock)
-    setOtpSent(true);
-  };
+    setOtpSent(true)
+  }
 
   const handleVerifyAndPay = async () => {
-    setError("");
+    setError('')
 
     // Validate OTP
-    const cleanedOtp = otp.replace(/\D/g, "");
+    const cleanedOtp = otp.replace(/\D/g, '')
     if (!cleanedOtp || cleanedOtp.length !== 6) {
-      setError("OTP must be 6 digits");
-      return;
+      setError('OTP must be 6 digits')
+      return
     }
 
     // Test cases for mock errors
-    if (cleanedOtp === "000000") {
-      setError("OTP mismatch. Please try again");
-      return;
+    if (cleanedOtp === '000000') {
+      setError('OTP mismatch. Please try again')
+      return
     }
 
-    if (cleanedOtp === "111111") {
-      setError("Insufficient balance");
-      return;
+    if (cleanedOtp === '111111') {
+      setError('Insufficient balance')
+      return
     }
 
     // Show loading state
-    setIsProcessing(true);
+    setIsProcessing(true)
 
     // Simulate payment processing (1-2 seconds)
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500))
 
     // Generate transaction ID
-    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const transactionId = `BKASH-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${randomSuffix}`;
-    const paidAt = new Date().toISOString();
+    const randomSuffix = Math.floor(Math.random() * 10000)
+      .toString()
+      .padStart(4, '0')
+    const transactionId = `BKASH-${new Date().toISOString().split('T')[0].replace(/-/g, '')}-${randomSuffix}`
+    const paidAt = new Date().toISOString()
 
     // Call success handler
-    onPaymentSuccess(transactionId, mobileNumber, totalAmount, paidAt);
-  };
+    onPaymentSuccess(transactionId, mobileNumber, totalAmount, paidAt)
+  }
 
   const handleMobileNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numeric input
-    const value = e.target.value.replace(/\D/g, "");
+    const value = e.target.value.replace(/\D/g, '')
     if (value.length <= 11) {
-      setMobileNumber(value);
+      setMobileNumber(value)
     }
-  };
+  }
 
   const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Only allow numeric input
-    const value = e.target.value.replace(/\D/g, "");
+    const value = e.target.value.replace(/\D/g, '')
     if (value.length <= 6) {
-      setOtp(value);
+      setOtp(value)
     }
-  };
+  }
 
   return (
     <div className="space-y-4 rounded-lg border-2 border-[hsl(var(--primary))]/20 bg-gradient-to-br from-[hsl(var(--muted))]/30 to-transparent p-5">
@@ -123,8 +130,10 @@ export function BkashPaymentForm({
           maxLength={11}
           disabled={isProcessing}
           className={cn(
-            "font-mono text-base",
-            error && error.includes("Invalid bKash number") && "border-red-500 focus-visible:ring-red-500"
+            'font-mono text-base',
+            error &&
+              error.includes('Invalid bKash number') &&
+              'border-red-500 focus-visible:ring-red-500',
           )}
         />
         <p className="text-xs text-[hsl(var(--muted-foreground))]">
@@ -169,8 +178,10 @@ export function BkashPaymentForm({
               maxLength={6}
               disabled={isProcessing}
               className={cn(
-                "font-mono text-base text-center tracking-widest",
-                error && error.includes("OTP") && "border-red-500 focus-visible:ring-red-500"
+                'font-mono text-base text-center tracking-widest',
+                error &&
+                  error.includes('OTP') &&
+                  'border-red-500 focus-visible:ring-red-500',
               )}
             />
             <p className="text-xs text-[hsl(var(--muted-foreground))]">
@@ -191,7 +202,7 @@ export function BkashPaymentForm({
                 Processing payment...
               </>
             ) : (
-              "Verify & Pay"
+              'Verify & Pay'
             )}
           </Button>
 
@@ -248,5 +259,5 @@ export function BkashPaymentForm({
         </Button>
       )}
     </div>
-  );
+  )
 }

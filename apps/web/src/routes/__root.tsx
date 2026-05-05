@@ -1,48 +1,54 @@
-import type { QueryClient } from "@tanstack/react-query";
+import {
+  HeadContent,
+  Outlet,
+  Scripts,
+  createRootRouteWithContext, useLocation 
+} from '@tanstack/react-router'
+import { useEffect, useState } from 'react'
+import * as Sentry from '@sentry/react'
+import appCss from '../index.css?url'
+import type { QueryClient } from '@tanstack/react-query'
 
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 
-import { Toaster } from "@/components/ui/sonner";
-import { Header } from "@/components/layout/header/Header";
-import { AdminLayout } from "@/components/layout/AdminLayout";
-import { VendorLayout } from "@/components/layout/VendorLayout";
-import { Footer } from "@/components/layout/footer/Footer";
-import { ToastProvider } from "@/components/ui/toast";
-import { AppBreadcrumb } from "@/components/layout/AppBreadcrumb";
-import { ProductModal } from "@/components/product/ProductModal";
-import { orpc } from "@/utils/orpc";
-import { useLocation } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useTheme } from "@/stores/theme-store";
-import * as Sentry from "@sentry/react";
+import type { orpc } from '@/utils/orpc'
+import { Toaster } from '@/components/ui/sonner'
+import { Header } from '@/components/layout/header/Header'
+import { AdminLayout } from '@/components/layout/AdminLayout'
+import { VendorLayout } from '@/components/layout/VendorLayout'
+import { Footer } from '@/components/layout/footer/Footer'
+import { ToastProvider } from '@/components/ui/toast'
+import { AppBreadcrumb } from '@/components/layout/AppBreadcrumb'
+import { ProductModal } from '@/components/product/ProductModal'
+import { useTheme } from '@/stores/theme-store'
 
-import appCss from "../index.css?url";
+
 export interface RouterAppContext {
-  orpc: typeof orpc;
-  queryClient: QueryClient;
+  orpc: typeof orpc
+  queryClient: QueryClient
 }
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        charSet: "utf-8",
+        charSet: 'utf-8',
       },
       {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1',
       },
       {
-        title: "Ayojon - Your Event Marketplace",
+        title: 'Ayojon - Your Event Marketplace',
       },
       {
-        name: "description",
-        content: "Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.",
+        name: 'description',
+        content:
+          'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.',
       },
     ],
     links: [
       {
-        rel: "stylesheet",
+        rel: 'stylesheet',
         href: appCss,
       },
     ],
@@ -62,11 +68,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
       </div>
     ),
   }),
-});
+})
 
 function RootDocument() {
-  const location = useLocation();
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const location = useLocation()
+  const isAdminRoute = location.pathname.startsWith('/admin')
 
   // Vendor management routes use the VendorLayout (sidebar)
   // The public vendor store page (/vendor/:vendorId) uses the regular customer layout
@@ -76,27 +82,28 @@ function RootDocument() {
     '/vendor/orders',
     '/vendor/settings',
     '/vendor/application-pending',
-    '/vendor/application-rejected'
-  ];
-  const isVendorManagementRoute = reservedVendorRoutes.some(route =>
-    location.pathname === route || location.pathname.startsWith(route + '/')
-  );
+    '/vendor/application-rejected',
+  ]
+  const isVendorManagementRoute = reservedVendorRoutes.some(
+    (route) =>
+      location.pathname === route || location.pathname.startsWith(route + '/'),
+  )
 
-  const { theme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
 
   // Sync theme with document element once mounted to handle hydration properly
   useEffect(() => {
-    setMounted(true);
-    const root = document.documentElement;
+    setMounted(true)
+    const root = document.documentElement
     if (theme === 'dark') {
-      root.classList.add('dark');
-      root.style.colorScheme = 'dark';
+      root.classList.add('dark')
+      root.style.colorScheme = 'dark'
     } else {
-      root.classList.remove('dark');
-      root.style.colorScheme = 'light';
+      root.classList.remove('dark')
+      root.style.colorScheme = 'light'
     }
-  }, [theme]);
+  }, [theme])
 
   // Admin and Vendor routes use sidebar layouts
   const renderContent = () => {
@@ -105,7 +112,7 @@ function RootDocument() {
         <AdminLayout>
           <Outlet />
         </AdminLayout>
-      );
+      )
     }
 
     if (isVendorManagementRoute) {
@@ -113,7 +120,7 @@ function RootDocument() {
         <VendorLayout>
           <Outlet />
         </VendorLayout>
-      );
+      )
     }
 
     // Regular customer routes
@@ -126,8 +133,8 @@ function RootDocument() {
         </main>
         <Footer />
       </>
-    );
-  };
+    )
+  }
 
   return (
     <html lang="en" className={mounted ? theme : ''} suppressHydrationWarning>
@@ -164,5 +171,5 @@ function RootDocument() {
         <Scripts />
       </body>
     </html>
-  );
+  )
 }

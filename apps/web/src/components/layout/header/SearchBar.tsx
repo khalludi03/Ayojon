@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Search, X, Clock, TrendingUp } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
-import { useSearchState } from '@/hooks/use-search';
-import { useCategories } from '@/hooks/use-categories';
-import { SearchResultsSkeleton } from '@/components/ui/skeleton';
-import { cn, formatPrice } from '@/lib/utils';
+import { useEffect, useRef, useState } from 'react'
+import { Clock, Search, TrendingUp, X } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { useSearchState } from '@/hooks/use-search'
+import { useCategories } from '@/hooks/use-categories'
+import { SearchResultsSkeleton } from '@/components/ui/skeleton'
+import { cn, formatPrice } from '@/lib/utils'
 
 const POPULAR_SEARCHES = [
   'Wedding decorations',
@@ -12,120 +12,144 @@ const POPULAR_SEARCHES = [
   'Sound system',
   'LED lights',
   'Furniture rental',
-];
+]
 
 export function SearchBar() {
-  const navigate = useNavigate();
-  const { query, setQuery, results, isLoading, isOpen, setIsOpen, clearSearch, hasResults } =
-    useSearchState();
-  const { data: categories } = useCategories();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const navigate = useNavigate()
+  const {
+    query,
+    setQuery,
+    results,
+    isLoading,
+    isOpen,
+    setIsOpen,
+    clearSearch,
+    hasResults,
+  } = useSearchState()
+  const { data: categories } = useCategories()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
+  const [recentSearches, setRecentSearches] = useState<Array<string>>([])
 
   // Load recent searches from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('recentSearches');
+    const saved = localStorage.getItem('recentSearches')
     if (saved) {
       try {
-        setRecentSearches(JSON.parse(saved));
+        setRecentSearches(JSON.parse(saved))
       } catch (e) {
         // Ignore parse errors
       }
     }
-  }, []);
+  }, [])
 
   // Save search to recent searches
   const saveRecentSearch = (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
-    const updated = [searchQuery, ...recentSearches.filter((s) => s !== searchQuery)].slice(0, 5);
-    setRecentSearches(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-  };
+    if (!searchQuery.trim()) return
+    const updated = [
+      searchQuery,
+      ...recentSearches.filter((s) => s !== searchQuery),
+    ].slice(0, 5)
+    setRecentSearches(updated)
+    localStorage.setItem('recentSearches', JSON.stringify(updated))
+  }
 
   // Clear recent search
   const clearRecentSearch = (searchQuery: string) => {
-    const updated = recentSearches.filter((s) => s !== searchQuery);
-    setRecentSearches(updated);
-    localStorage.setItem('recentSearches', JSON.stringify(updated));
-  };
+    const updated = recentSearches.filter((s) => s !== searchQuery)
+    setRecentSearches(updated)
+    localStorage.setItem('recentSearches', JSON.stringify(updated))
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [setIsOpen]);
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [setIsOpen])
 
   // Filter matching categories
   const matchingCategories =
     query.length >= 2
-      ? categories?.filter((cat) =>
-          cat.name.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 3) || []
-      : [];
+      ? categories
+          ?.filter((cat) =>
+            cat.name.toLowerCase().includes(query.toLowerCase()),
+          )
+          .slice(0, 3) || []
+      : []
 
   // Total suggestions count
-  const totalSuggestions = results.length + matchingCategories.length;
+  const totalSuggestions = results.length + matchingCategories.length
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
-      setIsOpen(false);
-      setSelectedIndex(-1);
-      inputRef.current?.blur();
+      setIsOpen(false)
+      setSelectedIndex(-1)
+      inputRef.current?.blur()
     } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev < totalSuggestions - 1 ? prev + 1 : prev));
+      e.preventDefault()
+      setSelectedIndex((prev) =>
+        prev < totalSuggestions - 1 ? prev + 1 : prev,
+      )
     } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1))
     } else if (e.key === 'Enter') {
-      e.preventDefault();
+      e.preventDefault()
       if (selectedIndex >= 0) {
         // Navigate to selected item
         if (selectedIndex < matchingCategories.length) {
-          const category = matchingCategories[selectedIndex];
+          const category = matchingCategories[selectedIndex]
           if (category && category.slug) {
-            navigate({ to: '/category/$categorySlug', params: { categorySlug: category.slug } });
+            navigate({
+              to: '/category/$categorySlug',
+              params: { categorySlug: category.slug },
+            })
           }
         } else {
-          const product = results[selectedIndex - matchingCategories.length];
+          const product = results[selectedIndex - matchingCategories.length]
           if (product && product.slug) {
-            navigate({ to: '/product/$productSlug', params: { productSlug: product.slug } });
+            navigate({
+              to: '/product/$productSlug',
+              params: { productSlug: product.slug },
+            })
           }
         }
       } else if (query.trim()) {
         // Perform full search
-        saveRecentSearch(query);
-        navigate({ to: '/products', search: { search: query } });
+        saveRecentSearch(query)
+        navigate({ to: '/products', search: { search: query } })
       }
-      setIsOpen(false);
+      setIsOpen(false)
     }
-  };
+  }
 
   // Highlight matching text
-  const highlightMatch = (text: string, query: string) => {
-    if (!query) return text;
-    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+  const highlightMatch = (text: string, searchQuery: string) => {
+    if (!searchQuery) return text
+    const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'))
     return parts.map((part, i) =>
-      part.toLowerCase() === query.toLowerCase() ? (
+      part.toLowerCase() === searchQuery.toLowerCase() ? (
         <mark key={i} className="bg-yellow-200 dark:bg-yellow-900 font-medium">
           {part}
         </mark>
       ) : (
         part
-      )
-    );
-  };
+      ),
+    )
+  }
 
-  const showRecent = isOpen && query.length === 0 && recentSearches.length > 0;
-  const showSuggestions = isOpen && query.length >= 2;
+  const showRecent = isOpen && query.length === 0 && recentSearches.length > 0
+  const showSuggestions = isOpen && query.length >= 2
 
   return (
     <div ref={containerRef} className="relative w-full">
@@ -136,9 +160,9 @@ export function SearchBar() {
           type="search"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(true);
-            setSelectedIndex(-1);
+            setQuery(e.target.value)
+            setIsOpen(true)
+            setSelectedIndex(-1)
           }}
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleKeyDown}
@@ -147,7 +171,9 @@ export function SearchBar() {
           aria-label="Search products"
           aria-expanded={isOpen && (showRecent || showSuggestions)}
           aria-controls="search-results"
-          aria-activedescendant={selectedIndex >= 0 ? `search-item-${selectedIndex}` : undefined}
+          aria-activedescendant={
+            selectedIndex >= 0 ? `search-item-${selectedIndex}` : undefined
+          }
           role="combobox"
         />
         {query && (
@@ -183,9 +209,9 @@ export function SearchBar() {
                   >
                     <button
                       onClick={() => {
-                        setQuery(search);
-                        saveRecentSearch(search);
-                        navigate({ to: '/products', search: { search } });
+                        setQuery(search)
+                        saveRecentSearch(search)
+                        navigate({ to: '/products', search: { search } })
                       }}
                       className="flex-1 text-left text-sm text-[hsl(var(--foreground))]"
                     >
@@ -193,8 +219,8 @@ export function SearchBar() {
                     </button>
                     <button
                       onClick={(e) => {
-                        e.stopPropagation();
-                        clearRecentSearch(search);
+                        e.stopPropagation()
+                        clearRecentSearch(search)
                       }}
                       className="rounded p-1 transition-colors hover:bg-[hsl(var(--accent))]"
                       aria-label="Remove from recent"
@@ -215,29 +241,34 @@ export function SearchBar() {
               ) : (
                 <div className="p-2">
                   {/* Popular Searches */}
-                  {query.length === 2 && !hasResults && matchingCategories.length === 0 && (
-                    <div className="mb-3">
-                      <div className="mb-2 flex items-center gap-2 px-2 text-xs font-medium text-[hsl(var(--muted-foreground))]">
-                        <TrendingUp className="h-3.5 w-3.5" />
-                        <span>Popular Searches</span>
+                  {query.length === 2 &&
+                    !hasResults &&
+                    matchingCategories.length === 0 && (
+                      <div className="mb-3">
+                        <div className="mb-2 flex items-center gap-2 px-2 text-xs font-medium text-[hsl(var(--muted-foreground))]">
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          <span>Popular Searches</span>
+                        </div>
+                        <div className="space-y-1">
+                          {POPULAR_SEARCHES.map((search, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setQuery(search)
+                                saveRecentSearch(search)
+                                navigate({
+                                  to: '/products',
+                                  search: { search },
+                                })
+                              }}
+                              className="w-full rounded px-2 py-1.5 text-left text-sm text-[hsl(var(--foreground))] transition-colors hover:bg-[hsl(var(--muted))]"
+                            >
+                              {search}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        {POPULAR_SEARCHES.map((search, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => {
-                              setQuery(search);
-                              saveRecentSearch(search);
-                              navigate({ to: '/products', search: { search } });
-                            }}
-                            className="w-full rounded px-2 py-1.5 text-left text-sm text-[hsl(var(--foreground))] transition-colors hover:bg-[hsl(var(--muted))]"
-                          >
-                            {search}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Categories */}
                   {matchingCategories.length > 0 && (
@@ -253,11 +284,12 @@ export function SearchBar() {
                               href={`/category/${category.slug}`}
                               className={cn(
                                 'flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors hover:bg-[hsl(var(--muted))]',
-                                selectedIndex === idx && 'bg-[hsl(var(--muted))]'
+                                selectedIndex === idx &&
+                                  'bg-[hsl(var(--muted))]',
                               )}
                               onClick={() => {
-                                saveRecentSearch(query);
-                                setIsOpen(false);
+                                saveRecentSearch(query)
+                                setIsOpen(false)
                               }}
                               role="option"
                               aria-selected={selectedIndex === idx}
@@ -283,7 +315,7 @@ export function SearchBar() {
                       </div>
                       <ul className="space-y-1">
                         {results.map((product, idx) => {
-                          const itemIndex = matchingCategories.length + idx;
+                          const itemIndex = matchingCategories.length + idx
                           return (
                             <li key={product.id}>
                               <a
@@ -291,11 +323,12 @@ export function SearchBar() {
                                 href={`/product/${product.slug}`}
                                 className={cn(
                                   'flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-[hsl(var(--muted))]',
-                                  selectedIndex === itemIndex && 'bg-[hsl(var(--muted))]'
+                                  selectedIndex === itemIndex &&
+                                    'bg-[hsl(var(--muted))]',
                                 )}
                                 onClick={() => {
-                                  saveRecentSearch(query);
-                                  setIsOpen(false);
+                                  saveRecentSearch(query)
+                                  setIsOpen(false)
                                 }}
                                 role="option"
                                 aria-selected={selectedIndex === itemIndex}
@@ -315,18 +348,20 @@ export function SearchBar() {
                                 </div>
                               </a>
                             </li>
-                          );
+                          )
                         })}
                       </ul>
                     </div>
                   )}
 
                   {/* No Results */}
-                  {!hasResults && matchingCategories.length === 0 && query.length > 2 && (
-                    <div className="p-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
-                      No results found for "{query}"
-                    </div>
-                  )}
+                  {!hasResults &&
+                    matchingCategories.length === 0 &&
+                    query.length > 2 && (
+                      <div className="p-4 text-center text-sm text-[hsl(var(--muted-foreground))]">
+                        No results found for "{query}"
+                      </div>
+                    )}
                 </div>
               )}
             </>
@@ -334,5 +369,5 @@ export function SearchBar() {
         </div>
       )}
     </div>
-  );
+  )
 }

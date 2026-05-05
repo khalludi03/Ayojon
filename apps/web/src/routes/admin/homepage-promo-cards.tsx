@@ -1,62 +1,62 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
-import { Edit, Eye, EyeOff, Image as ImageIcon, Save } from 'lucide-react';
-import { getUser } from '@/functions/get-user';
-import { orpc, orpcClient } from '@/utils/orpc';
-import { Button } from '@/components/ui/button';
+import { createFileRoute, redirect } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { Edit, Eye, EyeOff, Image as ImageIcon, Save } from 'lucide-react'
+import { nanoid } from 'nanoid'
+import { getUser } from '@/functions/get-user'
+import { orpc, orpcClient } from '@/utils/orpc'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
-import { nanoid } from 'nanoid';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/admin/homepage-promo-cards' as any)({
   beforeLoad: async () => {
-    const session = await getUser();
+    const session = await getUser()
     if (!session) {
-      throw redirect({ to: '/login' });
+      throw redirect({ to: '/login' })
     }
-    const user = session.user as any;
+    const user = session.user as any
     if (user.role !== 'admin') {
-      throw redirect({ to: '/' });
+      throw redirect({ to: '/' })
     }
-    return { session };
+    return { session }
   },
   component: HomepagePromoCardsPage,
-});
+})
 
 interface PromoCard {
-  id: string;
-  slotNumber: number;
-  imageUrl: string;
-  label: string;
-  title: string;
-  link: string;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  slotNumber: number
+  imageUrl: string
+  label: string
+  title: string
+  link: string
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
 }
 
 interface PromoCardFormData {
-  imageUrl: string;
-  label: string;
-  title: string;
-  link: string;
-  isActive: boolean;
+  imageUrl: string
+  label: string
+  title: string
+  link: string
+  isActive: boolean
 }
 
 function HomepagePromoCardsPage() {
-  const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSlot, setEditingSlot] = useState<number | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const queryClient = useQueryClient()
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingSlot, setEditingSlot] = useState<number | null>(null)
+  const [uploading, setUploading] = useState(false)
 
   const [formData, setFormData] = useState<PromoCardFormData>({
     imageUrl: '',
@@ -64,32 +64,36 @@ function HomepagePromoCardsPage() {
     title: '',
     link: '/',
     isActive: true,
-  });
+  })
 
   // Fetch promo cards
-  const { data, isLoading } = useQuery(orpc.admin.listAllPromoCards.queryOptions());
-  const promoCards = data?.promoCards || [];
+  const { data, isLoading } = useQuery(
+    orpc.admin.listAllPromoCards.queryOptions(),
+  )
+  const promoCards = data?.promoCards || []
 
   // Create a map of slot number to promo card
-  const promoCardsBySlot = new Map<number, PromoCard>();
+  const promoCardsBySlot = new Map<number, PromoCard>()
   promoCards.forEach((card) => {
-    promoCardsBySlot.set(card.slotNumber, card);
-  });
+    promoCardsBySlot.set(card.slotNumber, card)
+  })
 
   // Update promo card mutation
   const updateMutation = useMutation({
     mutationFn: async ({
       slotNumber,
-      ...data
+      ...cardData
     }: { slotNumber: number } & Partial<PromoCardFormData>) => {
-      return await orpcClient.admin.updatePromoCard({ slotNumber, ...data });
+      return await orpcClient.admin.updatePromoCard({ slotNumber, ...cardData })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin', 'listAllPromoCards'] });
-      setIsDialogOpen(false);
-      resetForm();
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'listAllPromoCards'],
+      })
+      setIsDialogOpen(false)
+      resetForm()
     },
-  });
+  })
 
   const resetForm = () => {
     setFormData({
@@ -98,13 +102,13 @@ function HomepagePromoCardsPage() {
       title: '',
       link: '/',
       isActive: true,
-    });
-    setEditingSlot(null);
-  };
+    })
+    setEditingSlot(null)
+  }
 
   const openEditDialog = (slotNumber: number) => {
-    const card = promoCardsBySlot.get(slotNumber);
-    setEditingSlot(slotNumber);
+    const card = promoCardsBySlot.get(slotNumber)
+    setEditingSlot(slotNumber)
     if (card) {
       setFormData({
         imageUrl: card.imageUrl,
@@ -112,7 +116,7 @@ function HomepagePromoCardsPage() {
         title: card.title,
         link: card.link,
         isActive: card.isActive,
-      });
+      })
     } else {
       setFormData({
         imageUrl: '',
@@ -120,32 +124,32 @@ function HomepagePromoCardsPage() {
         title: `Promo Card ${slotNumber}`,
         link: '/',
         isActive: true,
-      });
+      })
     }
-    setIsDialogOpen(true);
-  };
+    setIsDialogOpen(true)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingSlot === null) return;
-    updateMutation.mutate({ slotNumber: editingSlot, ...formData });
-  };
+    e.preventDefault()
+    if (editingSlot === null) return
+    updateMutation.mutate({ slotNumber: editingSlot, ...formData })
+  }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    setUploading(true);
+    setUploading(true)
     try {
       // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `homepage/promo-cards/${nanoid()}.${fileExt}`;
+      const fileExt = file.name.split('.').pop()
+      const fileName = `homepage/promo-cards/${nanoid()}.${fileExt}`
 
       // Get presigned URL
       const { url, publicUrl } = await orpcClient.storage.getUploadUrl({
         key: fileName,
         type: file.type,
-      });
+      })
 
       // Upload file
       await fetch(url, {
@@ -154,32 +158,31 @@ function HomepagePromoCardsPage() {
         headers: {
           'Content-Type': file.type,
         },
-      });
+      })
 
       // Update form data
-      setFormData((prev) => ({ ...prev, imageUrl: publicUrl }));
+      setFormData((prev) => ({ ...prev, imageUrl: publicUrl }))
     } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Failed to upload image');
+      console.error('Upload failed:', error)
+      alert('Failed to upload image')
     } finally {
-      setUploading(false);
+      setUploading(false)
     }
-  };
+  }
 
   const toggleActive = (slotNumber: number) => {
-    const card = promoCardsBySlot.get(slotNumber);
+    const card = promoCardsBySlot.get(slotNumber)
     if (card) {
-      updateMutation.mutate({ slotNumber, isActive: !card.isActive });
+      updateMutation.mutate({ slotNumber, isActive: !card.isActive })
     }
-  };
+  }
 
-  if (isLoading) {
+  if (!data)
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
       </div>
-    );
-  }
+    )
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 md:p-8">
@@ -197,8 +200,8 @@ function HomepagePromoCardsPage() {
         {/* Promo Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {[1, 2, 3, 4].map((slotNumber) => {
-            const card = promoCardsBySlot.get(slotNumber);
-            const isEmpty = !card || !card.imageUrl;
+            const card = promoCardsBySlot.get(slotNumber)
+            const isEmpty = !card || !card.imageUrl
 
             return (
               <div
@@ -206,7 +209,7 @@ function HomepagePromoCardsPage() {
                 className={cn(
                   'bg-white dark:bg-slate-900 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700',
                   'hover:border-slate-400 dark:hover:border-slate-600 transition-colors',
-                  card && !card.isActive && 'opacity-50'
+                  card && !card.isActive && 'opacity-50',
                 )}
               >
                 <div className="p-6 space-y-4">
@@ -222,7 +225,7 @@ function HomepagePromoCardsPage() {
                             'text-xs px-2 py-0.5 rounded',
                             card.isActive
                               ? 'bg-green-100 text-green-700'
-                              : 'bg-slate-100 text-slate-700'
+                              : 'bg-slate-100 text-slate-700',
                           )}
                         >
                           {card.isActive ? 'Active' : 'Inactive'}
@@ -298,7 +301,7 @@ function HomepagePromoCardsPage() {
                   )}
                 </div>
               </div>
-            );
+            )
           })}
         </div>
 
@@ -306,9 +309,7 @@ function HomepagePromoCardsPage() {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                Edit Promo Card - Slot {editingSlot}
-              </DialogTitle>
+              <DialogTitle>Edit Promo Card - Slot {editingSlot}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Image Upload */}
@@ -387,7 +388,10 @@ function HomepagePromoCardsPage() {
                   id="isActive"
                   checked={formData.isActive}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, isActive: e.target.checked }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      isActive: e.target.checked,
+                    }))
                   }
                   className="h-4 w-4"
                 />
@@ -426,5 +430,5 @@ function HomepagePromoCardsPage() {
         </Dialog>
       </div>
     </div>
-  );
+  )
 }

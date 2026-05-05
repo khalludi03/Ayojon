@@ -1,38 +1,66 @@
-import { Heart, Cake, Briefcase, Church, Calendar, Baby, GraduationCap, PartyPopper, Users, Sparkles, type LucideIcon } from 'lucide-react';
-import type { EventType } from '@/types';
-import { EventCard } from './EventCard';
-import { orpc } from '@/utils/orpc';
-import { useQuery } from '@tanstack/react-query';
+import {
+  Baby,
+  Briefcase,
+  Cake,
+  Calendar,
+  Church,
+  GraduationCap,
+  Heart,
+  PartyPopper,
+  Sparkles,
+  Users,
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { EventCard } from './EventCard'
+import type { LucideIcon } from 'lucide-react'
+import type { EventType } from '@/types'
+import { orpc } from '@/utils/orpc'
 
 const iconMap: Record<string, LucideIcon> = {
-  'wedding': Heart,
-  'birthday': Cake,
-  'corporate': Briefcase,
-  'religious': Church,
-  'anniversary': Calendar,
+  wedding: Heart,
+  birthday: Cake,
+  corporate: Briefcase,
+  religious: Church,
+  anniversary: Calendar,
   'baby-shower': Baby,
-  'graduation': GraduationCap,
-  'engagement': Heart,
-  'conference': Users,
-  'festival': PartyPopper,
-};
+  graduation: GraduationCap,
+  engagement: Heart,
+  conference: Users,
+  festival: PartyPopper,
+}
 
-const fallbackIcons = [Heart, Cake, Briefcase, Church, Calendar, Baby, GraduationCap, PartyPopper, Users, Sparkles];
+const fallbackIcons = [
+  Heart,
+  Cake,
+  Briefcase,
+  Church,
+  Calendar,
+  Baby,
+  GraduationCap,
+  PartyPopper,
+  Users,
+  Sparkles,
+]
 
 export function EventsSection() {
   const { data: eventTypes, isLoading } = useQuery(
-    orpc.product.listEventTypes.queryOptions({})
-  ) as { data: Array<{ id: string; name: string; slug: string }> | undefined; isLoading: boolean };
+    orpc.product.listEventTypes.queryOptions({}),
+  ) as {
+    data: Array<{ id: string; name: string; slug: string }> | undefined
+    isLoading: boolean
+  }
 
-  const eventsWithIcons: EventType[] = (eventTypes || []).map((event: { id: string; name: string; slug: string }, index: number) => ({
-    id: event.id,
-    name: event.name,
-    slug: event.slug,
-    icon: iconMap[event.slug] || fallbackIcons[index % fallbackIcons.length],
-  }));
+  const eventsWithIcons: Array<EventType> = (eventTypes || []).map(
+    (event: { id: string; name: string; slug: string }, index: number) => ({
+      id: event.id,
+      name: event.name,
+      slug: event.slug,
+      icon: iconMap[event.slug] ?? fallbackIcons[index % fallbackIcons.length],
+    }),
+  )
 
-  if (isLoading || !eventsWithIcons.length) {
-    return null;
+  if (isLoading || eventsWithIcons.length === 0) {
+    return null
   }
 
   return (
@@ -44,7 +72,8 @@ export function EventsSection() {
               Shop by Event Type
             </h2>
             <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))] sm:text-base">
-              Find everything you need for your celebration - rent from trusted vendors
+              Find everything you need for your celebration - rent from trusted
+              vendors
             </p>
           </div>
 
@@ -56,5 +85,5 @@ export function EventsSection() {
         </div>
       </div>
     </section>
-  );
+  )
 }

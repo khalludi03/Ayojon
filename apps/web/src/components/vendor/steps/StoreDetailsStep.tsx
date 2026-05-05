@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import type { VendorFormData } from '@/types/vendor';
-import { Store, Upload, Image as ImageIcon, X, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import { AlertCircle, Image as ImageIcon, Store, Upload, X } from 'lucide-react'
+import type { VendorFormData } from '@/types/vendor'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 
 interface StoreDetailsStepProps {
-  formData: VendorFormData;
-  onFormChange: (field: keyof VendorFormData, value: any) => void;
-  onNext: () => void;
-  onBack: () => void;
+  formData: VendorFormData
+  onFormChange: (field: keyof VendorFormData, value: any) => void
+  onNext: () => void
+  onBack: () => void
 }
 
 const PRODUCT_CATEGORIES = [
@@ -26,7 +26,7 @@ const PRODUCT_CATEGORIES = [
   'Health & Wellness',
   'Automotive',
   'Jewelry & Accessories',
-];
+]
 
 export function StoreDetailsStep({
   formData,
@@ -34,37 +34,43 @@ export function StoreDetailsStep({
   onNext,
   onBack,
 }: StoreDetailsStepProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleFileUpload = (field: keyof VendorFormData, file: File | undefined) => {
-    onFormChange(field, file);
-  };
+  const handleFileUpload = (
+    field: keyof VendorFormData,
+    file: File | undefined,
+  ) => {
+    onFormChange(field, file)
+  }
 
   const toggleCategory = (category: string) => {
-    const current = formData.productCategories || [];
+    const current = formData.productCategories
     const updated = current.includes(category)
       ? current.filter((c) => c !== category)
-      : [...current, category];
-    onFormChange('productCategories', updated);
-  };
+      : [...current, category]
+    onFormChange('productCategories', updated)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    e.preventDefault()
+    const newErrors: Record<string, string> = {}
 
-    if (!formData.storeName.trim()) newErrors.storeName = 'Store name is required';
-    if (!formData.storeDescription.trim()) newErrors.storeDescription = 'Store description is required';
-    if (formData.storeDescription.length > 500) newErrors.storeDescription = 'Description must be 500 characters or less';
-    if (!formData.productCategories || formData.productCategories.length === 0) {
-      newErrors.productCategories = 'Select at least one category';
+    if (!formData.storeName.trim())
+      newErrors.storeName = 'Store name is required'
+    if (!formData.storeDescription.trim())
+      newErrors.storeDescription = 'Store description is required'
+    if (formData.storeDescription.length > 500)
+      newErrors.storeDescription = 'Description must be 500 characters or less'
+    if (formData.productCategories.length === 0) {
+      newErrors.productCategories = 'Select at least one category'
     }
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
-      onNext();
+      onNext()
     }
-  };
+  }
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
@@ -89,13 +95,14 @@ export function StoreDetailsStep({
               id="storeName"
               value={formData.storeName}
               onChange={(e) => {
-                onFormChange('storeName', e.target.value);
-                if (errors.storeName) setErrors((prev) => ({ ...prev, storeName: '' }));
+                onFormChange('storeName', e.target.value)
+                if (errors.storeName)
+                  setErrors((prev) => ({ ...prev, storeName: '' }))
               }}
               placeholder="Your Store Name"
               className={cn(
                 'pl-10',
-                errors.storeName && 'border-red-500 focus-visible:ring-red-500'
+                errors.storeName && 'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
@@ -120,14 +127,16 @@ export function StoreDetailsStep({
               id="storeDescription"
               value={formData.storeDescription}
               onChange={(e) => {
-                onFormChange('storeDescription', e.target.value);
-                if (errors.storeDescription) setErrors((prev) => ({ ...prev, storeDescription: '' }));
+                onFormChange('storeDescription', e.target.value)
+                if (errors.storeDescription)
+                  setErrors((prev) => ({ ...prev, storeDescription: '' }))
               }}
               placeholder="Describe your store and what you sell..."
               rows={4}
               maxLength={500}
               className={cn(
-                errors.storeDescription && 'border-red-500 focus-visible:ring-red-500'
+                errors.storeDescription &&
+                  'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
@@ -154,8 +163,9 @@ export function StoreDetailsStep({
                   id={`category-${category}`}
                   checked={formData.productCategories.includes(category)}
                   onCheckedChange={() => {
-                    toggleCategory(category);
-                    if (errors.productCategories) setErrors((prev) => ({ ...prev, productCategories: '' }));
+                    toggleCategory(category)
+                    if (errors.productCategories)
+                      setErrors((prev) => ({ ...prev, productCategories: '' }))
                   }}
                 />
                 <Label
@@ -200,7 +210,10 @@ export function StoreDetailsStep({
                 </Button>
               </div>
             ) : (
-              <label htmlFor="storeLogo" className="flex flex-col items-center cursor-pointer">
+              <label
+                htmlFor="storeLogo"
+                className="flex flex-col items-center cursor-pointer"
+              >
                 <Upload className="h-8 w-8 text-[hsl(var(--muted-foreground))] mb-2" />
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">
                   Click to upload logo
@@ -213,7 +226,9 @@ export function StoreDetailsStep({
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleFileUpload('storeLogo', e.target.files?.[0])}
+                  onChange={(e) =>
+                    handleFileUpload('storeLogo', e.target.files?.[0])
+                  }
                 />
               </label>
             )}
@@ -242,7 +257,10 @@ export function StoreDetailsStep({
                 </Button>
               </div>
             ) : (
-              <label htmlFor="storeBanner" className="flex flex-col items-center cursor-pointer">
+              <label
+                htmlFor="storeBanner"
+                className="flex flex-col items-center cursor-pointer"
+              >
                 <Upload className="h-8 w-8 text-[hsl(var(--muted-foreground))] mb-2" />
                 <span className="text-sm text-[hsl(var(--muted-foreground))]">
                   Click to upload banner
@@ -255,7 +273,9 @@ export function StoreDetailsStep({
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => handleFileUpload('storeBanner', e.target.files?.[0])}
+                  onChange={(e) =>
+                    handleFileUpload('storeBanner', e.target.files?.[0])
+                  }
                 />
               </label>
             )}
@@ -264,23 +284,14 @@ export function StoreDetailsStep({
 
         {/* Navigation Buttons */}
         <div className="flex justify-between pt-4">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={onBack}
-          >
+          <Button type="button" variant="outline" size="lg" onClick={onBack}>
             ← Previous
           </Button>
-          <Button
-            type="submit"
-            size="lg"
-            className="min-w-[120px]"
-          >
+          <Button type="submit" size="lg" className="min-w-[120px]">
             Next →
           </Button>
         </div>
       </form>
     </div>
-  );
+  )
 }

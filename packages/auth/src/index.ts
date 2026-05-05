@@ -1,36 +1,36 @@
-import { db } from "@my-better-t-app/db";
-import * as schema from "@my-better-t-app/db/schema/auth";
-import { env } from "@my-better-t-app/env/server";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { emailOTP } from "better-auth/plugins";
-import { sendPasswordResetEmail, sendOTPEmail } from "./lib/email";
-import { eq } from "drizzle-orm";
+import { db } from '@my-better-t-app/db'
+import * as schema from '@my-better-t-app/db/schema/auth'
+import { env } from '@my-better-t-app/env/server'
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { emailOTP } from 'better-auth/plugins'
+import { eq } from 'drizzle-orm'
+import { sendOTPEmail, sendPasswordResetEmail } from './lib/email'
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "pg",
+    provider: 'pg',
 
     schema: schema,
   }),
   user: {
     additionalFields: {
-      phoneNumber: { type: "string" },
-      dateOfBirth: { type: "date" },
-      gender: { type: "string" },
-      isDeactivated: { type: "boolean", defaultValue: false },
-      deactivatedAt: { type: "date" },
-      retentionUntil: { type: "date" },
-      deactivationReason: { type: "string" },
-      deactivationFeedback: { type: "string" },
+      phoneNumber: { type: 'string' },
+      dateOfBirth: { type: 'date' },
+      gender: { type: 'string' },
+      isDeactivated: { type: 'boolean', defaultValue: false },
+      deactivatedAt: { type: 'date' },
+      retentionUntil: { type: 'date' },
+      deactivationReason: { type: 'string' },
+      deactivationFeedback: { type: 'string' },
       role: {
-        type: "string",
-        defaultValue: "customer",
+        type: 'string',
+        defaultValue: 'customer',
         required: true,
       },
       vendorStatus: {
-        type: "string",
-        defaultValue: "none",
+        type: 'string',
+        defaultValue: 'none',
         required: true,
       },
     },
@@ -39,7 +39,7 @@ export const auth = betterAuth({
     session: {
       async beforeCreate(session) {
         // Reactivate deactivated users on successful login
-        const user = session.user as any;
+        const user = session.user
         if (user?.isDeactivated) {
           await db
             .update(schema.user)
@@ -51,9 +51,9 @@ export const auth = betterAuth({
               deactivationFeedback: null,
               updatedAt: new Date(),
             })
-            .where(eq(schema.user.id, user.id));
+            .where(eq(schema.user.id, user.id))
         }
-        return { session };
+        return { session }
       },
     },
   },
@@ -67,11 +67,10 @@ export const auth = betterAuth({
           to: user.email,
           userName: user.name,
           resetUrl: url,
-        });
-        console.log(`Password reset email sent to ${user.email}`);
+        })
+        console.log(`Password reset email sent to ${user.email}`)
       } catch (error) {
-        console.error("Failed to send password reset email:", error);
-
+        console.error('Failed to send password reset email:', error)
       }
     },
   },
@@ -90,7 +89,7 @@ export const auth = betterAuth({
   },
   advanced: {
     defaultCookieAttributes: {
-      sameSite: "none",
+      sameSite: 'none',
       secure: true,
       httpOnly: true,
     },
@@ -103,10 +102,10 @@ export const auth = betterAuth({
             to: email,
             otp,
             type,
-          });
+          })
         } catch (error) {
-          console.error("Failed to send OTP email:", error);
-          throw error;
+          console.error('Failed to send OTP email:', error)
+          throw error
         }
       },
       otpLength: 6,
@@ -114,4 +113,4 @@ export const auth = betterAuth({
       allowedAttempts: 3,
     }),
   ],
-});
+})

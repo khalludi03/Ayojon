@@ -1,9 +1,9 @@
 // Category Hooks - Based on PRD Section 7.8
 
-import {  useQuery } from '@tanstack/react-query';
-import type {UseQueryOptions} from '@tanstack/react-query';
-import type { Category } from '@/types';
-import { orpc } from '@/utils/orpc';
+import { useQuery } from '@tanstack/react-query'
+import type { UseQueryOptions } from '@tanstack/react-query'
+import type { Category } from '@/types'
+import { orpc } from '@/utils/orpc'
 
 // Query keys factory
 export const categoryKeys = {
@@ -11,13 +11,13 @@ export const categoryKeys = {
   lists: () => [...categoryKeys.all, 'list'] as const,
   detail: (id: string) => [...categoryKeys.all, 'detail', id] as const,
   slug: (slug: string) => [...categoryKeys.all, 'slug', slug] as const,
-};
+}
 
 /**
  * Fetch all categories
  */
 export function useCategories(
-  options?: Omit<UseQueryOptions<Array<Category>>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Array<Category>>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.listCategories.queryOptions({
@@ -25,9 +25,9 @@ export function useCategories(
       gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
       retry: 1, // Only retry once to avoid excessive retries
       retryDelay: 1000, // Wait 1 second before retrying
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }
 
 /**
@@ -36,9 +36,9 @@ export function useCategories(
  */
 export function useCategory(
   id: string,
-  options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>,
 ) {
-  return useCategoryBySlug(id, options);
+  return useCategoryBySlug(id, options)
 }
 
 /**
@@ -46,14 +46,14 @@ export function useCategory(
  */
 export function useCategoryBySlug(
   slug: string,
-  options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<Category | undefined>, 'queryKey' | 'queryFn'>,
 ) {
   return useQuery(
     orpc.product.getCategoryBySlug.queryOptions({
       input: { slug },
       enabled: !!slug,
       staleTime: 10 * 60 * 1000,
-      ...options as any,
-    })
-  ) as any;
+      ...(options as any),
+    }),
+  ) as any
 }

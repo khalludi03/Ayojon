@@ -1,9 +1,9 @@
-import { Button } from '@/components/ui/button';
-import { Plus, ShoppingCart, Settings, Package } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
+import { Package, Plus, Settings, ShoppingCart } from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import { Button } from '@/components/ui/button'
 
 export function QuickActions() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   const actions = [
     {
@@ -34,7 +34,7 @@ export function QuickActions() {
       variant: 'outline' as const,
       onClick: () => navigate({ to: '/vendor/settings' }),
     },
-  ];
+  ]
 
   return (
     <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
@@ -43,7 +43,7 @@ export function QuickActions() {
       </h3>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {actions.map((action) => {
-          const Icon = action.icon;
+          const Icon = action.icon
           return (
             <Button
               key={action.label}
@@ -59,9 +59,9 @@ export function QuickActions() {
                 {action.description}
               </span>
             </Button>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

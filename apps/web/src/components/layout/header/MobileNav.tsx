@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
 import {
   Baby,
   BookOpen,
@@ -21,13 +21,16 @@ import {
   Store,
   UtensilsCrossed,
   X,
-  Zap
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { CategoryIconName } from '@/types';
-import { useCategories } from '@/hooks/use-categories';
+  Zap,
+} from 'lucide-react'
+import type { CategoryIconName } from '@/types'
+import { cn } from '@/lib/utils'
+import { useCategories } from '@/hooks/use-categories'
 
-const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<
+  CategoryIconName,
+  React.ComponentType<{ className?: string }>
+> = {
   Smartphone,
   Shirt,
   Home,
@@ -43,31 +46,46 @@ const iconMap: Record<CategoryIconName, React.ComponentType<{ className?: string
   LayoutPanelTop,
   Flower,
   Gamepad2,
-};
+}
 
 interface MobileNavProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
 }
 
 interface NavSection {
-  id: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  items: Array<{ href: string; label: string; description?: string }>;
+  id: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  items: Array<{ href: string; label: string; description?: string }>
 }
 
-const navSections: NavSection[] = [
+const navSections: Array<NavSection> = [
   {
     id: 'decor',
     label: 'Decor',
     icon: Sparkles,
     items: [
-      { href: '/category/decorations-balloons?subcategory=balloon-arches', label: 'Balloon Arches & Bouquets' },
-      { href: '/category/decorations-balloons?subcategory=backdrops', label: 'Backdrops & Photo Walls' },
-      { href: '/category/decorations-balloons?subcategory=led-decor', label: 'LED Lights & Neon Signs' },
-      { href: '/category/decorations-balloons?subcategory=themed-decor', label: 'Themed Decorations' },
-      { href: '/category/decorations-balloons?subcategory=entrance-decor', label: 'Entrance & Gate Decor' },
+      {
+        href: '/category/decorations-balloons?subcategory=balloon-arches',
+        label: 'Balloon Arches & Bouquets',
+      },
+      {
+        href: '/category/decorations-balloons?subcategory=backdrops',
+        label: 'Backdrops & Photo Walls',
+      },
+      {
+        href: '/category/decorations-balloons?subcategory=led-decor',
+        label: 'LED Lights & Neon Signs',
+      },
+      {
+        href: '/category/decorations-balloons?subcategory=themed-decor',
+        label: 'Themed Decorations',
+      },
+      {
+        href: '/category/decorations-balloons?subcategory=entrance-decor',
+        label: 'Entrance & Gate Decor',
+      },
       { href: '/category/decorations-balloons', label: 'View All' },
     ],
   },
@@ -76,11 +94,26 @@ const navSections: NavSection[] = [
     label: 'Sound & Lighting',
     icon: Mic,
     items: [
-      { href: '/category/sound-lighting?subcategory=pa-systems', label: 'PA Systems & Speakers' },
-      { href: '/category/sound-lighting?subcategory=microphones', label: 'Microphones & Wireless' },
-      { href: '/category/sound-lighting?subcategory=dj-equipment', label: 'DJ Equipment' },
-      { href: '/category/sound-lighting?subcategory=stage-lights', label: 'Stage Lights & Effects' },
-      { href: '/category/sound-lighting?subcategory=projectors', label: 'Projectors & Screens' },
+      {
+        href: '/category/sound-lighting?subcategory=pa-systems',
+        label: 'PA Systems & Speakers',
+      },
+      {
+        href: '/category/sound-lighting?subcategory=microphones',
+        label: 'Microphones & Wireless',
+      },
+      {
+        href: '/category/sound-lighting?subcategory=dj-equipment',
+        label: 'DJ Equipment',
+      },
+      {
+        href: '/category/sound-lighting?subcategory=stage-lights',
+        label: 'Stage Lights & Effects',
+      },
+      {
+        href: '/category/sound-lighting?subcategory=projectors',
+        label: 'Projectors & Screens',
+      },
       { href: '/category/sound-lighting', label: 'View All' },
     ],
   },
@@ -89,26 +122,41 @@ const navSections: NavSection[] = [
     label: 'Catering',
     icon: UtensilsCrossed,
     items: [
-      { href: '/category/catering-equipment?subcategory=chafing-dishes', label: 'Chafing Dishes & Warmers' },
-      { href: '/category/catering-equipment?subcategory=glassware', label: 'Glassware & Drinkware' },
-      { href: '/category/catering-equipment?subcategory=bar-equipment', label: 'Bar Equipment' },
-      { href: '/category/catering-equipment?subcategory=serving-platters', label: 'Serving Platters & Bowls' },
-      { href: '/category/catering-equipment?subcategory=beverage-dispensers', label: 'Beverage Dispensers' },
+      {
+        href: '/category/catering-equipment?subcategory=chafing-dishes',
+        label: 'Chafing Dishes & Warmers',
+      },
+      {
+        href: '/category/catering-equipment?subcategory=glassware',
+        label: 'Glassware & Drinkware',
+      },
+      {
+        href: '/category/catering-equipment?subcategory=bar-equipment',
+        label: 'Bar Equipment',
+      },
+      {
+        href: '/category/catering-equipment?subcategory=serving-platters',
+        label: 'Serving Platters & Bowls',
+      },
+      {
+        href: '/category/catering-equipment?subcategory=beverage-dispensers',
+        label: 'Beverage Dispensers',
+      },
       { href: '/category/catering-equipment', label: 'View All' },
     ],
   },
-];
+]
 
 export function MobileNav({ isOpen, onClose }: MobileNavProps) {
-  const [expandedSection, setExpandedSection] = useState<string | null>(null);
-  const [showCategories, setShowCategories] = useState(false);
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
+  const [showCategories, setShowCategories] = useState(false)
+  const { data: categories, isLoading: categoriesLoading } = useCategories()
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSection(expandedSection === sectionId ? null : sectionId);
-  };
+    setExpandedSection(expandedSection === sectionId ? null : sectionId)
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <>
@@ -123,7 +171,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
       <div
         className={cn(
           'fixed left-0 top-0 z-50 h-full w-80 overflow-y-auto bg-[hsl(var(--background))] shadow-xl transition-transform duration-300 ease-in-out lg:hidden',
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          'translate-x-0',
         )}
       >
         {/* Header */}
@@ -155,8 +203,8 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           {/* Navigation Sections with Dropdowns */}
           <div className="mt-2 space-y-1">
             {navSections.map((section) => {
-              const isExpanded = expandedSection === section.id;
-              const SectionIcon = section.icon;
+              const isExpanded = expandedSection === section.id
+              const SectionIcon = section.icon
 
               return (
                 <div key={section.id} className="rounded-lg overflow-hidden">
@@ -171,7 +219,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     <ChevronDown
                       className={cn(
                         'h-4 w-4 transition-transform duration-200',
-                        isExpanded && 'rotate-180'
+                        isExpanded && 'rotate-180',
                       )}
                     />
                   </button>
@@ -180,7 +228,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                   <div
                     className={cn(
                       'overflow-hidden transition-all duration-200',
-                      isExpanded ? 'max-h-96' : 'max-h-0'
+                      isExpanded ? 'max-h-96' : 'max-h-0',
                     )}
                   >
                     <div className="ml-4 mt-1 space-y-1 border-l-2 border-[hsl(var(--border))] pl-4">
@@ -193,7 +241,9 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                         >
                           <ChevronRight className="h-3 w-3 text-[hsl(var(--muted-foreground))]" />
                           <div>
-                            <span className="text-[hsl(var(--foreground))]">{item.label}</span>
+                            <span className="text-[hsl(var(--foreground))]">
+                              {item.label}
+                            </span>
                             {item.description && (
                               <span className="block text-xs text-[hsl(var(--muted-foreground))]">
                                 {item.description}
@@ -205,7 +255,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                     </div>
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
 
@@ -247,7 +297,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
             <ChevronDown
               className={cn(
                 'h-4 w-4 transition-transform duration-200',
-                showCategories && 'rotate-180'
+                showCategories && 'rotate-180',
               )}
             />
           </button>
@@ -256,20 +306,23 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           <div
             className={cn(
               'overflow-hidden transition-all duration-300',
-              showCategories ? 'max-h-screen mt-2' : 'max-h-0'
+              showCategories ? 'max-h-screen mt-2' : 'max-h-0',
             )}
           >
             {categoriesLoading ? (
               <div className="space-y-2 px-2">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-12 animate-pulse rounded bg-[hsl(var(--muted))]" />
+                  <div
+                    key={i}
+                    className="h-12 animate-pulse rounded bg-[hsl(var(--muted))]"
+                  />
                 ))}
               </div>
             ) : (
               <div className="space-y-1 px-2">
                 {categories?.map((category) => {
-                  const Icon = iconMap[category.icon];
-                  if (!Icon) return null;
+                  const Icon = iconMap[category.icon]
+                  if (!Icon) return null
 
                   return (
                     <a
@@ -283,7 +336,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
                       </div>
                       <span className="font-medium">{category.name}</span>
                     </a>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -291,5 +344,5 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
         </nav>
       </div>
     </>
-  );
+  )
 }

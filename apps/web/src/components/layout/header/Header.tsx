@@ -1,27 +1,27 @@
-import { useState } from 'react';
-import { useNavigate, Link } from '@tanstack/react-router';
-import { HelpCircle, Menu, Phone, Search, Truck } from 'lucide-react';
-import { Logo } from './Logo';
-import { SearchBar } from './SearchBar';
-import { MobileSearchModal } from './MobileSearchModal';
-import { UserMenu } from './UserMenu';
-import { CartIcon } from './CartIcon';
-import { WishlistIcon } from './WishlistIcon';
-import { NotificationBell } from './NotificationBell';
-import { ThemeToggle } from './ThemeToggle';
-import { MainNav } from './MainNav';
-import { MegaMenu } from './MegaMenu';
-import { MobileNav } from './MobileNav';
-import { Button } from '@/components/ui/button';
-import { useCart } from '@/stores/cart-store';
-import { CartDrawer } from '@/components/cart/CartDrawer';
+import { useState } from 'react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { HelpCircle, Menu, Phone, Search, Truck } from 'lucide-react'
+import { Logo } from './Logo'
+import { SearchBar } from './SearchBar'
+import { MobileSearchModal } from './MobileSearchModal'
+import { UserMenu } from './UserMenu'
+import { CartIcon } from './CartIcon'
+import { WishlistIcon } from './WishlistIcon'
+import { NotificationBell } from './NotificationBell'
+import { ThemeToggle } from './ThemeToggle'
+import { MainNav } from './MainNav'
+import { MegaMenu } from './MegaMenu'
+import { MobileNav } from './MobileNav'
+import { Button } from '@/components/ui/button'
+import { useCart } from '@/stores/cart-store'
+import { CartDrawer } from '@/components/cart/CartDrawer'
 
 export function Header() {
-  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const { openDrawer } = useCart();
-  const navigate = useNavigate();
+  const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false)
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const { openDrawer } = useCart()
+  const navigate = useNavigate()
 
   return (
     <>
@@ -30,11 +30,17 @@ export function Header() {
         <div className="mx-auto max-w-7xl px-4">
           <div className="flex h-9 items-center justify-between text-xs">
             <div className="flex items-center gap-6">
-              <a href="/track-order" className="flex items-center gap-1.5 hover:text-white/80 transition-colors">
+              <a
+                href="/track-order"
+                className="flex items-center gap-1.5 hover:text-white/80 transition-colors"
+              >
                 <Truck className="h-3.5 w-3.5" />
                 Track Order
               </a>
-              <a href="/help" className="flex items-center gap-1.5 hover:text-white/80 transition-colors">
+              <a
+                href="/help"
+                className="flex items-center gap-1.5 hover:text-white/80 transition-colors"
+              >
                 <HelpCircle className="h-3.5 w-3.5" />
                 Help Center
               </a>
@@ -115,7 +121,7 @@ export function Header() {
           <div className="mx-auto max-w-7xl px-4">
             <div className="flex h-14 items-center justify-between">
               <MainNav onCategoryClick={() => setIsMegaMenuOpen(true)} />
-              
+
               {/* Right side promo text */}
               <div className="hidden xl:flex items-center">
                 <Link
@@ -133,18 +139,27 @@ export function Header() {
       </header>
 
       {/* Mega Menu - Desktop only */}
-      <MegaMenu isOpen={isMegaMenuOpen} onClose={() => setIsMegaMenuOpen(false)} />
+      <MegaMenu
+        isOpen={isMegaMenuOpen}
+        onClose={() => setIsMegaMenuOpen(false)}
+      />
 
       {/* Mobile Navigation Drawer */}
-      <MobileNav isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} />
+      <MobileNav
+        isOpen={isMobileNavOpen}
+        onClose={() => setIsMobileNavOpen(false)}
+      />
 
       {/* Mobile Search Modal */}
-      <MobileSearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
-      
+      <MobileSearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+      />
+
       {/* Cart Drawer */}
       <CartDrawer />
     </>
-  );
+  )
 }
 
-export default Header;
+export default Header

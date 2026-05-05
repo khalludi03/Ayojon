@@ -1,88 +1,96 @@
-import { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Filter, Calendar, Loader2, ShoppingBag } from 'lucide-react';
-import { orpc } from '@/utils/orpc';
-import { useQuery } from '@tanstack/react-query';
-import { OrdersTable } from './OrdersTable';
+import { useMemo, useState } from 'react'
+import { Calendar, Filter, Search, ShoppingBag } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { OrdersTable } from './OrdersTable'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { orpc } from '@/utils/orpc'
 
 export function VendorOrdersPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('');
-  const [dateRangeFilter, setDateRangeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
-  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('')
+  const [dateRangeFilter, setDateRangeFilter] = useState<
+    'all' | 'today' | 'week' | 'month'
+  >('all')
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch orders from backend
   const { data: ordersResponse, isLoading } = useQuery({
     ...orpc.vendor.getOrders.queryOptions({
       input: {
         status: statusFilter || undefined,
-      }
+      },
     } as any),
     ssr: false, // Disable SSR for this query
-  } as any);
+  })
 
-  const orders = (ordersResponse as any)?.data || [];
+  const orders = (ordersResponse as any)?.data || []
 
   const filteredOrders = useMemo(() => {
-    let filtered = [...orders];
+    let filtered = [...orders]
 
     // Search (frontend side)
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
         (o: any) =>
           o.orderNumber.toLowerCase().includes(query) ||
           o.shippingName?.toLowerCase().includes(query) ||
           o.shippingPhone?.includes(query) ||
-          o.user?.name?.toLowerCase().includes(query)
-      );
+          o.user?.name?.toLowerCase().includes(query),
+      )
     }
 
     // Payment method filter
     if (paymentMethodFilter) {
-      filtered = filtered.filter((o: any) => o.paymentMethod === paymentMethodFilter);
+      filtered = filtered.filter(
+        (o: any) => o.paymentMethod === paymentMethodFilter,
+      )
     }
 
     // Date range filter
     if (dateRangeFilter !== 'all') {
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const startOfWeek = new Date(startOfToday);
-      startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const now = new Date()
+      const startOfToday = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+      )
+      const startOfWeek = new Date(startOfToday)
+      startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay())
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
 
       filtered = filtered.filter((o: any) => {
-        const orderDate = new Date(o.createdAt);
+        const orderDate = new Date(o.createdAt)
         switch (dateRangeFilter) {
           case 'today':
-            return orderDate >= startOfToday;
+            return orderDate >= startOfToday
           case 'week':
-            return orderDate >= startOfWeek;
+            return orderDate >= startOfWeek
           case 'month':
-            return orderDate >= startOfMonth;
+            return orderDate >= startOfMonth
           default:
-            return true;
+            return true
         }
-      });
+      })
     }
 
-    return filtered;
-  }, [orders, searchQuery, paymentMethodFilter, dateRangeFilter]);
+    return filtered
+  }, [orders, searchQuery, paymentMethodFilter, dateRangeFilter])
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setStatusFilter('');
-    setPaymentMethodFilter('');
-    setDateRangeFilter('all');
-  };
+    setSearchQuery('')
+    setStatusFilter('')
+    setPaymentMethodFilter('')
+    setDateRangeFilter('all')
+  }
 
   const activeFilterCount =
     (searchQuery ? 1 : 0) +
     (statusFilter ? 1 : 0) +
     (paymentMethodFilter ? 1 : 0) +
-    (dateRangeFilter !== 'all' ? 1 : 0);
+    (dateRangeFilter !== 'all' ? 1 : 0)
 
   // Stats
   const stats = {
@@ -90,14 +98,16 @@ export function VendorOrdersPage() {
     pending: orders.filter((o: any) => o.status === 'pending').length,
     confirmed: orders.filter((o: any) => o.status === 'confirmed').length,
     delivered: orders.filter((o: any) => o.status === 'delivered').length,
-  };
+  }
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">Orders</h1>
+          <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">
+            Orders
+          </h1>
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
             Manage and fulfill customer orders ({filteredOrders.length} order
             {filteredOrders.length !== 1 ? 's' : ''})
@@ -107,20 +117,36 @@ export function VendorOrdersPage() {
         {/* Stats Cards */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Total Orders</p>
-            <p className="text-2xl font-bold text-[hsl(var(--foreground))]">{isLoading ? '...' : stats.total}</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Total Orders
+            </p>
+            <p className="text-2xl font-bold text-[hsl(var(--foreground))]">
+              {stats.total}
+            </p>
           </div>
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Pending</p>
-            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{isLoading ? '...' : stats.pending}</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Pending
+            </p>
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              {stats.pending}
+            </p>
           </div>
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Confirmed</p>
-            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{isLoading ? '...' : stats.confirmed}</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Confirmed
+            </p>
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {stats.confirmed}
+            </p>
           </div>
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Delivered</p>
-            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{isLoading ? '...' : stats.delivered}</p>
+            <p className="text-sm text-[hsl(var(--muted-foreground))]">
+              Delivered
+            </p>
+            <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+              {stats.delivered}
+            </p>
           </div>
         </div>
 
@@ -219,23 +245,22 @@ export function VendorOrdersPage() {
         </div>
 
         {/* Orders Table */}
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-[hsl(var(--primary))] mb-4" />
-            <p className="text-sm text-[hsl(var(--muted-foreground))]">Loading your orders...</p>
-          </div>
-        ) : filteredOrders.length > 0 ? (
+        {filteredOrders.length > 0 ? (
           <OrdersTable orders={filteredOrders} />
         ) : (
           <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-12 text-center">
             <ShoppingBag className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
-            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">No orders found</h3>
+            <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">
+              No orders found
+            </h3>
             <p className="text-sm text-[hsl(var(--muted-foreground))]">
-              {activeFilterCount > 0 ? 'Try adjusting your filters' : 'You haven\'t received any orders yet'}
+              {activeFilterCount > 0
+                ? 'Try adjusting your filters'
+                : "You haven't received any orders yet"}
             </p>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

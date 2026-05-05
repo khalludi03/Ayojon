@@ -1,14 +1,26 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Plus, Search, Filter, ChevronDown, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { orpc } from '@/utils/orpc';
-import { toast } from 'sonner';
-import type { VendorProduct, ProductStatus, ProductType } from '@/types/vendor-product';
-import { AddProductForm } from './AddProductForm';
-import { EnhancedProductsTable } from './EnhancedProductsTable';
-import { cn } from '@/lib/utils';
+import { useEffect, useMemo, useState } from 'react'
+import {
+  AlertTriangle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Plus,
+  Search,
+} from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import { AddProductForm } from './AddProductForm'
+import { EnhancedProductsTable } from './EnhancedProductsTable'
+import type {
+  ProductStatus,
+  ProductType,
+  VendorProduct,
+} from '@/types/vendor-product'
+import { orpc } from '@/utils/orpc'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import {
   Dialog,
   DialogContent,
@@ -16,10 +28,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from '@/components/ui/dialog'
 
-type SortField = 'name' | 'price' | 'stock' | 'createdAt';
-type SortOrder = 'asc' | 'desc';
+type SortField = 'name' | 'price' | 'stock' | 'createdAt'
+type SortOrder = 'asc' | 'desc'
 
 const CATEGORIES = [
   'Apparel & Accessories',
@@ -30,44 +42,48 @@ const CATEGORIES = [
   'Art & Collectibles',
   'Toys & Games',
   'Sports & Outdoors',
-];
+]
 
-const ITEMS_PER_PAGE = 20;
+const ITEMS_PER_PAGE = 20
 
 export function VendorProductsPage() {
-  const queryClient = useQueryClient();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<VendorProduct | null>(null);
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteType, setDeleteType] = useState<'single' | 'bulk'>('single');
-  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const queryClient = useQueryClient()
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<VendorProduct | null>(
+    null,
+  )
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(
+    new Set(),
+  )
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deleteType, setDeleteType] = useState<'single' | 'bulk'>('single')
+  const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('');
-  const [statusFilter, setStatusFilter] = useState<ProductStatus | ''>('');
-  const [typeFilter, setTypeFilter] = useState<ProductType | ''>('');
+  const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<ProductStatus | ''>('')
+  const [typeFilter, setTypeFilter] = useState<ProductType | ''>('')
 
   // Sorting
-  const [sortField, setSortField] = useState<SortField>('createdAt');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sortField, setSortField] = useState<SortField>('createdAt')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Show filters
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch products from API
-  const { data: apiProducts = [], isLoading, refetch } = useQuery(
+  const { data: apiProducts = [], refetch } = useQuery(
     orpc.product.listMyProducts.queryOptions({
       input: { limit: 100, offset: 0 },
-    })
-  );
+    }),
+  )
 
   // Map API products to VendorProduct format for UI compatibility
-  const products: VendorProduct[] = useMemo(() => {
+  const products: Array<VendorProduct> = useMemo(() => {
     return apiProducts.map((p: any) => ({
       id: p.id,
       vendorId: p.vendorId,
@@ -96,218 +112,243 @@ export function VendorProductsPage() {
       status: p.status as ProductStatus,
       createdAt: p.createdAt?.toString() || new Date().toISOString(),
       updatedAt: p.updatedAt?.toString() || new Date().toISOString(),
-    }));
-  }, [apiProducts]);
+    }))
+  }, [apiProducts])
 
   // Delete product mutation
   const deleteMutation = useMutation(
     orpc.product.deleteProduct.mutationOptions({
       onSuccess: () => {
-        toast.success('Product deleted successfully');
-        refetch();
+        toast.success('Product deleted successfully')
+        refetch()
       },
       onError: (error: any) => {
-        toast.error('Failed to delete product');
-        console.error('Delete error:', error);
+        toast.error('Failed to delete product')
+        console.error('Delete error:', error)
       },
-    })
-  );
+    }),
+  )
 
   // Update product status mutation
   const updateStatusMutation = useMutation(
     orpc.product.updateProduct.mutationOptions({
       onSuccess: () => {
-        toast.success('Product updated');
-        refetch();
+        toast.success('Product updated')
+        refetch()
       },
       onError: (error: any) => {
-        toast.error('Failed to update product');
-        console.error('Update error:', error);
+        toast.error('Failed to update product')
+        console.error('Update error:', error)
       },
-    })
-  );
+    }),
+  )
 
   const handleToggleStatus = (product: VendorProduct) => {
-    const newStatus = product.status === 'active' ? 'draft' : 'active';
-    updateStatusMutation.mutate({ id: product.id, status: newStatus });
-  };
+    const newStatus = product.status === 'active' ? 'draft' : 'active'
+    updateStatusMutation.mutate({ id: product.id, status: newStatus })
+  }
 
   const handleDeleteProduct = (productId: string) => {
-    setProductToDelete(productId);
-    setDeleteType('single');
-    setShowDeleteDialog(true);
-  };
+    setProductToDelete(productId)
+    setDeleteType('single')
+    setShowDeleteDialog(true)
+  }
 
   const confirmDelete = () => {
     if (deleteType === 'single' && productToDelete) {
-      deleteMutation.mutate({ id: productToDelete });
+      deleteMutation.mutate({ id: productToDelete })
     } else if (deleteType === 'bulk') {
       selectedProducts.forEach((productId) => {
-        deleteMutation.mutate({ id: productId });
-      });
-      setSelectedProducts(new Set());
+        deleteMutation.mutate({ id: productId })
+      })
+      setSelectedProducts(new Set())
     }
-    setShowDeleteDialog(false);
-    setProductToDelete(null);
-  };
+    setShowDeleteDialog(false)
+    setProductToDelete(null)
+  }
 
   const handleUpdatePrice = (productId: string, price: number) => {
-    updateStatusMutation.mutate({ id: productId, price: price.toString() });
-  };
+    updateStatusMutation.mutate({ id: productId, price: price.toString() })
+  }
 
   const handleUpdateStock = (productId: string, stock: number) => {
-    updateStatusMutation.mutate({ id: productId, stock });
-  };
+    updateStatusMutation.mutate({ id: productId, stock })
+  }
 
   // Filter, sort, and paginate products
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = [...products];
+    let filtered = [...products]
 
     // Search
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.sku.toLowerCase().includes(query) ||
-          p.brand.toLowerCase().includes(query)
-      );
+          p.brand.toLowerCase().includes(query),
+      )
     }
 
     // Category filter
     if (categoryFilter) {
-      filtered = filtered.filter((p) => p.category === categoryFilter);
+      filtered = filtered.filter((p) => p.category === categoryFilter)
     }
 
     // Status filter
     if (statusFilter) {
-      filtered = filtered.filter((p) => p.status === statusFilter);
+      filtered = filtered.filter((p) => p.status === statusFilter)
     }
 
     // Type filter
     if (typeFilter) {
-      filtered = filtered.filter((p) => p.productType === typeFilter);
+      filtered = filtered.filter((p) => p.productType === typeFilter)
     }
 
     // Sort
     filtered.sort((a, b) => {
-      let aVal: any;
-      let bVal: any;
+      let aVal: any
+      let bVal: any
 
       switch (sortField) {
         case 'name':
-          aVal = a.name.toLowerCase();
-          bVal = b.name.toLowerCase();
-          break;
+          aVal = a.name.toLowerCase()
+          bVal = b.name.toLowerCase()
+          break
         case 'price':
-          aVal = a.purchaseDetails?.regularPrice || a.rentalDetails?.dailyRate || 0;
-          bVal = b.purchaseDetails?.regularPrice || b.rentalDetails?.dailyRate || 0;
-          break;
+          aVal =
+            a.purchaseDetails?.regularPrice || a.rentalDetails?.dailyRate || 0
+          bVal =
+            b.purchaseDetails?.regularPrice || b.rentalDetails?.dailyRate || 0
+          break
         case 'stock':
-          aVal = a.purchaseDetails?.quantity || a.rentalDetails?.quantityAvailable || 0;
-          bVal = b.purchaseDetails?.quantity || b.rentalDetails?.quantityAvailable || 0;
-          break;
+          aVal =
+            a.purchaseDetails?.quantity ||
+            a.rentalDetails?.quantityAvailable ||
+            0
+          bVal =
+            b.purchaseDetails?.quantity ||
+            b.rentalDetails?.quantityAvailable ||
+            0
+          break
         case 'createdAt':
-          aVal = new Date(a.createdAt).getTime();
-          bVal = new Date(b.createdAt).getTime();
-          break;
+          aVal = new Date(a.createdAt).getTime()
+          bVal = new Date(b.createdAt).getTime()
+          break
         default:
-          return 0;
+          return 0
       }
 
-      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1
+      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1
+      return 0
+    })
 
-    return filtered;
-  }, [products, searchQuery, categoryFilter, statusFilter, typeFilter, sortField, sortOrder]);
+    return filtered
+  }, [
+    products,
+    searchQuery,
+    categoryFilter,
+    statusFilter,
+    typeFilter,
+    sortField,
+    sortOrder,
+  ])
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(
+    filteredAndSortedProducts.length / ITEMS_PER_PAGE,
+  )
   const paginatedProducts = filteredAndSortedProducts.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+    currentPage * ITEMS_PER_PAGE,
+  )
 
   // Reset to page 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, categoryFilter, statusFilter, typeFilter, sortField, sortOrder]);
+    setCurrentPage(1)
+  }, [
+    searchQuery,
+    categoryFilter,
+    statusFilter,
+    typeFilter,
+    sortField,
+    sortOrder,
+  ])
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
     } else {
-      setSortField(field);
-      setSortOrder('asc');
+      setSortField(field)
+      setSortOrder('asc')
     }
-  };
+  }
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedProducts(new Set(paginatedProducts.map((p) => p.id)));
+      setSelectedProducts(new Set(paginatedProducts.map((p) => p.id)))
     } else {
-      setSelectedProducts(new Set());
+      setSelectedProducts(new Set())
     }
-  };
+  }
 
   const handleSelectProduct = (productId: string, checked: boolean) => {
-    const newSelected = new Set(selectedProducts);
+    const newSelected = new Set(selectedProducts)
     if (checked) {
-      newSelected.add(productId);
+      newSelected.add(productId)
     } else {
-      newSelected.delete(productId);
+      newSelected.delete(productId)
     }
-    setSelectedProducts(newSelected);
-  };
+    setSelectedProducts(newSelected)
+  }
 
   const handleBulkActivate = () => {
     selectedProducts.forEach((productId) => {
-      updateStatusMutation.mutate({ id: productId, status: 'active' });
-    });
-    setSelectedProducts(new Set());
-  };
+      updateStatusMutation.mutate({ id: productId, status: 'active' })
+    })
+    setSelectedProducts(new Set())
+  }
 
   const handleBulkDeactivate = () => {
     selectedProducts.forEach((productId) => {
-      updateStatusMutation.mutate({ id: productId, status: 'draft' });
-    });
-    setSelectedProducts(new Set());
-  };
+      updateStatusMutation.mutate({ id: productId, status: 'draft' })
+    })
+    setSelectedProducts(new Set())
+  }
 
   const handleBulkDelete = () => {
-    setDeleteType('bulk');
-    setShowDeleteDialog(true);
-  };
+    setDeleteType('bulk')
+    setShowDeleteDialog(true)
+  }
 
   const handleAddProduct = () => {
-    setEditingProduct(null);
-    setShowAddForm(true);
-  };
+    setEditingProduct(null)
+    setShowAddForm(true)
+  }
 
   const handleEditProduct = (product: VendorProduct) => {
-    setEditingProduct(product);
-    setShowAddForm(true);
-  };
+    setEditingProduct(product)
+    setShowAddForm(true)
+  }
 
   const handleCloseForm = () => {
-    setShowAddForm(false);
-    setEditingProduct(null);
-  };
+    setShowAddForm(false)
+    setEditingProduct(null)
+  }
 
   const clearFilters = () => {
-    setSearchQuery('');
-    setCategoryFilter('');
-    setStatusFilter('');
-    setTypeFilter('');
-  };
+    setSearchQuery('')
+    setCategoryFilter('')
+    setStatusFilter('')
+    setTypeFilter('')
+  }
 
   const activeFilterCount =
     (searchQuery ? 1 : 0) +
     (categoryFilter ? 1 : 0) +
     (statusFilter ? 1 : 0) +
-    (typeFilter ? 1 : 0);
+    (typeFilter ? 1 : 0)
 
   if (showAddForm) {
     return (
@@ -317,23 +358,14 @@ export function VendorProductsPage() {
             existingProduct={editingProduct}
             onClose={handleCloseForm}
             onSuccess={() => {
-              setShowAddForm(false);
-              setEditingProduct(null);
-              refetch();
+              setShowAddForm(false)
+              setEditingProduct(null)
+              refetch()
             }}
           />
         </div>
       </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[hsl(var(--primary))] border-t-transparent"></div>
-        <span className="ml-3 text-[hsl(var(--muted-foreground))]">Loading products...</span>
-      </div>
-    );
+    )
   }
 
   return (
@@ -342,14 +374,17 @@ export function VendorProductsPage() {
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">Products</h1>
+            <h1 className="text-3xl font-bold text-[hsl(var(--foreground))]">
+              Products
+            </h1>
             <Button onClick={handleAddProduct} size="lg">
               <Plus className="h-5 w-5 mr-2" />
               Add Product
             </Button>
           </div>
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            Manage your product catalog ({filteredAndSortedProducts.length} product
+            Manage your product catalog ({filteredAndSortedProducts.length}{' '}
+            product
             {filteredAndSortedProducts.length !== 1 ? 's' : ''})
           </p>
         </div>
@@ -410,7 +445,9 @@ export function VendorProductsPage() {
                   </label>
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as ProductStatus | '')}
+                    onChange={(e) =>
+                      setStatusFilter(e.target.value as ProductStatus | '')
+                    }
                     className="w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]"
                   >
                     <option value="">All Statuses</option>
@@ -426,7 +463,9 @@ export function VendorProductsPage() {
                   </label>
                   <select
                     value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value as ProductType | '')}
+                    onChange={(e) =>
+                      setTypeFilter(e.target.value as ProductType | '')
+                    }
                     className="w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]"
                   >
                     <option value="">All Types</option>
@@ -443,9 +482,9 @@ export function VendorProductsPage() {
                   <select
                     value={`${sortField}-${sortOrder}`}
                     onChange={(e) => {
-                      const [field, order] = e.target.value.split('-');
-                      setSortField(field as SortField);
-                      setSortOrder(order as SortOrder);
+                      const [field, order] = e.target.value.split('-')
+                      setSortField(field as SortField)
+                      setSortOrder(order as SortOrder)
                     }}
                     className="w-full rounded-md border px-3 py-2 text-sm bg-[hsl(var(--background))] border-[hsl(var(--border))]"
                   >
@@ -477,13 +516,22 @@ export function VendorProductsPage() {
           <div className="mb-4 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-[hsl(var(--foreground))]">
-                {selectedProducts.size} product{selectedProducts.size !== 1 ? 's' : ''} selected
+                {selectedProducts.size} product
+                {selectedProducts.size !== 1 ? 's' : ''} selected
               </p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleBulkActivate}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkActivate}
+                >
                   Activate
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleBulkDeactivate}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkDeactivate}
+                >
                   Deactivate
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleBulkDelete}>
@@ -516,8 +564,11 @@ export function VendorProductsPage() {
           <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-[hsl(var(--muted-foreground))]">
               Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
-              {Math.min(currentPage * ITEMS_PER_PAGE, filteredAndSortedProducts.length)} of{' '}
-              {filteredAndSortedProducts.length} products
+              {Math.min(
+                currentPage * ITEMS_PER_PAGE,
+                filteredAndSortedProducts.length,
+              )}{' '}
+              of {filteredAndSortedProducts.length} products
             </p>
             <div className="flex gap-2">
               <Button
@@ -530,38 +581,48 @@ export function VendorProductsPage() {
                 Previous
               </Button>
               <div className="flex gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first page, last page, current page, and pages around current
-                  if (
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
-                  ) {
-                    return (
-                      <Button
-                        key={page}
-                        variant={page === currentPage ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setCurrentPage(page)}
-                        className="w-10"
-                      >
-                        {page}
-                      </Button>
-                    );
-                  } else if (page === currentPage - 2 || page === currentPage + 2) {
-                    return (
-                      <span key={page} className="px-2 py-1 text-sm text-[hsl(var(--muted-foreground))]">
-                        ...
-                      </span>
-                    );
-                  }
-                  return null;
-                })}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <Button
+                          key={page}
+                          variant={page === currentPage ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className="w-10"
+                        >
+                          {page}
+                        </Button>
+                      )
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span
+                          key={page}
+                          className="px-2 py-1 text-sm text-[hsl(var(--muted-foreground))]"
+                        >
+                          ...
+                        </span>
+                      )
+                    }
+                    return null
+                  },
+                )}
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -585,10 +646,15 @@ export function VendorProductsPage() {
             <DialogDescription className="pt-3">
               {deleteType === 'bulk' ? (
                 <>
-                  Are you sure you want to delete <strong>{selectedProducts.size} product{selectedProducts.size !== 1 ? 's' : ''}</strong>? This action cannot be undone.
+                  Are you sure you want to delete{' '}
+                  <strong>
+                    {selectedProducts.size} product
+                    {selectedProducts.size !== 1 ? 's' : ''}
+                  </strong>
+                  ? This action cannot be undone.
                 </>
               ) : (
-                "Are you sure you want to delete this product? This action cannot be undone."
+                'Are you sure you want to delete this product? This action cannot be undone.'
               )}
             </DialogDescription>
           </DialogHeader>
@@ -596,8 +662,8 @@ export function VendorProductsPage() {
             <Button
               variant="outline"
               onClick={() => {
-                setShowDeleteDialog(false);
-                setProductToDelete(null);
+                setShowDeleteDialog(false)
+                setProductToDelete(null)
               }}
             >
               Cancel
@@ -613,5 +679,5 @@ export function VendorProductsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

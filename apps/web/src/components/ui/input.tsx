@@ -1,15 +1,15 @@
-import * as React from 'react';
-import { Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import * as React from 'react'
+import { Search } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  error?: string;
-  label?: string;
+  error?: string
+  label?: string
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, label, id, ...props }, ref) => {
-    const inputId = id || React.useId();
+    const inputId = id || React.useId()
 
     return (
       <div className="w-full">
@@ -26,8 +26,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           id={inputId}
           className={cn(
             'flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&:-webkit-autofill]:!bg-[hsl(var(--background))] [&:-webkit-autofill]:shadow-[0_0_0_100px_hsl(var(--background))_inset] [&:-webkit-autofill]:[-webkit-text-fill-color:hsl(var(--foreground))]',
-            error && 'border-[hsl(var(--destructive))] focus:ring-[hsl(var(--destructive))]',
-            className
+            error &&
+              'border-[hsl(var(--destructive))] focus:ring-[hsl(var(--destructive))]',
+            className,
           )}
           ref={ref}
           aria-invalid={!!error}
@@ -43,23 +44,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </p>
         )}
       </div>
-    );
-  }
-);
-Input.displayName = 'Input';
+    )
+  },
+)
+Input.displayName = 'Input'
 
 // Search Input variant
 export interface SearchInputProps extends Omit<InputProps, 'type'> {
-  onSearch?: (value: string) => void;
+  onSearch?: (value: string) => void
 }
 
 const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ({ className, onSearch, ...props }, ref) => {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter' && onSearch) {
-        onSearch(e.currentTarget.value);
+        onSearch(e.currentTarget.value)
       }
-    };
+    }
 
     return (
       <div className="relative w-full">
@@ -68,16 +69,16 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           type="search"
           className={cn(
             'flex h-10 w-full rounded-md border border-[hsl(var(--input))] bg-[hsl(var(--background))] pl-10 pr-3 py-2 text-sm text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-            className
+            className,
           )}
           ref={ref}
           onKeyDown={handleKeyDown}
           {...props}
         />
       </div>
-    );
-  }
-);
-SearchInput.displayName = 'SearchInput';
+    )
+  },
+)
+SearchInput.displayName = 'SearchInput'
 
-export { Input, SearchInput };
+export { Input, SearchInput }

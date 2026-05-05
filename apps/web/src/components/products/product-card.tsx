@@ -1,18 +1,18 @@
-import { Link } from "@tanstack/react-router";
-import { Heart, ShoppingCart, Star, Trash2 } from "lucide-react";
-import { cn, formatPrice } from "@/lib/utils";
-import type { Product } from "@/types";
-import { useWishlist } from "@/stores/wishlist-store";
-import { useCart } from "@/stores/cart-store";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { Link } from '@tanstack/react-router'
+import { Heart, ShoppingCart, Star, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import type { Product } from '@/types'
+import { cn, formatPrice } from '@/lib/utils'
+import { useWishlist } from '@/stores/wishlist-store'
+import { useCart } from '@/stores/cart-store'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 interface ProductCardProps {
-  product: Product;
-  showRemoveButton?: boolean; // For wishlist page - shows Remove button instead of heart
-  onRemove?: () => void; // Callback when Remove button is clicked
-  className?: string;
+  product: Product
+  showRemoveButton?: boolean // For wishlist page - shows Remove button instead of heart
+  onRemove?: () => void // Callback when Remove button is clicked
+  className?: string
 }
 
 export function ProductCard({
@@ -21,70 +21,70 @@ export function ProductCard({
   onRemove,
   className,
 }: ProductCardProps) {
-  const { toggleItem, isInWishlist } = useWishlist();
-  const { addItem: addToCart } = useCart();
-  const inWishlist = isInWishlist(product.id);
+  const { toggleItem, isInWishlist } = useWishlist()
+  const { addItem: addToCart } = useCart()
+  const inWishlist = isInWishlist(product.id)
 
   // Handle add to cart
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent navigation
-    e.stopPropagation();
+    e.preventDefault() // Prevent navigation
+    e.stopPropagation()
 
     try {
       // Add with quantity 1 and first variant if available
-      addToCart(product, 1, product.variants?.[0]);
-      toast.success("Added to cart");
+      addToCart(product, 1, product.variants[0])
+      toast.success('Added to cart')
     } catch (error) {
-      toast.error("Failed to add to cart");
+      toast.error('Failed to add to cart')
     }
-  };
+  }
 
   // Handle wishlist toggle
   const handleWishlistToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleItem(product);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    toggleItem(product)
+  }
 
   // Handle remove (for wishlist page)
   const handleRemove = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onRemove?.();
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    onRemove?.()
+  }
 
   // Get stock status styling
   const getStockStatusColor = () => {
     switch (product.stockStatus) {
-      case "in_stock":
-        return "text-green-600";
-      case "low_stock":
-        return "text-orange-600";
-      case "out_of_stock":
-        return "text-red-600";
+      case 'in_stock':
+        return 'text-green-600'
+      case 'low_stock':
+        return 'text-orange-600'
+      case 'out_of_stock':
+        return 'text-red-600'
       default:
-        return "text-gray-600";
+        return 'text-gray-600'
     }
-  };
+  }
 
   const getStockStatusText = () => {
     switch (product.stockStatus) {
-      case "in_stock":
-        return "In Stock";
-      case "low_stock":
-        return `Only ${product.stock} left`;
-      case "out_of_stock":
-        return "Out of Stock";
+      case 'in_stock':
+        return 'In Stock'
+      case 'low_stock':
+        return `Only ${product.stock} left`
+      case 'out_of_stock':
+        return 'Out of Stock'
       default:
-        return "";
+        return ''
     }
-  };
+  }
 
   return (
     <div
       className={cn(
-        "group relative flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm transition-all hover:shadow-md",
-        className
+        'group relative flex flex-col rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm transition-all hover:shadow-md',
+        className,
       )}
     >
       {/* Wishlist/Remove Button - Top Right */}
@@ -103,12 +103,13 @@ export function ProductCard({
             variant="secondary"
             size="icon"
             className={cn(
-              "h-9 w-9 rounded-full shadow-sm transition-colors",
-              inWishlist && "bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+              'h-9 w-9 rounded-full shadow-sm transition-colors',
+              inWishlist &&
+                'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50',
             )}
             onClick={handleWishlistToggle}
           >
-            <Heart className={cn("h-4 w-4", inWishlist && "fill-current")} />
+            <Heart className={cn('h-4 w-4', inWishlist && 'fill-current')} />
           </Button>
         )}
       </div>
@@ -121,7 +122,7 @@ export function ProductCard({
           className="relative aspect-square overflow-hidden rounded-t-xl bg-[hsl(var(--muted))]/30"
         >
           <img
-            src={product.images[0]?.url || "/placeholder-product.png"}
+            src={product.images[0]?.url || '/placeholder-product.png'}
             alt={product.images[0]?.alt || product.title}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
@@ -132,10 +133,10 @@ export function ProductCard({
               {product.badges.map((badge) => (
                 <Badge
                   key={badge}
-                  variant={badge === "choice" ? "default" : "secondary"}
+                  variant={badge === 'choice' ? 'default' : 'secondary'}
                   className="text-[10px] uppercase"
                 >
-                  {badge.replace("_", " ")}
+                  {badge.replace('_', ' ')}
                 </Badge>
               ))}
             </div>
@@ -155,8 +156,8 @@ export function ProductCard({
         <div className="flex flex-1 flex-col gap-2 p-4">
           {/* Vendor - Links to vendor store */}
           <div className="flex items-center gap-1 text-xs text-[hsl(var(--muted-foreground))]">
-            <Link 
-              to="/vendor/$vendorId" 
+            <Link
+              to="/vendor/$vendorId"
               params={{ vendorId: product.vendor.slug || product.vendor.id }}
               className="hover:underline hover:text-primary transition-colors font-medium"
             >
@@ -184,7 +185,9 @@ export function ProductCard({
           <div className="flex items-center gap-1">
             <div className="flex items-center gap-0.5">
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{product.rating.average.toFixed(1)}</span>
+              <span className="text-sm font-medium">
+                {product.rating.average.toFixed(1)}
+              </span>
             </div>
             <span className="text-xs text-[hsl(var(--muted-foreground))]">
               ({product.rating.count})
@@ -204,7 +207,7 @@ export function ProductCard({
           </div>
 
           {/* Stock Status */}
-          <p className={cn("text-xs font-medium", getStockStatusColor())}>
+          <p className={cn('text-xs font-medium', getStockStatusColor())}>
             {getStockStatusText()}
           </p>
 
@@ -221,12 +224,14 @@ export function ProductCard({
           className="w-full"
           size="sm"
           onClick={handleAddToCart}
-          disabled={product.stockStatus === "out_of_stock"}
+          disabled={product.stockStatus === 'out_of_stock'}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
-          {product.stockStatus === "out_of_stock" ? "Out of Stock" : "Add to Cart"}
+          {product.stockStatus === 'out_of_stock'
+            ? 'Out of Stock'
+            : 'Add to Cart'}
         </Button>
       </div>
     </div>
-  );
+  )
 }

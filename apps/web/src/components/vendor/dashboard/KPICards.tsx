@@ -1,28 +1,45 @@
-import { DollarSign, ShoppingCart, Clock, Star, TrendingUp, TrendingDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
-import { orpc } from '@/utils/orpc';
+import {
+  Clock,
+  DollarSign,
+  ShoppingCart,
+  Star,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { cn } from '@/lib/utils'
+import { orpc } from '@/utils/orpc'
 
 interface KPICardProps {
-  title: string;
-  value: string | number;
-  icon: React.ElementType;
+  title: string
+  value: string | number
+  icon: React.ElementType
   trend?: {
-    value: number;
-    isPositive: boolean;
-  };
-  color?: string;
-  clickable?: boolean;
-  onClick?: () => void;
-  isLoading?: boolean;
+    value: number
+    isPositive: boolean
+  }
+  color?: string
+  clickable?: boolean
+  onClick?: () => void
+  isLoading?: boolean
 }
 
-function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, isLoading }: KPICardProps) {
+function KPICard({
+  title,
+  value,
+  icon: Icon,
+  trend,
+  color,
+  clickable,
+  onClick,
+  isLoading,
+}: KPICardProps) {
   return (
     <div
       className={cn(
         'group relative overflow-hidden rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:p-6 shadow-sm transition-all duration-300',
-        clickable && 'cursor-pointer hover:border-[hsl(var(--primary))] hover:shadow-lg hover:-translate-y-1'
+        clickable &&
+          'cursor-pointer hover:border-[hsl(var(--primary))] hover:shadow-lg hover:-translate-y-1',
       )}
       onClick={onClick}
     >
@@ -43,14 +60,21 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
 
           {trend && !isLoading && (
             <div className="flex items-center gap-1 sm:gap-1.5 pt-0.5 sm:pt-1">
-              <div className={cn(
-                "flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold",
-                trend.isPositive
-                  ? "bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400"
-                  : "bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400"
-              )}>
-                {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                {trend.isPositive ? '+' : ''}{trend.value}%
+              <div
+                className={cn(
+                  'flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold',
+                  trend.isPositive
+                    ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400'
+                    : 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400',
+                )}
+              >
+                {trend.isPositive ? (
+                  <TrendingUp className="h-3 w-3" />
+                ) : (
+                  <TrendingDown className="h-3 w-3" />
+                )}
+                {trend.isPositive ? '+' : ''}
+                {trend.value}%
               </div>
               <span className="text-xs text-[hsl(var(--muted-foreground))] font-medium">
                 vs last month
@@ -59,10 +83,14 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
           )}
         </div>
 
-        <div className={cn(
-          "rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-colors duration-300",
-          color ? color : "bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
-        )}>
+        <div
+          className={cn(
+            'rounded-xl sm:rounded-2xl p-2 sm:p-3 transition-colors duration-300',
+            color
+              ? color
+              : 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]',
+          )}
+        >
           <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
         </div>
       </div>
@@ -70,24 +98,33 @@ function KPICard({ title, value, icon: Icon, trend, color, clickable, onClick, i
       {/* Decorative background element */}
       <div className="absolute -right-4 -bottom-4 h-24 w-24 rounded-full bg-gradient-to-br from-transparent to-[hsl(var(--primary))]/5 opacity-0 transition-opacity group-hover:opacity-100" />
     </div>
-  );
+  )
 }
 
 export function KPICards() {
   const { data: stats, isLoading } = useQuery({
     ...orpc.vendor.getDashboardStats.queryOptions(),
     ssr: false,
-  } as any);
+  })
 
   return (
     <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-2 lg:grid-cols-3">
       <KPICard
         title="Total Revenue"
-        value={stats ? `৳${parseFloat(stats.totalRevenue).toLocaleString()}` : '৳0'}
+        value={
+          stats ? `৳${parseFloat(stats.totalRevenue).toLocaleString()}` : '৳0'
+        }
         icon={DollarSign}
         color="bg-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
         isLoading={isLoading}
-        trend={stats?.revenueGrowth ? { value: stats.revenueGrowth, isPositive: stats.revenueGrowth > 0 } : undefined}
+        trend={
+          stats?.revenueGrowth
+            ? {
+                value: stats.revenueGrowth,
+                isPositive: stats.revenueGrowth > 0,
+              }
+            : undefined
+        }
       />
       <KPICard
         title="Orders This Month"
@@ -95,7 +132,11 @@ export function KPICards() {
         icon={ShoppingCart}
         color="bg-blue-100 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400"
         isLoading={isLoading}
-        trend={stats?.ordersGrowth ? { value: stats.ordersGrowth, isPositive: stats.ordersGrowth > 0 } : undefined}
+        trend={
+          stats?.ordersGrowth
+            ? { value: stats.ordersGrowth, isPositive: stats.ordersGrowth > 0 }
+            : undefined
+        }
       />
       <KPICard
         title="Pending Orders"
@@ -119,5 +160,5 @@ export function KPICards() {
         isLoading={isLoading}
       />
     </div>
-  );
+  )
 }

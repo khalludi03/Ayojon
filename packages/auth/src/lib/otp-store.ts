@@ -1,6 +1,8 @@
 // Simple in-memory OTP store
 // In production, replace with a shared store (Redis or database)
 
+import { logger } from './logger';
+
 interface OTPData {
   otp: string;
   email: string;
@@ -30,7 +32,7 @@ export function storeOTP(
   success: boolean;
 } {
   assertNotProduction();
-  console.log(`[OTP STORE] Storing OTP for ${email}`);
+  logger.debug(`[OTP STORE] Storing OTP for ${email}`);
 
   otpStore.set(email.toLowerCase(), {
     otp,
@@ -50,24 +52,24 @@ export function verifyOTP(email: string, providedOTP: string): {
   const normalizedEmail = email.toLowerCase();
   const data = otpStore.get(normalizedEmail);
 
-  console.log(`[OTP STORE] Verifying OTP for ${email}`);
+  logger.debug(`[OTP STORE] Verifying OTP for ${email}`);
 
   if (!data) {
-    console.log(`[OTP STORE] No OTP found for ${email}`);
+    logger.warn(`[OTP STORE] No OTP found for ${email}`);
     return { valid: false, error: "No OTP found. Please request a new code." };
   }
 
   // Check expiry
   const now = Date.now();
   if (now - data.createdAt > OTP_EXPIRY_MS) {
-    console.log(`[OTP STORE] OTP expired for ${email}`);
+    logger.warn(`[OTP STORE] OTP expired for ${email}`);
     otpStore.delete(normalizedEmail);
     return { valid: false, error: "OTP has expired. Please request a new code." };
   }
 
   // Check attempts
   if (data.attempts >= MAX_ATTEMPTS) {
-    console.log(`[OTP STORE] Too many attempts for ${email}`);
+    logger.warn(`[OTP STORE] Too many attempts for ${email}`);
     otpStore.delete(normalizedEmail);
     return {
       valid: false,
@@ -78,12 +80,12 @@ export function verifyOTP(email: string, providedOTP: string): {
   // Verify OTP
   if (data.otp !== providedOTP) {
     data.attempts++;
-    console.log(
+    logger.warn(
       `[OTP STORE] Invalid OTP for ${email}. Attempts: ${data.attempts}/${MAX_ATTEMPTS}`
     );
 
     if (data.attempts >= MAX_ATTEMPTS) {
-      console.log(`[OTP STORE] Too many attempts for ${email}`);
+      logger.warn(`[OTP STORE] Too many attempts for ${email}`);
       otpStore.delete(normalizedEmail);
       return {
         valid: false,
@@ -98,7 +100,7 @@ export function verifyOTP(email: string, providedOTP: string): {
   }
 
   // Success - remove from store
-  console.log(`[OTP STORE] OTP verified successfully for ${email}`);
+  logger.info(`[OTP STORE] OTP verified successfully for ${email}`);
   otpStore.delete(normalizedEmail);
   return { valid: true };
 }

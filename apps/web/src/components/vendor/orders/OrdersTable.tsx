@@ -1,10 +1,10 @@
-import { ShoppingBag } from 'lucide-react';
-import { Link } from '@tanstack/react-router';
-import { cn } from '@/lib/utils';
-import { OrderStatusBadge } from '@/components/ui/order-status-badge';
+import { ShoppingBag } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
+import { OrderStatusBadge } from '@/components/ui/order-status-badge'
 
 interface OrdersTableProps {
-  orders: any[];
+  orders: Array<any>
 }
 
 const getPaymentMethodLabel = (method: string) => {
@@ -12,32 +12,34 @@ const getPaymentMethodLabel = (method: string) => {
     bkash: 'bKash',
     card: 'Card',
     cod: 'Cash on Delivery',
-  };
-  return labels[method] || method;
-};
+  }
+  return labels[method] || method
+}
 
 const formatDate = (date: any) => {
-  const d = new Date(date);
+  const d = new Date(date)
   return d.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
-  });
-};
+  })
+}
 
 export function OrdersTable({ orders }: OrdersTableProps) {
   if (orders.length === 0) {
     return (
       <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-12 text-center">
         <ShoppingBag className="h-12 w-12 mx-auto text-[hsl(var(--muted-foreground))] mb-4" />
-        <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">No orders found</h3>
+        <h3 className="text-lg font-semibold text-[hsl(var(--foreground))] mb-2">
+          No orders found
+        </h3>
         <p className="text-sm text-[hsl(var(--muted-foreground))]">
           Try adjusting your search or filters
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -75,7 +77,11 @@ export function OrdersTable({ orders }: OrdersTableProps) {
           </thead>
           <tbody className="divide-y divide-[hsl(var(--border))]">
             {orders.map((order) => {
-              const vendorSubtotal = (order.items || []).reduce((sum: number, item: any) => sum + (parseFloat(item.price) * item.quantity), 0);
+              const vendorSubtotal = (order.items || []).reduce(
+                (sum: number, item: any) =>
+                  sum + parseFloat(item.price) * item.quantity,
+                0,
+              )
               return (
                 <tr
                   key={order.id}
@@ -95,7 +101,8 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                     </div>
                   </td>
                   <td className="p-3 text-sm text-[hsl(var(--muted-foreground))]">
-                    {(order.items || []).length} item{(order.items || []).length !== 1 ? 's' : ''}
+                    {(order.items || []).length} item
+                    {(order.items || []).length !== 1 ? 's' : ''}
                   </td>
                   <td className="p-3 text-sm font-medium text-[hsl(var(--foreground))]">
                     ৳{vendorSubtotal.toLocaleString()}
@@ -126,7 +133,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                     </Link>
                   </td>
                 </tr>
-              );
+              )
             })}
           </tbody>
         </table>
@@ -135,40 +142,58 @@ export function OrdersTable({ orders }: OrdersTableProps) {
       {/* Mobile Cards */}
       <div className="lg:hidden divide-y divide-[hsl(var(--border))]">
         {orders.map((order) => {
-          const vendorSubtotal = (order.items || []).reduce((sum: number, item: any) => sum + (parseFloat(item.price) * item.quantity), 0);
+          const vendorSubtotal = (order.items || []).reduce(
+            (sum: number, item: any) =>
+              sum + parseFloat(item.price) * item.quantity,
+            0,
+          )
           return (
-            <div
-              key={order.id}
-              className="p-4 space-y-3"
-            >
+            <div key={order.id} className="p-4 space-y-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-[hsl(var(--foreground))]">
                     {order.orderNumber}
                   </p>
-                  <p className="text-sm text-[hsl(var(--muted-foreground))]">{order.shippingName || order.user?.name}</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))]">{order.shippingPhone}</p>
+                  <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                    {order.shippingName || order.user?.name}
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                    {order.shippingPhone}
+                  </p>
                 </div>
                 <OrderStatusBadge status={order.status} />
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
-                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">Items</span>
+                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">
+                    Items
+                  </span>
                   <span className="font-medium">
-                    {(order.items || []).length} item{(order.items || []).length !== 1 ? 's' : ''}
+                    {(order.items || []).length} item
+                    {(order.items || []).length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">Revenue</span>
-                  <span className="font-medium">৳{vendorSubtotal.toLocaleString()}</span>
+                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">
+                    Revenue
+                  </span>
+                  <span className="font-medium">
+                    ৳{vendorSubtotal.toLocaleString()}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">Payment</span>
-                  <span className="text-xs">{getPaymentMethodLabel(order.paymentMethod)}</span>
+                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">
+                    Payment
+                  </span>
+                  <span className="text-xs">
+                    {getPaymentMethodLabel(order.paymentMethod)}
+                  </span>
                 </div>
                 <div>
-                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">Date</span>
+                  <span className="text-[hsl(var(--muted-foreground))] text-xs block">
+                    Date
+                  </span>
                   <span className="text-xs">{formatDate(order.createdAt)}</span>
                 </div>
               </div>
@@ -181,9 +206,9 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                 View Details →
               </Link>
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

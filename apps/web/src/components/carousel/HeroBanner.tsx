@@ -1,10 +1,17 @@
-import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
-import { ArrowRight, Gift, Sparkles, Ticket, TrendingUp, Zap } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import {
+  ArrowRight,
+  Gift,
+  Sparkles,
+  Ticket,
+  TrendingUp,
+  Zap,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface HeroBannerProps {
-  className?: string;
+  className?: string
 }
 
 // Multiple banner slides for variety
@@ -14,10 +21,12 @@ const bannerSlides = [
     badge: 'Flash Sale',
     badgeIcon: Zap,
     title: 'Mega Flash Sale',
-    subtitle: 'Limited time offers on top brands. Hurry up! These deals won\'t last long.',
+    subtitle:
+      "Limited time offers on top brands. Hurry up! These deals won't last long.",
     ctaText: 'View Deals',
     ctaLink: '/flash-deals',
-    gradient: 'from-[hsl(var(--accent))] via-[hsl(14,100%,50%)] to-[hsl(var(--secondary))]',
+    gradient:
+      'from-[hsl(var(--accent))] via-[hsl(14,100%,50%)] to-[hsl(var(--secondary))]',
     accentColor: 'bg-white text-[hsl(var(--accent))]',
   },
   {
@@ -31,12 +40,12 @@ const bannerSlides = [
     gradient: 'from-violet-600 via-purple-600 to-indigo-600',
     accentColor: 'bg-white text-violet-600',
   },
-];
+]
 
 export function HeroBanner({ className }: HeroBannerProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const slide = bannerSlides[currentSlide];
-  const BadgeIcon = slide.badgeIcon;
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const slide = bannerSlides[currentSlide]
+  const BadgeIcon = slide.badgeIcon
 
   return (
     <div className={cn('relative', className)}>
@@ -44,7 +53,7 @@ export function HeroBanner({ className }: HeroBannerProps) {
       <div
         className={cn(
           'relative overflow-hidden rounded-xl bg-gradient-to-br',
-          slide.gradient
+          slide.gradient,
         )}
       >
         {/* Background Image (if available) */}
@@ -66,8 +75,14 @@ export function HeroBanner({ className }: HeroBannerProps) {
           <div className="absolute right-1/4 top-1/2 h-40 w-40 rounded-full bg-white/5 blur-xl" />
           {/* Animated dots */}
           <div className="absolute right-10 top-10 h-2 w-2 animate-pulse rounded-full bg-white/40" />
-          <div className="absolute right-20 top-20 h-3 w-3 animate-pulse rounded-full bg-white/30" style={{ animationDelay: '0.5s' }} />
-          <div className="absolute right-32 top-8 h-2 w-2 animate-pulse rounded-full bg-white/20" style={{ animationDelay: '1s' }} />
+          <div
+            className="absolute right-20 top-20 h-3 w-3 animate-pulse rounded-full bg-white/30"
+            style={{ animationDelay: '0.5s' }}
+          />
+          <div
+            className="absolute right-32 top-8 h-2 w-2 animate-pulse rounded-full bg-white/20"
+            style={{ animationDelay: '1s' }}
+          />
         </div>
 
         {/* Content */}
@@ -96,7 +111,7 @@ export function HeroBanner({ className }: HeroBannerProps) {
                 className={cn(
                   'inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-sm font-bold shadow-lg transition-all duration-300',
                   'hover:scale-105 hover:shadow-xl active:scale-100',
-                  slide.accentColor
+                  slide.accentColor,
                 )}
               >
                 {slide.ctaText}
@@ -114,16 +129,17 @@ export function HeroBanner({ className }: HeroBannerProps) {
               onClick={() => setCurrentSlide(index)}
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
-                index === currentSlide ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/70'
+                index === currentSlide
+                  ? 'w-8 bg-white'
+                  : 'w-2 bg-white/50 hover:bg-white/70',
               )}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
         </div>
       </div>
-
     </div>
-  );
+  )
 }
 
-export default HeroBanner;
+export default HeroBanner

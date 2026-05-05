@@ -1,6 +1,14 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Banknote,
+  Info,
+  Loader2,
+  Lock,
+  ShieldCheck,
+  Smartphone,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -8,63 +16,66 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Banknote, Lock, ShieldCheck, Smartphone, Loader2, Info } from "lucide-react";
+} from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
 
 // Custom bKash icon component using the actual logo
 function BkashIcon({ className }: { className?: string }) {
   return (
     <div className="rounded bg-white dark:bg-white p-1.5 flex items-center justify-center">
-      <img 
-        src="/bkash.svg" 
-        alt="bKash" 
+      <img
+        src="/bkash.svg"
+        alt="bKash"
         className={className}
         style={{ objectFit: 'contain', height: '100%', width: '100%' }}
       />
     </div>
-  );
+  )
 }
-import { cn } from "@/lib/utils";
 
 interface PaymentStepProps {
-  onPlaceOrder: () => void;
-  onBack: () => void;
+  onPlaceOrder: () => void
+  onBack: () => void
   formData: {
-    paymentMethod: string;
-    cardNumber?: string;
-    cardName?: string;
-    expiryDate?: string;
-    cvv?: string;
-    mobileNumber?: string;
-    bkashTransactionId?: string;
-  };
-  onFormChange: (field: string, value: string) => void;
-  isSubmitting?: boolean;
-  totalAmount: number;
+    paymentMethod: string
+    cardNumber?: string
+    cardName?: string
+    expiryDate?: string
+    cvv?: string
+    mobileNumber?: string
+    bkashTransactionId?: string
+  }
+  onFormChange: (field: string, value: string) => void
+  isSubmitting?: boolean
+  totalAmount: number
 }
 
-export function PaymentStep({ 
-  onPlaceOrder, 
-  onBack, 
-  formData, 
+export function PaymentStep({
+  onPlaceOrder,
+  onBack,
+  formData,
   onFormChange,
   isSubmitting = false,
-  totalAmount
+  totalAmount,
 }: PaymentStepProps) {
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     // Validate based on payment method
     if (formData.paymentMethod === 'bkash') {
-      if (!formData.mobileNumber || formData.mobileNumber.length !== 11 || !formData.bkashTransactionId) {
-        return;
+      if (
+        !formData.mobileNumber ||
+        formData.mobileNumber.length !== 11 ||
+        !formData.bkashTransactionId
+      ) {
+        return
       }
     }
-    
-    onPlaceOrder();
-  };
 
-  const unavailableMethods = new Set<string>();
+    onPlaceOrder()
+  }
+
+  const unavailableMethods = new Set<string>()
 
   const paymentMethods = [
     {
@@ -83,7 +94,7 @@ export function PaymentStep({
       fee: 0,
       badge: '⚡ Instant',
     },
-  ];
+  ]
 
   return (
     <div className="space-y-6">
@@ -115,7 +126,11 @@ export function PaymentStep({
               </Label>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button type="button" variant="link" className="h-auto p-0 text-sm">
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="h-auto p-0 text-sm"
+                  >
                     Payment Terms
                   </Button>
                 </DialogTrigger>
@@ -123,13 +138,19 @@ export function PaymentStep({
                   <DialogHeader>
                     <DialogTitle>Payment Terms & Conditions</DialogTitle>
                     <DialogDescription>
-                      Please review the payment terms before completing your order.
+                      Please review the payment terms before completing your
+                      order.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3 text-sm text-[hsl(var(--muted-foreground))]">
                     <p>• All payments are processed securely and encrypted.</p>
-                    <p>• Mobile wallet payments must be completed within 15 minutes.</p>
-                    <p>• Card payments may require OTP or 3D Secure verification.</p>
+                    <p>
+                      • Mobile wallet payments must be completed within 15
+                      minutes.
+                    </p>
+                    <p>
+                      • Card payments may require OTP or 3D Secure verification.
+                    </p>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -137,21 +158,21 @@ export function PaymentStep({
 
             <div className="grid gap-3 sm:grid-cols-2">
               {paymentMethods.map((method) => {
-                const Icon = method.icon;
-                const isSelected = formData.paymentMethod === method.id;
-                const isAvailable = !unavailableMethods.has(method.id);
+                const Icon = method.icon
+                const isSelected = formData.paymentMethod === method.id
+                const isAvailable = !unavailableMethods.has(method.id)
 
                 return (
                   <label
                     key={method.id}
                     className={cn(
-                      "group relative flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 p-5 transition-all duration-200",
-                      !isAvailable && "cursor-not-allowed opacity-60",
+                      'group relative flex cursor-pointer flex-col items-center gap-3 rounded-lg border-2 p-5 transition-all duration-200',
+                      !isAvailable && 'cursor-not-allowed opacity-60',
                       isSelected && isAvailable
                         ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-md scale-[1.02]'
                         : isAvailable
-                        ? 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
-                        : 'border-[hsl(var(--border))]'
+                          ? 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
+                          : 'border-[hsl(var(--border))]',
                     )}
                   >
                     <input
@@ -159,15 +180,19 @@ export function PaymentStep({
                       name="paymentMethod"
                       value={method.id}
                       checked={isSelected}
-                      onChange={(e) => onFormChange('paymentMethod', e.target.value)}
+                      onChange={(e) =>
+                        onFormChange('paymentMethod', e.target.value)
+                      }
                       className="sr-only"
                       required
                       disabled={!isAvailable}
                     />
                     <Icon
                       className={cn(
-                        "h-8 w-8 transition-colors",
-                        isSelected ? "text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]"
+                        'h-8 w-8 transition-colors',
+                        isSelected
+                          ? 'text-[hsl(var(--primary))]'
+                          : 'text-[hsl(var(--muted-foreground))]',
                       )}
                     />
                     <div className="text-center">
@@ -179,7 +204,9 @@ export function PaymentStep({
                       </p>
                       <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
                         <span className="rounded-full bg-[hsl(var(--muted))]/50 px-2 py-0.5 font-medium text-[hsl(var(--foreground))]">
-                          {method.fee > 0 ? `+৳${method.fee} fee` : 'No extra fee'}
+                          {method.fee > 0
+                            ? `+৳${method.fee} fee`
+                            : 'No extra fee'}
                         </span>
                         <span className="font-medium text-[hsl(var(--primary))]">
                           {method.badge}
@@ -189,18 +216,27 @@ export function PaymentStep({
 
                     {isSelected && isAvailable && (
                       <div className="absolute right-2 top-2 rounded-full bg-[hsl(var(--primary))] p-1">
-                        <svg className="h-3 w-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <svg
+                          className="h-3 w-3 text-white"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                       </div>
                     )}
                   </label>
-                );
+                )
               })}
             </div>
 
             <div className="rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 px-4 py-3 text-xs text-[hsl(var(--muted-foreground))]">
-              Some items may restrict payment methods. Unavailable options will appear disabled.
+              Some items may restrict payment methods. Unavailable options will
+              appear disabled.
             </div>
           </div>
 
@@ -217,27 +253,37 @@ export function PaymentStep({
               <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800 shadow-sm space-y-3">
                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                   <Info className="h-4 w-4" />
-                  <span className="text-sm font-bold uppercase tracking-wider">Instructions</span>
+                  <span className="text-sm font-bold uppercase tracking-wider">
+                    Instructions
+                  </span>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  Please send <strong>৳{totalAmount.toLocaleString()}</strong> to our merchant bKash number below using "Send Money" or "Payment", then provide the details.
+                  Please send <strong>৳{totalAmount.toLocaleString()}</strong>{' '}
+                  to our merchant bKash number below using "Send Money" or
+                  "Payment", then provide the details.
                 </p>
                 <div className="bg-indigo-50 dark:bg-indigo-900/30 p-3 rounded text-center">
-                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">Merchant bKash Number</p>
-                  <p className="text-xl font-black text-slate-900 dark:text-white">01700-000000</p>
+                  <p className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
+                    Merchant bKash Number
+                  </p>
+                  <p className="text-xl font-black text-slate-900 dark:text-white">
+                    01700-000000
+                  </p>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="mobileNumber" className="text-sm font-bold">Your bKash Number *</Label>
+                  <Label htmlFor="mobileNumber" className="text-sm font-bold">
+                    Your bKash Number *
+                  </Label>
                   <Input
                     id="mobileNumber"
                     value={formData.mobileNumber || ''}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                      const value = e.target.value.replace(/\D/g, '') // Only allow digits
                       if (value.length <= 11) {
-                        onFormChange('mobileNumber', value);
+                        onFormChange('mobileNumber', value)
                       }
                     }}
                     placeholder="017XXXXXXXX"
@@ -249,15 +295,27 @@ export function PaymentStep({
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter 11-digit mobile number {formData.mobileNumber && `(${formData.mobileNumber.length}/11)`}
+                    Enter 11-digit mobile number{' '}
+                    {formData.mobileNumber &&
+                      `(${formData.mobileNumber.length}/11)`}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="bkashTransactionId" className="text-sm font-bold">Transaction ID (TrxID) *</Label>
+                  <Label
+                    htmlFor="bkashTransactionId"
+                    className="text-sm font-bold"
+                  >
+                    Transaction ID (TrxID) *
+                  </Label>
                   <Input
                     id="bkashTransactionId"
                     value={formData.bkashTransactionId || ''}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('bkashTransactionId', e.target.value.toUpperCase())}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      onFormChange(
+                        'bkashTransactionId',
+                        e.target.value.toUpperCase(),
+                      )
+                    }
                     placeholder="8N7A6D5C4B"
                     className="font-mono uppercase bg-white dark:bg-slate-900"
                     required
@@ -276,7 +334,7 @@ export function PaymentStep({
                   Cash on Delivery
                 </h3>
               </div>
-              
+
               <div className="mt-4 space-y-3">
                 <div className="flex items-start gap-2 text-sm">
                   <span className="text-lg shrink-0">✅</span>
@@ -287,7 +345,8 @@ export function PaymentStep({
                 <div className="flex items-start gap-2 text-sm">
                   <span className="text-lg shrink-0">💵</span>
                   <p className="text-[hsl(var(--foreground))]">
-                    Please keep the exact amount ready for a smooth delivery experience
+                    Please keep the exact amount ready for a smooth delivery
+                    experience
                   </p>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
@@ -309,11 +368,11 @@ export function PaymentStep({
           {/* Proceed Information */}
           <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-200 dark:border-slate-800">
             <p className="text-sm text-center text-slate-600 dark:text-slate-400 font-medium">
-              {formData.paymentMethod === 'bkash' 
-                ? "Click below after entering your payment details to complete the order."
+              {formData.paymentMethod === 'bkash'
+                ? 'Click below after entering your payment details to complete the order.'
                 : formData.paymentMethod === 'cod'
-                ? "You will pay the total amount at your doorstep when you receive the items."
-                : "Select a payment method above to continue."}
+                  ? 'You will pay the total amount at your doorstep when you receive the items.'
+                  : 'Select a payment method above to continue.'}
             </p>
           </div>
         </form>
@@ -321,33 +380,42 @@ export function PaymentStep({
 
       {/* Action Buttons - Moved outside for better visibility */}
       <div className="flex flex-col gap-4 pt-4 sm:flex-row sm:justify-between items-center">
-        <Button type="button" variant="outline" size="lg" onClick={onBack} className="w-full sm:w-auto h-12 px-8 order-2 sm:order-1">
+        <Button
+          type="button"
+          variant="outline"
+          size="lg"
+          onClick={onBack}
+          className="w-full sm:w-auto h-12 px-8 order-2 sm:order-1"
+        >
           ← Back to Review
         </Button>
-        
+
         <div className="flex flex-col items-center sm:items-end gap-3 w-full sm:w-auto order-1 sm:order-2">
           {!formData.paymentMethod && (
             <p className="text-xs font-bold text-destructive animate-pulse">
               Please select a payment method above
             </p>
           )}
-          {formData.paymentMethod === 'bkash' && (!formData.mobileNumber || formData.mobileNumber.length !== 11 || !formData.bkashTransactionId) && (
-            <p className="text-xs font-bold text-destructive">
-              {!formData.mobileNumber || formData.mobileNumber.length !== 11 
-                ? 'Please enter valid 11-digit mobile number' 
-                : 'Please enter Transaction ID'}
-            </p>
-          )}
-          
-          <Button 
-            type="button" 
+          {formData.paymentMethod === 'bkash' &&
+            (!formData.mobileNumber ||
+              formData.mobileNumber.length !== 11 ||
+              !formData.bkashTransactionId) && (
+              <p className="text-xs font-bold text-destructive">
+                {!formData.mobileNumber || formData.mobileNumber.length !== 11
+                  ? 'Please enter valid 11-digit mobile number'
+                  : 'Please enter Transaction ID'}
+              </p>
+            )}
+
+          <Button
+            type="button"
             size="lg"
             onClick={handleSubmit}
             className={cn(
-              "w-full sm:w-auto px-8 h-12 transition-all duration-300",
-              formData.paymentMethod 
-                ? "bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-[0_8px_25px_-4px_rgba(249,115,22,0.4)]"
-                : "bg-slate-200 text-slate-400 cursor-not-allowed"
+              'w-full sm:w-auto px-8 h-12 transition-all duration-300',
+              formData.paymentMethod
+                ? 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white shadow-[0_8px_25px_-4px_rgba(249,115,22,0.4)]'
+                : 'bg-slate-200 text-slate-400 cursor-not-allowed',
             )}
             disabled={!formData.paymentMethod || isSubmitting}
           >
@@ -381,5 +449,5 @@ export function PaymentStep({
         </div>
       </div>
     </div>
-  );
+  )
 }

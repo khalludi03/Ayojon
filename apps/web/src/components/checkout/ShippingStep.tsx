@@ -1,102 +1,107 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { 
-  BD_DIVISIONS, 
-  BD_CITIES, 
-  validateBDPhone, 
+import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
+import { Check, Loader2, MapPin, Plus } from 'lucide-react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { Division } from '@/lib/bd-locations'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  BD_CITIES,
+  BD_DIVISIONS,
+  validateBDPhone,
   validateBDPostalCode,
-  type Division 
-} from "@/lib/bd-locations";
-import { MapPin, Plus, Check, Loader2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { authClient } from "@/lib/auth-client";
-import { orpc, orpcClient } from "@/utils/orpc";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+} from '@/lib/bd-locations'
+import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
+import { orpc, orpcClient } from '@/utils/orpc'
 
 interface SavedAddress {
-  id: string;
-  fullName: string;
-  phone: string;
-  addressLine1: string;
-  addressLine2: string;
-  city: string;
-  division: Division;
-  postalCode: string;
-  addressType: 'home' | 'office';
-  isDefault: boolean;
+  id: string
+  fullName: string
+  phone: string
+  addressLine1: string
+  addressLine2: string
+  city: string
+  division: Division
+  postalCode: string
+  addressType: 'home' | 'office'
+  isDefault: boolean
 }
 
 interface ShippingStepProps {
-  onNext: () => void;
+  onNext: () => void
   formData: {
-    fullName: string;
-    email: string;
-    phone: string;
-    addressLine1: string;
-    addressLine2: string;
-    city: string;
-    division: string;
-    postalCode: string;
-    addressType: 'home' | 'office';
-    saveAddress: boolean;
-  };
-  onFormChange: (field: string, value: string | boolean) => void;
+    fullName: string
+    email: string
+    phone: string
+    addressLine1: string
+    addressLine2: string
+    city: string
+    division: string
+    postalCode: string
+    addressType: 'home' | 'office'
+    saveAddress: boolean
+  }
+  onFormChange: (field: string, value: string | boolean) => void
 }
 
-export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepProps) {
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isFormValid, setIsFormValid] = useState(false);
-  const [selectedAddressId, setSelectedAddressId] = useState<string>('');
-  const [showNewAddressForm, setShowNewAddressForm] = useState(true);
-  const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+export function ShippingStep({
+  onNext,
+  formData,
+  onFormChange,
+}: ShippingStepProps) {
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isFormValid, setIsFormValid] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState<string>('')
+  const [showNewAddressForm, setShowNewAddressForm] = useState(true)
+  const [availableCities, setAvailableCities] = useState<Array<string>>([])
+  const [isSaving, setIsSaving] = useState(false)
 
-  const queryClient = useQueryClient();
-  const { data: session } = authClient.useSession();
+  const queryClient = useQueryClient()
+  const { data: session } = authClient.useSession()
 
   // Fetch addresses from backend if logged in
-  const { data: backendAddresses = [], isLoading: isLoadingAddresses } = useQuery({
-    ...orpc.address.listAddresses.queryOptions(),
-    enabled: !!session,
-  } as any);
+  const { data: backendAddresses = [], isLoading: isLoadingAddresses } =
+    useQuery({
+      ...orpc.address.listAddresses.queryOptions(),
+      enabled: !!session,
+    })
 
   // Mutation to add address
   const addAddressMutation = useMutation({
     mutationFn: (data: any) => orpcClient.address.addAddress(data), // Using direct client for manual trigger
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] });
-      toast.success('Address saved to your account');
+      queryClient.invalidateQueries({ queryKey: ['address', 'listAddresses'] })
+      toast.success('Address saved to your account')
     },
     onError: (error) => {
-      console.error('Failed to save address:', error);
-      toast.error('Failed to save address to account');
-    }
-  } as any);
+      console.error('Failed to save address:', error)
+      toast.error('Failed to save address to account')
+    },
+  } as any)
 
   // Computed saved addresses (backend or guest-local)
-  const [guestAddresses, setGuestAddresses] = useState<SavedAddress[]>([]);
+  const [guestAddresses, setGuestAddresses] = useState<Array<SavedAddress>>([])
 
   // Load guest addresses only if not logged in
   useEffect(() => {
     if (!session) {
-      const saved = localStorage.getItem('guest-saved-addresses');
+      const saved = localStorage.getItem('guest-saved-addresses')
       if (saved) {
         try {
-          setGuestAddresses(JSON.parse(saved));
+          setGuestAddresses(JSON.parse(saved))
         } catch (e) {
-          console.error('Failed to parse guest addresses', e);
+          console.error('Failed to parse guest addresses', e)
         }
       }
     } else {
-      setGuestAddresses([]); // Clear guest addresses if logged in
+      setGuestAddresses([]) // Clear guest addresses if logged in
     }
-  }, [session]);
+  }, [session])
 
-  const savedAddresses: SavedAddress[] = session 
+  const savedAddresses: Array<SavedAddress> = session
     ? backendAddresses.map((addr: any) => ({
         id: addr.id,
         fullName: addr.name,
@@ -109,79 +114,83 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
         addressType: addr.type,
         isDefault: addr.isDefault,
       }))
-    : guestAddresses;
+    : guestAddresses
 
   // Auto-select default address when addresses are loaded
   useEffect(() => {
     if (savedAddresses.length > 0 && !formData.fullName && !selectedAddressId) {
-      const defaultAddress = savedAddresses.find((addr) => addr.isDefault);
+      const defaultAddress = savedAddresses.find((addr) => addr.isDefault)
       if (defaultAddress) {
-        handleUseSavedAddress(defaultAddress.id);
+        handleUseSavedAddress(defaultAddress.id)
       } else if (savedAddresses.length > 0) {
         // If no default, select the first one
-        handleUseSavedAddress(savedAddresses[0].id);
+        handleUseSavedAddress(savedAddresses[0].id)
       }
-      
+
       // If we have addresses, hide the new form by default
       if (savedAddresses.length > 0) {
-        setShowNewAddressForm(false);
+        setShowNewAddressForm(false)
       }
     }
-  }, [savedAddresses.length, session]); // simplified dependency
+  }, [savedAddresses.length, session]) // simplified dependency
 
   // Update available cities when division changes
   useEffect(() => {
-    if (formData.division && BD_CITIES[formData.division as Division]) {
-      setAvailableCities(BD_CITIES[formData.division as Division]);
-      // Reset city if it's not in the new division
-      if (formData.city && !BD_CITIES[formData.division as Division].includes(formData.city)) {
-        onFormChange('city', '');
+    if (formData.division) {
+      const cities = BD_CITIES[formData.division as Division]
+      setAvailableCities(cities)
+      if (formData.city && !cities.includes(formData.city)) {
+        onFormChange('city', '')
       }
     } else {
-      setAvailableCities([]);
+      setAvailableCities([])
     }
-  }, [formData.division]);
+  }, [formData.division])
 
   // Validate form
   useEffect(() => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {}
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = 'Full name is required'
     }
 
     // Email required for guest checkout
     if (!session && !formData.email.trim()) {
-      newErrors.email = 'Email is required for guest checkout';
-    } else if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+      newErrors.email = 'Email is required for guest checkout'
+    } else if (
+      formData.email &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+    ) {
+      newErrors.email = 'Please enter a valid email address'
     }
 
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = 'Phone number is required'
     } else if (!validateBDPhone(formData.phone)) {
-      newErrors.phone = 'Please enter a valid Bangladesh phone number (e.g., 01712345678 or +8801712345678)';
+      newErrors.phone =
+        'Please enter a valid Bangladesh phone number (e.g., 01712345678 or +8801712345678)'
     }
 
     if (!formData.addressLine1.trim()) {
-      newErrors.addressLine1 = 'Address is required';
+      newErrors.addressLine1 = 'Address is required'
     }
 
     if (!formData.division) {
-      newErrors.division = 'Division is required';
+      newErrors.division = 'Division is required'
     }
 
     if (!formData.city) {
-      newErrors.city = 'City is required';
+      newErrors.city = 'City is required'
     }
 
     if (formData.postalCode && !validateBDPostalCode(formData.postalCode)) {
-      newErrors.postalCode = 'Postal code must be 4 digits';
+      newErrors.postalCode = 'Postal code must be 4 digits'
     }
 
-    setErrors(newErrors);
-    setIsFormValid(Object.keys(newErrors).length === 0);
-  }, [formData, session]);
+    setErrors(newErrors)
+    setIsFormValid(Object.keys(newErrors).length === 0)
+  }, [formData, session])
 
   // Need to import orpcClient for mutationFn if not available in closure
   // We'll assume orpcClient is imported from @/utils/orpc
@@ -191,13 +200,13 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
   // Actually `useMutation(orpc.address.addAddress.mutationOptions())` is cleaner.
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     if (!isFormValid) {
-      return;
+      return
     }
 
-    setIsSaving(true);
+    setIsSaving(true)
 
     try {
       // Save address if checked
@@ -205,27 +214,29 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
         if (session) {
           // Check limit
           if (savedAddresses.length >= 5) {
-            toast.error('Maximum 5 addresses allowed. Please manage addresses in your account.');
-             // Proceed without saving
+            toast.error(
+              'Maximum 5 addresses allowed. Please manage addresses in your account.',
+            )
+            // Proceed without saving
           } else {
-             // Save to backend
-             // We can't use the mutation hook directly here as a function easily if we want to await it
-             // So we'll use the client directly or use mutateAsync from the hook
-             // But I didn't define the hook with mutateAsync exposed nicely, let's redefine above
-             // Actually I did: const addAddressMutation = useMutation(...)
-             
-             await addAddressMutation.mutateAsync({
-               name: formData.fullName,
-               phone: formData.phone,
-               addressLine1: formData.addressLine1,
-               addressLine2: formData.addressLine2,
-               city: formData.city,
-               state: formData.division,
-               postalCode: formData.postalCode,
-               type: formData.addressType as 'home' | 'office',
-               country: 'Bangladesh',
-               isDefault: savedAddresses.length === 0,
-             });
+            // Save to backend
+            // We can't use the mutation hook directly here as a function easily if we want to await it
+            // So we'll use the client directly or use mutateAsync from the hook
+            // But I didn't define the hook with mutateAsync exposed nicely, let's redefine above
+            // Actually I did: const addAddressMutation = useMutation(...)
+
+            await addAddressMutation.mutateAsync({
+              name: formData.fullName,
+              phone: formData.phone,
+              addressLine1: formData.addressLine1,
+              addressLine2: formData.addressLine2,
+              city: formData.city,
+              state: formData.division,
+              postalCode: formData.postalCode,
+              type: formData.addressType,
+              country: 'Bangladesh',
+              isDefault: savedAddresses.length === 0,
+            })
           }
         } else {
           // Guest save to local storage
@@ -240,57 +251,60 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
             postalCode: formData.postalCode,
             addressType: formData.addressType,
             isDefault: savedAddresses.length === 0,
-          };
-          const existing = [...guestAddresses, newAddress];
-          localStorage.setItem('guest-saved-addresses', JSON.stringify(existing));
-          setGuestAddresses(existing);
-          toast.success('Address saved for future guest checkout');
+          }
+          const existing = [...guestAddresses, newAddress]
+          localStorage.setItem(
+            'guest-saved-addresses',
+            JSON.stringify(existing),
+          )
+          setGuestAddresses(existing)
+          toast.success('Address saved for future guest checkout')
         }
       }
-      
-      onNext();
+
+      onNext()
     } catch (error) {
       // Error already handled in mutation
       // But we should probably still proceed or let user retry?
       // If saving fails, we probably shouldn't block checkout.
       // So we catch and proceed.
-      console.error("Error in submit", error);
-      onNext();
+      console.error('Error in submit', error)
+      onNext()
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleUseSavedAddress = (addressId: string) => {
-    setSelectedAddressId(addressId);
-    const address = savedAddresses.find(a => a.id === addressId);
-    
+    setSelectedAddressId(addressId)
+    const address = savedAddresses.find((a) => a.id === addressId)
+
     if (address) {
-      onFormChange('fullName', address.fullName);
-      onFormChange('phone', address.phone);
-      onFormChange('addressLine1', address.addressLine1);
-      onFormChange('addressLine2', address.addressLine2);
-      onFormChange('division', address.division);
-      onFormChange('city', address.city);
-      onFormChange('postalCode', address.postalCode);
-      onFormChange('addressType', address.addressType);
-      setShowNewAddressForm(false);
+      onFormChange('fullName', address.fullName)
+      onFormChange('phone', address.phone)
+      onFormChange('addressLine1', address.addressLine1)
+      onFormChange('addressLine2', address.addressLine2)
+      onFormChange('division', address.division)
+      onFormChange('city', address.city)
+      onFormChange('postalCode', address.postalCode)
+      onFormChange('addressType', address.addressType)
+      setShowNewAddressForm(false)
     }
-  };
+  }
 
   const handleAddNewAddress = () => {
-    setSelectedAddressId('');
-    setShowNewAddressForm(true);
+    setSelectedAddressId('')
+    setShowNewAddressForm(true)
     // Clear form
-    onFormChange('fullName', '');
-    onFormChange('phone', '');
-    onFormChange('addressLine1', '');
-    onFormChange('addressLine2', '');
-    onFormChange('division', '');
-    onFormChange('city', '');
-    onFormChange('postalCode', '');
-    onFormChange('addressType', 'home');
-  };
+    onFormChange('fullName', '')
+    onFormChange('phone', '')
+    onFormChange('addressLine1', '')
+    onFormChange('addressLine2', '')
+    onFormChange('division', '')
+    onFormChange('city', '')
+    onFormChange('postalCode', '')
+    onFormChange('addressType', 'home')
+  }
 
   return (
     <div className="space-y-6">
@@ -306,8 +320,8 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
             </h2>
             <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">
               {savedAddresses.length > 0
-                ? "Use a saved address or add a new one" 
-                : "Enter your delivery address details"}
+                ? 'Use a saved address or add a new one'
+                : 'Enter your delivery address details'}
             </p>
           </div>
         </div>
@@ -317,8 +331,9 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
       {savedAddresses.length === 0 && (
         <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--muted))]/30 p-4">
           <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            📍 You don't have any saved addresses yet. Fill out the form below to add your first address.
-            You can save it for future orders by checking the box at the bottom.
+            📍 You don't have any saved addresses yet. Fill out the form below
+            to add your first address. You can save it for future orders by
+            checking the box at the bottom.
           </p>
         </div>
       )}
@@ -329,11 +344,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Label className="text-base font-semibold">Saved Addresses</Label>
-              {savedAddresses.length > 0 && (
-                <span className="text-xs text-[hsl(var(--muted-foreground))]">
-                  {savedAddresses.length} {savedAddresses.length === 1 ? 'address' : 'addresses'}
-                </span>
-              )}
+              <span className="text-xs text-[hsl(var(--muted-foreground))]">
+                {savedAddresses.length}{' '}
+                {savedAddresses.length === 1 ? 'address' : 'addresses'}
+              </span>
             </div>
             <a
               href="/account?section=addresses"
@@ -349,10 +363,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               <label
                 key={address.id}
                 className={cn(
-                  "group relative flex cursor-pointer items-start gap-4 rounded-lg border-2 p-4 transition-all duration-200",
+                  'group relative flex cursor-pointer items-start gap-4 rounded-lg border-2 p-4 transition-all duration-200',
                   selectedAddressId === address.id
                     ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-md'
-                    : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50'
+                    : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50',
                 )}
               >
                 <input
@@ -366,28 +380,30 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                 {/* Radio indicator */}
                 <div
                   className={cn(
-                    "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                    'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all',
                     selectedAddressId === address.id
-                      ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
-                      : "border-[hsl(var(--border))] bg-[hsl(var(--background))]"
+                      ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]'
+                      : 'border-[hsl(var(--border))] bg-[hsl(var(--background))]',
                   )}
                 >
                   {selectedAddressId === address.id && (
                     <div className="h-2 w-2 rounded-full bg-white" />
                   )}
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
                     <p className="font-semibold text-[hsl(var(--foreground))]">
                       {address.fullName}
                     </p>
-                    <span className={cn(
-                      "text-xs rounded-full px-2.5 py-0.5 font-medium",
-                      address.addressType === 'home'
-                        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                        : "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-                    )}>
+                    <span
+                      className={cn(
+                        'text-xs rounded-full px-2.5 py-0.5 font-medium',
+                        address.addressType === 'home'
+                          ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                          : 'bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300',
+                      )}
+                    >
                       {address.addressType === 'home' ? '🏠 Home' : '🏢 Office'}
                     </span>
                   </div>
@@ -416,7 +432,7 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               </label>
             ))}
           </div>
-          
+
           {!showNewAddressForm && (
             <Button
               type="button"
@@ -453,15 +469,22 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               </h3>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="flex items-center gap-1 text-sm font-semibold">
+                  <Label
+                    htmlFor="fullName"
+                    className="flex items-center gap-1 text-sm font-semibold"
+                  >
                     Full Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="fullName"
                     value={formData.fullName}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('fullName', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      onFormChange('fullName', e.target.value)
+                    }
                     placeholder="Enter your full name"
-                    className={errors.fullName ? "border-red-500 focus:ring-red-500" : ""}
+                    className={
+                      errors.fullName ? 'border-red-500 focus:ring-red-500' : ''
+                    }
                     required
                   />
                   {errors.fullName && (
@@ -473,7 +496,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="flex items-center gap-1 text-sm font-semibold">
+                  <Label
+                    htmlFor="phone"
+                    className="flex items-center gap-1 text-sm font-semibold"
+                  >
                     Phone Number <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -481,20 +507,23 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                     type="tel"
                     value={formData.phone}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                      const value = e.target.value.replace(/\D/g, ''); // Only allow digits
+                      const value = e.target.value.replace(/\D/g, '') // Only allow digits
                       if (value.length <= 11) {
-                        onFormChange('phone', value);
+                        onFormChange('phone', value)
                       }
                     }}
                     placeholder="01712345678"
                     pattern="[0-9]{11}"
                     minLength={11}
                     maxLength={11}
-                    className={errors.phone ? "border-red-500 focus:ring-red-500" : ""}
+                    className={
+                      errors.phone ? 'border-red-500 focus:ring-red-500' : ''
+                    }
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Enter 11-digit mobile number {formData.phone && `(${formData.phone.length}/11)`}
+                    Enter 11-digit mobile number{' '}
+                    {formData.phone && `(${formData.phone.length}/11)`}
                   </p>
                   {errors.phone && (
                     <p className="flex items-center gap-1 text-xs text-red-500">
@@ -508,16 +537,23 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               {/* Email for guest checkout */}
               {!session && (
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-1 text-sm font-semibold">
+                  <Label
+                    htmlFor="email"
+                    className="flex items-center gap-1 text-sm font-semibold"
+                  >
                     Email Address <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('email', e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      onFormChange('email', e.target.value)
+                    }
                     placeholder="Enter your email address"
-                    className={errors.email ? "border-red-500 focus:ring-red-500" : ""}
+                    className={
+                      errors.email ? 'border-red-500 focus:ring-red-500' : ''
+                    }
                     required
                   />
                   {errors.email && (
@@ -535,17 +571,26 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               <h3 className="text-sm font-semibold uppercase tracking-wide text-[hsl(var(--muted-foreground))]">
                 Delivery Address
               </h3>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="addressLine1" className="flex items-center gap-1 text-sm font-semibold">
+                <Label
+                  htmlFor="addressLine1"
+                  className="flex items-center gap-1 text-sm font-semibold"
+                >
                   Address Line 1 <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="addressLine1"
                   value={formData.addressLine1}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('addressLine1', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onFormChange('addressLine1', e.target.value)
+                  }
                   placeholder="Enter house/flat number and road name"
-                  className={errors.addressLine1 ? "border-red-500 focus:ring-red-500" : ""}
+                  className={
+                    errors.addressLine1
+                      ? 'border-red-500 focus:ring-red-500'
+                      : ''
+                  }
                   required
                 />
                 {errors.addressLine1 && (
@@ -557,18 +602,25 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="addressLine2" className="text-sm font-semibold">Address Line 2 (Optional)</Label>
+                <Label htmlFor="addressLine2" className="text-sm font-semibold">
+                  Address Line 2 (Optional)
+                </Label>
                 <Input
                   id="addressLine2"
                   value={formData.addressLine2}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('addressLine2', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onFormChange('addressLine2', e.target.value)
+                  }
                   placeholder="Enter area, landmark, or nearby location (optional)"
                 />
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="division" className="flex items-center gap-1 text-sm font-semibold">
+                  <Label
+                    htmlFor="division"
+                    className="flex items-center gap-1 text-sm font-semibold"
+                  >
                     Division <span className="text-red-500">*</span>
                   </Label>
                   <select
@@ -576,8 +628,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                     value={formData.division}
                     onChange={(e) => onFormChange('division', e.target.value)}
                     className={cn(
-                      "flex h-10 w-full rounded-md border bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-background placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&:-webkit-autofill]:!bg-[hsl(var(--background))] [&:-webkit-autofill]:shadow-[0_0_0_100px_hsl(var(--background))_inset]",
-                      errors.division ? "border-red-500 focus:ring-red-500" : "border-[hsl(var(--border))]"
+                      'flex h-10 w-full rounded-md border bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-background placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&:-webkit-autofill]:!bg-[hsl(var(--background))] [&:-webkit-autofill]:shadow-[0_0_0_100px_hsl(var(--background))_inset]',
+                      errors.division
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-[hsl(var(--border))]',
                     )}
                     required
                   >
@@ -597,7 +651,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="city" className="flex items-center gap-1 text-sm font-semibold">
+                  <Label
+                    htmlFor="city"
+                    className="flex items-center gap-1 text-sm font-semibold"
+                  >
                     City <span className="text-red-500">*</span>
                   </Label>
                   <select
@@ -605,13 +662,19 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                     value={formData.city}
                     onChange={(e) => onFormChange('city', e.target.value)}
                     className={cn(
-                      "flex h-10 w-full rounded-md border bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-background placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&:-webkit-autofill]:!bg-[hsl(var(--background))] [&:-webkit-autofill]:shadow-[0_0_0_100px_hsl(var(--background))_inset]",
-                      errors.city ? "border-red-500 focus:ring-red-500" : "border-[hsl(var(--border))]"
+                      'flex h-10 w-full rounded-md border bg-[hsl(var(--background))] px-3 py-2 text-sm text-[hsl(var(--foreground))] ring-offset-background placeholder:text-[hsl(var(--muted-foreground))] focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&:-webkit-autofill]:!bg-[hsl(var(--background))] [&:-webkit-autofill]:shadow-[0_0_0_100px_hsl(var(--background))_inset]',
+                      errors.city
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-[hsl(var(--border))]',
                     )}
                     required
                     disabled={!formData.division}
                   >
-                    <option value="">{formData.division ? "Select City" : "Select division first"}</option>
+                    <option value="">
+                      {formData.division
+                        ? 'Select City'
+                        : 'Select division first'}
+                    </option>
                     {availableCities.map((city) => (
                       <option key={city} value={city}>
                         {city}
@@ -628,14 +691,22 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="postalCode" className="text-sm font-semibold">Postal Code (Optional)</Label>
+                <Label htmlFor="postalCode" className="text-sm font-semibold">
+                  Postal Code (Optional)
+                </Label>
                 <Input
                   id="postalCode"
                   value={formData.postalCode}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFormChange('postalCode', e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onFormChange('postalCode', e.target.value)
+                  }
                   placeholder="Enter postal code (e.g., 1200)"
                   maxLength={4}
-                  className={errors.postalCode ? "border-red-500 focus:ring-red-500 sm:w-1/2" : "sm:w-1/2"}
+                  className={
+                    errors.postalCode
+                      ? 'border-red-500 focus:ring-red-500 sm:w-1/2'
+                      : 'sm:w-1/2'
+                  }
                 />
                 {errors.postalCode && (
                   <p className="flex items-center gap-1 text-xs text-red-500">
@@ -654,10 +725,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
               <div className="grid gap-3 sm:grid-cols-2">
                 <label
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all",
+                    'flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all',
                     formData.addressType === 'home'
-                      ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-sm"
-                      : "border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50"
+                      ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-sm'
+                      : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50',
                   )}
                 >
                   <input
@@ -665,15 +736,17 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                     name="addressType"
                     value="home"
                     checked={formData.addressType === 'home'}
-                    onChange={(e) => onFormChange('addressType', e.target.value)}
+                    onChange={(e) =>
+                      onFormChange('addressType', e.target.value)
+                    }
                     className="sr-only"
                   />
                   <div
                     className={cn(
-                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                      'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all',
                       formData.addressType === 'home'
-                        ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
-                        : "border-[hsl(var(--border))] bg-[hsl(var(--background))]"
+                        ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]'
+                        : 'border-[hsl(var(--border))] bg-[hsl(var(--background))]',
                     )}
                   >
                     {formData.addressType === 'home' && (
@@ -686,10 +759,10 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
 
                 <label
                   className={cn(
-                    "flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all",
+                    'flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all',
                     formData.addressType === 'office'
-                      ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-sm"
-                      : "border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50"
+                      ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]/5 shadow-sm'
+                      : 'border-[hsl(var(--border))] hover:border-[hsl(var(--primary))]/50 hover:bg-[hsl(var(--muted))]/50',
                   )}
                 >
                   <input
@@ -697,15 +770,17 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                     name="addressType"
                     value="office"
                     checked={formData.addressType === 'office'}
-                    onChange={(e) => onFormChange('addressType', e.target.value)}
+                    onChange={(e) =>
+                      onFormChange('addressType', e.target.value)
+                    }
                     className="sr-only"
                   />
                   <div
                     className={cn(
-                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all",
+                      'flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-all',
                       formData.addressType === 'office'
-                        ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary))]"
-                        : "border-[hsl(var(--border))] bg-[hsl(var(--background))]"
+                        ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))]'
+                        : 'border-[hsl(var(--border))] bg-[hsl(var(--background))]',
                     )}
                   >
                     {formData.addressType === 'office' && (
@@ -724,7 +799,9 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                 <Checkbox
                   id="saveAddress"
                   checked={formData.saveAddress}
-                  onCheckedChange={(checked) => onFormChange('saveAddress', checked as boolean)}
+                  onCheckedChange={(checked) =>
+                    onFormChange('saveAddress', checked)
+                  }
                   className="mt-0.5"
                 />
                 <div>
@@ -752,9 +829,9 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
                   ← Back to Saved Addresses
                 </Button>
               )}
-              <Button 
-                type="submit" 
-                size="lg" 
+              <Button
+                type="submit"
+                size="lg"
                 disabled={!isFormValid}
                 className="order-1 sm:order-2 sm:ml-auto"
               >
@@ -784,5 +861,5 @@ export function ShippingStep({ onNext, formData, onFormChange }: ShippingStepPro
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router'
 
 const linkGroups = [
   {
@@ -34,14 +34,16 @@ const linkGroups = [
       { href: '/events', label: 'Events' },
     ],
   },
-];
+]
 
 export function FooterLinks() {
   return (
     <div className="grid grid-cols-2 gap-6 sm:gap-8 md:grid-cols-4">
       {linkGroups.map((group) => (
         <div key={group.title}>
-          <h4 className="text-sm font-semibold text-[hsl(var(--foreground))] sm:text-base">{group.title}</h4>
+          <h4 className="text-sm font-semibold text-[hsl(var(--foreground))] sm:text-base">
+            {group.title}
+          </h4>
           <ul className="mt-2 space-y-1.5 sm:mt-3 sm:space-y-2">
             {group.links.map((link) => (
               <li key={link.href}>
@@ -57,5 +59,5 @@ export function FooterLinks() {
         </div>
       ))}
     </div>
-  );
+  )
 }

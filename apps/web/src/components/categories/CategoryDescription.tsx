@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState } from 'react'
+import { ChevronDown, ChevronUp } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CategoryDescriptionProps {
-  description: string;
-  maxLength?: number;
-  className?: string;
+  description: string
+  maxLength?: number
+  className?: string
 }
 
 export function CategoryDescription({
@@ -13,14 +13,15 @@ export function CategoryDescription({
   maxLength = 200,
   className,
 }: CategoryDescriptionProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  if (!description) return null;
+  if (!description) return null
 
-  const shouldTruncate = description.length > maxLength;
-  const displayText = shouldTruncate && !isExpanded
-    ? `${description.slice(0, maxLength)}...`
-    : description;
+  const shouldTruncate = description.length > maxLength
+  const displayText =
+    shouldTruncate && !isExpanded
+      ? `${description.slice(0, maxLength)}...`
+      : description
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -48,5 +49,5 @@ export function CategoryDescription({
         </button>
       )}
     </div>
-  );
+  )
 }

@@ -1,13 +1,21 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import type { VendorFormData } from '@/types/vendor';
-import { Mail, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, UserCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { authClient } from '@/lib/auth-client';
-import { env } from "@my-better-t-app/env/web";
-import { toast } from "sonner";
+import { useState } from 'react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  UserCheck,
+} from 'lucide-react'
+import { env } from '@my-better-t-app/env/web'
+import { toast } from 'sonner'
+import type { VendorFormData } from '@/types/vendor'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
 import {
   Dialog,
   DialogContent,
@@ -15,26 +23,30 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 
 interface AccountStepProps {
-  formData: VendorFormData;
-  onFormChange: (field: keyof VendorFormData, value: string) => void;
-  onNext: () => void;
+  formData: VendorFormData
+  onFormChange: (field: keyof VendorFormData, value: string) => void
+  onNext: () => void
 }
 
-export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps) {
-  const { data: session } = authClient.useSession();
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
-  
+export function AccountStep({
+  formData,
+  onFormChange,
+  onNext,
+}: AccountStepProps) {
+  const { data: session } = authClient.useSession()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false)
+
   // OTP States
-  const [showOTPDialog, setShowOTPDialog] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
-  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [showOTPDialog, setShowOTPDialog] = useState(false)
+  const [otp, setOtp] = useState('')
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false)
+  const [isSendingOTP, setIsSendingOTP] = useState(false)
 
   // If already logged in, show a different UI
   if (session?.user) {
@@ -48,24 +60,23 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
             Already Logged In
           </h2>
           <p className="mt-2 text-[hsl(var(--muted-foreground))]">
-            You are currently logged in as <span className="font-semibold text-[hsl(var(--foreground))]">{session.user.email}</span>. 
-            We'll use this account for your vendor registration.
+            You are currently logged in as{' '}
+            <span className="font-semibold text-[hsl(var(--foreground))]">
+              {session.user.email}
+            </span>
+            . We'll use this account for your vendor registration.
           </p>
         </div>
 
         <div className="flex flex-col gap-3">
-          <Button
-            onClick={onNext}
-            size="lg"
-            className="w-full"
-          >
+          <Button onClick={onNext} size="lg" className="w-full">
             Continue as {session.user.name || 'User'} →
           </Button>
           <Button
             variant="outline"
             onClick={async () => {
-              await authClient.signOut();
-              window.location.reload();
+              await authClient.signOut()
+              window.location.reload()
             }}
             className="w-full"
           >
@@ -73,51 +84,56 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return emailRegex.test(email)
+  }
 
   const validatePassword = (password: string): boolean => {
-    return password.length >= 8;
-  };
+    return password.length >= 8
+  }
 
   const handleVerifyOTP = async () => {
     if (otp.length !== 6) {
-      toast.error("Please enter a 6-digit code");
-      return;
+      toast.error('Please enter a 6-digit code')
+      return
     }
 
-    setIsVerifyingOTP(true);
+    setIsVerifyingOTP(true)
     try {
-      const response = await fetch(`${env.VITE_SERVER_URL}/api/signup/verify-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${env.VITE_SERVER_URL}/api/signup/verify-otp`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            otp,
+          }),
         },
-        body: JSON.stringify({
-          email: formData.email,
-          otp,
-        }),
-      });
+      )
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
-        if (result.error?.includes("Too many failed attempts")) {
-          setShowOTPDialog(false);
-          setOtp("");
-          toast.error("Verification unsuccessful: Too many failed OTP attempts. Please try again later.");
-          return;
+        if (result.error?.includes('Too many failed attempts')) {
+          setShowOTPDialog(false)
+          setOtp('')
+          toast.error(
+            'Verification unsuccessful: Too many failed OTP attempts. Please try again later.',
+          )
+          return
         }
-        throw new Error(result.error || "Invalid verification code");
+        throw new Error(result.error || 'Invalid verification code')
       }
 
       // OTP verified, now create the account
-      setIsCreatingAccount(true);
+      setIsCreatingAccount(true)
       await authClient.signUp.email(
         {
           email: formData.email,
@@ -126,115 +142,135 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
         },
         {
           onSuccess: () => {
-            setShowOTPDialog(false);
-            toast.success("Account created and email verified!");
-            onNext();
+            setShowOTPDialog(false)
+            toast.success('Account created and email verified!')
+            onNext()
           },
           onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
-            setIsCreatingAccount(false);
+            toast.error(error.error.message || error.error.statusText)
+            setIsCreatingAccount(false)
           },
         },
-      );
+      )
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to verify code");
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to verify code',
+      )
     } finally {
-      setIsVerifyingOTP(false);
+      setIsVerifyingOTP(false)
     }
-  };
+  }
 
   const handleResendOTP = async () => {
     try {
-      const response = await fetch(`${env.VITE_SERVER_URL}/api/signup/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${env.VITE_SERVER_URL}/api/signup/send-otp`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email: formData.email }),
         },
-        body: JSON.stringify({ email: formData.email }),
-      });
+      )
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to resend code");
+        throw new Error(result.error || 'Failed to resend code')
       }
 
-      toast.success(`Verification code resent to ${formData.email}`);
-      setOtp("");
+      toast.success(`Verification code resent to ${formData.email}`)
+      setOtp('')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to resend code");
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to resend code',
+      )
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const newErrors: Record<string, string> = {};
+    e.preventDefault()
+    const newErrors: Record<string, string> = {}
 
     // Validate email
     if (!formData.email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = 'Email is required'
     } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Invalid email format';
+      newErrors.email = 'Invalid email format'
     }
 
     // Validate password
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = 'Password is required'
     } else if (!validatePassword(formData.password)) {
-      newErrors.password = 'Password must be at least 8 characters';
+      newErrors.password = 'Password must be at least 8 characters'
     }
 
     // Validate confirm password
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password';
+      newErrors.confirmPassword = 'Please confirm your password'
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = 'Passwords do not match'
     }
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
     if (Object.keys(newErrors).length === 0) {
       // Send OTP first
-      setIsSendingOTP(true);
+      setIsSendingOTP(true)
       try {
-        const response = await fetch(`${env.VITE_SERVER_URL}/api/signup/send-otp`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+        const response = await fetch(
+          `${env.VITE_SERVER_URL}/api/signup/send-otp`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email: formData.email }),
           },
-          body: JSON.stringify({ email: formData.email }),
-        });
+        )
 
-        const result = await response.json();
+        const result = await response.json()
 
         if (!response.ok) {
-          throw new Error(result.error || "Failed to send verification code");
+          throw new Error(result.error || 'Failed to send verification code')
         }
 
-        setShowOTPDialog(true);
-        toast.success(`Verification code sent to ${formData.email}`);
+        setShowOTPDialog(true)
+        toast.success(`Verification code sent to ${formData.email}`)
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Failed to start account creation");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : 'Failed to start account creation',
+        )
       } finally {
-        setIsSendingOTP(false);
+        setIsSendingOTP(false)
       }
     }
-  };
+  }
 
-  const passwordStrength = (password: string): { strength: number; label: string; color: string } => {
-    let strength = 0;
-    if (password.length >= 8) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
-    if (/[@$!%*?&]/.test(password)) strength++;
+  const passwordStrength = (
+    password: string,
+  ): { strength: number; label: string; color: string } => {
+    let strength = 0
+    if (password.length >= 8) strength++
+    if (/[a-z]/.test(password)) strength++
+    if (/[A-Z]/.test(password)) strength++
+    if (/\d/.test(password)) strength++
+    if (/[@$!%*?&]/.test(password)) strength++
 
-    if (strength <= 2) return { strength: 33, label: 'Weak', color: 'bg-red-500' };
-    if (strength <= 4) return { strength: 66, label: 'Medium', color: 'bg-yellow-500' };
-    return { strength: 100, label: 'Strong', color: 'bg-green-500' };
-  };
+    if (strength <= 2)
+      return { strength: 33, label: 'Weak', color: 'bg-red-500' }
+    if (strength <= 4)
+      return { strength: 66, label: 'Medium', color: 'bg-yellow-500' }
+    return { strength: 100, label: 'Strong', color: 'bg-green-500' }
+  }
 
-  const passwordStatus = formData.password ? passwordStrength(formData.password) : null;
+  const passwordStatus = formData.password
+    ? passwordStrength(formData.password)
+    : null
 
   return (
     <div className="rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 shadow-sm">
@@ -260,13 +296,13 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               type="email"
               value={formData.email}
               onChange={(e) => {
-                onFormChange('email', e.target.value);
-                if (errors.email) setErrors((prev) => ({ ...prev, email: '' }));
+                onFormChange('email', e.target.value)
+                if (errors.email) setErrors((prev) => ({ ...prev, email: '' }))
               }}
               placeholder="vendor@example.com"
               className={cn(
                 'pl-10',
-                errors.email && 'border-red-500 focus-visible:ring-red-500'
+                errors.email && 'border-red-500 focus-visible:ring-red-500',
               )}
             />
           </div>
@@ -290,13 +326,14 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={(e) => {
-                onFormChange('password', e.target.value);
-                if (errors.password) setErrors((prev) => ({ ...prev, password: '' }));
+                onFormChange('password', e.target.value)
+                if (errors.password)
+                  setErrors((prev) => ({ ...prev, password: '' }))
               }}
               placeholder="Create a strong password"
               className={cn(
                 'pl-10 pr-10',
-                errors.password && 'border-red-500 focus-visible:ring-red-500'
+                errors.password && 'border-red-500 focus-visible:ring-red-500',
               )}
             />
             <button
@@ -304,7 +341,11 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.password && (
@@ -318,12 +359,16 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
             <div className="space-y-1">
               <div className="h-1.5 w-full rounded-full bg-[hsl(var(--muted))]">
                 <div
-                  className={cn('h-full rounded-full transition-all', passwordStatus.color)}
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    passwordStatus.color,
+                  )}
                   style={{ width: `${passwordStatus.strength}%` }}
                 />
               </div>
               <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                Password strength: <span className="font-medium">{passwordStatus.label}</span>
+                Password strength:{' '}
+                <span className="font-medium">{passwordStatus.label}</span>
               </p>
             </div>
           )}
@@ -344,13 +389,15 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               type={showConfirmPassword ? 'text' : 'password'}
               value={formData.confirmPassword}
               onChange={(e) => {
-                onFormChange('confirmPassword', e.target.value);
-                if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: '' }));
+                onFormChange('confirmPassword', e.target.value)
+                if (errors.confirmPassword)
+                  setErrors((prev) => ({ ...prev, confirmPassword: '' }))
               }}
               placeholder="Re-enter your password"
               className={cn(
                 'pl-10 pr-10',
-                errors.confirmPassword && 'border-red-500 focus-visible:ring-red-500'
+                errors.confirmPassword &&
+                  'border-red-500 focus-visible:ring-red-500',
               )}
             />
             <button
@@ -358,7 +405,11 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]"
             >
-              {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              {showConfirmPassword ? (
+                <EyeOff className="h-5 w-5" />
+              ) : (
+                <Eye className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.confirmPassword && (
@@ -407,8 +458,8 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
         open={showOTPDialog}
         onOpenChange={(open) => {
           if (!open && !isVerifyingOTP && !isCreatingAccount) {
-            setShowOTPDialog(false);
-            setOtp("");
+            setShowOTPDialog(false)
+            setOtp('')
           }
         }}
       >
@@ -416,8 +467,9 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
           <DialogHeader>
             <DialogTitle>Verify Your Email</DialogTitle>
             <DialogDescription>
-              We've sent a 6-digit verification code to <strong>{formData.email}</strong>.
-              Please enter it below to verify your email and create your account.
+              We've sent a 6-digit verification code to{' '}
+              <strong>{formData.email}</strong>. Please enter it below to verify
+              your email and create your account.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -427,7 +479,9 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
                 id="otp"
                 placeholder="Enter 6-digit code"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+                }
                 maxLength={6}
                 className="text-center text-lg tracking-widest"
                 autoFocus
@@ -449,8 +503,8 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               <Button
                 variant="outline"
                 onClick={() => {
-                  setShowOTPDialog(false);
-                  setOtp("");
+                  setShowOTPDialog(false)
+                  setOtp('')
                 }}
                 disabled={isVerifyingOTP || isCreatingAccount}
                 className="flex-1"
@@ -459,15 +513,19 @@ export function AccountStep({ formData, onFormChange, onNext }: AccountStepProps
               </Button>
               <Button
                 onClick={handleVerifyOTP}
-                disabled={isVerifyingOTP || isCreatingAccount || otp.length !== 6}
+                disabled={
+                  isVerifyingOTP || isCreatingAccount || otp.length !== 6
+                }
                 className="flex-1"
               >
-                {isVerifyingOTP || isCreatingAccount ? "Processing..." : "Verify & Create"}
+                {isVerifyingOTP || isCreatingAccount
+                  ? 'Processing...'
+                  : 'Verify & Create'}
               </Button>
             </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

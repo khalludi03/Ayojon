@@ -7,44 +7,44 @@
 
 :root {
   /* Light Theme (Default) - Ayojon Festive Colors */
-  --background: 0 0% 98%;           /* #FAFAFA */
-  --foreground: 220 20% 15%;        /* #1E2532 - Dark slate */
+  --background: 0 0% 98%; /* #FAFAFA */
+  --foreground: 220 20% 15%; /* #1E2532 - Dark slate */
 
-  --card: 0 0% 100%;                /* #FFFFFF */
-  --card-foreground: 220 20% 15%;  /* #1E2532 */
+  --card: 0 0% 100%; /* #FFFFFF */
+  --card-foreground: 220 20% 15%; /* #1E2532 */
 
-  --popover: 0 0% 100%;             /* #FFFFFF */
+  --popover: 0 0% 100%; /* #FFFFFF */
   --popover-foreground: 220 20% 15%; /* #1E2532 */
 
-  --primary: 12 85% 55%;            /* #F04E37 - Coral (festive, warm) */
+  --primary: 12 85% 55%; /* #F04E37 - Coral (festive, warm) */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --secondary: 175 50% 40%;         /* #33A399 - Teal (modern, professional) */
+  --secondary: 175 50% 40%; /* #33A399 - Teal (modern, professional) */
   --secondary-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --accent: 40 95% 55%;             /* #FBAB1B - Gold (celebratory) */
+  --accent: 40 95% 55%; /* #FBAB1B - Gold (celebratory) */
   --accent-foreground: 220 20% 15%; /* #1E2532 */
 
-  --muted: 220 15% 95%;             /* #F0F1F3 */
-  --muted-foreground: 220 10% 45%;  /* #6B7280 */
+  --muted: 220 15% 95%; /* #F0F1F3 */
+  --muted-foreground: 220 10% 45%; /* #6B7280 */
 
-  --destructive: 0 84% 60%;         /* #F44336 */
+  --destructive: 0 84% 60%; /* #F44336 */
   --destructive-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --success: 145 65% 42%;           /* #2E7D32 */
+  --success: 145 65% 42%; /* #2E7D32 */
   --success-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --warning: 35 92% 50%;            /* #FF9800 */
-  --warning-foreground: 0 0% 100%;  /* #FFFFFF */
+  --warning: 35 92% 50%; /* #FF9800 */
+  --warning-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --border: 0 0% 90%;               /* #E5E5E5 */
-  --input: 0 0% 90%;                /* #E5E5E5 */
-  --ring: 12 85% 55%;               /* #F04E37 - Coral */
+  --border: 0 0% 90%; /* #E5E5E5 */
+  --input: 0 0% 90%; /* #E5E5E5 */
+  --ring: 12 85% 55%; /* #F04E37 - Coral */
 
   /* Brand Colors */
-  --brand-coral: 12 85% 55%;        /* #F04E37 */
-  --brand-teal: 175 50% 40%;        /* #33A399 */
-  --brand-gold: 40 95% 55%;         /* #FBAB1B */
+  --brand-coral: 12 85% 55%; /* #F04E37 */
+  --brand-teal: 175 50% 40%; /* #33A399 */
+  --brand-gold: 40 95% 55%; /* #FBAB1B */
 
   /* Radius */
   --radius: 0.5rem;
@@ -55,70 +55,114 @@
   --radius-full: 9999px;
 
   /* Gradients */
-  --gradient-hero: linear-gradient(135deg, hsl(12 85% 55%) 0%, hsl(25 95% 60%) 100%);
-  --gradient-secondary: linear-gradient(135deg, hsl(175 50% 40%) 0%, hsl(175 50% 55%) 100%);
-  --gradient-accent: linear-gradient(135deg, hsl(40 95% 55%) 0%, hsl(35 92% 50%) 100%);
-  --gradient-dark: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(220 25% 12%) 100%);
-  --gradient-card: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(220 15% 98%) 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    hsl(12 85% 55%) 0%,
+    hsl(25 95% 60%) 100%
+  );
+  --gradient-secondary: linear-gradient(
+    135deg,
+    hsl(175 50% 40%) 0%,
+    hsl(175 50% 55%) 100%
+  );
+  --gradient-accent: linear-gradient(
+    135deg,
+    hsl(40 95% 55%) 0%,
+    hsl(35 92% 50%) 100%
+  );
+  --gradient-dark: linear-gradient(
+    135deg,
+    hsl(220 20% 8%) 0%,
+    hsl(220 25% 12%) 100%
+  );
+  --gradient-card: linear-gradient(
+    135deg,
+    hsl(0 0% 100%) 0%,
+    hsl(220 15% 98%) 100%
+  );
 
   /* Shadows */
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-card:
+    0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --shadow-festive: 0 4px 20px -2px hsla(12, 85%, 55%, 0.25);
 }
 
 /* Dark Theme - Ayojon Night Mode */
 .dark {
-  --background: 220 20% 8%;         /* #0F1218 - Deep slate */
-  --foreground: 0 0% 95%;           /* #F5F5F5 */
+  --background: 220 20% 8%; /* #0F1218 - Deep slate */
+  --foreground: 0 0% 95%; /* #F5F5F5 */
 
-  --card: 220 20% 12%;              /* #181C24 */
-  --card-foreground: 0 0% 95%;     /* #F5F5F5 */
+  --card: 220 20% 12%; /* #181C24 */
+  --card-foreground: 0 0% 95%; /* #F5F5F5 */
 
-  --popover: 220 20% 12%;           /* #181C24 */
+  --popover: 220 20% 12%; /* #181C24 */
   --popover-foreground: 0 0% 95%; /* #F5F5F5 */
 
-  --primary: 12 85% 58%;            /* #F4593F - Coral (brighter) */
+  --primary: 12 85% 58%; /* #F4593F - Coral (brighter) */
   --primary-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --secondary: 175 50% 45%;         /* #3DB5A6 - Teal (brighter) */
+  --secondary: 175 50% 45%; /* #3DB5A6 - Teal (brighter) */
   --secondary-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --accent: 40 95% 58%;             /* #FBB627 - Gold (brighter) */
-  --accent-foreground: 220 20% 8%;  /* #0F1218 */
+  --accent: 40 95% 58%; /* #FBB627 - Gold (brighter) */
+  --accent-foreground: 220 20% 8%; /* #0F1218 */
 
-  --muted: 220 15% 18%;             /* #272B34 */
-  --muted-foreground: 220 10% 65%;  /* #9CA3AF */
+  --muted: 220 15% 18%; /* #272B34 */
+  --muted-foreground: 220 10% 65%; /* #9CA3AF */
 
-  --destructive: 0 84% 65%;         /* #F5564A */
+  --destructive: 0 84% 65%; /* #F5564A */
   --destructive-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --success: 145 65% 45%;           /* #35935B */
+  --success: 145 65% 45%; /* #35935B */
   --success-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --warning: 35 92% 55%;            /* #FFA726 */
-  --warning-foreground: 0 0% 100%;  /* #FFFFFF */
+  --warning: 35 92% 55%; /* #FFA726 */
+  --warning-foreground: 0 0% 100%; /* #FFFFFF */
 
-  --border: 220 15% 20%;            /* #2A2E37 */
-  --input: 220 15% 20%;             /* #2A2E37 */
-  --ring: 12 85% 58%;               /* #F4593F - Coral */
+  --border: 220 15% 20%; /* #2A2E37 */
+  --input: 220 15% 20%; /* #2A2E37 */
+  --ring: 12 85% 58%; /* #F4593F - Coral */
 
   /* Brand Colors (adjusted for dark mode) */
-  --brand-coral: 12 85% 58%;        /* #F4593F */
-  --brand-teal: 175 50% 45%;        /* #3DB5A6 */
-  --brand-gold: 40 95% 58%;         /* #FBB627 */
+  --brand-coral: 12 85% 58%; /* #F4593F */
+  --brand-teal: 175 50% 45%; /* #3DB5A6 */
+  --brand-gold: 40 95% 58%; /* #FBB627 */
 
   /* Gradients (same as light) */
-  --gradient-hero: linear-gradient(135deg, hsl(12 85% 55%) 0%, hsl(25 95% 60%) 100%);
-  --gradient-secondary: linear-gradient(135deg, hsl(175 50% 40%) 0%, hsl(175 50% 55%) 100%);
-  --gradient-accent: linear-gradient(135deg, hsl(40 95% 55%) 0%, hsl(35 92% 50%) 100%);
-  --gradient-dark: linear-gradient(135deg, hsl(220 20% 8%) 0%, hsl(220 25% 12%) 100%);
-  --gradient-card: linear-gradient(135deg, hsl(220 20% 12%) 0%, hsl(220 15% 16%) 100%);
+  --gradient-hero: linear-gradient(
+    135deg,
+    hsl(12 85% 55%) 0%,
+    hsl(25 95% 60%) 100%
+  );
+  --gradient-secondary: linear-gradient(
+    135deg,
+    hsl(175 50% 40%) 0%,
+    hsl(175 50% 55%) 100%
+  );
+  --gradient-accent: linear-gradient(
+    135deg,
+    hsl(40 95% 55%) 0%,
+    hsl(35 92% 50%) 100%
+  );
+  --gradient-dark: linear-gradient(
+    135deg,
+    hsl(220 20% 8%) 0%,
+    hsl(220 25% 12%) 100%
+  );
+  --gradient-card: linear-gradient(
+    135deg,
+    hsl(220 20% 12%) 0%,
+    hsl(220 15% 16%) 100%
+  );
 
   /* Shadows (darker) */
-  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
-  --shadow-card-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --shadow-card:
+    0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover:
+    0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
   --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   --shadow-festive: 0 4px 20px -2px hsla(12, 85%, 58%, 0.35);
 }
@@ -134,9 +178,20 @@
 body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-    Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans',
-    'Helvetica Neue', sans-serif;
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -144,10 +199,10 @@ body {
 /* Ensure interactive elements show pointer cursor */
 a,
 button,
-[role="button"],
-[type="button"],
-[type="submit"],
-[type="reset"],
+[role='button'],
+[type='button'],
+[type='submit'],
+[type='reset'],
 select,
 .cursor-pointer {
   cursor: pointer;
@@ -156,7 +211,11 @@ select,
 /* Only apply theme transitions after page load to prevent flash */
 html.theme-transition-enabled body,
 html.theme-transition-enabled * {
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 /* ========================================
@@ -164,7 +223,8 @@ html.theme-transition-enabled * {
    ======================================== */
 
 @keyframes skeleton-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -221,11 +281,11 @@ html.theme-transition-enabled * {
 
 /* Account UI styling */
 .account-shell {
-  font-family: "Space Grotesk", "DM Sans", sans-serif;
+  font-family: 'Space Grotesk', 'DM Sans', sans-serif;
 }
 
 .account-heading {
-  font-family: "Fraunces", "Times New Roman", serif;
+  font-family: 'Fraunces', 'Times New Roman', serif;
   letter-spacing: 0.01em;
 }
 

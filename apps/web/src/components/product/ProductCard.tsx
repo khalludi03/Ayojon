@@ -1,71 +1,84 @@
-import { useState } from 'react';
-import { Heart, ShoppingCart, Star, Truck, Eye, AlertTriangle } from 'lucide-react';
-import { useNavigate } from '@tanstack/react-router';
-import type { Product } from '@/types';
-import { useCart } from '@/stores/cart-store';
-import { useWishlist } from '@/stores/wishlist-store';
-import { useQuickView } from '@/stores/quick-view-store';
-import { DiscountBadge, ProductBadge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn, formatPrice } from '@/lib/utils';
+import { useState } from 'react'
+import {
+  AlertTriangle,
+  Eye,
+  Heart,
+  ShoppingCart,
+  Star,
+  Truck,
+} from 'lucide-react'
+import { useNavigate } from '@tanstack/react-router'
+import type { Product } from '@/types'
+import { useCart } from '@/stores/cart-store'
+import { useWishlist } from '@/stores/wishlist-store'
+import { useQuickView } from '@/stores/quick-view-store'
+import { DiscountBadge, ProductBadge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { cn, formatPrice } from '@/lib/utils'
 
 interface ProductCardProps {
-  product: Product;
-  onQuickView?: (product: Product) => void; // Keep for backward compatibility but not used
+  product: Product
+  onQuickView?: (product: Product) => void // Keep for backward compatibility but not used
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const navigate = useNavigate();
-  const [isAddingToCart, setIsAddingToCart] = useState(false);
-  const { addItem, toggleItem, isInCart } = useCart();
-  const { toggleItem: toggleWishlist, isInWishlist } = useWishlist();
-  const { openQuickView } = useQuickView();
+  const navigate = useNavigate()
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const { addItem, toggleItem, isInCart } = useCart()
+  const { toggleItem: toggleWishlist, isInWishlist } = useWishlist()
+  const { openQuickView } = useQuickView()
 
-  const inCart = isInCart(product.id);
-  const inWishlist = isInWishlist(product.id);
-  const isOutOfStock = product.stockStatus === 'out_of_stock' || product.stock === 0;
-  
+  const inCart = isInCart(product.id)
+  const inWishlist = isInWishlist(product.id)
+  const isOutOfStock =
+    product.stockStatus === 'out_of_stock' || product.stock === 0
+
   // Calculate discount percentage if not provided
-  const discountPercentage = product.pricing.discountPercentage || 
-    (product.pricing.originalPrice > product.pricing.currentPrice 
-      ? Math.round(((product.pricing.originalPrice - product.pricing.currentPrice) / product.pricing.originalPrice) * 100)
-      : 0);
+  const discountPercentage =
+    product.pricing.discountPercentage ||
+    (product.pricing.originalPrice > product.pricing.currentPrice
+      ? Math.round(
+          ((product.pricing.originalPrice - product.pricing.currentPrice) /
+            product.pricing.originalPrice) *
+            100,
+        )
+      : 0)
 
   // Product detail page URL
-  const productUrl = `/product/${product.slug}`;
+  const productUrl = `/product/${product.slug}`
 
   const handleToggleCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsAddingToCart(true);
-    toggleItem(product);
+    e.preventDefault()
+    e.stopPropagation()
+    setIsAddingToCart(true)
+    toggleItem(product)
     // Brief feedback animation
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    setIsAddingToCart(false);
-  };
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    setIsAddingToCart(false)
+  }
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWishlist(product);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist(product)
+  }
 
   const handleBuyNow = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(product);
-    navigate({ to: '/checkout' });
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    addItem(product)
+    navigate({ to: '/checkout' })
+  }
 
   const handleQuickView = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    openQuickView(product);
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    openQuickView(product)
+  }
 
   // Calculate star display
-  const fullStars = Math.floor(product.rating.average);
-  const hasHalfStar = product.rating.average % 1 >= 0.5;
+  const fullStars = Math.floor(product.rating.average)
+  const hasHalfStar = product.rating.average % 1 >= 0.5
 
   return (
     <a
@@ -74,7 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
       aria-label={`View ${product.title} - ${formatPrice(product.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
-      <div 
+      <div
         className="relative aspect-square w-full flex-shrink-0 overflow-hidden rounded-md bg-[hsl(var(--muted))]"
         onClick={handleQuickView}
       >
@@ -87,17 +100,20 @@ export function ProductCard({ product }: ProductCardProps) {
 
         {/* Quick View Overlay Button (Desktop) */}
         <button
-            onClick={handleQuickView}
-            className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20 cursor-pointer hidden sm:flex"
-            aria-label="Quick view"
+          onClick={handleQuickView}
+          className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-black/20 cursor-pointer hidden sm:flex"
+          aria-label="Quick view"
         >
-            <Eye className="h-8 w-8 text-white opacity-70 drop-shadow-lg transition-transform hover:scale-125" />
+          <Eye className="h-8 w-8 text-white opacity-70 drop-shadow-lg transition-transform hover:scale-125" />
         </button>
 
         {/* Discount Badge */}
         {discountPercentage > 0 && (
           <div className="absolute left-1.5 top-1.5 sm:left-2 sm:top-2 z-10">
-            <DiscountBadge percentage={discountPercentage} className="text-[10px] sm:text-xs md:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1" />
+            <DiscountBadge
+              percentage={discountPercentage}
+              className="text-[10px] sm:text-xs md:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1"
+            />
           </div>
         )}
 
@@ -108,11 +124,16 @@ export function ProductCard({ product }: ProductCardProps) {
             'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2 z-10',
             inWishlist
               ? 'text-red-500'
-              : 'text-[hsl(var(--muted-foreground))] hover:text-red-500'
+              : 'text-[hsl(var(--muted-foreground))] hover:text-red-500',
           )}
           aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
         >
-          <Heart className={cn('h-3.5 w-3.5 sm:h-4 sm:w-4', inWishlist && 'fill-current')} />
+          <Heart
+            className={cn(
+              'h-3.5 w-3.5 sm:h-4 sm:w-4',
+              inWishlist && 'fill-current',
+            )}
+          />
         </button>
       </div>
 
@@ -142,7 +163,7 @@ export function ProductCard({ product }: ProductCardProps) {
                     ? 'fill-yellow-400 text-yellow-400'
                     : i === fullStars && hasHalfStar
                       ? 'fill-yellow-400/50 text-yellow-400'
-                      : 'fill-gray-200 text-gray-200'
+                      : 'fill-gray-200 text-gray-200',
                 )}
               />
             ))}
@@ -216,7 +237,7 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
     </a>
-  );
+  )
 }
 
-export default ProductCard;
+export default ProductCard

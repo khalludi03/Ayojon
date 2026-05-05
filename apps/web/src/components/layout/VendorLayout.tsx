@@ -1,56 +1,56 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from '@tanstack/react-router';
+import { useState } from 'react'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   LayoutDashboard,
-  Package,
-  ShoppingBag,
-  Settings,
   LogOut,
-  Search,
   Menu,
-  X
-} from 'lucide-react';
-import { Logo } from './header/Logo';
-import { ThemeToggle } from './header/ThemeToggle';
-import { NotificationBell } from './header/NotificationBell';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils';
-import { authClient } from '@/lib/auth-client';
-import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
+  Package,
+  Search,
+  Settings,
+  ShoppingBag,
+  X,
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
+import { Logo } from './header/Logo'
+import { ThemeToggle } from './header/ThemeToggle'
+import { NotificationBell } from './header/NotificationBell'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/lib/utils'
+import { authClient } from '@/lib/auth-client'
 
 const navigationItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/vendor/dashboard' },
   { label: 'Products', icon: Package, path: '/vendor/products' },
   { label: 'Orders', icon: ShoppingBag, path: '/vendor/orders' },
-  { label: 'Settings', icon: Settings, path: '/vendor/settings' }
-];
+  { label: 'Settings', icon: Settings, path: '/vendor/settings' },
+]
 
 interface VendorLayoutProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 export function VendorLayout({ children }: VendorLayoutProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const handleSignOut = async () => {
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
           // Clear all cached queries on logout
-          queryClient.clear();
-          toast.success('Signed out successfully');
-          navigate({ to: '/login' });
-        }
-      }
-    });
-  };
+          queryClient.clear()
+          toast.success('Signed out successfully')
+          navigate({ to: '/login' })
+        },
+      },
+    })
+  }
 
-  const isActivePath = (path: string) => location.pathname === path;
+  const isActivePath = (path: string) => location.pathname === path
 
   return (
     <div className="min-h-screen bg-[hsl(var(--background))]">
@@ -107,18 +107,18 @@ export function VendorLayout({ children }: VendorLayoutProps) {
           <div className="mx-auto max-w-7xl px-4">
             <nav className="hidden lg:flex h-14 items-center gap-1">
               {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = isActivePath(item.path);
+                const Icon = item.icon
+                const isActive = isActivePath(item.path)
 
                 return (
                   <Link
                     key={item.path}
                     to={item.path as any}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors relative",
+                      'flex items-center gap-2 px-4 py-2 text-sm font-medium transition-colors relative',
                       isActive
-                        ? "text-[hsl(var(--primary))]"
-                        : "text-[hsl(var(--foreground))]/80 hover:text-[hsl(var(--foreground))]"
+                        ? 'text-[hsl(var(--primary))]'
+                        : 'text-[hsl(var(--foreground))]/80 hover:text-[hsl(var(--foreground))]',
                     )}
                   >
                     <Icon className="h-4 w-4" />
@@ -127,7 +127,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
                       <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[hsl(var(--primary))]" />
                     )}
                   </Link>
-                );
+                )
               })}
             </nav>
           </div>
@@ -155,25 +155,25 @@ export function VendorLayout({ children }: VendorLayoutProps) {
 
             <nav className="flex flex-col p-4 space-y-1">
               {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = isActivePath(item.path);
+                const Icon = item.icon
+                const isActive = isActivePath(item.path)
 
                 return (
                   <Link
                     key={item.path}
                     to={item.path as any}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      'flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors',
                       isActive
-                        ? "bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]"
-                        : "text-[hsl(var(--foreground))]/80 hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]"
+                        ? 'bg-[hsl(var(--primary))]/10 text-[hsl(var(--primary))]'
+                        : 'text-[hsl(var(--foreground))]/80 hover:bg-[hsl(var(--muted))] hover:text-[hsl(var(--foreground))]',
                     )}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>
                   </Link>
-                );
+                )
               })}
             </nav>
 
@@ -192,9 +192,7 @@ export function VendorLayout({ children }: VendorLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main>
-        {children}
-      </main>
+      <main>{children}</main>
     </div>
-  );
+  )
 }

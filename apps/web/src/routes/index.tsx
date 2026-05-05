@@ -1,5 +1,14 @@
-import { createFileRoute, Link, redirect } from '@tanstack/react-router'
-import { Award, Flame, Home, ShoppingCart, Sparkles, TrendingUp, UtensilsCrossed, Zap } from 'lucide-react'
+import { Link, createFileRoute, redirect } from '@tanstack/react-router'
+import {
+  Award,
+  Flame,
+  Home,
+  ShoppingCart,
+  Sparkles,
+  TrendingUp,
+  UtensilsCrossed,
+  Zap,
+} from 'lucide-react'
 
 import { HeroCarousel } from '@/components/carousel/HeroCarousel'
 import { FlashSaleSection } from '@/components/deals/FlashSaleSection'
@@ -17,50 +26,68 @@ import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
-    const session = await getUser();
+    const session = await getUser()
     if (session) {
-      const user = session.user as any;
+      const user = session.user as any
       if (user.role === 'admin') {
-        throw redirect({ to: '/admin/dashboard' });
+        throw redirect({ to: '/admin/dashboard' })
       }
       if (user.role === 'vendor') {
-        throw redirect({ to: '/vendor/dashboard' });
+        throw redirect({ to: '/vendor/dashboard' })
       }
     }
   },
   head: () => ({
     meta: [
       { title: 'Ayojon - Your Event Marketplace' },
-      { name: 'description', content: 'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.' },
-      { name: 'keywords', content: 'event rental, wedding supplies, party decorations, catering equipment, furniture rental, Ayojon' },
+      {
+        name: 'description',
+        content:
+          'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.',
+      },
+      {
+        name: 'keywords',
+        content:
+          'event rental, wedding supplies, party decorations, catering equipment, furniture rental, Ayojon',
+      },
       { property: 'og:title', content: 'Ayojon - Your Event Marketplace' },
-      { property: 'og:description', content: 'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.' },
+      {
+        property: 'og:description',
+        content:
+          'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more for weddings, birthdays, corporate events.',
+      },
       { property: 'og:image', content: '/og-image.png' },
       { property: 'og:url', content: 'https://ayojon.com' },
       { property: 'og:type', content: 'website' },
       { property: 'og:site_name', content: 'Ayojon' },
       { name: 'twitter:card', content: 'summary_large_image' },
       { name: 'twitter:title', content: 'Ayojon - Your Event Marketplace' },
-      { name: 'twitter:description', content: 'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more.' },
+      {
+        name: 'twitter:description',
+        content:
+          'Discover and rent event supplies from trusted vendors. Decorations, furniture, catering equipment, and more.',
+      },
       { name: 'twitter:image', content: '/og-image.png' },
     ],
-    links: [
-      { rel: 'canonical', href: 'https://ayojon.com' },
-    ],
+    links: [{ rel: 'canonical', href: 'https://ayojon.com' }],
   }),
-  component: HomePage
+  component: HomePage,
 })
 
 function HomePage() {
   const { itemCount } = useCart()
   // Fetch product sections
   const { data: hotDealsProducts, isLoading: hotDealsLoading } = useHotDeals(12)
-  
+
   // Fetch category sections
-  const { data: decorationsProducts, isLoading: decorationsLoading } = useProductsByCategory('decorations', 8)
-  const { data: soundLightingProducts, isLoading: soundLightingLoading } = useProductsByCategory('sound-lighting', 8)
-  const { data: furnitureProducts, isLoading: furnitureLoading } = useProductsByCategory('furniture-tents', 8)
-  const { data: cateringProducts, isLoading: cateringLoading } = useProductsByCategory('catering-equipment', 8)
+  const { data: decorationsProducts, isLoading: decorationsLoading } =
+    useProductsByCategory('decorations', 8)
+  const { data: soundLightingProducts, isLoading: soundLightingLoading } =
+    useProductsByCategory('sound-lighting', 8)
+  const { data: furnitureProducts, isLoading: furnitureLoading } =
+    useProductsByCategory('furniture-tents', 8)
+  const { data: cateringProducts, isLoading: cateringLoading } =
+    useProductsByCategory('catering-equipment', 8)
 
   return (
     <>
@@ -84,7 +111,8 @@ function HomePage() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-[hsl(var(--foreground))] sm:text-base">
-                  You have {itemCount} {itemCount === 1 ? 'item' : 'items'} in your cart
+                  You have {itemCount} {itemCount === 1 ? 'item' : 'items'} in
+                  your cart
                 </p>
                 <p className="text-xs text-[hsl(var(--muted-foreground))] sm:text-sm">
                   Continue where you left off and complete your purchase.
@@ -95,7 +123,9 @@ function HomePage() {
               <Link to="/cart">View Cart</Link>
             </Button>
             <Button asChild size="icon" variant="ghost" className="sm:hidden">
-              <Link to="/cart"><ShoppingCart className="h-5 w-5" /></Link>
+              <Link to="/cart">
+                <ShoppingCart className="h-5 w-5" />
+              </Link>
             </Button>
           </div>
         </section>
@@ -111,8 +141,12 @@ function HomePage() {
                   <TrendingUp className="h-5 w-5 text-[hsl(var(--primary))] sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Free Shipping</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">On orders over ৳999</p>
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">
+                    Free Shipping
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">
+                    On orders over ৳999
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
@@ -120,8 +154,12 @@ function HomePage() {
                   <Award className="h-5 w-5 text-[hsl(var(--secondary))] sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Best Quality</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">Verified products</p>
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">
+                    Best Quality
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">
+                    Verified products
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
@@ -129,8 +167,12 @@ function HomePage() {
                   <Zap className="h-5 w-5 text-[hsl(var(--accent))] sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Fast Delivery</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">24/7 express service</p>
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">
+                    Fast Delivery
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">
+                    24/7 express service
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-3 md:p-4">
@@ -138,8 +180,12 @@ function HomePage() {
                   <Sparkles className="h-5 w-5 text-emerald-500 sm:h-6 sm:w-6" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">Secure Payment</p>
-                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">100% protected</p>
+                  <p className="text-sm font-semibold text-[hsl(var(--foreground))] md:text-base">
+                    Secure Payment
+                  </p>
+                  <p className="text-xs text-[hsl(var(--muted-foreground))] md:text-sm">
+                    100% protected
+                  </p>
                 </div>
               </div>
             </div>
@@ -168,7 +214,7 @@ function HomePage() {
       />
 
       {/* Category Sections */}
-      
+
       {/* Decorations & Balloons */}
       <ProductSection
         title="Decorations & Balloons"

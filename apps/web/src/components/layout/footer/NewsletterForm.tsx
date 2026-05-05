@@ -1,23 +1,23 @@
-import { useState } from 'react';
-import { Mail } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { Mail } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 export function NewsletterForm() {
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
+    e.preventDefault()
+    if (!email) return
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    setEmail('');
-  };
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+    setIsSubmitting(false)
+    setIsSubmitted(true)
+    setEmail('')
+  }
 
   return (
     <div className="flex flex-col items-center gap-3 text-center sm:gap-4 md:flex-row md:text-left">
@@ -32,10 +32,15 @@ export function NewsletterForm() {
 
       {isSubmitted ? (
         <div className="rounded-lg bg-white/10 px-4 py-2 text-white sm:px-6 sm:py-3">
-          <p className="text-sm font-medium sm:text-base">Thanks for subscribing!</p>
+          <p className="text-sm font-medium sm:text-base">
+            Thanks for subscribing!
+          </p>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="flex w-full max-w-md flex-col gap-2 sm:flex-row">
+        <form
+          onSubmit={handleSubmit}
+          className="flex w-full max-w-md flex-col gap-2 sm:flex-row"
+        >
           <div className="relative flex-1">
             <Mail className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[hsl(var(--muted-foreground))] sm:h-4 sm:w-4" />
             <input
@@ -58,5 +63,5 @@ export function NewsletterForm() {
         </form>
       )}
     </div>
-  );
+  )
 }

@@ -2,7 +2,7 @@
 // These are simplified but accurate representations of payment brand logos
 
 interface PaymentIconProps {
-  className?: string;
+  className?: string
 }
 
 // Visa Logo SVG
@@ -18,7 +18,7 @@ function VisaIcon({ className }: PaymentIconProps) {
         d="M7.23 2.24H1.97l-.05.3c4.17 1.07 6.93 3.64 8.08 6.73l-1.16-5.92c-.2-.82-.79-1.06-1.61-1.11z"
       />
     </svg>
-  );
+  )
 }
 
 // Mastercard Logo SVG
@@ -32,21 +32,21 @@ function MastercardIcon({ className }: PaymentIconProps) {
         d="M25 4.35c-4.14 3.24-6.8 8.26-6.8 13.93s2.66 10.7 6.8 13.94c4.14-3.24 6.8-8.27 6.8-13.94S29.14 7.6 25 4.35z"
       />
     </svg>
-  );
+  )
 }
 
 // bKash Logo SVG - Using official bKash logo
 function BkashIcon({ className }: PaymentIconProps) {
   return (
     <div className="rounded bg-white dark:bg-white p-1 flex items-center justify-center">
-      <img 
-        src="/bkash.svg" 
-        alt="bKash" 
+      <img
+        src="/bkash.svg"
+        alt="bKash"
         className={className}
         style={{ objectFit: 'contain' }}
       />
     </div>
-  );
+  )
 }
 
 // Nagad Logo SVG - Authentic style with bird/wing icon
@@ -86,7 +86,7 @@ function NagadIcon({ className }: PaymentIconProps) {
         nagad
       </text>
     </svg>
-  );
+  )
 }
 
 // Rocket Logo SVG
@@ -106,13 +106,17 @@ function RocketIcon({ className }: PaymentIconProps) {
         Rocket
       </text>
     </svg>
-  );
+  )
 }
 
 // American Express Logo SVG - Authentic centurion style
 function AmexIcon({ className }: PaymentIconProps) {
   return (
-    <svg viewBox="0 0 60 40" className={className} aria-label="American Express">
+    <svg
+      viewBox="0 0 60 40"
+      className={className}
+      aria-label="American Express"
+    >
       <rect width="60" height="40" rx="4" fill="#006FCF" />
       {/* Centurion head silhouette (simplified) */}
       <g transform="translate(6, 8)">
@@ -152,13 +156,17 @@ function AmexIcon({ className }: PaymentIconProps) {
         EXPRESS
       </text>
     </svg>
-  );
+  )
 }
 
 // Cash on Delivery Icon - Modern style with package/money icon
 function CodIcon({ className }: PaymentIconProps) {
   return (
-    <svg viewBox="0 0 70 40" className={className} aria-label="Cash on Delivery">
+    <svg
+      viewBox="0 0 70 40"
+      className={className}
+      aria-label="Cash on Delivery"
+    >
       <defs>
         <linearGradient id="cod-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#43A047" />
@@ -168,12 +176,42 @@ function CodIcon({ className }: PaymentIconProps) {
       <rect width="70" height="40" rx="4" fill="url(#cod-gradient)" />
       {/* Package box icon */}
       <g transform="translate(8, 8)">
-        <rect x="0" y="6" width="16" height="14" rx="1" fill="white" stroke="#2E7D32" strokeWidth="0.5" />
-        <path d="M0 10 L8 6 L16 10" stroke="#2E7D32" strokeWidth="1" fill="none" />
+        <rect
+          x="0"
+          y="6"
+          width="16"
+          height="14"
+          rx="1"
+          fill="white"
+          stroke="#2E7D32"
+          strokeWidth="0.5"
+        />
+        <path
+          d="M0 10 L8 6 L16 10"
+          stroke="#2E7D32"
+          strokeWidth="1"
+          fill="none"
+        />
         <line x1="8" y1="6" x2="8" y2="20" stroke="#2E7D32" strokeWidth="0.8" />
         {/* Money/coin indicator */}
-        <circle cx="14" cy="18" r="5" fill="#FFC107" stroke="#FF9800" strokeWidth="0.5" />
-        <text x="14" y="20" textAnchor="middle" fill="#2E7D32" fontSize="5" fontWeight="bold">৳</text>
+        <circle
+          cx="14"
+          cy="18"
+          r="5"
+          fill="#FFC107"
+          stroke="#FF9800"
+          strokeWidth="0.5"
+        />
+        <text
+          x="14"
+          y="20"
+          textAnchor="middle"
+          fill="#2E7D32"
+          fontSize="5"
+          fontWeight="bold"
+        >
+          ৳
+        </text>
       </g>
       {/* COD text */}
       <text
@@ -200,7 +238,7 @@ function CodIcon({ className }: PaymentIconProps) {
         Cash on Delivery
       </text>
     </svg>
-  );
+  )
 }
 
 // Payment methods configuration - bKash, Nagad, Visa, Mastercard, Cash on Delivery
@@ -210,12 +248,14 @@ const paymentMethods = [
   { name: 'Visa', Icon: VisaIcon, width: 'w-14' },
   { name: 'Mastercard', Icon: MastercardIcon, width: 'w-11' },
   { name: 'Cash on Delivery', Icon: CodIcon, width: 'w-16' },
-];
+]
 
 export function PaymentIcons() {
   return (
     <div className="flex flex-wrap items-center justify-center gap-3 md:justify-end">
-      <span className="text-sm text-[hsl(var(--muted-foreground))]">We accept:</span>
+      <span className="text-sm text-[hsl(var(--muted-foreground))]">
+        We accept:
+      </span>
       <div className="flex flex-wrap items-center gap-2">
         {paymentMethods.map((method) => (
           <div
@@ -228,5 +268,5 @@ export function PaymentIcons() {
         ))}
       </div>
     </div>
-  );
+  )
 }

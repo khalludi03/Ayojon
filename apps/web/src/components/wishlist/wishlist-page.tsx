@@ -1,74 +1,77 @@
-import { useState, useMemo } from "react";
-import { Link } from "@tanstack/react-router";
-import { Heart, ShoppingCart, ArrowUpDown } from "lucide-react";
-import { useWishlist } from "@/stores/wishlist-store";
-import { useCart } from "@/stores/cart-store";
-import { ProductCard } from "@/components/products/product-card";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { ArrowUpDown, Heart, ShoppingCart } from 'lucide-react'
+import { toast } from 'sonner'
+import { useWishlist } from '@/stores/wishlist-store'
+import { useCart } from '@/stores/cart-store'
+import { ProductCard } from '@/components/products/product-card'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
+} from '@/components/ui/select'
 
-type SortOption = "recent" | "price-low" | "price-high";
+type SortOption = 'recent' | 'price-low' | 'price-high'
 
 export function WishlistPage() {
-  const { items, removeItem } = useWishlist();
-  const { addItem: addToCart } = useCart();
-  const [sortBy, setSortBy] = useState<SortOption>("recent");
+  const { items, removeItem } = useWishlist()
+  const { addItem: addToCart } = useCart()
+  const [sortBy, setSortBy] = useState<SortOption>('recent')
 
   // Sort wishlist items based on selected option
   const sortedItems = useMemo(() => {
-    const itemsCopy = [...items];
+    const itemsCopy = [...items]
 
     switch (sortBy) {
-      case "recent":
+      case 'recent':
         // Most recently added first
         return itemsCopy.sort(
-          (a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime()
-        );
+          (a, b) =>
+            new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime(),
+        )
 
-      case "price-low":
+      case 'price-low':
         // Lowest price first
         return itemsCopy.sort(
-          (a, b) => a.product.pricing.currentPrice - b.product.pricing.currentPrice
-        );
+          (a, b) =>
+            a.product.pricing.currentPrice - b.product.pricing.currentPrice,
+        )
 
-      case "price-high":
+      case 'price-high':
         // Highest price first
         return itemsCopy.sort(
-          (a, b) => b.product.pricing.currentPrice - a.product.pricing.currentPrice
-        );
+          (a, b) =>
+            b.product.pricing.currentPrice - a.product.pricing.currentPrice,
+        )
 
       default:
-        return itemsCopy;
+        return itemsCopy
     }
-  }, [items, sortBy]);
+  }, [items, sortBy])
 
   // Move all items to cart
   const handleMoveAllToCart = () => {
-    if (items.length === 0) return;
+    if (items.length === 0) return
 
-    let successCount = 0;
+    let successCount = 0
     items.forEach((item) => {
       try {
         // Add to cart with quantity 1 and first variant if available
-        addToCart(item.product, 1, item.product.variants?.[0]);
-        removeItem(item.productId);
-        successCount++;
+        addToCart(item.product, 1, item.product.variants[0])
+        removeItem(item.productId)
+        successCount++
       } catch (error) {
-        console.error("Failed to add item to cart:", error);
+        console.error('Failed to add item to cart:', error)
       }
-    });
+    })
 
     if (successCount > 0) {
-      toast.success(`Moved ${successCount} item(s) to cart`);
+      toast.success(`Moved ${successCount} item(s) to cart`)
     }
-  };
+  }
 
   // Empty wishlist state
   if (items.length === 0) {
@@ -92,7 +95,7 @@ export function WishlistPage() {
           </Button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -101,7 +104,7 @@ export function WishlistPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">My Wishlist</h1>
         <p className="text-[hsl(var(--muted-foreground))] mt-2">
-          {items.length} {items.length === 1 ? "item" : "items"} saved
+          {items.length} {items.length === 1 ? 'item' : 'items'} saved
         </p>
       </div>
 
@@ -110,7 +113,10 @@ export function WishlistPage() {
         {/* Sort Dropdown */}
         <div className="flex items-center gap-2">
           <ArrowUpDown className="h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => setSortBy(value as SortOption)}
+          >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -143,5 +149,5 @@ export function WishlistPage() {
         ))}
       </div>
     </div>
-  );
+  )
 }

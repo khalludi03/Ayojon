@@ -1,7 +1,9 @@
 # Homepage Management Feature - Implementation Guide
 
 ## Overview
+
 This feature allows admins to manage the homepage images through the admin panel:
+
 1. **Main Banner Slider** - Unlimited carousel slides with images and text
 2. **4 Promotional Cards** - Fixed 4-slot grid beside the banner
 
@@ -10,9 +12,11 @@ This feature allows admins to manage the homepage images through the admin panel
 ## ✅ What Was Built
 
 ### 1. Database Schema
+
 **Location**: `packages/db/src/schema/homepage.ts`
 
 Two new tables were created:
+
 - `home_banners` - Stores main carousel slides
   - Fields: id, imageUrl, title, subtitle, buttonText, buttonLink, isActive, sortOrder
   - Indexed for performance on active status and sort order
@@ -24,12 +28,14 @@ Two new tables were created:
 ### 2. Backend APIs
 
 **Public Endpoints** (`packages/api/src/routers/homepage.ts`):
+
 - `GET /api/homepage.listBanners` - Returns active banners ordered by sortOrder
 - `GET /api/homepage.listPromoCards` - Returns active promo cards ordered by slotNumber
 
 **Admin Endpoints** (added to `packages/api/src/routers/admin.ts`):
 
 Banner Management:
+
 - `POST /api/admin.listAllBanners` - List all banners (active + inactive)
 - `POST /api/admin.createBanner` - Create a new banner
 - `PATCH /api/admin.updateBanner` - Update banner fields
@@ -37,12 +43,14 @@ Banner Management:
 - `POST /api/admin.reorderBanners` - Update sortOrder for multiple banners
 
 Promo Card Management:
+
 - `POST /api/admin.listAllPromoCards` - List all promo cards
 - `PATCH /api/admin.updatePromoCard` - Update or create promo card for a slot
 
 ### 3. Admin Panel Pages
 
 **Banner Management** (`apps/web/src/routes/admin/homepage-banners.tsx`):
+
 - List view with drag-and-drop reordering
 - Create/Edit modal with image upload
 - Toggle active/inactive status
@@ -50,6 +58,7 @@ Promo Card Management:
 - Displays preview images and metadata
 
 **Promo Card Management** (`apps/web/src/routes/admin/homepage-promo-cards.tsx`):
+
 - 4-slot grid layout
 - Edit modal for each slot
 - Image upload for each card
@@ -59,6 +68,7 @@ Promo Card Management:
 ### 4. Frontend Homepage
 
 **Updated HeroCarousel** (`apps/web/src/components/carousel/HeroCarousel.tsx`):
+
 - Fetches banners and promo cards from API
 - Shows only active items
 - Auto-rotates every 5 seconds
@@ -94,6 +104,7 @@ Promo Card Management:
 ### For Users (Homepage)
 
 The homepage automatically displays:
+
 - Active banner slides in a carousel (auto-rotates)
 - Active promo cards in a 2x2 grid beside the banner
 - Mobile-responsive layout (stacked on mobile, side-by-side on desktop)
@@ -133,17 +144,20 @@ scripts/
 ### 1. Test Database
 
 Run the seeding script to populate sample data:
+
 ```bash
 bun /home/takib/Documents/nemo/my-better-t-app/scripts/seed-homepage-data.ts
 ```
 
 This creates:
+
 - 3 sample banner slides
 - 4 sample promo cards
 
 ### 2. Test Admin Panel
 
 1. Start the server and web app:
+
    ```bash
    bun run dev
    ```
@@ -179,6 +193,7 @@ This creates:
 ### 4. Test APIs
 
 **Public Endpoints**:
+
 ```bash
 # List banners
 curl http://localhost:3000/api/homepage.listBanners
@@ -188,6 +203,7 @@ curl http://localhost:3000/api/homepage.listPromoCards
 ```
 
 **Admin Endpoints** (requires authentication):
+
 ```bash
 # List all banners
 curl -X POST http://localhost:3000/api/admin.listAllBanners \
@@ -224,6 +240,7 @@ curl -X POST http://localhost:3000/api/admin.createBanner \
 ## 🎨 Features
 
 ### Banner Management
+
 ✅ Unlimited slides
 ✅ Image upload to S3
 ✅ Title, subtitle, button text/link
@@ -233,6 +250,7 @@ curl -X POST http://localhost:3000/api/admin.createBanner \
 ✅ Navigation arrows and dots
 
 ### Promo Card Management
+
 ✅ Exactly 4 fixed slots
 ✅ Image upload per slot
 ✅ Label, title, and link per card
@@ -241,6 +259,7 @@ curl -X POST http://localhost:3000/api/admin.createBanner \
 ✅ Responsive layout
 
 ### Homepage Display
+
 ✅ Fetches data from API
 ✅ Shows only active items
 ✅ Auto-slide carousel (5s interval)
@@ -256,11 +275,13 @@ curl -X POST http://localhost:3000/api/admin.createBanner \
 The seed script creates:
 
 **Banners**:
+
 1. Wedding Events - "Make Your Wedding Unforgettable"
 2. Flash Sale - "Flash Sale - Up to 50% OFF"
 3. Corporate Events - "Corporate Events Made Easy"
 
 **Promo Cards**:
+
 1. Wedding Decorations - "50% OFF RENTAL"
 2. Sound & Lighting - "NEW ARRIVAL"
 3. Furniture & Tents - "TOP SELLER"
@@ -271,6 +292,7 @@ The seed script creates:
 ## 🔄 Next Steps
 
 To add more functionality, consider:
+
 1. **Scheduling**: Add startDate/endDate for auto-activation
 2. **Analytics**: Track clicks on banners/cards
 3. **A/B Testing**: Test different variations
@@ -283,6 +305,7 @@ To add more functionality, consider:
 ## 📞 Support
 
 If you encounter issues:
+
 1. Check browser console for errors
 2. Check server logs for API errors
 3. Verify database connection
@@ -294,6 +317,7 @@ If you encounter issues:
 ## ✨ Summary
 
 You now have a complete homepage management system with:
+
 - **Backend**: Database schema + APIs
 - **Admin Panel**: Full CRUD interfaces with image upload
 - **Frontend**: Dynamic homepage carousel and promo cards
