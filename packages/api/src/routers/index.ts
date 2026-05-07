@@ -23,8 +23,6 @@ export const appRouter = router({
   cart: cartRouter,
   notifications: notificationRouter,
   review: reviewRouter,
-  vendorProduct: productRouter,
-  catalog: productRouter,
   admin: adminRouter,
   homepage: homepageRouter,
   coupon: couponRouter,

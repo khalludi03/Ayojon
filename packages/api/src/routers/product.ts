@@ -15,6 +15,7 @@ import {
 import { protectedProcedure, publicProcedure, router } from '../index'
 import { logger } from '../lib/logger'
 import * as notificationService from '../services/notification-service'
+import { extractS3Key } from '../utils/s3'
 
 // =============================================================================
 // HELPERS
@@ -843,18 +844,6 @@ export const productRouter = router({
     .input(z.object({ id: z.string() }))
     .handler(async ({ input, context }) => {
       const vendorId = await getVendorId(context.session.user.id)
-
-      // Helper function to extract S3 key from URL
-      const extractS3Key = (url: string | null): string | null => {
-        if (!url) return null
-
-        // Match everything after '/images/' until a '?' or end of string
-        const match = url.match(/\/images\/(.+?)(?:\?|$)/)
-        if (match) {
-          return match[1] ?? null
-        }
-        return null
-      }
 
       await db.transaction(async (tx) => {
         // Get product images before deleting

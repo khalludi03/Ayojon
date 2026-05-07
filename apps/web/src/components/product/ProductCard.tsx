@@ -5,6 +5,7 @@ import {
   Heart,
   ShoppingCart,
   Star,
+  Trash2,
   Truck,
 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
@@ -18,10 +19,17 @@ import { cn, formatPrice } from '@/lib/utils'
 
 interface ProductCardProps {
   product: Product
-  onQuickView?: (product: Product) => void // Keep for backward compatibility but not used
+  showRemoveButton?: boolean
+  onRemove?: () => void
+  className?: string
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({
+  product,
+  showRemoveButton = false,
+  onRemove,
+  className,
+}: ProductCardProps) {
   const navigate = useNavigate()
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const { addItem, toggleItem, isInCart } = useCart()
@@ -76,6 +84,12 @@ export function ProductCard({ product }: ProductCardProps) {
     openQuickView(product)
   }
 
+  const handleRemove = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    onRemove?.()
+  }
+
   // Calculate star display
   const fullStars = Math.floor(product.rating.average)
   const hasHalfStar = product.rating.average % 1 >= 0.5
@@ -83,7 +97,10 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <a
       href={productUrl}
-      className="group relative flex h-full flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-2 sm:p-3"
+      className={cn(
+        'group relative flex h-full flex-col rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-2 transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:ring-offset-2 sm:p-3',
+        className,
+      )}
       aria-label={`View ${product.title} - ${formatPrice(product.pricing.currentPrice)}`}
     >
       {/* Image Container - Fixed aspect ratio */}
@@ -117,24 +134,34 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         )}
 
-        {/* Wishlist Button */}
-        <button
-          onClick={handleToggleWishlist}
-          className={cn(
-            'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2 z-10',
-            inWishlist
-              ? 'text-red-500'
-              : 'text-[hsl(var(--muted-foreground))] hover:text-red-500',
-          )}
-          aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-        >
-          <Heart
+        {/* Wishlist / Remove Button */}
+        {showRemoveButton ? (
+          <button
+            onClick={handleRemove}
+            className="absolute right-1.5 top-1.5 rounded-full bg-red-500 p-1.5 shadow text-white sm:right-2 sm:top-2 sm:p-2 z-10"
+            aria-label="Remove from wishlist"
+          >
+            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          </button>
+        ) : (
+          <button
+            onClick={handleToggleWishlist}
             className={cn(
-              'h-3.5 w-3.5 sm:h-4 sm:w-4',
-              inWishlist && 'fill-current',
+              'absolute right-1.5 top-1.5 rounded-full bg-white/90 p-1.5 shadow transition-colors sm:right-2 sm:top-2 sm:p-2 z-10',
+              inWishlist
+                ? 'text-red-500'
+                : 'text-[hsl(var(--muted-foreground))] hover:text-red-500',
             )}
-          />
-        </button>
+            aria-label={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          >
+            <Heart
+              className={cn(
+                'h-3.5 w-3.5 sm:h-4 sm:w-4',
+                inWishlist && 'fill-current',
+              )}
+            />
+          </button>
+        )}
       </div>
 
       {/* Card Content - Flex column to enable proper alignment */}

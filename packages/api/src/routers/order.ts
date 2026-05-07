@@ -6,6 +6,7 @@ import { vendors } from '@my-better-t-app/db/schema/catalog'
 import { desc, eq, sql } from 'drizzle-orm'
 import { ORPCError } from '@orpc/server'
 import { protectedProcedure, publicProcedure, router } from '../index'
+import { logger } from '../lib/logger'
 import * as orderService from '../services/order-service'
 import * as paymentService from '../services/payment-service'
 
@@ -109,7 +110,7 @@ export const orderRouter = router({
           paymentMethod: order.paymentMethod,
         }
       } catch (error) {
-        console.error('Order placement failed:', error)
+        logger.error({ err: error }, 'Order placement failed')
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to place order. Please try again.',
         })

@@ -6,6 +6,8 @@ import {
   vendors,
 } from '@my-better-t-app/db/schema/index'
 import { and, avg, countDistinct, eq, inArray, sql } from 'drizzle-orm'
+import { COMPLETED_ORDER_STATUSES } from '../utils/constants'
+import { logger } from '../lib/logger'
 
 /**
  * Calculates and updates the Vendor Score based on the formula:
@@ -71,15 +73,6 @@ export async function updateVendorScore(vendorId: string, tx: any = db) {
       return
     }
 
-    // Successful (Completed) orders
-    const successfulStatuses: Array<any> = [
-      'delivered',
-      'vendor_paid',
-      'cash_collected',
-      'settlement_ready',
-      'vendor_settled',
-    ]
-
     const completedOrdersResult = await tx
       .select({
         count: countDistinct(orderItems.orderId),
@@ -89,7 +82,7 @@ export async function updateVendorScore(vendorId: string, tx: any = db) {
       .where(
         and(
           eq(orderItems.vendorId, vendorId),
-          inArray(orders.status, successfulStatuses),
+          inArray(orders.status, [...COMPLETED_ORDER_STATUSES]),
         ),
       )
 
@@ -115,10 +108,13 @@ export async function updateVendorScore(vendorId: string, tx: any = db) {
       })
       .where(eq(vendors.id, vendorId))
 
-    console.log(
+    logger.info(
       `[updateVendorScore] Updated vendor ${vendorId}: AvgRating=${avgProductRating}, CompletionRate=${completionRate.toFixed(2)}, Score=${score.toFixed(2)}`,
     )
   } catch (error) {
-    console.error(`[updateVendorScore] Error for vendor ${vendorId}:`, error)
+    logger.error(
+      { err: error },
+      `[updateVendorScore] Error for vendor ${vendorId}`,
+    )
   }
 }

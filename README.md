@@ -22,7 +22,7 @@ A full-stack multi-vendor e-commerce platform for event products, targeting the 
 
 - **Hono** HTTP framework on **Bun** runtime
 - **oRPC** for type-safe RPC with auto-generated OpenAPI docs
-- **better-auth** for authentication (email/password, Google OAuth, Facebook OAuth, Email OTP)
+- **better-auth** for authentication (email/password, Google OAuth, Email OTP)
 - **Drizzle ORM** with **PostgreSQL** (Supabase)
 - **Nodemailer** for transactional emails
 - **Scalar** for interactive API documentation
@@ -40,7 +40,7 @@ A full-stack multi-vendor e-commerce platform for event products, targeting the 
 - **Admin dashboard** — User/vendor/product/order management, payment verification, vendor payouts, homepage content management, platform settings
 - **Vendor dashboard** — KPI analytics, revenue charts, order fulfillment, product management, store branding
 - **Reviews & ratings** — Verified-purchase reviews with images, helpful votes, vendor scoring
-- **Authentication** — Email/password + Google + Facebook OAuth, Email OTP verification, role-based access (customer/vendor/admin)
+- **Authentication** — Email/password + Google OAuth, Email OTP verification, role-based access (customer/vendor/admin)
 - **Dark/light theme** — System detection with user preference persistence
 - **Multi-currency** — BDT, INR, PKR, USD support
 - **Notifications** — 15 notification types with real-time bell indicator
@@ -76,7 +76,7 @@ ayojon/
 - [Bun](https://bun.sh/) v1.3+
 - PostgreSQL database (or [Supabase](https://supabase.com/) project)
 - S3-compatible storage bucket (AWS S3, Supabase Storage, etc.)
-- Google & Facebook OAuth app credentials
+- Google OAuth app credentials
 - SMTP email service
 
 ### 1. Install dependencies
@@ -101,7 +101,6 @@ cp .env.example .env
 | `BETTER_AUTH_SECRET`                                                          | Auth secret key (min 32 chars) |
 | `BETTER_AUTH_URL`                                                             | Auth base URL                  |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`                                   | Google OAuth                   |
-| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET`                               | Facebook OAuth                 |
 | `CORS_ORIGIN`                                                                 | Allowed frontend origin        |
 | `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_USER` / `EMAIL_PASS`                     | SMTP config                    |
 | `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_REGION` / `S3_ENDPOINT` / `S3_BUCKET` | S3 storage                     |

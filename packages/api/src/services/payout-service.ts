@@ -8,7 +8,8 @@ import {
 } from '@my-better-t-app/db/schema/index'
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
-import { calculateVendorPayout } from './order-service'
+import { logger } from '../lib/logger'
+import { calculateVendorPayout } from '../utils/math'
 import { OrderActions } from './order-state-machine'
 import * as notificationService from './notification-service'
 import type { PayoutStatus } from '@my-better-t-app/db/schema/index'
@@ -260,7 +261,7 @@ export async function processPayout(
       }
     } catch (error) {
       // Log error but don't fail the payout
-      console.error('Failed to send payout notification:', error)
+      logger.error({ err: error }, 'Failed to send payout notification')
     }
   }
 

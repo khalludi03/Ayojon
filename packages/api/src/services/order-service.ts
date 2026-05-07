@@ -3,6 +3,7 @@ import { orderItems, orders, payments } from '@my-better-t-app/db/schema/orders'
 import { vendors } from '@my-better-t-app/db/schema/index'
 import { and, desc, eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
+import { logger } from '../lib/logger'
 import {
   getInitialOrderStatus,
   validateStatusTransition,
@@ -26,29 +27,6 @@ import type {
  * - Transitioning order status with validation
  * - Retrieving order details with related data
  */
-
-/**
- * Calculate vendor payout amount after platform commission
- *
- * @param orderTotal - Total order amount
- * @param commissionRate - Platform commission rate (0-100)
- * @returns Object with vendorAmount and commissionAmount
- */
-export function calculateVendorPayout(
-  orderTotal: number,
-  commissionRate: number,
-): { vendorAmount: number; commissionAmount: number } {
-  // Ensure commission rate is between 0 and 100
-  const validRate = Math.max(0, Math.min(100, commissionRate))
-
-  const commissionAmount = (orderTotal * validRate) / 100
-  const vendorAmount = orderTotal - commissionAmount
-
-  return {
-    vendorAmount: Number(vendorAmount.toFixed(2)),
-    commissionAmount: Number(commissionAmount.toFixed(2)),
-  }
-}
 
 /**
  * Create a new order with proper initial status based on payment method
@@ -212,7 +190,7 @@ export async function createOrder(orderData: {
         }
       } catch (error) {
         // Log notification errors but don't fail the order
-        console.error('Failed to send order notifications:', error)
+        logger.error({ err: error }, 'Failed to send order notifications')
       }
 
       return result.order
@@ -321,7 +299,10 @@ export async function transitionOrderStatus(
           )
         } catch (error) {
           // Log notification errors but don't fail the status update
-          console.error('Failed to send order status notification:', error)
+          logger.error(
+            { err: error },
+            'Failed to send order status notification',
+          )
         }
       }
 
