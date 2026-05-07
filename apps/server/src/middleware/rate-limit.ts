@@ -1,6 +1,6 @@
 import { db } from '@my-better-t-app/db'
 import { rateLimit } from '@my-better-t-app/db/schema/auth'
-import { eq, lt } from 'drizzle-orm'
+import { eq, lt, sql } from 'drizzle-orm'
 import type { Context, Next } from 'hono'
 
 export interface RateLimitOptions {
@@ -36,57 +36,40 @@ export const rateLimiter = (options: RateLimitOptions) => {
     }
 
     try {
-      const record = await db.query.rateLimit.findFirst({
-        where: eq(rateLimit.key, key),
-      })
+      const expiresAt = new Date(now.getTime() + options.windowMs)
 
-      if (record) {
-        if (record.expiresAt < now) {
-          // Reset if expired
-          await db
-            .update(rateLimit)
-            .set({
-              count: 1,
-              lastAttempt: now,
-              expiresAt: new Date(now.getTime() + options.windowMs),
-            })
-            .where(eq(rateLimit.key, key))
-        } else {
-          if (record.count >= options.max) {
-            const retryAfter = Math.ceil(
-              (record.expiresAt.getTime() - now.getTime()) / 1000,
-            )
-            c.header('Retry-After', retryAfter.toString())
-            return c.json(
-              {
-                error:
-                  options.message ||
-                  'Too many requests. Please try again later.',
-                retryAfterSeconds: retryAfter,
-              },
-              429,
-            )
-          }
-
-          await db
-            .update(rateLimit)
-            .set({
-              count: record.count + 1,
-              lastAttempt: now,
-            })
-            .where(eq(rateLimit.key, key))
-        }
-      } else {
-        await db.insert(rateLimit).values({
-          key,
-          count: 1,
-          lastAttempt: now,
-          expiresAt: new Date(now.getTime() + options.windowMs),
+      // Atomic upsert: reset if expired, increment otherwise
+      const result = await db
+        .insert(rateLimit)
+        .values({ key, count: 1, lastAttempt: now, expiresAt })
+        .onConflictDoUpdate({
+          target: rateLimit.key,
+          set: {
+            count: sql`CASE WHEN ${rateLimit.expiresAt} < ${now} THEN 1 ELSE ${rateLimit.count} + 1 END`,
+            lastAttempt: now,
+            expiresAt: sql`CASE WHEN ${rateLimit.expiresAt} < ${now} THEN ${expiresAt} ELSE ${rateLimit.expiresAt} END`,
+          },
         })
+        .returning()
+
+      const record = result[0]
+      if (record && record.count > options.max) {
+        const retryAfter = Math.ceil(
+          (record.expiresAt.getTime() - now.getTime()) / 1000,
+        )
+        c.header('Retry-After', retryAfter.toString())
+        return c.json(
+          {
+            error:
+              options.message || 'Too many requests. Please try again later.',
+            retryAfterSeconds: retryAfter,
+          },
+          429,
+        )
       }
     } catch (error) {
       console.error('[RateLimit] Database error:', error)
-      // Fail open to avoid blocking users if DB is down, but log it
+      // Fail open to avoid blocking users if DB is down
     }
 
     await next()

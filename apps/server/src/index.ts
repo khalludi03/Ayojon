@@ -643,6 +643,9 @@ Sitemap: ${baseUrl}/sitemap.xml`
 // Serve TanStack Start static client assets (JS/CSS bundles)
 app.use('/*', serveStatic({ root: './apps/web/dist/client' }))
 
+// HEAD requests (health checks, crawlers) — return 200 without invoking SSR
+app.on(['HEAD'], '*', (c) => new Response(null, { status: 200, headers: c.res.headers }))
+
 // SSR fallback: let TanStack Start render all page requests
 app.get('*', async (c) => {
   const handler = await loadFrontend()
