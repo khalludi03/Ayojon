@@ -1289,7 +1289,7 @@ export const adminRouter = os.router({
         .where(
           and(
             gte(orders.createdAt, firstDayOfMonth),
-            notInArray(orders.status, ['cancelled', 'returned'] as any[]),
+            notInArray(orders.status, ['cancelled', 'returned'] as Array<any>),
             or(
               // bKash orders: count when payment received or later
               and(
@@ -1314,7 +1314,7 @@ export const adminRouter = os.router({
         .where(
           and(
             gte(orders.createdAt, firstDayOfMonth),
-            notInArray(orders.status, ['cancelled', 'returned'] as any[]),
+            notInArray(orders.status, ['cancelled', 'returned'] as Array<any>),
             or(
               // bKash orders: count when payment received or later
               and(
