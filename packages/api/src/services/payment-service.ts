@@ -193,7 +193,10 @@ export async function verifyPayment(
             'payment_received',
           )
         } catch (error) {
-          logger.error({ err: error }, 'Failed to send payment verification notification:')
+          logger.error(
+            { err: error },
+            'Failed to send payment verification notification:',
+          )
         }
       }
 
@@ -293,7 +296,10 @@ export async function rejectPayment(
             'payment_rejected',
           )
         } catch (error) {
-          logger.error({ err: error }, 'Failed to send payment rejection notification')
+          logger.error(
+            { err: error },
+            'Failed to send payment rejection notification',
+          )
         }
       }
 

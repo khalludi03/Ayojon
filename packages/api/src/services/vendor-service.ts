@@ -112,6 +112,9 @@ export async function updateVendorScore(vendorId: string, tx: any = db) {
       `[updateVendorScore] Updated vendor ${vendorId}: AvgRating=${avgProductRating}, CompletionRate=${completionRate.toFixed(2)}, Score=${score.toFixed(2)}`,
     )
   } catch (error) {
-    logger.error({ err: error }, `[updateVendorScore] Error for vendor ${vendorId}`)
+    logger.error(
+      { err: error },
+      `[updateVendorScore] Error for vendor ${vendorId}`,
+    )
   }
 }

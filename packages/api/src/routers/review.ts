@@ -170,7 +170,10 @@ export const reviewRouter = router({
 
         return { id: reviewId }
       } catch (error) {
-        logger.error({ err: error }, `[createReview] Error for user ${userId} and product ${productId}:`)
+        logger.error(
+          { err: error },
+          `[createReview] Error for user ${userId} and product ${productId}:`,
+        )
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -221,7 +224,10 @@ export const reviewRouter = router({
           myVote: (r as any).votes?.[0]?.voteType || null,
         }))
       } catch (error) {
-        logger.error({ err: error }, `[getProductReviews] Error for product ${input.productId}:`)
+        logger.error(
+          { err: error },
+          `[getProductReviews] Error for product ${input.productId}:`,
+        )
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to fetch reviews',
         })
@@ -270,7 +276,10 @@ export const reviewRouter = router({
 
         return { canReview: true }
       } catch (error) {
-        logger.error({ err: error }, `[canReview] Error for user ${userId} and product ${productId}:`)
+        logger.error(
+          { err: error },
+          `[canReview] Error for user ${userId} and product ${productId}:`,
+        )
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to check review eligibility',
         })
@@ -444,13 +453,19 @@ export const reviewRouter = router({
           try {
             await context.storage.deleteFile(fileKey)
           } catch (error) {
-            logger.error({ err: error }, `[updateReview] Failed to delete file ${fileKey}:`)
+            logger.error(
+              { err: error },
+              `[updateReview] Failed to delete file ${fileKey}:`,
+            )
           }
         }
 
         return { success: true }
       } catch (error) {
-        logger.error({ err: error }, `[updateReview] Error for review ${reviewId}`)
+        logger.error(
+          { err: error },
+          `[updateReview] Error for review ${reviewId}`,
+        )
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -542,13 +557,19 @@ export const reviewRouter = router({
           try {
             await context.storage.deleteFile(fileKey)
           } catch (error) {
-            logger.error({ err: error }, `[deleteReview] Failed to delete file ${fileKey}:`)
+            logger.error(
+              { err: error },
+              `[deleteReview] Failed to delete file ${fileKey}:`,
+            )
           }
         }
 
         return { success: true }
       } catch (error) {
-        logger.error({ err: error }, `[deleteReview] Error for review ${reviewId}`)
+        logger.error(
+          { err: error },
+          `[deleteReview] Error for review ${reviewId}`,
+        )
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -647,7 +668,10 @@ export const reviewRouter = router({
 
         return { success: true }
       } catch (error) {
-        logger.error({ err: error }, `[voteReview] Error for user ${userId} and review ${reviewId}:`)
+        logger.error(
+          { err: error },
+          `[voteReview] Error for user ${userId} and review ${reviewId}:`,
+        )
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to process vote',
         })

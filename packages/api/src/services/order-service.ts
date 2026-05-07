@@ -299,7 +299,10 @@ export async function transitionOrderStatus(
           )
         } catch (error) {
           // Log notification errors but don't fail the status update
-          logger.error({ err: error }, 'Failed to send order status notification')
+          logger.error(
+            { err: error },
+            'Failed to send order status notification',
+          )
         }
       }
 
