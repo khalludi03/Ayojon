@@ -5,7 +5,7 @@ import { products } from '@my-better-t-app/db/schema/products'
 import { vendors } from '@my-better-t-app/db/schema/catalog'
 import { desc, eq, sql } from 'drizzle-orm'
 import { ORPCError } from '@orpc/server'
-import { router, protectedProcedure, publicProcedure } from '../index'
+import { protectedProcedure, publicProcedure, router } from '../index'
 import * as orderService from '../services/order-service'
 import * as paymentService from '../services/payment-service'
 

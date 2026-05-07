@@ -4,7 +4,7 @@ import { address } from '@my-better-t-app/db/schema/address'
 import { and, desc, eq } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { ORPCError } from '@orpc/server'
-import { router, protectedProcedure } from '../index'
+import { protectedProcedure, router } from '../index'
 
 export const addressRouter = router({
   listAddresses: protectedProcedure

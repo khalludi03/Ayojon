@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { router, protectedProcedure } from '../index'
+import { protectedProcedure, router } from '../index'
 import {
   deleteNotification,
   getUnreadCount,

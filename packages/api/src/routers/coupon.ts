@@ -6,9 +6,9 @@ import { ORPCError } from '@orpc/server'
 import { nanoid } from 'nanoid'
 import {
   adminProcedure,
-  router,
   protectedProcedure,
   publicProcedure,
+  router,
 } from '../index'
 
 export const couponRouter = router({

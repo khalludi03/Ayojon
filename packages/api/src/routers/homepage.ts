@@ -6,7 +6,7 @@ import {
   platformSettings,
 } from '@my-better-t-app/db/schema/index'
 import { asc, eq } from 'drizzle-orm'
-import { router, publicProcedure } from '../index'
+import { publicProcedure, router } from '../index'
 
 export const homepageRouter = router({
   getPublicSettings: publicProcedure

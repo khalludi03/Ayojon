@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { router, protectedProcedure, publicProcedure } from '../index'
+import { protectedProcedure, publicProcedure, router } from '../index'
 import { storageRouter } from './storage'
 import { vendorRouter } from './vendor'
 import { productRouter } from './product'
