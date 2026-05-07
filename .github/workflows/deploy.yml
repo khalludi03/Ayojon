@@ -57,11 +57,16 @@ jobs:
       - name: Trigger Render staging deploy
         id: deploy
         run: |
-          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
-          echo "Deploy hook response: $RESPONSE"
-          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // .deploy.id // empty')
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" > /dev/null
+          echo "Deploy hook triggered, waiting for deploy to register..."
+          sleep 15
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys?limit=1")
+          echo "Latest deploy response: $RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.[0].deploy.id // .[0].id // empty')
           if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
-            echo "Could not extract deploy ID from response"
+            echo "Could not extract deploy ID"
             exit 1
           fi
           echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
@@ -116,11 +121,16 @@ jobs:
       - name: Trigger Render production deploy
         id: deploy
         run: |
-          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
-          echo "Deploy hook response: $RESPONSE"
-          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // .deploy.id // empty')
+          curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}" > /dev/null
+          echo "Deploy hook triggered, waiting for deploy to register..."
+          sleep 15
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/${{ secrets.RENDER_SERVICE_ID }}/deploys?limit=1")
+          echo "Latest deploy response: $RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.[0].deploy.id // .[0].id // empty')
           if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
-            echo "Could not extract deploy ID from response"
+            echo "Could not extract deploy ID"
             exit 1
           fi
           echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
