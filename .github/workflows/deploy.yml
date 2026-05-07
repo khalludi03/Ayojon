@@ -74,7 +74,8 @@ jobs:
             RESPONSE=$(curl -s \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
               "https://api.render.com/v1/deploys/$DEPLOY_ID")
-            STATUS=$(echo "$RESPONSE" | jq -r '.status // empty')
+            echo "API response: $RESPONSE"
+            STATUS=$(echo "$RESPONSE" | jq -r '.status // .deploy.status // empty')
             echo "Status: $STATUS"
             if [ "$STATUS" = "live" ]; then
               echo "Deploy succeeded"
@@ -132,7 +133,8 @@ jobs:
             RESPONSE=$(curl -s \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
               "https://api.render.com/v1/deploys/$DEPLOY_ID")
-            STATUS=$(echo "$RESPONSE" | jq -r '.status // empty')
+            echo "API response: $RESPONSE"
+            STATUS=$(echo "$RESPONSE" | jq -r '.status // .deploy.status // empty')
             echo "Status: $STATUS"
             if [ "$STATUS" = "live" ]; then
               echo "Deploy succeeded"
