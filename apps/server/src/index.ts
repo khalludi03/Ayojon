@@ -47,8 +47,8 @@ try {
     default: { fetch: (req: Request) => Promise<Response> }
   }
   frontendFetch = mod.default.fetch.bind(mod.default)
-} catch {
-  // Dev mode: frontend runs on its own Vite dev server
+} catch (err) {
+  logger.warn({ err }, 'Frontend SSR not loaded — dev mode or build missing')
 }
 
 const app = new Hono()
