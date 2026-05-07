@@ -20,6 +20,7 @@ import { env } from '@my-better-t-app/env/server'
 import { and, eq, ne, notInArray } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { serveStatic } from 'hono/bun'
 import { z } from 'zod'
 import * as Sentry from '@sentry/node'
 import { getClientIp, rateLimiter } from './middleware/rate-limit'
@@ -479,7 +480,7 @@ app.get(
   }),
 )
 
-app.get('/', (c) => {
+app.get('/health', (c) => {
   return c.text('OK')
 })
 
@@ -613,5 +614,10 @@ Sitemap: ${baseUrl}/sitemap.xml`
     },
   })
 })
+
+// Serve static assets from ./public (populated by Docker build with apps/web/dist)
+app.use('/*', serveStatic({ root: './public' }))
+// SPA fallback: any unmatched GET request serves index.html (client-side routing)
+app.get('*', serveStatic({ path: './public/index.html' }))
 
 export default app
