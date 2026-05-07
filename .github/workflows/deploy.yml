@@ -2,8 +2,8 @@ name: Deploy
 
 on:
   push:
-    branches: [main]   # → staging (Render)
-    tags: ['v*']       # → production (Render)
+    branches: [main] # → staging (Render)
+    tags: ['v*'] # → production (Render)
 
 jobs:
   # ── Quality gate (runs for both staging and production) ──────────────────

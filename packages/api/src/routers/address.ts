@@ -178,7 +178,7 @@ export const addressRouter = os.router({
           throw new ORPCError('NOT_FOUND', { message: 'Address not found' })
         }
 
-        const wasDefault = existing[0].isDefault
+        const wasDefault = existing[0]!.isDefault
 
         await tx.delete(address).where(eq(address.id, input.id))
 
@@ -194,7 +194,7 @@ export const addressRouter = os.router({
             await tx
               .update(address)
               .set({ isDefault: true })
-              .where(eq(address.id, nextAddress[0].id))
+              .where(eq(address.id, nextAddress[0]!.id))
           }
         }
 

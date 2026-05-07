@@ -96,8 +96,6 @@ export async function fileExists(key: string): Promise<boolean> {
  */
 export function extractKeyFromUrl(url: string): string | null {
   try {
-    const urlObj = new URL(url)
-
     // Try to extract from public URL format
     if (env.S3_PUBLIC_URL) {
       const baseUrl = env.S3_PUBLIC_URL.endsWith('/')
@@ -116,9 +114,8 @@ export function extractKeyFromUrl(url: string): string | null {
 
     const bucketPrefix = `${endpoint}/${env.S3_BUCKET}/`
     if (url.startsWith(bucketPrefix)) {
-      // Remove query params for presigned URLs
       const key = url.substring(bucketPrefix.length).split('?')[0]
-      return key
+      return key ?? null
     }
 
     return null

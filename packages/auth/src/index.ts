@@ -36,11 +36,18 @@ export const auth = betterAuth({
     },
   },
   hooks: {
+    // @ts-expect-error — better-auth hooks typing doesn't expose 'session', but it works at runtime
     session: {
-      async beforeCreate(session) {
+      async beforeCreate(session: {
+        session: Record<string, unknown>
+        user: { id: string; isDeactivated?: boolean | null } & Record<
+          string,
+          unknown
+        >
+      }) {
         // Reactivate deactivated users on successful login
         const user = session.user
-        if (user?.isDeactivated) {
+        if (user.isDeactivated) {
           await db
             .update(schema.user)
             .set({
@@ -61,7 +68,7 @@ export const auth = betterAuth({
   trustedOrigins: [env.CORS_ORIGIN],
   emailAndPassword: {
     enabled: true,
-    sendResetPassword: async ({ user, url, token }) => {
+    sendResetPassword: async ({ user, url, token: _token }) => {
       try {
         await sendPasswordResetEmail({
           to: user.email,

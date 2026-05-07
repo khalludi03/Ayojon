@@ -8,8 +8,6 @@ import {
   eventTypes,
   productEventTypes,
   productImages,
-  productSpecifications,
-  productVariants,
   products,
   subcategories,
   vendors,
@@ -290,7 +288,7 @@ export const productRouter = os.router({
         }
 
         if (actualIds.length === 1) {
-          whereClauses.push(eq(products.categoryId, actualIds[0]))
+          whereClauses.push(eq(products.categoryId, actualIds[0]!))
         } else if (actualIds.length > 1) {
           whereClauses.push(inArray(products.categoryId, actualIds))
         }
@@ -310,7 +308,7 @@ export const productRouter = os.router({
         }
 
         if (actualIds.length === 1) {
-          whereClauses.push(eq(products.subcategoryId, actualIds[0]))
+          whereClauses.push(eq(products.subcategoryId, actualIds[0]!))
         } else if (actualIds.length > 1) {
           whereClauses.push(inArray(products.subcategoryId, actualIds))
         }
@@ -328,7 +326,7 @@ export const productRouter = os.router({
         }
 
         if (actualIds.length === 1) {
-          whereClauses.push(eq(products.vendorId, actualIds[0]))
+          whereClauses.push(eq(products.vendorId, actualIds[0]!))
         } else if (actualIds.length > 1) {
           whereClauses.push(inArray(products.vendorId, actualIds))
         }
@@ -492,8 +490,8 @@ export const productRouter = os.router({
         return transformed
       } catch (err) {
         logger.error(
-          `[getProductBySlug] TRANSFORMATION FAILED for product ${fullProduct.id}:`,
-          err,
+          { err },
+          `[getProductBySlug] TRANSFORMATION FAILED for product ${fullProduct.id}`,
         )
         throw err
       }
@@ -665,7 +663,7 @@ export const productRouter = os.router({
         const result = schema.safeParse(input)
         if (!result.success) {
           const errorMsg = `Validation failed: ${JSON.stringify(result.error.format())}`
-          logger.error('[Create Product]', errorMsg)
+          logger.error({ msg: errorMsg }, '[Create Product]')
           throw new ORPCError('BAD_REQUEST', {
             message: errorMsg,
           })
@@ -719,7 +717,7 @@ export const productRouter = os.router({
 
         return { id: productId }
       } catch (error) {
-        logger.error('[Create Product] ERROR:', error)
+        logger.error({ err: error }, '[Create Product] ERROR')
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -769,8 +767,8 @@ export const productRouter = os.router({
         })
       }
 
-      const oldStock = existingProduct[0].stock
-      const oldProduct = existingProduct[0]
+      const oldStock = existingProduct[0]!.stock
+      const oldProduct = existingProduct[0]!
 
       // Prepare update data
       const updateData: any = {
@@ -800,7 +798,7 @@ export const productRouter = os.router({
         })
       }
 
-      const updatedProduct = result[0]
+      const updatedProduct = result[0]!
 
       // Check stock levels and send notifications if needed
       if (input.stock !== undefined && input.stock !== oldStock) {
@@ -853,7 +851,7 @@ export const productRouter = os.router({
         // Match everything after '/images/' until a '?' or end of string
         const match = url.match(/\/images\/(.+?)(?:\?|$)/)
         if (match) {
-          return match[1]
+          return match[1] ?? null
         }
         return null
       }
@@ -895,8 +893,8 @@ export const productRouter = os.router({
             logger.debug(`[Vendor Delete Product] Deleted S3 file: ${fileKey}`)
           } catch (error) {
             logger.error(
-              `[Vendor Delete Product] Failed to delete file ${fileKey}:`,
-              error,
+              { err: error },
+              `[Vendor Delete Product] Failed to delete file ${fileKey}`,
             )
             // Continue even if deletion fails
           }

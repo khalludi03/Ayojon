@@ -642,10 +642,10 @@ export function useCart() {
   // Sync cart when session changes
   useEffect(() => {
     if (!isPending) {
-      const userId = session?.user?.id ?? null
+      const userId = session != null ? session.user.id : null
       cartStore.loadUserCart(userId)
     }
-  }, [session?.user?.id, isPending])
+  }, [session, isPending])
 
   // Derive values from subscribed state for reactive updates
   const itemCount = state.items.reduce(
