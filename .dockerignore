@@ -1,0 +1,28 @@
+.git
+.gitignore
+.husky
+*.md
+docs/
+scripts/
+supabase/
+
+# Env files — never bake secrets into images
+.env
+.env.*
+apps/server/.env
+apps/web/.env
+
+# Build outputs (rebuilt in Docker)
+apps/web/dist/
+apps/server/dist/
+apps/server/server
+
+# Local node_modules (reinstalled in Docker)
+node_modules/
+apps/*/node_modules/
+packages/*/node_modules/
+
+# Dev tooling
+.vscode/
+.idea/
+*.log
