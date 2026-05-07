@@ -29,6 +29,7 @@ import {
 } from '@my-better-t-app/db/schema/index'
 import { adminProcedure, router } from '../index'
 import { logger } from '../lib/logger'
+import { extractS3Key } from '../utils/s3'
 import * as orderService from '../services/order-service'
 import * as paymentService from '../services/payment-service'
 import * as payoutService from '../services/payout-service'
@@ -755,18 +756,6 @@ export const adminRouter = router({
       }),
     )
     .handler(async ({ input, context }) => {
-      // Helper function to extract S3 key from URL
-      const extractS3Key = (url: string | null): string | null => {
-        if (!url) return null
-
-        // Match everything after '/images/' until a '?' or end of string
-        const match = url.match(/\/images\/(.+?)(?:\?|$)/)
-        if (match) {
-          return match[1] ?? null
-        }
-        return null
-      }
-
       const result = await db.transaction(async (tx) => {
         const vendorRecord = await tx
           .select()
@@ -982,18 +971,6 @@ export const adminRouter = router({
       }),
     )
     .handler(async ({ input, context }) => {
-      // Helper function to extract S3 key from URL
-      const extractS3Key = (url: string | null): string | null => {
-        if (!url) return null
-
-        // Match everything after '/images/' until a '?' or end of string
-        const match = url.match(/\/images\/(.+?)(?:\?|$)/)
-        if (match) {
-          return match[1] ?? null
-        }
-        return null
-      }
-
       return await db.transaction(async (tx) => {
         // Get product images before deleting
         const images = await tx

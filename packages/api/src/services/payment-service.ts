@@ -1,6 +1,7 @@
 import { db } from '@my-better-t-app/db'
 import { orders, payments } from '@my-better-t-app/db/schema/orders'
 import { and, desc, eq } from 'drizzle-orm'
+import { logger } from '../lib/logger'
 import { transitionOrderStatus } from './order-service'
 import { OrderActions } from './order-state-machine'
 import { notifyOrderStatusUpdate } from './notification-service'
@@ -192,10 +193,7 @@ export async function verifyPayment(
             'payment_received',
           )
         } catch (error) {
-          console.error(
-            'Failed to send payment verification notification:',
-            error,
-          )
+          logger.error({ err: error }, 'Failed to send payment verification notification:')
         }
       }
 
@@ -295,7 +293,7 @@ export async function rejectPayment(
             'payment_rejected',
           )
         } catch (error) {
-          console.error('Failed to send payment rejection notification:', error)
+          logger.error({ err: error }, 'Failed to send payment rejection notification')
         }
       }
 

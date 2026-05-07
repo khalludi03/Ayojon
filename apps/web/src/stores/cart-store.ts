@@ -98,7 +98,7 @@ function createCartStore(): CartStore {
 
   const syncFromSession = (keepCurrentOnNull: boolean = false) => {
     authClient.getSession().then((session) => {
-      const sessionUserId = session.data.user.id || null
+      const sessionUserId = session.data?.user?.id ?? null
       const resolvedUserId =
         sessionUserId ?? (keepCurrentOnNull ? currentUserId : null)
 

@@ -8,6 +8,7 @@ import {
 } from '@my-better-t-app/db/schema/index'
 import { and, eq } from 'drizzle-orm'
 import { protectedProcedure, router } from '../index'
+import { logger } from '../lib/logger'
 import { transformProduct } from './product'
 
 export const wishlistRouter = router({
@@ -19,7 +20,7 @@ export const wishlistRouter = router({
     })
     .handler(async ({ context }) => {
       const userId = context.session.user.id
-      console.log(`[Wishlist] Fetching wishlist for user: ${userId}`)
+      logger.info(`[Wishlist] Fetching wishlist for user: ${userId}`)
 
       try {
         const items = await db
@@ -68,10 +69,10 @@ export const wishlistRouter = router({
           }),
         )
 
-        console.log(`[Wishlist] Found ${itemsWithProducts.length} items`)
+        logger.info(`[Wishlist] Found ${itemsWithProducts.length} items`)
         return itemsWithProducts
       } catch (err) {
-        console.error('[Wishlist] Error in list:', err)
+        logger.error({ err }, '[Wishlist] Error in list')
         throw err
       }
     }),

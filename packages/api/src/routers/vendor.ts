@@ -15,6 +15,7 @@ import { protectedProcedure, router } from '../index'
 import * as orderService from '../services/order-service'
 import * as payoutService from '../services/payout-service'
 import * as notificationService from '../services/notification-service'
+import { extractS3Key } from '../utils/s3'
 
 // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -458,23 +459,6 @@ export const vendorRouter = router({
         throw new ORPCError('NOT_FOUND', {
           message: 'Vendor profile not found.',
         })
-      }
-
-      // Helper function to extract S3 key from URL
-      const extractS3Key = (url: string | null): string | null => {
-        if (!url) return null
-
-        // Match everything after '/images/' until a '?' or end of string
-        // This correctly captures 'USER_ID/path/to/file'
-        const match = url.match(/\/images\/(.+?)(?:\?|$)/)
-        if (match) {
-          return match[1] ?? null
-        }
-
-        // Fallback for raw keys or non-URL strings
-        if (url.includes('/') && !url.startsWith('http')) return url
-
-        return null
       }
 
       // Collect files to delete

@@ -4,7 +4,7 @@ import { ArrowUpDown, Heart, ShoppingCart } from 'lucide-react'
 import { toast } from 'sonner'
 import { useWishlist } from '@/stores/wishlist-store'
 import { useCart } from '@/stores/cart-store'
-import { ProductCard } from '@/components/products/product-card'
+import { ProductCard } from '@/components/product/ProductCard'
 import { Button } from '@/components/ui/button'
 import {
   Select,

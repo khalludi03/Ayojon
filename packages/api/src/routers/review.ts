@@ -16,22 +16,9 @@ import { ORPCError } from '@orpc/server'
 import { protectedProcedure, publicProcedure, router } from '../index'
 import { updateVendorScore } from '../services/vendor-service'
 import * as notificationService from '../services/notification-service'
-
-// =============================================================================
-// HELPERS
-// =============================================================================
-
-// Helper function to extract S3 key from URL
-const extractS3Key = (url: string | null): string | null => {
-  if (!url) return null
-
-  // Match everything after '/images/' until a '?' or end of string
-  const match = url.match(/\/images\/(.+?)(?:\?|$)/)
-  if (match && match[1]) {
-    return match[1]
-  }
-  return null
-}
+import { extractS3Key } from '../utils/s3'
+import { COMPLETED_ORDER_STATUSES } from '../utils/constants'
+import { logger } from '../lib/logger'
 
 export const reviewRouter = router({
   createReview: protectedProcedure
@@ -56,14 +43,6 @@ export const reviewRouter = router({
 
       try {
         // 1. Verify user has purchased the product and it was delivered
-        const deliveredStatuses: Array<any> = [
-          'delivered',
-          'vendor_paid',
-          'cash_collected',
-          'settlement_ready',
-          'vendor_settled',
-        ]
-
         const purchase = await db
           .select({ id: orders.id })
           .from(orders)
@@ -72,7 +51,7 @@ export const reviewRouter = router({
             and(
               eq(orders.userId, userId),
               eq(orderItems.productId, productId),
-              inArray(orders.status, deliveredStatuses),
+              inArray(orders.status, [...COMPLETED_ORDER_STATUSES]),
             ),
           )
           .limit(1)
@@ -185,16 +164,13 @@ export const reviewRouter = router({
             )
           } catch (error) {
             // Log error but don't fail the review creation
-            console.error('Failed to send review notification:', error)
+            logger.error({ err: error }, 'Failed to send review notification')
           }
         }
 
         return { id: reviewId }
       } catch (error) {
-        console.error(
-          `[createReview] Error for user ${userId} and product ${productId}:`,
-          error,
-        )
+        logger.error({ err: error }, `[createReview] Error for user ${userId} and product ${productId}:`)
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -245,10 +221,7 @@ export const reviewRouter = router({
           myVote: (r as any).votes?.[0]?.voteType || null,
         }))
       } catch (error) {
-        console.error(
-          `[getProductReviews] Error for product ${input.productId}:`,
-          error,
-        )
+        logger.error({ err: error }, `[getProductReviews] Error for product ${input.productId}:`)
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to fetch reviews',
         })
@@ -267,14 +240,6 @@ export const reviewRouter = router({
       const { productId } = input
 
       try {
-        const deliveredStatuses: Array<any> = [
-          'delivered',
-          'vendor_paid',
-          'cash_collected',
-          'settlement_ready',
-          'vendor_settled',
-        ]
-
         const purchase = await db
           .select({ id: orders.id })
           .from(orders)
@@ -283,7 +248,7 @@ export const reviewRouter = router({
             and(
               eq(orders.userId, userId),
               eq(orderItems.productId, productId),
-              inArray(orders.status, deliveredStatuses),
+              inArray(orders.status, [...COMPLETED_ORDER_STATUSES]),
             ),
           )
           .limit(1)
@@ -305,10 +270,7 @@ export const reviewRouter = router({
 
         return { canReview: true }
       } catch (error) {
-        console.error(
-          `[canReview] Error for user ${userId} and product ${productId}:`,
-          error,
-        )
+        logger.error({ err: error }, `[canReview] Error for user ${userId} and product ${productId}:`)
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to check review eligibility',
         })
@@ -361,7 +323,7 @@ export const reviewRouter = router({
           myVote: (r as any).votes?.[0]?.voteType || null,
         }))
       } catch (error) {
-        console.error(`[listMyReviews] Error for user ${userId}:`, error)
+        logger.error({ err: error }, `[listMyReviews] Error for user ${userId}`)
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to fetch your reviews',
         })
@@ -482,16 +444,13 @@ export const reviewRouter = router({
           try {
             await context.storage.deleteFile(fileKey)
           } catch (error) {
-            console.error(
-              `[updateReview] Failed to delete file ${fileKey}:`,
-              error,
-            )
+            logger.error({ err: error }, `[updateReview] Failed to delete file ${fileKey}:`)
           }
         }
 
         return { success: true }
       } catch (error) {
-        console.error(`[updateReview] Error for review ${reviewId}:`, error)
+        logger.error({ err: error }, `[updateReview] Error for review ${reviewId}`)
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -583,16 +542,13 @@ export const reviewRouter = router({
           try {
             await context.storage.deleteFile(fileKey)
           } catch (error) {
-            console.error(
-              `[deleteReview] Failed to delete file ${fileKey}:`,
-              error,
-            )
+            logger.error({ err: error }, `[deleteReview] Failed to delete file ${fileKey}:`)
           }
         }
 
         return { success: true }
       } catch (error) {
-        console.error(`[deleteReview] Error for review ${reviewId}:`, error)
+        logger.error({ err: error }, `[deleteReview] Error for review ${reviewId}`)
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -691,10 +647,7 @@ export const reviewRouter = router({
 
         return { success: true }
       } catch (error) {
-        console.error(
-          `[voteReview] Error for user ${userId} and review ${reviewId}:`,
-          error,
-        )
+        logger.error({ err: error }, `[voteReview] Error for user ${userId} and review ${reviewId}:`)
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message: 'Failed to process vote',
         })
