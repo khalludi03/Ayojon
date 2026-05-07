@@ -6,6 +6,7 @@ import type { Context } from './context'
 import type { user } from '@my-better-t-app/db/schema/auth'
 
 export { os }
+export const router = os.router as <T>(routerDef: T) => T
 
 // Base procedure with context
 export const baseProcedure = os.$context<Context>()

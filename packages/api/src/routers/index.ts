@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { os, protectedProcedure, publicProcedure } from '../index'
+import { router, protectedProcedure, publicProcedure } from '../index'
 import { storageRouter } from './storage'
 import { vendorRouter } from './vendor'
 import { productRouter } from './product'
@@ -13,7 +13,7 @@ import { reviewRouter } from './review'
 import { homepageRouter } from './homepage'
 import { couponRouter } from './coupon'
 
-export const appRouter = os.router({
+export const appRouter = router({
   storage: storageRouter,
   vendor: vendorRouter,
   product: productRouter,

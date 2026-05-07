@@ -7,10 +7,10 @@ import {
   wishlist,
 } from '@my-better-t-app/db/schema/index'
 import { and, eq } from 'drizzle-orm'
-import { os, protectedProcedure } from '../index'
+import { router, protectedProcedure } from '../index'
 import { transformProduct } from './product'
 
-export const wishlistRouter = os.router({
+export const wishlistRouter = router({
   list: protectedProcedure
     .route({
       method: 'POST',

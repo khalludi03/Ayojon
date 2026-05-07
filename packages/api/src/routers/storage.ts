@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { os, protectedProcedure } from '../index'
+import { router, protectedProcedure } from '../index'
 
-export const storageRouter = os.router({
+export const storageRouter = router({
   getUploadUrl: protectedProcedure
     .route({
       method: 'POST',

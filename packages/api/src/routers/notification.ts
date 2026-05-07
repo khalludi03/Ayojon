@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { os, protectedProcedure } from '../index'
+import { router, protectedProcedure } from '../index'
 import {
   deleteNotification,
   getUnreadCount,
@@ -8,7 +8,7 @@ import {
   markAsRead,
 } from '../services/notification-service'
 
-export const notificationRouter = os.router({
+export const notificationRouter = router({
   /**
    * List user notifications with pagination
    */
