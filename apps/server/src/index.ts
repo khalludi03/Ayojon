@@ -644,7 +644,11 @@ Sitemap: ${baseUrl}/sitemap.xml`
 app.use('/*', serveStatic({ root: './apps/web/dist/client' }))
 
 // HEAD requests (health checks, crawlers) — return 200 without invoking SSR
-app.on(['HEAD'], '*', (c) => new Response(null, { status: 200, headers: c.res.headers }))
+app.on(
+  ['HEAD'],
+  '*',
+  (c) => new Response(null, { status: 200, headers: c.res.headers }),
+)
 
 // SSR fallback: let TanStack Start render all page requests
 app.get('*', async (c) => {
