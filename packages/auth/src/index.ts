@@ -43,7 +43,7 @@ export const auth = betterAuth({
         }) {
         // Reactivate deactivated users on successful login
         const user = session.user
-        if (user?.isDeactivated) {
+        if (user.isDeactivated) {
           await db
             .update(schema.user)
             .set({
