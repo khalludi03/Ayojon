@@ -254,7 +254,7 @@ export async function processPayout(
         await notificationService.notifyPayoutProcessed(
           vendor.userId,
           result.payout.id,
-          parseFloat(result.payout.amount),
+          result.payout.amount,
           result.orderId,
         )
       }

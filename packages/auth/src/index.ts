@@ -36,6 +36,7 @@ export const auth = betterAuth({
     },
   },
   hooks: {
+    // @ts-expect-error — better-auth hooks typing doesn't expose 'session', but it works at runtime
     session: {
       async beforeCreate(session: {
         session: Record<string, unknown>

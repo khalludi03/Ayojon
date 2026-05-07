@@ -1,11 +1,9 @@
 import { db } from '@my-better-t-app/db'
 import { orders, payments } from '@my-better-t-app/db/schema/orders'
 import { and, desc, eq } from 'drizzle-orm'
-import { nanoid } from 'nanoid'
 import { transitionOrderStatus } from './order-service'
 import { OrderActions } from './order-state-machine'
 import { notifyOrderStatusUpdate } from './notification-service'
-import type { PaymentStatus } from '@my-better-t-app/db/schema/orders'
 
 /**
  * Payment Service
@@ -190,7 +188,7 @@ export async function verifyPayment(
           await notifyOrderStatusUpdate(
             result.userId,
             orderId,
-            result.orderNumber,
+            result.orderNumber!,
             'payment_received',
           )
         } catch (error) {
@@ -293,7 +291,7 @@ export async function rejectPayment(
           await notifyOrderStatusUpdate(
             result.userId,
             orderId,
-            result.orderNumber,
+            result.orderNumber!,
             'payment_rejected',
           )
         } catch (error) {
