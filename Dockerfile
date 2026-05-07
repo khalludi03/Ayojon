@@ -34,8 +34,8 @@ COPY --from=builder /app/packages ./packages
 # Server source
 COPY --from=builder /app/apps/server ./apps/server
 
-# Built web frontend served as static files
-COPY --from=builder /app/apps/web/dist ./public
+# TanStack Start build output (client assets + SSR server)
+COPY --from=builder /app/apps/web/dist ./apps/web/dist
 
 # Root package.json needed for workspace resolution
 COPY --from=builder /app/package.json ./
