@@ -38,9 +38,12 @@ export const auth = betterAuth({
   hooks: {
     session: {
       async beforeCreate(session: {
-          session: Record<string, unknown>
-          user: { id: string; isDeactivated?: boolean | null } & Record<string, unknown>
-        }) {
+        session: Record<string, unknown>
+        user: { id: string; isDeactivated?: boolean | null } & Record<
+          string,
+          unknown
+        >
+      }) {
         // Reactivate deactivated users on successful login
         const user = session.user
         if (user.isDeactivated) {
