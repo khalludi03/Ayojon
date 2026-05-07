@@ -42,6 +42,9 @@
   },
   "dependencies": {
     "@faker-js/faker": "^10.2.0",
+    "@tanstack/react-router": "^1.141.1",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
     "@my-better-t-app/env": "workspace:*",
     "@my-better-t-app/storage": "workspace:*",
     "@orpc/client": "^1.13.4",
