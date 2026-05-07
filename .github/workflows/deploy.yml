@@ -58,7 +58,12 @@ jobs:
         id: deploy
         run: |
           RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
-          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "Deploy hook response: $RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // .deploy.id // empty')
+          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
+            echo "Could not extract deploy ID from response"
+            exit 1
+          fi
           echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
           echo "Triggered deploy: $DEPLOY_ID"
 
@@ -66,15 +71,17 @@ jobs:
         run: |
           DEPLOY_ID="${{ steps.deploy.outputs.deploy_id }}"
           for i in $(seq 1 30); do
-            STATUS=$(curl -s \
+            RESPONSE=$(curl -s \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-              "https://api.render.com/v1/deploys/$DEPLOY_ID" \
-              | jq -r '.status')
+              "https://api.render.com/v1/deploys/$DEPLOY_ID")
+            STATUS=$(echo "$RESPONSE" | jq -r '.status // empty')
             echo "Status: $STATUS"
             if [ "$STATUS" = "live" ]; then
               echo "Deploy succeeded"
               exit 0
-            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "canceled" ] || [ "$STATUS" = "failed" ]; then
+            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "canceled" ] || \
+                 [ "$STATUS" = "failed" ] || [ "$STATUS" = "build_failed" ] || \
+                 [ "$STATUS" = "update_failed" ]; then
               echo "Deploy failed with status: $STATUS"
               exit 1
             fi
@@ -109,7 +116,12 @@ jobs:
         id: deploy
         run: |
           RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
-          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "Deploy hook response: $RESPONSE"
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id // .deploy.id // empty')
+          if [ -z "$DEPLOY_ID" ] || [ "$DEPLOY_ID" = "null" ]; then
+            echo "Could not extract deploy ID from response"
+            exit 1
+          fi
           echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
           echo "Triggered deploy: $DEPLOY_ID"
 
@@ -117,15 +129,17 @@ jobs:
         run: |
           DEPLOY_ID="${{ steps.deploy.outputs.deploy_id }}"
           for i in $(seq 1 30); do
-            STATUS=$(curl -s \
+            RESPONSE=$(curl -s \
               -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
-              "https://api.render.com/v1/deploys/$DEPLOY_ID" \
-              | jq -r '.status')
+              "https://api.render.com/v1/deploys/$DEPLOY_ID")
+            STATUS=$(echo "$RESPONSE" | jq -r '.status // empty')
             echo "Status: $STATUS"
             if [ "$STATUS" = "live" ]; then
               echo "Deploy succeeded"
               exit 0
-            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "canceled" ] || [ "$STATUS" = "failed" ]; then
+            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "canceled" ] || \
+                 [ "$STATUS" = "failed" ] || [ "$STATUS" = "build_failed" ] || \
+                 [ "$STATUS" = "update_failed" ]; then
               echo "Deploy failed with status: $STATUS"
               exit 1
             fi
