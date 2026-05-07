@@ -36,19 +36,28 @@ if (env.SENTRY_DSN) {
   })
 }
 
-// Load TanStack Start SSR handler (built to apps/web/dist/server/server.js in production)
-let frontendFetch: ((req: Request) => Promise<Response>) | null = null
-try {
-  const serverPath = new URL(
-    '../../../apps/web/dist/server/server.js',
-    import.meta.url,
-  ).href
-  const mod = (await import(serverPath)) as {
-    default: { fetch: (req: Request) => Promise<Response> }
+// Lazy-load TanStack Start SSR handler on first request
+const frontendServerPath = new URL(
+  '../../../apps/web/dist/server/server.js',
+  import.meta.url,
+).href
+let frontendFetch: ((req: Request) => Promise<Response>) | null | undefined =
+  undefined
+
+async function loadFrontend() {
+  if (frontendFetch !== undefined) return frontendFetch
+  try {
+    const mod = (await import(frontendServerPath)) as {
+      default: { fetch: (req: Request) => Promise<Response> }
+    }
+    frontendFetch = mod.default.fetch.bind(mod.default)
+    console.log('Frontend SSR loaded successfully')
+  } catch (err) {
+    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    console.error('Frontend SSR load failed:', msg)
+    frontendFetch = null
   }
-  frontendFetch = mod.default.fetch.bind(mod.default)
-} catch (err) {
-  logger.warn('Frontend SSR not loaded: ' + String(err))
+  return frontendFetch
 }
 
 const app = new Hono()
@@ -635,10 +644,11 @@ app.use('/*', serveStatic({ root: './apps/web/dist/client' }))
 
 // SSR fallback: let TanStack Start render all page requests
 app.get('*', async (c) => {
-  if (!frontendFetch) {
-    return c.text('Frontend not built. Run: bun run --filter web build', 503)
+  const handler = await loadFrontend()
+  if (!handler) {
+    return c.text('Frontend not available', 503)
   }
-  return frontendFetch(c.req.raw)
+  return handler(c.req.raw)
 })
 
 export default app
