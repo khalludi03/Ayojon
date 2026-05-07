@@ -71,7 +71,7 @@ app.onError((err, c) => {
   }
 
   // Always log full error details server-side for debugging
-  logger.error(`[Hono Error] ${c.req.method} ${c.req.url}:`, err)
+  logger.error({ err }, `[Hono Error] ${c.req.method} ${c.req.url}`)
 
   // In production, return generic error to avoid leaking internal details
   // (SQL errors, stack traces, file paths, etc.)
@@ -145,7 +145,7 @@ app.post('/api/email-change/send-otp', otpLimiter, async (c) => {
       ...(process.env.NODE_ENV !== 'production' && { otp }),
     })
   } catch (error) {
-    logger.error('Error sending OTP:', error)
+    logger.error({ err: error }, 'Error sending OTP')
     return c.json({ error: 'Failed to send verification code' }, 500)
   }
 })
@@ -195,7 +195,7 @@ app.post('/api/signup/send-otp', otpLimiter, async (c) => {
       ...(process.env.NODE_ENV !== 'production' && { otp }),
     })
   } catch (error) {
-    logger.error('Error sending signup OTP:', error)
+    logger.error({ err: error }, 'Error sending signup OTP')
     return c.json({ error: 'Failed to send verification code' }, 500)
   }
 })
@@ -217,7 +217,7 @@ app.post('/api/signup/verify-otp', async (c) => {
 
     return c.json({ success: true })
   } catch (error) {
-    logger.error('Error verifying signup OTP:', error)
+    logger.error({ err: error }, 'Error verifying signup OTP')
     return c.json({ error: 'Failed to verify code' }, 500)
   }
 })
@@ -229,7 +229,7 @@ app.post('/api/account/deactivate', async (c) => {
       headers: c.req.raw.headers,
     })
 
-    if (!session.user.id) {
+    if (!session) {
       return c.json({ error: 'Authentication required' }, 401)
     }
 
@@ -289,7 +289,7 @@ app.post('/api/account/deactivate', async (c) => {
       message: 'Account deactivated successfully',
     })
   } catch (error) {
-    logger.error('Error deactivating account:', error)
+    logger.error({ err: error }, 'Error deactivating account')
     return c.json({ error: 'Failed to deactivate account' }, 500)
   }
 })
@@ -300,7 +300,7 @@ app.post('/api/email-change/verify-otp', async (c) => {
       headers: c.req.raw.headers,
     })
 
-    if (!session.user.id) {
+    if (!session) {
       return c.json({ error: 'Authentication required' }, 401)
     }
 
@@ -370,7 +370,7 @@ app.post('/api/email-change/verify-otp', async (c) => {
           ),
         )
     } catch (updateError) {
-      logger.error('Error updating email:', updateError)
+      logger.error({ err: updateError }, 'Error updating email')
       // Since the OTP has already been consumed by verifyOTP,
       // issue a new OTP so the user can retry the email change.
       try {
@@ -397,8 +397,8 @@ app.post('/api/email-change/verify-otp', async (c) => {
         )
       } catch (resendError) {
         logger.error(
-          'Error sending replacement OTP after email update failure:',
-          resendError,
+          { err: resendError },
+          'Error sending replacement OTP after email update failure',
         )
         return c.json({ error: 'Failed to update email' }, 500)
       }
@@ -406,7 +406,7 @@ app.post('/api/email-change/verify-otp', async (c) => {
 
     return c.json({ success: true })
   } catch (error) {
-    logger.error('Error verifying OTP:', error)
+    logger.error({ err: error }, 'Error verifying OTP')
     return c.json({ error: 'Failed to verify code' }, 500)
   }
 })
@@ -578,12 +578,12 @@ app.get('/sitemap.xml', async (c) => {
       },
     })
   } catch (error) {
-    logger.error('Error generating sitemap:', error)
+    logger.error({ err: error }, 'Error generating sitemap')
     return c.text('Error generating sitemap', 500)
   }
 })
 
-app.get('/robots.txt', (c) => {
+app.get('/robots.txt', () => {
   const baseUrl = env.CORS_ORIGIN || 'https://ayojon.com'
 
   const robotsTxt = `User-agent: *

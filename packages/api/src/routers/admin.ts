@@ -570,7 +570,10 @@ export const adminRouter = os.router({
               result.storeName,
             )
           } catch (error) {
-            logger.error('Failed to send vendor approval notification:', error)
+            logger.error(
+              { err: error },
+              'Failed to send vendor approval notification',
+            )
           }
         } else if (result.notificationType === 'rejected') {
           try {
@@ -581,7 +584,10 @@ export const adminRouter = os.router({
               result.reason,
             )
           } catch (error) {
-            logger.error('Failed to send vendor rejection notification:', error)
+            logger.error(
+              { err: error },
+              'Failed to send vendor rejection notification',
+            )
           }
         }
 
@@ -591,7 +597,10 @@ export const adminRouter = os.router({
 
         return result.user
       } catch (error) {
-        logger.error(`[Admin Action] Error updating vendor status:`, error)
+        logger.error(
+          { err: error },
+          '[Admin Action] Error updating vendor status',
+        )
         if (error instanceof ORPCError) throw error
         throw new ORPCError('INTERNAL_SERVER_ERROR', {
           message:
@@ -753,7 +762,7 @@ export const adminRouter = os.router({
         // Match everything after '/images/' until a '?' or end of string
         const match = url.match(/\/images\/(.+?)(?:\?|$)/)
         if (match) {
-          return match[1]
+          return match[1] ?? null
         }
         return null
       }
@@ -788,8 +797,8 @@ export const adminRouter = os.router({
             logger.debug(`[Admin Delete Vendor] Deleted S3 file: ${fileKey}`)
           } catch (error) {
             logger.error(
-              `[Admin Delete Vendor] Failed to delete file ${fileKey}:`,
-              error,
+              { err: error },
+              `[Admin Delete Vendor] Failed to delete file ${fileKey}`,
             )
             // Continue even if deletion fails
           }
@@ -980,7 +989,7 @@ export const adminRouter = os.router({
         // Match everything after '/images/' until a '?' or end of string
         const match = url.match(/\/images\/(.+?)(?:\?|$)/)
         if (match) {
-          return match[1]
+          return match[1] ?? null
         }
         return null
       }
@@ -1008,8 +1017,8 @@ export const adminRouter = os.router({
             logger.debug(`[Admin Delete Product] Deleted S3 file: ${fileKey}`)
           } catch (error) {
             logger.error(
-              `[Admin Delete Product] Failed to delete file ${fileKey}:`,
-              error,
+              { err: error },
+              `[Admin Delete Product] Failed to delete file ${fileKey}`,
             )
             // Continue even if deletion fails
           }
@@ -1147,7 +1156,7 @@ export const adminRouter = os.router({
     )
     .handler(async ({ input }) => {
       const conditions = []
-      if (input.status) conditions.push(eq(orders.status, input.status))
+      if (input.status) conditions.push(eq(orders.status, input.status as any))
       if (input.search) {
         conditions.push(
           or(
@@ -1240,7 +1249,7 @@ export const adminRouter = os.router({
         throw new ORPCError('BAD_REQUEST', { message: result.error })
       }
 
-      const updatedOrder = result[0]
+      const updatedOrder = result.order!
 
       // Send notification to customer about status change
       try {
@@ -1252,7 +1261,7 @@ export const adminRouter = os.router({
         )
       } catch (error) {
         // Log error but don't fail the status update
-        logger.error('Failed to send order status notification:', error)
+        logger.error({ err: error }, 'Failed to send order status notification')
       }
 
       return updatedOrder
@@ -1280,7 +1289,7 @@ export const adminRouter = os.router({
         .where(
           and(
             gte(orders.createdAt, firstDayOfMonth),
-            notInArray(orders.status, ['cancelled', 'returned']),
+            notInArray(orders.status, ['cancelled', 'returned'] as Array<any>),
             or(
               // bKash orders: count when payment received or later
               and(
@@ -1305,7 +1314,7 @@ export const adminRouter = os.router({
         .where(
           and(
             gte(orders.createdAt, firstDayOfMonth),
-            notInArray(orders.status, ['cancelled', 'returned']),
+            notInArray(orders.status, ['cancelled', 'returned'] as Array<any>),
             or(
               // bKash orders: count when payment received or later
               and(
@@ -1743,7 +1752,10 @@ export const adminRouter = os.router({
           await context.storage.deleteFile(imageKey)
         }
       } catch (error) {
-        logger.error('Failed to delete banner image from storage:', error)
+        logger.error(
+          { err: error },
+          'Failed to delete banner image from storage',
+        )
         // Continue even if deletion fails
       }
 

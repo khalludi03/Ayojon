@@ -16,7 +16,6 @@ import { ORPCError } from '@orpc/server'
 import { os, protectedProcedure, publicProcedure } from '../index'
 import { updateVendorScore } from '../services/vendor-service'
 import * as notificationService from '../services/notification-service'
-import type { VoteType } from '@my-better-t-app/db/schema/index'
 
 // =============================================================================
 // HELPERS

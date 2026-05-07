@@ -4,7 +4,6 @@ import {
   orderItems,
   orders,
   platformSettings,
-  products,
   user,
   vendorApplications,
   vendors,
@@ -16,7 +15,6 @@ import { os, protectedProcedure } from '../index'
 import * as orderService from '../services/order-service'
 import * as payoutService from '../services/payout-service'
 import * as notificationService from '../services/notification-service'
-import { OrderActions } from '../services/order-state-machine'
 
 // Helper function to format time ago
 function formatTimeAgo(date: Date): string {
@@ -470,7 +468,7 @@ export const vendorRouter = os.router({
         // This correctly captures 'USER_ID/path/to/file'
         const match = url.match(/\/images\/(.+?)(?:\?|$)/)
         if (match) {
-          return match[1]
+          return match[1] ?? null
         }
 
         // Fallback for raw keys or non-URL strings
@@ -795,7 +793,6 @@ export const vendorRouter = os.router({
           itemTotal,
           commissionAmount,
           vendorAmount,
-          status: item.status,
         })
         revenueByDate.set(key, current + vendorAmount)
       })
