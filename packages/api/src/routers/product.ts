@@ -12,7 +12,7 @@ import {
   subcategories,
   vendors,
 } from '@my-better-t-app/db/schema/index'
-import { os, protectedProcedure, publicProcedure } from '../index'
+import { protectedProcedure, publicProcedure, router } from '../index'
 import { logger } from '../lib/logger'
 import * as notificationService from '../services/notification-service'
 
@@ -150,7 +150,7 @@ export function transformProduct(p: any) {
 // ROUTER
 // =============================================================================
 
-export const productRouter = os.router({
+export const productRouter = router({
   // --- Public Catalog Procedures ---
 
   listCategories: publicProcedure

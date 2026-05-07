@@ -8,7 +8,7 @@ import {
   vendors,
 } from '@my-better-t-app/db/schema/index'
 import { and, eq } from 'drizzle-orm'
-import { os, protectedProcedure } from '../index'
+import { protectedProcedure, router } from '../index'
 import { transformProduct } from './product'
 
 async function fetchCartItemsWithDetails(userId: string, tx: any = db) {
@@ -59,7 +59,7 @@ async function fetchCartItemsWithDetails(userId: string, tx: any = db) {
   )
 }
 
-export const cartRouter = os.router({
+export const cartRouter = router({
   list: protectedProcedure
     .route({
       method: 'GET',
