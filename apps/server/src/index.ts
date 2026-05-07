@@ -36,6 +36,21 @@ if (env.SENTRY_DSN) {
   })
 }
 
+// Load TanStack Start SSR handler (built to apps/web/dist/server/server.js in production)
+let frontendFetch: ((req: Request) => Promise<Response>) | null = null
+try {
+  const serverPath = new URL(
+    '../../../apps/web/dist/server/server.js',
+    import.meta.url,
+  ).href
+  const mod = (await import(serverPath)) as {
+    default: { fetch: (req: Request) => Promise<Response> }
+  }
+  frontendFetch = mod.default.fetch.bind(mod.default)
+} catch {
+  // Dev mode: frontend runs on its own Vite dev server
+}
+
 const app = new Hono()
 
 app.use(customLogger)
@@ -615,9 +630,15 @@ Sitemap: ${baseUrl}/sitemap.xml`
   })
 })
 
-// Serve static assets from ./public (populated by Docker build with apps/web/dist)
-app.use('/*', serveStatic({ root: './public' }))
-// SPA fallback: any unmatched GET request serves index.html (client-side routing)
-app.get('*', serveStatic({ path: './public/index.html' }))
+// Serve TanStack Start static client assets (JS/CSS bundles)
+app.use('/*', serveStatic({ root: './apps/web/dist/client' }))
+
+// SSR fallback: let TanStack Start render all page requests
+app.get('*', async (c) => {
+  if (!frontendFetch) {
+    return c.text('Frontend not built. Run: bun run --filter web build', 503)
+  }
+  return frontendFetch(c.req.raw)
+})
 
 export default app
