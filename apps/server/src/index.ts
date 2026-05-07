@@ -53,7 +53,8 @@ async function loadFrontend() {
     frontendFetch = mod.default.fetch.bind(mod.default)
     console.log('Frontend SSR loaded successfully')
   } catch (err) {
-    const msg = err instanceof Error ? `${err.name}: ${err.message}` : String(err)
+    const msg =
+      err instanceof Error ? `${err.name}: ${err.message}` : String(err)
     console.error('Frontend SSR load failed:', msg)
     frontendFetch = null
   }
