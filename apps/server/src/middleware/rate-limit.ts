@@ -1,6 +1,6 @@
 import { db } from '@my-better-t-app/db'
 import { rateLimit } from '@my-better-t-app/db/schema/auth'
-import { eq, lt, sql } from 'drizzle-orm'
+import { lt, sql } from 'drizzle-orm'
 import type { Context, Next } from 'hono'
 
 export interface RateLimitOptions {
