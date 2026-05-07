@@ -48,7 +48,7 @@ try {
   }
   frontendFetch = mod.default.fetch.bind(mod.default)
 } catch (err) {
-  logger.warn('Frontend SSR not loaded: ' + String(err))
+  logger.warn({ err }, 'Frontend SSR not loaded — dev mode or build missing')
 }
 
 const app = new Hono()
