@@ -1,0 +1,135 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main] # → staging (Render)
+    tags: ['v*'] # → production (Render)
+
+jobs:
+  # ── Quality gate (runs for both staging and production) ──────────────────
+  check:
+    name: Lint, types & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Format check
+        run: bun run format:check
+
+      - name: Type check
+        run: bun run check-types
+
+      - name: Build
+        run: bun run build
+
+  # ── Staging deploy (push to main → Render) ───────────────────────────────
+  deploy-staging:
+    name: Deploy → staging (Render)
+    needs: check
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run staging migrations
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Trigger Render staging deploy
+        id: deploy
+        run: |
+          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          echo "Triggered deploy: $DEPLOY_ID"
+
+      - name: Wait for Render deploy to complete
+        run: |
+          DEPLOY_ID="${{ steps.deploy.outputs.deploy_id }}"
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              "https://api.render.com/v1/deploys/$DEPLOY_ID" \
+              | jq -r '.status')
+            echo "Status: $STATUS"
+            if [ "$STATUS" = "live" ]; then
+              echo "Deploy succeeded"
+              exit 0
+            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "canceled" ] || [ "$STATUS" = "failed" ]; then
+              echo "Deploy failed with status: $STATUS"
+              exit 1
+            fi
+            sleep 20
+          done
+          echo "Deploy timed out after 10 minutes"
+          exit 1
+
+  # ── Production deploy (git tag v* → Render) ──────────────────────────────
+  deploy-production:
+    name: Deploy → production (Render)
+    needs: check
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run production migrations
+        run: bun run db:migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Trigger Render production deploy
+        id: deploy
+        run: |
+          RESPONSE=$(curl -s -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}")
+          DEPLOY_ID=$(echo "$RESPONSE" | jq -r '.id')
+          echo "deploy_id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          echo "Triggered deploy: $DEPLOY_ID"
+
+      - name: Wait for Render deploy to complete
+        run: |
+          DEPLOY_ID="${{ steps.deploy.outputs.deploy_id }}"
+          for i in $(seq 1 30); do
+            STATUS=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              "https://api.render.com/v1/deploys/$DEPLOY_ID" \
+              | jq -r '.status')
+            echo "Status: $STATUS"
+            if [ "$STATUS" = "live" ]; then
+              echo "Deploy succeeded"
+              exit 0
+            elif [ "$STATUS" = "deactivated" ] || [ "$STATUS" = "canceled" ] || [ "$STATUS" = "failed" ]; then
+              echo "Deploy failed with status: $STATUS"
+              exit 1
+            fi
+            sleep 20
+          done
+          echo "Deploy timed out after 10 minutes"
+          exit 1
