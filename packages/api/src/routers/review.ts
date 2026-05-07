@@ -13,7 +13,7 @@ import {
 import { and, desc, eq, inArray, sql } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { ORPCError } from '@orpc/server'
-import { os, protectedProcedure, publicProcedure } from '../index'
+import { router, protectedProcedure, publicProcedure } from '../index'
 import { updateVendorScore } from '../services/vendor-service'
 import * as notificationService from '../services/notification-service'
 
@@ -33,7 +33,7 @@ const extractS3Key = (url: string | null): string | null => {
   return null
 }
 
-export const reviewRouter = os.router({
+export const reviewRouter = router({
   createReview: protectedProcedure
     .route({
       operationId: 'createReview',

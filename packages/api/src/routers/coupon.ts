@@ -6,12 +6,12 @@ import { ORPCError } from '@orpc/server'
 import { nanoid } from 'nanoid'
 import {
   adminProcedure,
-  os,
+  router,
   protectedProcedure,
   publicProcedure,
 } from '../index'
 
-export const couponRouter = os.router({
+export const couponRouter = router({
   validateCoupon: publicProcedure
     .route({
       method: 'POST',

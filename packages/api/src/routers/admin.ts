@@ -27,7 +27,7 @@ import {
   vendorApplications,
   vendors,
 } from '@my-better-t-app/db/schema/index'
-import { adminProcedure, os } from '../index'
+import { adminProcedure, router } from '../index'
 import { logger } from '../lib/logger'
 import * as orderService from '../services/order-service'
 import * as paymentService from '../services/payment-service'
@@ -38,7 +38,7 @@ import {
   notifyVendorRejected,
 } from '../services/notification-service'
 
-export const adminRouter = os.router({
+export const adminRouter = router({
   listUsers: adminProcedure
     .route({
       method: 'POST',

@@ -186,7 +186,7 @@ export async function verifyPayment(
       if (result.success) {
         try {
           await notifyOrderStatusUpdate(
-            result.userId,
+            result.userId!,
             orderId,
             result.orderNumber!,
             'payment_received',
@@ -289,7 +289,7 @@ export async function rejectPayment(
       if (result.success) {
         try {
           await notifyOrderStatusUpdate(
-            result.userId,
+            result.userId!,
             orderId,
             result.orderNumber!,
             'payment_rejected',

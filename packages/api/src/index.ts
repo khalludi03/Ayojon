@@ -7,6 +7,9 @@ import type { user } from '@my-better-t-app/db/schema/auth'
 
 export { os }
 
+// Patched router() that preserves procedure types without the Lazyable<Procedure> constraint check
+export const router = os.router as <T>(routerDef: T) => T
+
 // Base procedure with context
 export const baseProcedure = os.$context<Context>()
 
