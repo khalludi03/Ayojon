@@ -11,7 +11,7 @@ import {
 import { and, desc, eq, gte, inArray, or, sql } from 'drizzle-orm'
 import { nanoid } from 'nanoid'
 import { ORPCError } from '@orpc/server'
-import { router, protectedProcedure } from '../index'
+import { protectedProcedure, router } from '../index'
 import * as orderService from '../services/order-service'
 import * as payoutService from '../services/payout-service'
 import * as notificationService from '../services/notification-service'
