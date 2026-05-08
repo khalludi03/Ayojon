@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import z from 'zod'
 import { Eye, EyeOff } from 'lucide-react'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { env } from '@my-better-t-app/env/web'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -58,6 +58,8 @@ function PasswordStrength({ password }: { password: string }) {
   )
 }
 
+const SIGNUP_PENDING_KEY = 'ayojon-signup-pending'
+
 export default function SignUpForm({
   onSwitchToSignIn,
   onSuccess,
@@ -75,6 +77,28 @@ export default function SignUpForm({
     password: '',
     name: '',
   })
+
+  // Restore OTP dialog if user switched tabs during verification
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(SIGNUP_PENDING_KEY)
+      if (stored) {
+        const data = JSON.parse(stored) as {
+          email: string
+          password: string
+          name: string
+        }
+        setSignupData(data)
+        setShowOTPDialog(true)
+      }
+    } catch {
+      sessionStorage.removeItem(SIGNUP_PENDING_KEY)
+    }
+  }, [])
+
+  const clearPendingSignup = () => {
+    sessionStorage.removeItem(SIGNUP_PENDING_KEY)
+  }
 
   const navigate = useNavigate({
     from: '/',
@@ -107,12 +131,14 @@ export default function SignUpForm({
           throw new Error(result.error || 'Failed to send verification code')
         }
 
-        // Store signup data for later use
-        setSignupData({
+        // Store signup data for later use (persisted so tab-switch doesn't lose it)
+        const pending = {
           email: value.email,
           password: value.password,
           name: value.name,
-        })
+        }
+        sessionStorage.setItem(SIGNUP_PENDING_KEY, JSON.stringify(pending))
+        setSignupData(pending)
 
         setShowOTPDialog(true)
         toast.success(`Verification code sent to ${value.email}`)
@@ -170,6 +196,7 @@ export default function SignUpForm({
       if (!response.ok) {
         // If it was the 3rd attempt, the server returns a specific error
         if (result.error?.includes('Too many failed attempts')) {
+          clearPendingSignup()
           setShowOTPDialog(false)
           setOtp('')
           toast.error(
@@ -189,6 +216,7 @@ export default function SignUpForm({
         },
         {
           onSuccess: () => {
+            clearPendingSignup()
             setShowOTPDialog(false)
             if (onSuccess) {
               onSuccess()
@@ -454,6 +482,7 @@ export default function SignUpForm({
         open={showOTPDialog}
         onOpenChange={(open) => {
           if (!open && !isVerifyingOTP) {
+            clearPendingSignup()
             setShowOTPDialog(false)
             setOtp('')
           }
@@ -499,6 +528,7 @@ export default function SignUpForm({
               <Button
                 variant="outline"
                 onClick={() => {
+                  clearPendingSignup()
                   setShowOTPDialog(false)
                   setOtp('')
                 }}

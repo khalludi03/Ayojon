@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -25,6 +25,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 
+const VENDOR_SIGNUP_PENDING_KEY = 'ayojon-vendor-signup-pending'
+
 interface AccountStepProps {
   formData: VendorFormData
   onFormChange: (field: keyof VendorFormData, value: string) => void
@@ -47,6 +49,29 @@ export function AccountStep({
   const [otp, setOtp] = useState('')
   const [isVerifyingOTP, setIsVerifyingOTP] = useState(false)
   const [isSendingOTP, setIsSendingOTP] = useState(false)
+
+  const clearPendingSignup = () => {
+    sessionStorage.removeItem(VENDOR_SIGNUP_PENDING_KEY)
+  }
+
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(VENDOR_SIGNUP_PENDING_KEY)
+      if (stored) {
+        const data = JSON.parse(stored) as {
+          email: string
+          password: string
+          businessName: string
+        }
+        onFormChange('email', data.email)
+        onFormChange('password', data.password)
+        if (data.businessName) onFormChange('businessName', data.businessName)
+        setShowOTPDialog(true)
+      }
+    } catch {
+      sessionStorage.removeItem(VENDOR_SIGNUP_PENDING_KEY)
+    }
+  }, [])
 
   // If already logged in, show a different UI
   if (session?.user) {
@@ -122,6 +147,7 @@ export function AccountStep({
 
       if (!response.ok) {
         if (result.error?.includes('Too many failed attempts')) {
+          clearPendingSignup()
           setShowOTPDialog(false)
           setOtp('')
           toast.error(
@@ -142,6 +168,7 @@ export function AccountStep({
         },
         {
           onSuccess: () => {
+            clearPendingSignup()
             setShowOTPDialog(false)
             toast.success('Account created and email verified!')
             onNext()
@@ -237,6 +264,14 @@ export function AccountStep({
           throw new Error(result.error || 'Failed to send verification code')
         }
 
+        sessionStorage.setItem(
+          VENDOR_SIGNUP_PENDING_KEY,
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            businessName: formData.businessName || '',
+          }),
+        )
         setShowOTPDialog(true)
         toast.success(`Verification code sent to ${formData.email}`)
       } catch (error) {
@@ -458,6 +493,7 @@ export function AccountStep({
         open={showOTPDialog}
         onOpenChange={(open) => {
           if (!open && !isVerifyingOTP && !isCreatingAccount) {
+            clearPendingSignup()
             setShowOTPDialog(false)
             setOtp('')
           }
@@ -503,6 +539,7 @@ export function AccountStep({
               <Button
                 variant="outline"
                 onClick={() => {
+                  clearPendingSignup()
                   setShowOTPDialog(false)
                   setOtp('')
                 }}
