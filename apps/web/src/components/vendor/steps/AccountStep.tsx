@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import {
   AlertCircle,
   CheckCircle2,
@@ -71,7 +71,6 @@ export function AccountStep({
     } catch {
       sessionStorage.removeItem(VENDOR_SIGNUP_PENDING_KEY)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // If already logged in, show a different UI
