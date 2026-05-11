@@ -49,7 +49,7 @@ export function ReviewsSection({
   )
 
   const reviews = useMemo(() => {
-    const raw = rawReviews as Array<any>
+    const raw = (rawReviews as Array<any>) ?? []
 
     let filtered = [...raw]
 
@@ -88,7 +88,7 @@ export function ReviewsSection({
   }, [rawReviews, filter, sort])
 
   const summary = useMemo<ReviewSummary | null>(() => {
-    const raw = rawReviews as Array<any>
+    const raw = (rawReviews as Array<any>) ?? []
     if (raw.length === 0)
       return {
         averageRating: 0,
