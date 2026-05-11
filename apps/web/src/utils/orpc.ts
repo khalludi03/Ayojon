@@ -7,7 +7,10 @@ import type { AppRouter } from '@my-better-t-app/api/routers/index'
 const getServerUrl = () => {
   if (env.VITE_SERVER_URL) return env.VITE_SERVER_URL
   if (typeof window !== 'undefined') return window.location.origin
-  return 'http://localhost:3000'
+  // SSR context: use PORT env var (Render sets this to 10000 by default)
+  const port =
+    (typeof process !== 'undefined' && process.env.PORT) || '3000'
+  return `http://localhost:${port}`
 }
 
 // Create oRPC client
